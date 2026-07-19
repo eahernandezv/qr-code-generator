@@ -20,6 +20,8 @@ Status: **Not frozen.** This document defines ownership and required machine-rea
 
 ## Required shared semantics
 
+Commercial vocabulary and lifecycle intent come from `docs/product/pricing-entitlement-semantics.md`. Contract schemas may encode those decisions but MUST NOT silently redefine them.
+
 ### Identifiers
 
 - Opaque, non-sequential public IDs.

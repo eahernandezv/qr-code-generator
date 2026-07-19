@@ -13,7 +13,7 @@ Status: Draft Gate 4 baseline. Paths are proposed monorepo ownership and become 
 ## WS-00: Product, Economics, and Policy
 
 **Mission:** Convert hypotheses into approved product promises and policies.  
-**Owns:** `docs/product/**`, pricing semantics, acceptable-use/refund/continuity policy requirements, evidence ledger.  
+**Owns:** `docs/product/**`, including `pricing-entitlement-semantics.md`; acceptable-use/refund/continuity policy requirements; evidence ledger.
 **Produces:** frozen PRD versions and policy decisions.  
 **Excludes:** application code and architecture implementation.  
 **Depends on:** sponsor decisions; research/spike evidence.  
