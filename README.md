@@ -26,8 +26,9 @@ This repository contains the source-of-truth product, architecture, contract, an
 6. `docs/program/workstreams.md`
 7. `docs/program/dependency-graph.md`
 8. `docs/program/traceability-matrix.md`
-9. `docs/program/integration-plan.md`
-10. `docs/program/handoffs/TEMPLATE.md`
+9. `docs/program/delegation-plan.md`
+10. `docs/program/integration-plan.md`
+11. `docs/program/handoffs/TEMPLATE.md`
 
 ## Important qualification
 
