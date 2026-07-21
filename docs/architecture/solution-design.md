@@ -6,7 +6,12 @@ Date: 2026-07-19
 
 ## 1. Architecture objectives
 
+### MVP sequencing constraint
+
+Only the Artistic Studio path is active MVP architecture scope: web experience, QR Core/validation, artistic generation/composition, export, narrow guest checkout/project-access capability, minimal provider infrastructure, safety/privacy, telemetry, and release QA. Full identity/entitlements/commerce, campaigns, redirect/analytics, domains, and bulk components remain future boundaries and must not become dependencies of the Artistic MVP.
+
 - Keep static creation and bulk rendering browser-local where feasible.
+- Deliver artistic QR creation in MVP through a deterministic safe-template baseline plus an optional provider-backed generative path only when scan, safety, privacy, latency, and cost gates pass.
 - Isolate the latency-sensitive redirect data plane from dashboard/control-plane failures.
 - Treat commerce webhooks as the authority for paid entitlements.
 - Make analytics asynchronous and non-blocking.
@@ -48,7 +53,7 @@ No browser return, QR payload, destination, DNS claim, forwarded header, or anal
 - Failure: static tool should remain usable when paid APIs are unavailable.
 
 **Feature modules**
-- Static Studio, campaign dashboard, domain setup, analytics views, and bulk wizard publish isolated modules to the integrator-owned shell.
+- Static/Artistic Studio, campaign dashboard, domain setup, analytics views, and bulk wizard publish isolated modules to the integrator-owned shell.
 
 ### Control plane
 
@@ -78,7 +83,12 @@ No browser return, QR payload, destination, DNS claim, forwarded header, or anal
 
 ### Commerce plane
 
-**Checkout and Webhook Service**
+**Artistic MVP guest purchase/unlock subset**
+- Owns: $12 project and $5 exploration checkout creation, verified/idempotent provider-event inbox, successful-round/export allowance, opaque guest project-access capability, and purchase recovery.
+- Does not own: customer accounts, subscription billing, generic credits, dynamic campaign entitlements, or QR generation decisions.
+- Failure: free preview remains available; paid unlock/export waits for reconciliation and never trusts browser return alone.
+
+**Future Checkout and Webhook Service**
 - Owns: checkout-session creation, payment event inbox, provider-object mapping, refund/dispute ingestion.
 - Does not own: final campaign or batch behavior.
 - Exposes: checkout API and verified commerce events.
@@ -110,11 +120,18 @@ Use 302 or 307 by policy for editable destinations; do not default to 301. Defin
 
 ### Browser compute plane
 
-**QR Core**
-- Owns: payload normalization, QR matrix/style rendering, SVG/PNG generation, scannability rules.
-- Does not own: campaign persistence, payments, ZIP packaging.
-- Exposes: deterministic TypeScript library and fixtures.
-- Stores: none by default.
+**QR Core and Artistic Rendering Pipeline**
+- Owns: payload normalization, QR matrix/style rendering, protected functional masks, deterministic artistic templates, candidate composition, SVG/PNG generation, decoder orchestration, scan-risk scoring, and safe fallback.
+- Does not own: campaign persistence, payments, ZIP packaging, provider infrastructure, or global content policy.
+- Exposes: deterministic `qr-core-api.v1`, `artistic-qr-api.v1`, validation evidence, and fixtures.
+- Stores: no payload/logo/reference image by default for local modes; provider-backed artistic mode uses short-lived encrypted job metadata and the minimum provider retention permitted by approved policy.
+- Failure: provider timeout/unsafe output/unscannable candidates return an actionable failure and preserve a deterministic safe candidate; no unvalidated artistic export is labeled scan-safe.
+
+**Artistic generation adapter (conditional MVP path)**
+- Owns: model/provider-neutral job submission, protected QR conditioning/masks, candidate retrieval, timeout/cancellation, provider version/provenance, and retry accounting.
+- Consumes: approved prompt/reference image, QR functional mask, content-safety verdict, and artistic entitlement/allowance when adopted.
+- Does not own: QR acceptance thresholds, commerce truth, or provider infrastructure credentials.
+- Build/buy: prefer a managed image-generation provider for MVP; keep provider behind an adapter and feature flag.
 
 **Bulk Engine**
 - Owns: CSV schema/parser, row validation, deterministic naming, worker orchestration, ZIP/manifest generation, local progress/retry behavior.
@@ -173,6 +190,15 @@ No service reads another service's private tables as an integration mechanism.
 5. Redirect projection accepts host only after active mapping event.
 6. Removal invalidates mapping before claim release; cooldown prevents stale takeover.
 
+### Artistic QR
+
+1. Browser normalizes URL/text through QR Core and creates the protected QR matrix/mask.
+2. User selects a curated template or, if enabled, submits an approved prompt/reference image.
+3. Deterministic composition runs locally; provider-backed generation passes only the minimum approved inputs through the artistic adapter.
+4. Returned candidates are composited with protected modules/quiet zone and tested by the decoder matrix at multiple render scales/perturbations.
+5. Only passing candidates can be labeled scan-validated/exportable; failures offer regeneration or deterministic fallback.
+6. Export embeds non-sensitive provenance (mode/provider/model version and validation version) in project metadata, not visibly in the QR payload.
+
 ### Bulk
 
 1. Browser parses/validates CSV and previews style/output.
@@ -190,7 +216,8 @@ No service reads another service's private tables as an integration mechanism.
 - Normalize internationalized domains safely; protect reserved hostnames and slug namespaces.
 - WAF/rate limits by route class; anomaly response must preserve ordinary legitimate traffic.
 - Coarse geolocation may be derived transiently; raw IP retention requires a narrowly defined security window.
-- User logos/CSV stay local in MVP; CSP and dependency integrity reduce exfiltration risk.
+- User logos/CSV stay local in MVP; reference images/prompts stay local unless the user explicitly invokes provider-backed artistic generation under disclosed retention/use terms. CSP and dependency integrity reduce exfiltration risk.
+- Artistic inputs and outputs pass content-safety checks; provider terms, training use, deletion, copyright/trademark complaints, and generation provenance are documented before enablement.
 - Append-only audits for destination, entitlement, domain, abuse, and operator changes.
 - Publish suspension reason/appeal rules; never redirect suspended codes to ads or unrelated content.
 
@@ -209,17 +236,18 @@ No service reads another service's private tables as an integration mechanism.
 
 - Local: emulators/mocks and contract fixtures.
 - Preview: per-change web environment with mocked external providers where practical.
-- Staging: production-shaped identity, payment test mode, DNS test domain, edge runtime, analytics pipeline.
+- Artistic MVP staging: production-shaped Studio, payment-provider test mode and signed webhook path, guest project-access recovery, artistic provider adapter, QR validation/repair harness, export path, safety controls, cost telemetry, and controllable provider/payment failure injection.
+- Future infrastructure staging: identity, payment test mode, DNS test domain, edge runtime, and analytics pipeline only when the relevant later release is authorized.
 - Production: isolated secrets/data/resources, least-privilege deploy identities.
-- Feature flags for dynamic checkout, custom domains, analytics dimensions, bulk purchase, and SEO page families.
+- MVP feature flags for provider-backed artistic modes, individual art directions, and deterministic fallback; future flags cover dynamic checkout, custom domains, analytics dimensions, bulk purchase, and SEO page families.
 - Contract changes use additive versioning first; destructive changes require migration and consumer proof.
 
 ## 9. Build/buy candidates (not final decisions)
 
 - CDN/edge compute and managed custom hostnames/TLS: buy managed capability unless spike disproves economics/control.
 - Relational control-plane database: managed PostgreSQL-class service favored for integrity/PITR.
-- Payment: Stripe Checkout/webhooks candidate.
-- Identity/email: managed provider candidate; avoid building password security for MVP.
+- Payment: Stripe Checkout/webhooks candidate for a later commerce release.
+- Identity/email: managed provider candidate for a later account release; the Artistic MVP does not require customer identity.
 - QR rendering/CSV/ZIP: use audited libraries behind owned deterministic wrappers.
 - Analytics: owned minimal event model on managed queue/storage; avoid enterprise analytics dependency in redirect path.
 
@@ -227,17 +255,29 @@ All selections require ADRs covering cost, lock-in, limits, data location, expor
 
 ## 10. Mandatory architecture spikes
 
-1. **SP-01 QR fidelity:** SVG/PNG/logo/style output and physical/device scan matrix.
-2. **SP-02 Bulk envelope:** 500-row time/memory/ZIP behavior across supported desktop browsers; worker cancellation/retry.
-3. **SP-03 Redirect runtime:** p95/p99, projection propagation, control-plane outage, event-pipeline outage, and cost per traffic scenario.
-4. **SP-04 Custom hostnames:** ownership, DNS UX, certificate timing/renewal, hostname limits, teardown/takeover, and per-domain cost.
-5. **SP-05 Commerce semantics:** webhook replay/order, refund/dispute states, tax/currency, and entitlement reconciliation.
-6. **SP-06 Economics/abuse:** five-year cost distributions, reserve, anomalous scan traffic, rate limits, and honest fair-use wording.
-7. **SP-07 Privacy:** fields needed for coarse analytics and fraud; retention/deletion impact assessment.
+### Artistic MVP blockers
 
-## 11. Key ADRs required before implementation wave 2
+- **SP-01 QR fidelity:** SVG/PNG/logo/style output and physical/device scan matrix.
+- **SP-08 Artistic QR feasibility:** compare deterministic templates and selected generative approaches across prompt/style/reference-image cases; measure candidate pass rate, adversarial scan robustness, latency, retry rate, accessibility/UX, provider retention/safety, and per-successful-export cost. Define the deterministic fallback that keeps artistic creation in MVP if generative mode fails.
 
-- ADR-001 monorepo/runtime language and package boundaries.
+### Deferred infrastructure spikes
+
+- **SP-02 Bulk envelope:** 500-row time/memory/ZIP behavior across supported desktop browsers; worker cancellation/retry.
+- **SP-03 Redirect runtime:** p95/p99, projection propagation, control-plane outage, event-pipeline outage, and cost per traffic scenario.
+- **SP-04 Custom hostnames:** ownership, DNS UX, certificate timing/renewal, hostname limits, teardown/takeover, and per-domain cost.
+- **SP-05 Commerce semantics:** webhook replay/order, refund/dispute states, tax/currency, and entitlement reconciliation.
+- **SP-06 Economics/abuse:** five-year cost distributions, reserve, anomalous scan traffic, rate limits, and honest fair-use wording.
+- **SP-07 Privacy:** fields needed for coarse analytics and fraud; retention/deletion impact assessment.
+
+## 11. Key ADR sequencing
+
+Artistic MVP blockers:
+
+- ADR-001 monorepo/runtime language and MVP package boundaries.
+- ADR-008 artistic generation/validation architecture, provider, provenance, content safety, retention, and cost controls.
+
+Deferred until the corresponding infrastructure release:
+
 - ADR-002 edge/CDN and route-projection storage.
 - ADR-003 control database and tenant strategy.
 - ADR-004 identity provider and account recovery.

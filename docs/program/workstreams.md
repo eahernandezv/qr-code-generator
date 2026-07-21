@@ -2,6 +2,10 @@
 
 Status: Draft Gate 4 baseline. Paths are proposed monorepo ownership and become binding after ADR-001.
 
+## Artistic MVP activation rule
+
+For MVP, only WS-00, WS-01 (artistic and guest-purchase contracts/ADR-008 only), WS-02, WS-03, the narrow guest-checkout/project-access subset of WS-05, the minimum artistic-provider/telemetry subset of WS-12, and WS-13 are active. WS-04 and WS-06–11 remain designed but dormant; broader WS-05 commerce is also dormant. No dormant workstream may add dependencies, schema, infrastructure, or coordination load to the Artistic MVP.
+
 ## Ownership rules
 
 - One workstream owns each write surface. Other agents consume published packages/contracts.
@@ -34,29 +38,29 @@ Status: Draft Gate 4 baseline. Paths are proposed monorepo ownership and become 
 **Acceptance:** schema validation and consumer fixture tests pass.  
 **Integration proof:** every consumer compiles/tests against the same contract version.
 
-## WS-02: Design System and Interaction Foundation
+## WS-02: Design System, Artistic Direction, and Interaction Foundation
 
-**Mission:** Implement the monochrome/single-accent visual language and accessible interaction primitives.  
-**Owns:** `packages/design-system/**`, design tokens, component/preset documentation, visual test fixtures.  
+**Mission:** Implement the monochrome/single-accent visual language, artistic QR style language, and accessible interaction primitives.
+**Owns:** `packages/design-system/**`, design tokens, artistic style-pack specifications/assets, candidate-comparison and confidence-display patterns, component/preset documentation, visual test fixtures.
 **Consumes:** accessibility NFR and feature-module shell contract.  
 **Produces:** tokens/components/theme API.  
-**Excludes:** business state, campaign pages, analytics logic.  
+**Excludes:** QR matrix/rendering algorithms, scan acceptance logic, model/provider integration, business state, campaign pages, analytics logic.
 **Depends on:** WS-01 shell/token contract draft.  
 **Can start:** Wave 1.  
 **Acceptance:** WCAG checks, keyboard/focus tests, visual regression, light/dark themes.  
 **Integration proof:** reference Studio/dashboard fixture renders without private overrides.
 
-## WS-03: QR Core and Static Studio
+## WS-03: QR Core, Static Studio, and Artistic Studio
 
-**Mission:** Deliver anonymous real-time QR creation and trustworthy PNG/SVG exports.  
-**Owns:** `packages/qr-core/**`, `apps/web/src/features/static-studio/**`.  
-**Consumes:** WS-02 design system.  
-**Produces:** `qr-core-api.v1`, scan-risk validation, deterministic fixtures.  
-**Excludes:** accounts, payments, dynamic routes, ZIP batches.  
-**Depends on:** SP-01; WS-02 primitives can be mocked initially.  
-**Can start:** Wave 1 spike, then Wave 2 implementation.  
-**Acceptance:** AJ-01, SVG validation, visual/physical scan matrix, no payload/logo network upload.  
-**Integration proof:** module mounts in integrator shell and exports exact fixture hashes where deterministic.
+**Mission:** Deliver the flagship standalone Artistic QR Studio: premium art direction, controllable multi-candidate generation, closed-loop scan repair/validation, and publication-ready exports. Static-safe rendering is the substrate and fallback, not the headline product.
+**Owns:** `packages/qr-core/**`, `packages/artistic-qr/**`, `apps/web/src/features/static-studio/**`, `apps/web/src/features/artistic-studio/**`; QR functional masks, artistic composition/generation adapters, decoder orchestration, scan-confidence rules, and safe fallback.
+**Consumes:** WS-02 design system/art direction, WS-01 contracts, WS-12 provider/deployment interface, optional artistic entitlement contract.
+**Produces:** `qr-core-api.v1`, `artistic-qr-api.v1`, scan-risk/validation evidence, deterministic fixtures, and provider-neutral artistic job/provenance records.
+**Excludes:** accounts, payments, dynamic routes, ZIP batches, provider infrastructure credentials, and final global content/IP policy.
+**Depends on:** SP-01 and SP-08; WS-02 primitives can be mocked initially.
+**Can start:** Wave 1 spikes, then Wave 2 implementation.
+**Acceptance:** AJ-01/AJ-08; at least six release-quality art directions; four-candidate board; meaningful variation/refinement controls; closed-loop repair; SVG/PNG validation; adversarial and physical scan matrix; provider/content-safety/privacy/fallback tests; and proof of disclosed network behavior for provider-backed inputs.
+**Integration proof:** static/artistic modules mount in the integrator shell; deterministic exports match fixtures; a real artistic candidate passes the approved decoder/device matrix and provider failure falls back safely.
 
 ## WS-04: Identity and Entitlements
 
@@ -134,11 +138,11 @@ Status: Draft Gate 4 baseline. Paths are proposed monorepo ownership and become 
 
 ## WS-10: Bulk Browser Engine
 
-**Mission:** Validate CSV and generate up to 500 consistently branded SVGs plus manifest/ZIP locally.  
+**Mission:** Validate CSV and generate up to 500 consistently branded deterministic SVGs plus manifest/ZIP locally; artistic bulk generation is explicitly post-MVP.
 **Owns:** `packages/bulk-engine/**`, `apps/web/src/features/bulk/**`, bulk CSV and manifest schemas.  
 **Consumes:** QR Core, design system, batch-pass authorization.  
 **Produces:** browser ZIP/manifest and pass-consumption protocol.  
-**Excludes:** QR rendering internals and server storage of uploaded rows.  
+**Excludes:** QR rendering internals, generative/artistic bulk rendering, and server storage of uploaded rows.
 **Depends on:** SP-02, WS-03 QR API, WS-04 entitlements.  
 **Can start:** spike Wave 1; implementation after QR API freezes.  
 **Acceptance:** malformed CSV, filenames, 500-row envelope, worker cancel/retry, partial-failure manifest tests.  
@@ -158,7 +162,7 @@ Status: Draft Gate 4 baseline. Paths are proposed monorepo ownership and become 
 
 ## WS-12: Platform, Security, and Operations
 
-**Mission:** Provide environments, deployment, secrets, telemetry, backups, WAF/rate limits, operator-access baseline, and incident readiness.  
+**Mission:** Provide environments, deployment, secrets, telemetry, backups, WAF/rate limits, artistic-provider connectivity/cost telemetry, operator-access baseline, and incident readiness.
 **Owns:** `infra/**`, `.github/workflows/**`, `packages/telemetry/**`, `docs/operations/**`.  
 **Consumes:** service resource/SLO declarations.  
 **Produces:** deployment interfaces, telemetry conventions, environments, runbooks.  
@@ -176,7 +180,7 @@ Status: Draft Gate 4 baseline. Paths are proposed monorepo ownership and become 
 **Excludes:** changing feature internals to hide failures; contract changes require owner approval.  
 **Depends on:** WS-01 contracts and incremental deliverables from all workstreams.  
 **Can start:** test harness Wave 1; integration continuously.  
-**Acceptance:** AJ-01–AJ-07, accessibility/security/performance gates, production-shaped staging proof.  
+**Acceptance:** AJ-01–AJ-08, including independent artistic scan/device, content-safety, provider-failure, privacy, and misleading-confidence tests; accessibility/security/performance gates; production-shaped staging proof.
 **Operational proof:** release/rollback checklist and post-deploy synthetic verification.
 
 ## Preliminary independence score

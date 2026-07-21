@@ -20,6 +20,10 @@ Status: Initial ledger; user-provided market statements are **context, not indep
 | EV-014 | Raw IP addresses are unnecessary for the proposed analytics | Assumption | Privacy-first design direction | Medium | Confirm coarse geolocation pipeline and fraud needs | Security + WS-09 |
 | EV-015 | Programmatic SEO can acquire qualified demand without paid ads | Hypothesis | Proposed growth strategy | Low | Keyword research, quality threshold, indexation experiment | WS-11 |
 | EV-016 | “Lifetime/forever” language is legally and operationally safe | Assumption | No review completed | Very low | Legal review and continuity-policy decision; do not publish beforehand | Product + Legal |
+| EV-017 | Target customers value artistic QR codes enough to improve activation or willingness to pay | Hypothesis | Sponsor added artistic creation to MVP | Low | Prototype tests with small business, agency, and event users; compare completion and stated preference | WS-00 + WS-03 |
+| EV-018 | A bounded artistic pipeline can produce scan-safe output with acceptable latency and unit cost | Hypothesis | No selected model/provider or scan evidence | Low | SP-08 prompt/style/reference-image matrix, multi-decoder/device tests, safety/privacy review, and cost model | WS-03 + WS-12 + WS-13 |
+| EV-019 | Curated deterministic artistic templates are a viable MVP fallback if generative output is unreliable | Assumption | Existing QR styling pattern only | Medium | Implement representative templates and test perceived quality plus scan reliability | WS-02 + WS-03 |
+| EV-020 | The flagship Artistic QR MVP will not use display advertising | Decision | Sponsor explicitly discarded the ad-based option | High | Evaluate only direct monetization structures: free proof plus one-time project/export, bounded credits, or later subscription | Product owner |
 
 ## Decision discipline
 

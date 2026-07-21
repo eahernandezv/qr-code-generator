@@ -12,7 +12,8 @@ graph TD
   W01 --> W07[WS-07 Redirect Runtime]
   W01 --> W09[WS-09 Analytics]
   W01 --> W12[WS-12 Platform/Ops]
-  W02 --> W03[WS-03 QR Core/Static]
+  W02 --> W03[WS-03 QR Core/Static/Artistic]
+  W12 --> W03
   W03 --> W10[WS-10 Bulk]
   W04 --> W05
   W04 --> W06[WS-06 Campaign Control]
@@ -35,61 +36,48 @@ graph TD
 
 This diagram is conservative. WS-05 can implement against mocked claims after the identity contract freezes; WS-09 can implement against synthetic scan fixtures; WS-07 can implement against route fixtures before WS-06 exists.
 
-## Parallel waves
+## Artistic-first execution waves
 
-### Wave 0 — Decisions and evidence
+### Wave A0 — Creative and technical proof
 
-- WS-00 charter/PRD, competitor validation, interviews, economics and policy.
-- WS-01 preliminary architecture boundaries.
-- Spikes SP-01 through SP-07 assigned to future owners.
+- Freeze the Artistic MVP brief and quality rubric.
+- Execute SP-01 QR fidelity and SP-08 artistic feasibility only.
+- Prototype at least six meaningfully distinct art directions.
+- Establish independent decoder, perturbation, print/device, safety, privacy, latency, and cost evidence.
 
-**Exit:** dangerous promises are qualified; MVP scope and measurable NFRs accepted.
+**Exit:** the team can repeatedly produce compelling artistic candidates and repair them to the proposed export threshold; sponsor approves the creative bar and pipeline direction.
 
-### Wave 1 — Foundations and feasibility
+### Wave A1 — Contracts and vertical prototype
 
-- WS-01 contracts/ADRs.
-- WS-02 design system foundations.
-- WS-03 QR fidelity spike.
-- WS-08 custom-domain spike.
-- WS-10 bulk envelope spike.
-- WS-11 demand/SEO research only.
-- WS-12 environments/CI/telemetry baseline.
-- WS-13 contract/E2E harness skeleton.
+- Freeze `qr-core-api.v1`, `artistic-qr-api.v1`, ADR-008, and owned write surfaces.
+- Build one complete thin slice: payload → art direction → four candidates → validation/repair → high-resolution export.
+- Establish minimal provider secrets, telemetry, cost caps, CI, and independent test harness.
 
-**Exit:** machine-readable contract v1 candidates; spike verdicts; no fatal economics/architecture blocker.
+**Exit:** one production-shaped art direction completes AJ-08 end to end without accounts or broader infrastructure.
 
-### Wave 2 — Independently mockable cores
+### Wave A2 — Flagship Studio
 
-- WS-03 static implementation.
-- WS-04 identity/entitlements.
-- WS-05 commerce against claims/event mocks.
-- WS-07 redirect runtime against route/hostname fixtures.
-- WS-09 analytics against scan fixtures.
-- WS-12 staging infrastructure.
+- Implement the full premium interaction model and six+ launch art directions.
+- Add candidate comparison, refinement/variation, local/session continuity, print preview, deterministic fallback, accessibility, and responsive browser performance.
+- Continuously exercise the independent scan/safety matrix.
 
-**Exit:** contract tests pass and each core works with shared fixtures.
+**Exit:** all Artistic MVP requirements pass shared contracts and real integrated evidence.
 
-### Wave 3 — Stateful feature composition
+### Wave A3 — Hardening and release
 
-- WS-06 campaign control.
-- WS-08 custom domains if validated.
-- WS-10 bulk engine after QR Core/entitlement contracts.
-- WS-11 initial high-quality landing-page family.
-- WS-13 continuous integration.
+- Adversarial scan, content-safety, privacy, provider-failure, cost-cap, accessibility, performance, and browser/device drills.
+- Production-shaped deployment, rollback/feature-disable, support guidance, and post-deploy synthetic generation/validation proof.
+- Independent AJ-01/AJ-08 release recommendation.
 
-**Exit:** AJ-01 through AJ-05 pass in staging.
+**Exit:** the standalone Artistic QR Studio passes the sponsor-approved creative and reliability bar and is released or explicitly held.
 
-### Wave 4 — Hardening and launch
+### Deferred Waves B+ — Infrastructure around the proven core
 
-- Abuse/security/privacy testing.
-- Backup/restore and provider-failure drills.
-- Terms/refund/continuity publication.
-- Accessibility/performance/browser matrix.
-- AJ-06/AJ-07 plus rollback and post-deploy proof.
+Accounts/commerce, dynamic campaigns, redirect/analytics, custom domains, bulk, teams, and APIs remain dormant until the Artistic MVP passes Wave A3 and the sponsor authorizes the next release. Their existing DAG documents future boundaries but does not authorize parallel implementation.
 
 ## Critical paths
 
-**Static launch:** WS-00 → WS-02 → SP-01/WS-03 → WS-13.  
+**Artistic MVP:** WS-00 creative brief → SP-01/SP-08 → WS-01 artistic contracts/ADR-008 → WS-02/WS-03 + minimal WS-12 → WS-13 independent release proof.
 **Dynamic launch:** WS-00 → WS-01 → WS-04 → WS-06 → WS-07 → WS-13, with WS-05 required for paid activation.  
 **Custom domains:** SP-04/ADR-005 → WS-04/06 → WS-08 → WS-07 → WS-13.  
 **Bulk paid launch:** SP-01/WS-03 + SP-02 + WS-04/05 → WS-10 → WS-13.

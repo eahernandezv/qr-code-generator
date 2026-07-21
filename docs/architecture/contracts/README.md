@@ -6,7 +6,7 @@ Status: **Not frozen.** This document defines ownership and required machine-rea
 
 | Contract | Owner | Consumers |
 |---|---|---|
-| `qr-core-api.v1` | WS-03 Static/QR Core | WS-10 Bulk, WS-13 Integrator |
+| `qr-core-api.v1`, `artistic-qr-api.v1` | WS-03 Static/Artistic QR Core | WS-10 Bulk (deterministic QR API only), WS-12 provider adapter, WS-13 Integrator |
 | `design-tokens.v1` and feature-module shell API | WS-02 Design System | All UI-producing workstreams |
 | `identity-claims.v1`, `entitlements.v1` | WS-04 Identity & Entitlements | WS-05, WS-06, WS-08, WS-09, WS-10, WS-13 |
 | `commerce-events.v1` | WS-05 Commerce | WS-04, WS-13 |
@@ -35,12 +35,24 @@ Commercial vocabulary and lifecycle intent come from `docs/product/pricing-entit
 - Consumers keep an inbox/deduplication record or equivalent.
 - Projection updates reject versions older than the currently applied aggregate version.
 
+### Artistic QR semantics
+
+`artistic-qr-api.v1` must define:
+- normalized payload reference and protected QR matrix/mask version
+- style/template ID, artistic-strength bounds, generation mode (`deterministic_template` or `provider_generative`), and candidate/job states
+- scan-validation suite/version, decoder results, perturbation/device evidence summary, threshold decision, and explicit `export_allowed`
+- provider/model/version provenance, retry/timeout/cancellation, safety verdict, and non-sensitive cost/latency telemetry
+- safe fallback result and stable error codes for unsafe input, provider failure, unscannable output, and exhausted allowance
+
+Prompts, reference images, full destination payloads, and provider secrets MUST NOT be placed in public provenance or analytics events. The contract MUST NOT describe a candidate as universally scannable.
+
 ### Entitlement vocabulary
 
 Provisional types:
 - `dynamic_campaign_slot`
 - `custom_hostname_slot`
 - `bulk_batch_pass`
+- `artistic_generation_allowance` (provisional; only if Wave 0 adopts metering/paid generations)
 
 Provisional states:
 - `pending`, `active`, `reserved`, `consumed`, `under_review`, `revoked`, `refunded`, `expired`

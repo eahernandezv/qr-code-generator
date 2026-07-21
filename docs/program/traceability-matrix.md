@@ -1,5 +1,7 @@
 # Requirement and Risk Traceability
 
+MVP activation: FR-001–006, FR-046–058, NFR-004/006–008/010/011/014/016, AJ-01, and AJ-08 are active for the standalone Artistic QR release. Other rows preserve future ownership but are dormant until the sponsor authorizes the corresponding version.
+
 ## Functional requirements
 
 | Requirements | Accountable WS | Supporting WS | Primary contract/proof |
@@ -16,6 +18,8 @@
 | FR-042 | WS-11 | WS-03, WS-13 | canonical Studio embed and SEO tests |
 | FR-043 | WS-12 | WS-04–09, WS-13 | operator scopes, audit events, support drill |
 | FR-044–045 | WS-00 | WS-04, WS-05, WS-09, WS-12 | published policies plus deletion/status tests |
+| FR-046–052 | WS-03 | WS-00, WS-01, WS-02, WS-12, WS-13 | `artistic-qr-api.v1`, SP-08, AJ-08 |
+| FR-053–058 | WS-05 narrow MVP subset | WS-00, WS-01, WS-03, WS-12, WS-13 | `artistic-purchase.v1`, signed webhook/idempotency, allowance/export authorization tests |
 
 ## Non-functional requirements
 
@@ -34,6 +38,7 @@
 | NFR-013 | WS-11 | WS-13 | crawler/indexation/canonical/content audit |
 | NFR-014 | WS-01 | WS-12, WS-13 | ownership check and compatibility tests |
 | NFR-015 | WS-12 | WS-07, WS-13 | recovery/failover drill |
+| NFR-016 | WS-03 | WS-00, WS-02, WS-12, WS-13 | SP-08 measurements, safety/privacy review, provider-failure and decoder/device matrix |
 
 ## Major risks
 
@@ -46,6 +51,8 @@
 | Payment replay duplicates entitlement | WS-05 | event inbox, idempotency, reconciliation test |
 | Custom hostname takeover | WS-08 | proof/cooldown/removal/collision test |
 | QR styling reduces scannability | WS-03 | validation plus device/print matrix |
+| Artistic QR appears attractive but does not scan reliably | WS-03 | protected functional mask, multi-decoder/device validation, export gate, deterministic fallback, AJ-08 |
+| Artistic provider creates unsafe/IP-sensitive output, leaks inputs, or has unsustainable cost/latency | WS-00 | SP-08, provider terms/DPIA, moderation, provenance, feature flag, allowance/cost cap; WS-12 operational enforcement |
 | Browser batch exhausts memory | WS-10 | SP-02 and worker/bounded ZIP design |
 | Analytics becomes invasive | WS-09 | privacy-minimized event contract and retention audit |
 | Programmatic pages become doorway spam | WS-11 | unique-content/index quality gate |

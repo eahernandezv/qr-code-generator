@@ -6,7 +6,7 @@ Date: 2026-07-19
 
 ## 1. Product definition
 
-A design-forward web utility for creating static QR assets, purchasing durable editable dynamic QR campaigns, and producing branded QR assets in browser-side batches without mandatory recurring subscriptions.
+The first product is a standalone, high-end Artistic QR Studio: customers turn URL/text payloads into distinctive, scene-integrated artwork, refine candidates, verify scan robustness, and export publication-ready assets. The broader product may later add static/bulk workflows, accounts, commerce, durable dynamic campaigns, redirects, custom domains, and analytics, but those capabilities are not permitted to dilute or block the Artistic MVP.
 
 ## 2. Personas and priority
 
@@ -19,14 +19,21 @@ A design-forward web utility for creating static QR assets, purchasing durable e
 ## 3. Core journeys
 
 1. **Static:** arrive → enter content → style → validate scannability → preview → export PNG/SVG.
-2. **Dynamic:** create draft → authenticate → pay → receive entitlement → configure destination/slug → activate → scan → edit destination without reprinting.
-3. **Custom domain:** choose campaign → enter hostname → receive DNS instruction → prove control → provision TLS → activate → monitor/repair.
-4. **Analytics:** open campaign → view scan totals and restrained time/location/device summaries → change range → export summary later if validated.
-5. **Bulk:** choose style → upload CSV → map/validate columns → preview failures → pay → generate locally → download ZIP and manifest.
-6. **Recovery:** regain account access → review entitlement/campaign state → restore safe configuration or contact support.
-7. **Deletion:** delete campaign/account according to retention and legal obligations; deleted routes no longer resolve to former destination.
+2. **Artistic:** enter URL/text → choose curated artistic template or describe/select a visual concept → optionally provide an owned reference image → generate candidates → validate scan confidence → adjust/regenerate → export a clearly labeled scan-validated result.
+3. **Dynamic:** create draft → authenticate → pay → receive entitlement → configure destination/slug → activate → scan → edit destination without reprinting.
+4. **Custom domain:** choose campaign → enter hostname → receive DNS instruction → prove control → provision TLS → activate → monitor/repair.
+5. **Analytics:** open campaign → view scan totals and restrained time/location/device summaries → change range → export summary later if validated.
+6. **Bulk:** choose style → upload CSV → map/validate columns → preview failures → pay → generate locally → download ZIP and manifest.
+7. **Recovery:** regain account access → review entitlement/campaign state → restore safe configuration or contact support.
+8. **Deletion:** delete campaign/account according to retention and legal obligations; deleted routes no longer resolve to former destination.
 
 ## 4. Functional requirements
+
+### Release applicability
+
+- **Artistic MVP requirements:** FR-001–006 and FR-046–058, narrowed by the MVP scope in Section 7.
+- **Post-MVP requirements:** FR-007–045 remain approved product-direction requirements except that FR-012–013 webhook/idempotency principles apply to the narrow guest checkout. Full accounts, durable entitlements, dynamic campaigns, and broader commerce remain deferred.
+
 
 ### Static Studio
 
@@ -97,6 +104,25 @@ A design-forward web utility for creating static QR assets, purchasing durable e
 - **FR-044:** Users MUST be able to request account/data deletion and understand retained billing/security records.
 - **FR-045:** The service MUST publish status, support, acceptable-use, privacy, refund, and continuity information before paid launch.
 
+### Artistic QR Studio
+
+- **FR-046:** The MVP MUST let a customer create an artistic QR from a supported URL/text payload using curated artistic templates and, where SP-08 validates it, prompt- or reference-image-assisted generation.
+- **FR-047:** Artistic generation MUST preserve a protected QR functional pattern, quiet-zone policy, and error-correction constraints rather than treating scannability as a cosmetic afterthought.
+- **FR-048:** The system MUST validate every artistic candidate with the approved decoder matrix and MUST prevent or strongly block export when no candidate meets the launch scan threshold; confidence labels MUST NOT imply universal device guarantees.
+- **FR-049:** Users MUST be able to compare candidates, adjust artistic strength/style, regenerate, and fall back to a safe deterministic rendering without re-entering the payload.
+- **FR-050:** Prompt/reference-image inputs MUST be subject to published content, intellectual-property, privacy, retention, and provider-use rules; unsafe prompts or images MUST fail with actionable guidance.
+- **FR-051:** The MVP MUST export a scan-validated artistic QR as high-resolution PNG. SVG is required only for deterministic/vector artistic templates; raster generative artwork MAY omit SVG with clear disclosure.
+- **FR-052:** Artistic generation limits, queueing, retries, credits/entitlement, and failure treatment MUST be disclosed before generation; failed provider attempts MUST NOT consume paid allowance unless an approved policy explicitly says otherwise.
+
+### Artistic MVP monetization
+
+- **FR-053:** An anonymous user MUST receive one successful preview round with four preview-quality candidates and scan-check evidence without an account or card; no final professional export is included.
+- **FR-054:** A one-time **$12 Artistic QR Project** purchase MUST unlock three successful rounds total, up to 12 candidates, refinement/repair, and one finished-artwork export bundle in all standard sizes/formats.
+- **FR-055:** A contextual **$5 Extra Exploration** purchase MUST add two successful rounds and one additional finished-artwork export; it SHOULD appear only when the included exploration is exhausted.
+- **FR-056:** A round MUST count only when the promised reviewable candidates are returned; provider/product errors, incomplete boards, and all-unscannable boards MUST NOT consume allowance, while internal retries remain bounded against abuse.
+- **FR-057:** Payment MUST be confirmed by a verified, idempotent provider event and bound to an opaque project-access capability with a documented recovery path; browser return alone MUST NOT unlock export.
+- **FR-058:** MVP pricing MUST NOT separately charge for standard dimensions, applicable PNG/SVG formats, validation, repair, or downloading the same purchased artwork during its allowed availability window; display ads, subscriptions, generic credit wallets, and unlimited/lifetime generation are excluded.
+
 ## 5. Non-functional requirements
 
 - **NFR-001 Availability:** Public redirect runtime target is at least 99.95% monthly after general availability; control-plane availability has a separate lower target.
@@ -114,8 +140,11 @@ A design-forward web utility for creating static QR assets, purchasing durable e
 - **NFR-013 SEO quality:** Generated pages MUST be indexable only when unique and useful, with canonicalization, sitemap controls, and no doorway-page behavior.
 - **NFR-014 Maintainability:** Shared contracts MUST be versioned; database tables and infrastructure resources have one owning workstream.
 - **NFR-015 Recovery:** Provisional objectives: redirect RTO ≤30 minutes for regional/provider incident and control-data RPO ≤5 minutes where the selected stack supports it; validate via architecture spike.
+- **NFR-016 Artistic quality and safety:** Artistic generation MUST have measured decoder/device pass rate, bounded generation latency and cost, provider-failure fallback, content-safety controls, and provenance metadata sufficient to identify the generation mode/provider/version without exposing prompts publicly.
 
 ## 6. Entitlement and lifecycle semantics
+
+This section applies to the later Dynamic QR Infrastructure release and is not part of the standalone Artistic MVP.
 
 ### Terminology
 
@@ -132,20 +161,29 @@ Use **Durable Campaign License** in specifications. Public “lifetime/forever/u
 
 ## 7. Launch scope
 
-### MVP
+### MVP (v1.0) — Standalone High-End Artistic QR Studio
 
-- Static URL/text QR Studio with safe presets and PNG/SVG.
-- Account, one-time dynamic campaign purchase, one dynamic route, destination editing.
-- Basic totals and time-series analytics.
-- One custom hostname flow if the spike validates self-service economics; otherwise controlled beta.
-- CSV-to-SVG ZIP bulk pass up to 500 on supported desktop browsers.
-- Status, privacy, acceptable use, refunds, continuity policy, support tooling, monitoring.
+- Focused Studio for URL/text payloads with anonymous free preview and guest one-time checkout/project access; no full account, campaign, domain, analytics, or bulk dependency.
+- Premium prompt-guided, reference-image, and curated art-direction workflows where SP-08 validates them.
+- At least six launch-quality, meaningfully distinct art directions rather than cosmetic color presets.
+- Four-candidate generation board with regenerate, variation, artistic-strength, composition/focal-area, palette, and protected-QR controls.
+- Closed-loop scan repair: generate → multi-decoder/perturbation validation → targeted repair/reinforcement → revalidate.
+- Side-by-side candidate comparison with honest robustness evidence and an always-available safe fallback.
+- Publication-ready high-resolution PNG; deterministic/vector designs also export SVG. Print preview and minimum-size guidance are required.
+- Local/session project continuity sufficient to recover the current work without requiring cloud identity.
+- Approved $0 preview, $12 project unlock, and contextual $5 exploration offer with verified/idempotent payment, opaque guest project access, fair successful-round accounting, and export authorization.
+- Content/IP/privacy disclosures, provider/payment failure handling, accessibility, performance, observability, and independent release proof.
 
-### Later
+### Post-MVP versions
 
-- Teams, roles, transfer, advanced analytics, API, scheduled redirects, multi-domain portfolios, PDF/EPS, webhooks, richer QR payloads, and agency branding.
+- **v1.1 — Artistic Pro:** saved local projects/history, reusable brand kits, more art directions, deterministic seeds/variations, stronger print/export tooling, and generation provenance.
+- **v1.2 — Creative workflow and monetization:** optional accounts/cloud sync, transparent artistic-generation allowances or paid packs, project library, sharing, and selected batch/template workflows.
+- **v2.0 — Dynamic QR infrastructure:** durable campaign purchase, editable redirects, lifecycle controls, basic analytics, and operational continuity built around artistic assets.
+- **v2.1 — Domains and scale:** custom domains, richer analytics, bulk artistic generation, teams/agency controls, APIs/webhooks, and higher-volume operations after their own feasibility gates.
 
 ## 8. Acceptance journeys
+
+For MVP release, AJ-01 and AJ-08 are mandatory; AJ-02–AJ-07 are retained for later infrastructure releases and are not MVP blockers.
 
 - **AJ-01:** Anonymous user creates a styled QR, downloads SVG/PNG, and both scan to the exact payload on reference devices.
 - **AJ-02:** User pays once, webhook grants entitlement once, creates campaign, scans public QR, changes destination, and the same QR reaches the new destination.
@@ -154,16 +192,26 @@ Use **Durable Campaign License** in specifications. Public “lifetime/forever/u
 - **AJ-05:** User validates and purchases a 500-row batch; ZIP contains 500 valid SVGs plus complete manifest within the supported performance envelope.
 - **AJ-06:** Cross-tenant and webhook replay tests fail safely with audit evidence.
 - **AJ-07:** Paused, deleted, abusive, refunded/review, and degraded-domain states each produce the documented safe behavior.
+- **AJ-08:** User starts from a URL/text payload, directs a genuinely artistic composition, receives multiple visibly distinct candidates, refines a selected candidate, exports only after closed-loop validation/repair meets the approved robustness threshold, scans the exported high-resolution PNG on the reference device/perturbation matrix to the exact payload, and can recover safely from unscannable output or provider failure.
 
 ## 9. Open product decisions
 
-1. Exact service-life and continuity promise replacing “forever.”
-2. Fair-use thresholds and remediation sequence.
-3. Refund/dispute treatment for already printed dynamic codes.
-4. Whether a campaign slot can be transferred or reused.
-5. Canonical hosted route domain and slug policy.
-6. Which analytics dimensions are useful enough to justify collection.
-7. Custom-domain scope: hostname per campaign versus hostname per account with multiple slugs.
-8. Authentication methods and guest-to-paid transition.
-9. Taxes/VAT, currencies, invoice requirements, and launch jurisdictions.
-10. Support SLA and migration/export remedy if service is discontinued.
+### Artistic MVP blockers
+
+1. Sponsor-approved artistic quality rubric and final six+ launch art directions.
+2. Artistic generation model/provider and deterministic composition/fallback architecture.
+3. Permitted prompt/reference-image modes, safety/IP policy, provider retention, deletion, and provenance.
+4. Launch decoder/perturbation/device/print threshold and honest customer-facing robustness language.
+5. Generation latency, retries, anonymous abuse/cost limits, and maximum cost per successful export.
+6. Exact PNG/SVG dimensions, print guidance, local/session continuity, and supported browser/device matrix.
+7. Guest purchase recovery method and paid project/download availability window without requiring a full customer account.
+
+### Deferred infrastructure decisions
+
+8. Exact service-life and continuity promise replacing “forever.”
+9. Fair-use thresholds and remediation sequence for dynamic routes.
+10. Refund/dispute treatment for already printed dynamic codes.
+11. Campaign-slot transfer/reuse and canonical hosted-route/slug policy.
+12. Analytics dimensions and retention.
+13. Custom-domain scope.
+14. Authentication, taxes/VAT, currencies, invoices, support SLA, and discontinuation remedy.
