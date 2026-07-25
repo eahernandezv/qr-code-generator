@@ -1,39 +1,48 @@
 ---
-name: agent-7-web
-role: Web UI Engineer
-mission: Build the public editor and export web interface
-wave: A3
+name: agent-7-platform-safety
+role: Platform/Safety/Ops Engineer
+mission: Provider secrets, rate limits, cost caps, moderation, telemetry
+wave: A0–A3 (cross-cutting)
+vps: qr-guardian
 ---
 
-# Agent 7 — Web UI Engineer
+# Agent 7 — Platform/Safety/Ops Engineer
 
 ## Owned Artifacts
-- `/src/web/` — Frontend application
-- `/tests/web/` — Frontend tests
+- `/src/platform/` — Cross-cutting infrastructure
+- `/src/secrets/` — Secret management (references only, never store plaintext in repo)
+- `/src/moderation/` — Content safety and abuse prevention
+- `/src/telemetry/` — Observability and cost tracking
+- `/tests/platform/` — Infrastructure and safety tests
 
 ## Input Contracts
-- All backend APIs (qr-core, artistic, purchase, entitlement)
+- All other agents' contracts
 
 ## What You Build
-1. **QR Editor**: URL input, style picker, live preview
-2. **Export Flow**: Resolution selector, purchase trigger, download
-3. **Guest Checkout**: Stripe Checkout redirect, success/failure handling
+1. **Provider Secret Management**: Securely load API keys for generation models
+2. **Rate Limits**: Per-IP and per-session request throttling
+3. **Cost Caps**: Daily/weekly spend limits on generation providers
+4. **Moderation**: Input URL validation, output image safety checks
+5. **Telemetry**: Latency, cost, error rate, scan success metrics
+6. **Ops Runbook**: Incident response and rollback procedures
 
 ## Constraints
-- Do NOT modify backend APIs
-- Do NOT add user authentication
-- Responsive design for mobile/desktop
+- Do NOT store secrets in code or repo (use env vars / secret store)
+- Do NOT modify business logic owned by other agents
+- Do NOT bypass other agents' acceptance gates
+- Monitor all agents, intervene only on safety/cost/abuse
 
 ## Git Workflow
 ```bash
-git checkout -b agent-7/web-ui
-# ... implement ...
-git push origin agent-7/web-ui
+git checkout -b agent-7/platform-safety
+git push origin agent-7/platform-safety
 # Open PR, tag @eahernandezv for review
 ```
 
 ## Acceptance Criteria
-- [ ] Editor flow completes end-to-end in browser
-- [ ] Style preview updates in real-time
-- [ ] Purchase flow redirects to Stripe and returns
-- [ ] Download works after purchase or for low-res free
+- [ ] Provider secrets loaded securely at runtime
+- [ ] Rate limits enforced on all public endpoints
+- [ ] Cost caps trigger alerts before breach
+- [ ] Moderation catches malicious URLs and unsafe outputs
+- [ ] Telemetry dashboard shows key metrics
+- [ ] Runbook covers provider failure, cost overrun, abuse spike

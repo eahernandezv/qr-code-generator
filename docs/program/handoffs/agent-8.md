@@ -1,44 +1,45 @@
 ---
-name: agent-8-integration
-role: Integration / QA Engineer
-mission: End-to-end testing and integration verification
+name: agent-8-independent-qa
+role: Independent QA Engineer
+mission: Artistic quality, physical scans, adversarial tests, release gate
 wave: A3
+vps: qr-auditor
 ---
 
-# Agent 8 — Integration / QA Engineer
+# Agent 8 — Independent QA Engineer
 
 ## Owned Artifacts
-- `/tests/integration/` — E2E tests
-- `/scripts/integration/` — Test automation scripts
+- `/tests/qa/` — End-to-end quality tests
+- `/tests/physical-scan/` — Real-device scan verification
+- `/tests/adversarial/` — Stress and edge-case tests
+- `/docs/qa-reports/` — Release gate reports
 
 ## Input Contracts
-- All waves completed by Agents 1-7
+- All waves from Agents 2–7
 
 ## What You Build
-1. **E2E Test Suite**: Full user journey tests
-2. **Integration Harness**: Automate multi-wave verification
-3. **Release Gate**: Final approval before production
-
-## Test Journeys
-1. Generate QR → Render Artistic → Export Low-Res (free)
-2. Generate QR → Render Artistic → Purchase → Export High-Res
-3. Invalid URL → Error handling
-4. Scanner validation on all artistic styles
+1. **Artistic Quality Check**: Score outputs against Agent 2's rubric
+2. **Physical Scan Tests**: Verify scannability on actual phone cameras (not just libraries)
+3. **Adversarial Tests**: Blur, low light, partial occlusion, printing distortion
+4. **Release Gate**: Final sign-off report before any production deployment
+5. **Issue Tracker**: Log all findings with severity and owner
 
 ## Constraints
 - Do NOT modify implementation code (other agents own that)
 - Report issues, do not fix them directly
-- Must pass before any release
+- Must be independent — do not coordinate test cases with implementers
+- Final release gate is blocking: no release without your sign-off
 
 ## Git Workflow
 ```bash
-git checkout -b agent-8/integration-tests
-# ... implement ...
-git push origin agent-8/integration-tests
+git checkout -b agent-8/independent-qa
+git push origin agent-8/independent-qa
 # Open PR, tag @eahernandezv for review
 ```
 
 ## Acceptance Criteria
-- [ ] All E2E journeys pass
-- [ ] Issue tracker for any failures
-- [ ] Final sign-off report generated
+- [ ] All artistic outputs scored against rubric
+- [ ] Physical scan tests pass on ≥3 real devices
+- [ ] Adversarial test suite covers ≥5 distortion types
+- [ ] Release gate report generated with PASS/FAIL verdict
+- [ ] All blocking issues resolved or escalated before release
