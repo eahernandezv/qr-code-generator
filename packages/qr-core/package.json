@@ -1,0 +1,1 @@
+{"name":"@qr/qr-core","version":"0.1.0","description":"QR matrix generation, functional masks, deterministic rendering","private":true,"type":"module","scripts":{"test":"echo 'Tests not yet configured'"}}

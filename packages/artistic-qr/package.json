@@ -1,0 +1,1 @@
+{"name":"@qr/artistic-qr","version":"0.1.0","description":"Artistic QR generation, validation, repair, and export","private":true,"type":"module","scripts":{"test":"echo 'Tests not yet configured'"}}

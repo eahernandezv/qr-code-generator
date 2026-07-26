@@ -1,46 +1,32 @@
-# CODEOWNERS — QR MVP Agent Ownership
-
-# Global fallback — integrator owns everything by default
+# Global fallback
 * @eahernandezv
 
-# Agent 1 — QR Core Engineer
-/src/qr_core/ @agent-1-qr-core
-/tests/qr_core/ @agent-1-qr-core
-/docs/contracts/qr-core-api* @agent-1-qr-core
+# Architecture and Contracts (WS-01 / Agent 1)
+docs/architecture/** @eahernandezv
+packages/contracts/** @eahernandezv
 
-# Agent 2 — QR Validator
-/src/validator/ @agent-2-validator
-/tests/validator/ @agent-2-validator
+# Product and Policy (WS-00 / Agent 1)
+docs/product/** @eahernandezv
 
-# Agent 3 — Artistic QR Engineer
-/src/artistic/ @agent-3-artistic
-/tests/artistic/ @agent-3-artistic
-/docs/contracts/artistic-qr-api* @agent-3-artistic
+# Program and Integration (WS-13 / Agent 1)
+docs/program/** @eahernandezv
+infra/** @eahernandezv
+apps/web/src/app-shell/** @eahernandezv
+tests/contract/** @eahernandezv
+tests/e2e/** @eahernandezv
 
-# Agent 4 — Export Engineer
-/src/exporter/ @agent-4-exporter
-/tests/exporter/ @agent-4-exporter
+# Design System and Artistic Direction (WS-02 / qr-artist Agent 2)
+packages/design-system/** @eahernandezv
 
-# Agent 5 — Guest Purchase Engineer
-/src/purchase/ @agent-5-purchase
-/tests/purchase/ @agent-5-purchase
-/docs/contracts/guest-purchase-api* @agent-5-purchase
+# QR Core, Static Studio, Artistic Studio (WS-03 / qr-creator + qr-validator Agent 3)
+packages/qr-core/** @eahernandezv
+packages/artistic-qr/** @eahernandezv
+apps/web/src/features/static-studio/** @eahernandezv
+apps/web/src/features/artistic-studio/** @eahernandezv
 
-# Agent 6 — Entitlement Engineer
-/src/entitlement/ @agent-6-entitlement
-/tests/entitlement/ @agent-6-entitlement
+# Guest Commerce (WS-05 narrow subset / qr-checkout Agent 6)
+services/commerce/** @eahernandezv
 
-# Agent 7 — Web UI Engineer
-/src/web/ @agent-7-web
-/tests/web/ @agent-7-web
-
-# Agent 8 — Integration / QA Engineer
-/tests/integration/ @agent-8-integration
-/scripts/integration/ @agent-8-integration
-
-# Contracts and program files owned by integrator (me)
-/docs/program/ @eahernandezv
-/docs/charter.md @eahernandezv
-/docs/contracts/*.md @eahernandezv
-.github/workflows/ @eahernandezv
-CODEOWNERS @eahernandezv
+# Platform and Ops (WS-12 / qr-guardian Agent 7)
+packages/telemetry/** @eahernandezv
+.github/workflows/** @eahernandezv
