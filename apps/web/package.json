@@ -1,0 +1,7 @@
+{
+  "name": "@qr/web",
+  "version": "0.1.0",
+  "description": "Web Studio shell and feature modules",
+  "private": true,
+  "type": "module"
+}

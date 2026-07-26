@@ -1,0 +1,32 @@
+# Global fallback
+* @eahernandezv
+
+# Architecture and Contracts (WS-01 / Agent 1)
+docs/architecture/** @eahernandezv
+packages/contracts/** @eahernandezv
+
+# Product and Policy (WS-00 / Agent 1)
+docs/product/** @eahernandezv
+
+# Program and Integration (WS-13 / Agent 1)
+docs/program/** @eahernandezv
+infra/** @eahernandezv
+apps/web/src/app-shell/** @eahernandezv
+tests/contract/** @eahernandezv
+tests/e2e/** @eahernandezv
+
+# Design System and Artistic Direction (WS-02 / qr-artist Agent 2)
+packages/design-system/** @eahernandezv
+
+# QR Core, Static Studio, Artistic Studio (WS-03 / qr-creator + qr-validator Agent 3)
+packages/qr-core/** @eahernandezv
+packages/artistic-qr/** @eahernandezv
+apps/web/src/features/static-studio/** @eahernandezv
+apps/web/src/features/artistic-studio/** @eahernandezv
+
+# Guest Commerce (WS-05 narrow subset / qr-checkout Agent 6)
+services/commerce/** @eahernandezv
+
+# Platform and Ops (WS-12 / qr-guardian Agent 7)
+packages/telemetry/** @eahernandezv
+.github/workflows/** @eahernandezv

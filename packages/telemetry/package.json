@@ -1,0 +1,9 @@
+{
+  "name": "@qr/telemetry",
+  "version": "0.1.0",
+  "description": "Observability conventions and minimal event transport",
+  "private": true,
+  "scripts": {
+    "test": "echo 'Tests not yet configured'"
+  }
+}
