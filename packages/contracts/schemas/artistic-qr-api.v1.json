@@ -1,0 +1,161 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://qr.ernestohernan.dev/contracts/artistic-qr-api.v1.json",
+  "title": "Artistic QR API v1",
+  "description": "Artistic QR generation, validation, repair, export, and provenance contracts.",
+  "version": "1.0.0",
+  "definitions": {
+    "GenerationMode": {
+      "type": "string",
+      "enum": ["deterministic_template", "provider_generative"]
+    },
+    "CandidateState": {
+      "type": "string",
+      "enum": ["generating", "compositing", "scan_pending", "scan_passed", "scan_failed", "rejected_unsafe", "repaired", "exportable"]
+    },
+    "ArtDirection": {
+      "type": "string",
+      "enum": ["minimal", "gradient_mesh", "organic_flora", "circuit_board", "watercolor", "geometric_tessellation"]
+    },
+    "DecoderResult": {
+      "type": "object",
+      "required": ["decoded_payload", "matches_input", "scan_quality"],
+      "properties": {
+        "decoded_payload": { "type": "string" },
+        "matches_input": { "type": "boolean" },
+        "scan_quality": { "type": "number", "minimum": 0, "maximum": 1 },
+        "scale_tested": { "type": "number", "minimum": 0.1, "maximum": 3 }
+      }
+    },
+    "PerturbationSummary": {
+      "type": "object",
+      "properties": {
+        "blur_passed": { "type": "boolean" },
+        "compression_passed": { "type": "boolean" },
+        "contrast_passed": { "type": "boolean" },
+        "rotation_passed": { "type": "boolean" }
+      }
+    }
+  },
+  "endpoints": {
+    "generateCandidates": {
+      "input": {
+        "type": "object",
+        "required": ["matrix", "mode", "count"],
+        "properties": {
+          "matrix": { "$ref": "qr-core-api.v1.json#/definitions/QrMatrix" },
+          "mode": { "$ref": "#/definitions/GenerationMode" },
+          "art_direction": { "$ref": "#/definitions/ArtDirection" },
+          "style_overrides": { "type": "object" },
+          "count": { "type": "integer", "minimum": 1, "maximum": 12 },
+          "prompt": {
+            "type": "string",
+            "maxLength": 500,
+            "description": "Provider generative mode only. Not retained in public provenance."
+          },
+          "reference_image": {
+            "type": "string",
+            "format": "uri",
+            "description": "Data URI or temp URL. Not retained in public provenance."
+          }
+        }
+      },
+      "output": {
+        "type": "object",
+        "required": ["job_id", "candidates"],
+        "properties": {
+          "job_id": { "type": "string" },
+          "candidates": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["candidate_id", "state"],
+              "properties": {
+                "candidate_id": { "type": "string" },
+                "state": { "$ref": "#/definitions/CandidateState" },
+                "artifact_preview": { "type": "string" },
+                "preview_dimensions": {
+                  "type": "object",
+                  "properties": {
+                    "width": { "type": "integer" },
+                    "height": { "type": "integer" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "validateCandidate": {
+      "input": {
+        "type": "object",
+        "required": ["candidate_id", "matrix", "original_payload"],
+        "properties": {
+          "candidate_id": { "type": "string" },
+          "matrix": { "$ref": "qr-core-api.v1.json#/definitions/QrMatrix" },
+          "original_payload": { "type": "string" },
+          "test_suite_version": { "type": "string" }
+        }
+      },
+      "output": {
+        "type": "object",
+        "required": ["candidate_id", "scan_verdict", "export_allowed"],
+        "properties": {
+          "candidate_id": { "type": "string" },
+          "scan_verdict": { "type": "string", "enum": ["pass", "fail", "repairable", "needs_human_review"] },
+          "export_allowed": { "type": "boolean" },
+          "decoder_results": {
+            "type": "array",
+            "items": { "$ref": "#/definitions/DecoderResult" }
+          },
+          "perturbation_summary": { "$ref": "#/definitions/PerturbationSummary" },
+          "validation_version": { "type": "string" },
+          "repair_attempted": { "type": "boolean" },
+          "repair_successful": { "type": "boolean" }
+        }
+      }
+    },
+    "exportArtifact": {
+      "input": {
+        "type": "object",
+        "required": ["candidate_id", "format", "resolution"],
+        "properties": {
+          "candidate_id": { "type": "string" },
+          "format": { "type": "string", "enum": ["svg", "png", "pdf", "eps"] },
+          "resolution": { "type": "integer", "minimum": 300, "maximum": 1200 },
+          "include_provenance": { "type": "boolean", "default": true },
+          "allowance_verified": { "type": "boolean" }
+        }
+      },
+      "output": {
+        "type": "object",
+        "required": ["artifact_url", "format", "dimensions"],
+        "properties": {
+          "artifact_url": { "type": "string", "format": "uri" },
+          "format": { "type": "string", "enum": ["svg", "png", "pdf", "eps"] },
+          "dimensions": {
+            "type": "object",
+            "properties": {
+              "width_px": { "type": "integer" },
+              "height_px": { "type": "integer" },
+              "dpi": { "type": "integer" }
+            }
+          },
+          "provenance": {
+            "type": "object",
+            "description": "Non-sensitive generation metadata only. No prompts/reference images.",
+            "properties": {
+              "generation_mode": { "$ref": "#/definitions/GenerationMode" },
+              "provider": { "type": "string" },
+              "model_version": { "type": "string" },
+              "validation_version": { "type": "string" },
+              "generation_time_ms": { "type": "integer" },
+              "candidate_index": { "type": "integer" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

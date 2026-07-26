@@ -1,0 +1,114 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://qr.ernestohernan.dev/contracts/qr-core-api.v1.json",
+  "title": "QR Core API v1",
+  "description": "Payload normalization, QR matrix, and deterministic rendering contracts.",
+  "version": "1.0.0",
+  "definitions": {
+    "PayloadType": {
+      "type": "string",
+      "enum": ["url", "text", "email", "phone", "wifi", "vcard"]
+    },
+    "QrMatrix": {
+      "type": "object",
+      "required": ["version", "mask", "module_size", "modules"],
+      "properties": {
+        "version": { "type": "integer", "minimum": 1, "maximum": 40 },
+        "mask": { "type": "integer", "minimum": 0, "maximum": 7 },
+        "module_size": { "type": "integer", "enum": [21, 25, 29, 33, 37, 41, 45, 49, 53, 57, 61, 65, 69, 73, 77, 81, 85, 89, 93, 97, 101, 105, 109, 113, 117, 121, 125, 129, 133, 137, 141, 145, 149, 153, 157, 161, 165, 169, 173, 177] },
+        "modules": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": { "type": "boolean" }
+          }
+        }
+      }
+    },
+    "StyleConfig": {
+      "type": "object",
+      "required": ["shape", "color_primary", "color_background"],
+      "properties": {
+        "shape": { "type": "string", "enum": ["square", "rounded", "dot", "custom"] },
+        "color_primary": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" },
+        "color_background": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" },
+        "gradient": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "from": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" },
+            "to": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" },
+            "angle": { "type": "integer", "minimum": 0, "maximum": 360 }
+          }
+        },
+        "border_width": { "type": "integer", "minimum": 0, "maximum": 10 },
+        "quiet_zone": { "type": "integer", "minimum": 1, "maximum": 8 }
+      }
+    }
+  },
+  "endpoints": {
+    "normalizePayload": {
+      "input": {
+        "type": "object",
+        "required": ["type", "content"],
+        "properties": {
+          "type": { "$ref": "#/definitions/PayloadType" },
+          "content": { "type": "string", "maxLength": 4296 },
+          "metadata": { "type": "object" }
+        }
+      },
+      "output": {
+        "type": "object",
+        "required": ["normalized", "payload_type", "error_correction_capacity"],
+        "properties": {
+          "normalized": { "type": "string", "maxLength": 4296 },
+          "payload_type": { "$ref": "#/definitions/PayloadType" },
+          "error_correction_capacity": { "type": "string", "enum": ["L", "M", "Q", "H"] },
+          "warnings": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "generateMatrix": {
+      "input": {
+        "type": "object",
+        "required": ["normalized_payload", "error_correction"],
+        "properties": {
+          "normalized_payload": { "type": "string", "maxLength": 4296 },
+          "error_correction": { "type": "string", "enum": ["L", "M", "Q", "H"] },
+          "min_version": { "type": "integer", "minimum": 1, "maximum": 40 }
+        }
+      },
+      "output": {
+        "$ref": "#/definitions/QrMatrix"
+      }
+    },
+    "renderDeterministic": {
+      "input": {
+        "type": "object",
+        "required": ["matrix", "style"],
+        "properties": {
+          "matrix": { "$ref": "#/definitions/QrMatrix" },
+          "style": { "$ref": "#/definitions/StyleConfig" },
+          "format": { "type": "string", "enum": ["svg", "png", "canvas"] },
+          "scale": { "type": "integer", "minimum": 1, "maximum": 20 }
+        }
+      },
+      "output": {
+        "type": "object",
+        "required": ["artifact", "format", "dimensions"],
+        "properties": {
+          "artifact": { "type": "string" },
+          "format": { "type": "string", "enum": ["svg", "png", "canvas"] },
+          "dimensions": {
+            "type": "object",
+            "required": ["width", "height"],
+            "properties": {
+              "width": { "type": "integer" },
+              "height": { "type": "integer" }
+            }
+          }
+        }
+      }
+    }
+  }
+}
