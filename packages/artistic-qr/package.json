@@ -5,9 +5,17 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./api": "./src/api/index.js"
+    ".": "./dist/index.js",
+    "./api": "./dist/api/index.js"
   },
   "scripts": {
-    "test": "echo 'Tests not yet configured'"
+    "build": "tsc",
+    "test": "node --test dist/**/*.test.js"
+  },
+  "dependencies": {
+    "@qr/qr-core": "0.1.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0"
   }
 }
