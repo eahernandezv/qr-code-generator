@@ -2,16 +2,15 @@
   "name": "qr-code-generator",
   "version": "0.1.0",
   "private": true,
-  "description": "Artistic QR Code Generator — Flagship MVP",
+  "description": "Artistic QR Code Generator - Flagship MVP",
+  "type": "module",
   "workspaces": [
     "packages/*",
-    "apps/*",
-    "services/*"
+    "apps/*"
   ],
   "scripts": {
-    "build": "echo 'Build script not yet configured'",
-    "test": "echo 'Test script not yet configured'",
-    "lint": "echo 'Lint script not yet configured'"
-  },
-  "packageManager": "pnpm@9.0.0"
+    "build": "npm run build --workspaces",
+    "test": "npm test --workspaces",
+    "lint": "npm run lint --workspaces"
+  }
 }

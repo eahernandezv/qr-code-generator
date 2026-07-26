@@ -1,1 +1,21 @@
-{"name":"@qr/artistic-qr","version":"0.1.0","description":"Artistic QR generation, validation, repair, and export","private":true,"type":"module","scripts":{"test":"echo 'Tests not yet configured'"}}
+{
+  "name": "@qr/artistic-qr",
+  "version": "0.1.0",
+  "description": "Artistic QR generation, validation, repair, and export",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./dist/index.js",
+    "./api": "./dist/api/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "node --test dist/**/*.test.js"
+  },
+  "dependencies": {
+    "@qr/qr-core": "0.1.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0"
+  }
+}

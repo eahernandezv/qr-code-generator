@@ -1,1 +1,14 @@
-{"name":"@qr/web","version":"0.1.0","description":"Web Studio shell and feature modules","private":true,"type":"module"}
+{
+  "name": "@qr/web",
+  "version": "0.1.0",
+  "description": "Web Studio shell and feature modules",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@qr/contracts": "0.1.0",
+    "@qr/qr-core": "0.1.0",
+    "@qr/artistic-qr": "0.1.0",
+    "@qr/design-system": "0.1.0",
+    "@qr/telemetry": "0.1.0"
+  }
+}

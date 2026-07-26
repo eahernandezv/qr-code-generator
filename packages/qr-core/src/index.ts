@@ -3,7 +3,7 @@
  * Owned by WS-03 (qr-creator)
  */
 
-export { normalizePayload, generateMatrix, renderDeterministic } from './api/index.js';
+export { normalizePayload, generateMatrix, renderDeterministic, decodeMatrix } from './api/index.js';
 export type {
   QrPayload,
   NormalizedPayload,
@@ -14,7 +14,4 @@ export type {
   FunctionalRegions,
   FinderPattern,
   TimingPattern,
-  ErrorCorrectionLevel,
-  QrMode,
-  ModuleShape,
 } from './types.js';

@@ -1,161 +1,332 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://qr.ernestohernan.dev/contracts/artistic-qr-api.v1.json",
+  "$id": "https://qr.ernesto.dev/schemas/artistic-qr-api.v1.json",
   "title": "Artistic QR API v1",
-  "description": "Artistic QR generation, validation, repair, export, and provenance contracts.",
+  "description": "Contracts for artistic QR generation, candidate validation, repair, and export. Owned by WS-03 (qr-creator).",
   "version": "1.0.0",
   "definitions": {
-    "GenerationMode": {
-      "type": "string",
-      "enum": ["deterministic_template", "provider_generative"]
-    },
-    "CandidateState": {
-      "type": "string",
-      "enum": ["generating", "compositing", "scan_pending", "scan_passed", "scan_failed", "rejected_unsafe", "repaired", "exportable"]
-    },
     "ArtDirection": {
-      "type": "string",
-      "enum": ["minimal", "gradient_mesh", "organic_flora", "circuit_board", "watercolor", "geometric_tessellation"]
-    },
-    "DecoderResult": {
       "type": "object",
-      "required": ["decoded_payload", "matches_input", "scan_quality"],
+      "required": ["id", "name", "style", "description"],
       "properties": {
-        "decoded_payload": { "type": "string" },
-        "matches_input": { "type": "boolean" },
-        "scan_quality": { "type": "number", "minimum": 0, "maximum": 1 },
-        "scale_tested": { "type": "number", "minimum": 0.1, "maximum": 3 }
+        "id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+        "name": { "type": "string" },
+        "style": {
+          "type": "string",
+          "enum": [
+            "editorial-illustration",
+            "organic-botanical",
+            "architectural-geometric",
+            "photographic-cinematic",
+            "premium-minimal",
+            "playful-character"
+          ]
+        },
+        "description": { "type": "string" },
+        "isGenerative": { "type": "boolean", "default": false },
+        "deterministicTemplate": {
+          "type": "object",
+          "properties": {
+            "templateId": { "type": "string" },
+            "requiresVector": { "type": "boolean", "default": false }
+          }
+        }
       }
     },
-    "PerturbationSummary": {
+    "GenerationRequest": {
       "type": "object",
+      "required": ["normalizedPayload", "mode"],
       "properties": {
-        "blur_passed": { "type": "boolean" },
-        "compression_passed": { "type": "boolean" },
-        "contrast_passed": { "type": "boolean" },
-        "rotation_passed": { "type": "boolean" }
+        "normalizedPayload": {
+          "type": "object",
+          "description": "Reference to NormalizedPayload from qr-core-api.v1"
+        },
+        "mode": {
+          "type": "string",
+          "enum": ["deterministic_template", "provider_generative"],
+          "description": "Generation mode"
+        },
+        "artDirectionId": {
+          "type": "string",
+          "description": "Selected art direction (required for deterministic; optional for generative)"
+        },
+        "prompt": {
+          "type": "string",
+          "maxLength": 2000,
+          "description": "User creative prompt (generative mode only, subject to safety review)"
+        },
+        "referenceImage": {
+          "type": "object",
+          "description": "Reference image metadata (generative mode only)",
+          "properties": {
+            "mimeType": { "type": "string", "enum": ["image/png", "image/jpeg", "image/webp"] },
+            "width": { "type": "integer" },
+            "height": { "type": "integer" },
+            "hash": { "type": "string", "description": "SHA-256 hash of image bytes for deduplication/integrity" }
+          }
+        },
+        "artisticStrength": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 0.5,
+          "description": "0 = minimal artistic treatment, 1 = maximum artistic integration"
+        },
+        "palette": {
+          "type": "object",
+          "properties": {
+            "primary": { "type": "string", "description": "Primary color hex" },
+            "secondary": { "type": "string", "description": "Secondary color hex" },
+            "accent": { "type": "string", "description": "Accent color hex" },
+            "background": { "type": "string", "description": "Background color hex" }
+          }
+        },
+        "composition": {
+          "type": "object",
+          "properties": {
+            "focalArea": {
+              "type": "string",
+              "enum": ["center", "top", "bottom", "left", "right", "balanced"],
+              "default": "balanced"
+            },
+            "qrProminence": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "default": 0.6,
+              "description": "How visually prominent the QR pattern should be"
+            }
+          }
+        },
+        "seed": {
+          "type": "integer",
+          "description": "Deterministic seed for reproducible generation where supported"
+        }
+      }
+    },
+    "Candidate": {
+      "type": "object",
+      "required": ["candidateId", "matrixRef", "rendered", "scanResults", "exportAllowed", "artisticScore"],
+      "properties": {
+        "candidateId": { "type": "string", "format": "uuid" },
+        "matrixRef": { "type": "string", "description": "Reference to base QR matrix (from qr-core-api.v1)" },
+        "rendered": {
+          "type": "object",
+          "required": ["format", "data", "width", "height"],
+          "properties": {
+            "format": { "type": "string", "enum": ["svg", "png-dataurl"] },
+            "data": { "type": "string" },
+            "width": { "type": "integer" },
+            "height": { "type": "integer" }
+          }
+        },
+        "scanResults": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/ScanValidationResult" }
+        },
+        "exportAllowed": { "type": "boolean", "description": "True only if scan validation passes threshold" },
+        "artisticScore": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Internal quality score (not customer-facing guarantee)"
+        },
+        "provenance": {
+          "type": "object",
+          "properties": {
+            "generationMode": { "type": "string" },
+            "provider": { "type": "string" },
+            "modelVersion": { "type": "string" },
+            "adapterVersion": { "type": "string" },
+            "validationVersion": { "type": "string" },
+            "createdAt": { "type": "string", "format": "date-time" }
+          }
+        }
+      }
+    },
+    "ScanValidationResult": {
+      "type": "object",
+      "required": ["pass", "decoder", "version", "thresholdVersion", "scannedPayload", "tests"],
+      "properties": {
+        "pass": { "type": "boolean" },
+        "decoder": { "type": "string" },
+        "version": { "type": "string" },
+        "thresholdVersion": { "type": "string" },
+        "scannedPayload": { "type": "string" },
+        "tests": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "pass", "scale"],
+            "properties": {
+              "name": { "type": "string" },
+              "pass": { "type": "boolean" },
+              "scale": { "type": "number" },
+              "perturbation": { "type": "string", "enum": ["none", "blur", "noise", "contrast", "rotation", "perspective"] },
+              "details": { "type": "object" }
+            }
+          }
+        },
+        "overallConfidence": {
+          "type": "string",
+          "enum": ["high", "medium", "low", "failed"],
+          "description": "Honest confidence label, never implies universal device guarantee"
+        }
+      }
+    },
+    "GenerationBoard": {
+      "type": "object",
+      "required": ["boardId", "request", "candidates", "status"],
+      "properties": {
+        "boardId": { "type": "string", "format": "uuid" },
+        "request": { "$ref": "#/definitions/GenerationRequest" },
+        "candidates": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/Candidate" },
+          "minItems": 1,
+          "maxItems": 4
+        },
+        "status": {
+          "type": "string",
+          "enum": ["pending", "generating", "validating", "completed", "failed", "cancelled"]
+        },
+        "failure": {
+          "type": "object",
+          "properties": {
+            "code": { "type": "string" },
+            "message": { "type": "string" },
+            "retryable": { "type": "boolean" },
+            "safeFallbackAvailable": { "type": "boolean" }
+          }
+        }
+      }
+    },
+    "ExportRequest": {
+      "type": "object",
+      "required": ["candidateId", "formats"],
+      "properties": {
+        "candidateId": { "type": "string", "format": "uuid" },
+        "formats": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["png", "svg"]
+          },
+          "minItems": 1
+        },
+        "sizes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "label": { "type": "string" },
+              "widthPx": { "type": "integer" },
+              "heightPx": { "type": "integer" },
+              "dpi": { "type": "integer" }
+            }
+          }
+        }
+      }
+    },
+    "ExportArtifact": {
+      "type": "object",
+      "required": ["artifactId", "candidateId", "files", "provenance"],
+      "properties": {
+        "artifactId": { "type": "string", "format": "uuid" },
+        "candidateId": { "type": "string", "format": "uuid" },
+        "files": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["format", "data", "width", "height"],
+            "properties": {
+              "format": { "type": "string", "enum": ["png", "svg"] },
+              "data": { "type": "string" },
+              "width": { "type": "integer" },
+              "height": { "type": "integer" }
+            }
+          }
+        },
+        "provenance": {
+          "type": "object",
+          "properties": {
+            "generationMode": { "type": "string" },
+            "provider": { "type": "string" },
+            "modelVersion": { "type": "string" },
+            "adapterVersion": { "type": "string" },
+            "validationVersion": { "type": "string" }
+          }
+        }
       }
     }
   },
-  "endpoints": {
+  "methods": {
     "generateCandidates": {
-      "input": {
-        "type": "object",
-        "required": ["matrix", "mode", "count"],
-        "properties": {
-          "matrix": { "$ref": "qr-core-api.v1.json#/definitions/QrMatrix" },
-          "mode": { "$ref": "#/definitions/GenerationMode" },
-          "art_direction": { "$ref": "#/definitions/ArtDirection" },
-          "style_overrides": { "type": "object" },
-          "count": { "type": "integer", "minimum": 1, "maximum": 12 },
-          "prompt": {
-            "type": "string",
-            "maxLength": 500,
-            "description": "Provider generative mode only. Not retained in public provenance."
-          },
-          "reference_image": {
-            "type": "string",
-            "format": "uri",
-            "description": "Data URI or temp URL. Not retained in public provenance."
-          }
-        }
-      },
-      "output": {
-        "type": "object",
-        "required": ["job_id", "candidates"],
-        "properties": {
-          "job_id": { "type": "string" },
-          "candidates": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "required": ["candidate_id", "state"],
-              "properties": {
-                "candidate_id": { "type": "string" },
-                "state": { "$ref": "#/definitions/CandidateState" },
-                "artifact_preview": { "type": "string" },
-                "preview_dimensions": {
-                  "type": "object",
-                  "properties": {
-                    "width": { "type": "integer" },
-                    "height": { "type": "integer" }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
+      "description": "Generate a board of artistic QR candidates from a request.",
+      "input": { "$ref": "#/definitions/GenerationRequest" },
+      "output": { "$ref": "#/definitions/GenerationBoard" },
+      "errors": [
+        { "code": "GENERATION_FAILED", "message": "Candidate generation failed" },
+        { "code": "PROVIDER_UNAVAILABLE", "message": "Generative provider is not available" },
+        { "code": "SAFETY_REJECTED", "message": "Prompt or reference image failed safety checks" },
+        { "code": "UNSUPPORTED_MODE", "message": "Requested generation mode is not enabled" },
+        { "code": "ALLOWANCE_EXHAUSTED", "message": "Generation allowance for this session/project is exhausted" }
+      ]
     },
     "validateCandidate": {
+      "description": "Run scan validation suite on a single candidate.",
       "input": {
         "type": "object",
-        "required": ["candidate_id", "matrix", "original_payload"],
+        "required": ["candidateId", "matrixRef", "rendered"],
         "properties": {
-          "candidate_id": { "type": "string" },
-          "matrix": { "$ref": "qr-core-api.v1.json#/definitions/QrMatrix" },
-          "original_payload": { "type": "string" },
-          "test_suite_version": { "type": "string" }
-        }
-      },
-      "output": {
-        "type": "object",
-        "required": ["candidate_id", "scan_verdict", "export_allowed"],
-        "properties": {
-          "candidate_id": { "type": "string" },
-          "scan_verdict": { "type": "string", "enum": ["pass", "fail", "repairable", "needs_human_review"] },
-          "export_allowed": { "type": "boolean" },
-          "decoder_results": {
-            "type": "array",
-            "items": { "$ref": "#/definitions/DecoderResult" }
-          },
-          "perturbation_summary": { "$ref": "#/definitions/PerturbationSummary" },
-          "validation_version": { "type": "string" },
-          "repair_attempted": { "type": "boolean" },
-          "repair_successful": { "type": "boolean" }
-        }
-      }
-    },
-    "exportArtifact": {
-      "input": {
-        "type": "object",
-        "required": ["candidate_id", "format", "resolution"],
-        "properties": {
-          "candidate_id": { "type": "string" },
-          "format": { "type": "string", "enum": ["svg", "png", "pdf", "eps"] },
-          "resolution": { "type": "integer", "minimum": 300, "maximum": 1200 },
-          "include_provenance": { "type": "boolean", "default": true },
-          "allowance_verified": { "type": "boolean" }
-        }
-      },
-      "output": {
-        "type": "object",
-        "required": ["artifact_url", "format", "dimensions"],
-        "properties": {
-          "artifact_url": { "type": "string", "format": "uri" },
-          "format": { "type": "string", "enum": ["svg", "png", "pdf", "eps"] },
-          "dimensions": {
+          "candidateId": { "type": "string", "format": "uuid" },
+          "matrixRef": { "type": "string" },
+          "rendered": {
             "type": "object",
+            "required": ["format", "data", "width", "height"],
             "properties": {
-              "width_px": { "type": "integer" },
-              "height_px": { "type": "integer" },
-              "dpi": { "type": "integer" }
-            }
-          },
-          "provenance": {
-            "type": "object",
-            "description": "Non-sensitive generation metadata only. No prompts/reference images.",
-            "properties": {
-              "generation_mode": { "$ref": "#/definitions/GenerationMode" },
-              "provider": { "type": "string" },
-              "model_version": { "type": "string" },
-              "validation_version": { "type": "string" },
-              "generation_time_ms": { "type": "integer" },
-              "candidate_index": { "type": "integer" }
+              "format": { "type": "string" },
+              "data": { "type": "string" },
+              "width": { "type": "integer" },
+              "height": { "type": "integer" }
             }
           }
         }
-      }
+      },
+      "output": { "$ref": "#/definitions/ScanValidationResult" },
+      "errors": [
+        { "code": "VALIDATION_FAILED", "message": "Scan validation could not complete" },
+        { "code": "NO_DECODER", "message": "No decoder available for validation" }
+      ]
+    },
+    "exportArtifact": {
+      "description": "Export a validated candidate to publication-ready formats.",
+      "input": { "$ref": "#/definitions/ExportRequest" },
+      "output": { "$ref": "#/definitions/ExportArtifact" },
+      "errors": [
+        { "code": "EXPORT_FAILED", "message": "Export could not be completed" },
+        { "code": "NOT_VALIDATED", "message": "Candidate has not passed scan validation" },
+        { "code": "UNSUPPORTED_FORMAT", "message": "Requested export format is not available for this candidate" }
+      ]
+    },
+    "repairCandidate": {
+      "description": "Apply targeted repair to a candidate and re-validate.",
+      "input": {
+        "type": "object",
+        "required": ["candidateId", "repairStrategy"],
+        "properties": {
+          "candidateId": { "type": "string", "format": "uuid" },
+          "repairStrategy": {
+            "type": "string",
+            "enum": ["contrast_boost", "quiet_zone_enforce", "module_reinforce", "error_correction_upgrade", "composite_rerender"]
+          }
+        }
+      },
+      "output": { "$ref": "#/definitions/Candidate" },
+      "errors": [
+        { "code": "REPAIR_FAILED", "message": "Repair did not produce a scannable candidate" },
+        { "code": "NO_REPAIR_POSSIBLE", "message": "No repair strategy improved scan results" }
+      ]
     }
   }
 }
