@@ -1,0 +1,66 @@
+{
+  "description": "Valid artistic candidate with export_allowed=true",
+  "fixture_type": "valid",
+  "contract": "artistic-qr-api.v1",
+  "candidate": {
+    "id": "cand-11111111-1111-1111-1111-111111111111",
+    "state": "export_ready",
+    "provenance": {
+      "mode": "deterministic_template",
+      "template_id": "botanical-v1",
+      "provider": "local",
+      "model": "qr-core-template",
+      "model_version": "1.0.0",
+      "artistic_strength": 0.6,
+      "generation_latency_ms": 120,
+      "normalized_payload_ref": "sha256:abc123"
+    },
+    "validation": {
+      "suite_version": "1.0.0",
+      "perturbation_tests": [
+        {
+          "name": "blur",
+          "params": { "sigma": 1.2 },
+          "decoder_results": [
+            { "decoder": "zxing", "scanned": true, "confidence": 0.95, "payload_match": true, "latency_ms": 14 },
+            { "decoder": "jsqr", "scanned": true, "confidence": 0.92, "payload_match": true, "latency_ms": 8 }
+          ]
+        },
+        {
+          "name": "compression",
+          "params": { "quality": 0.7 },
+          "decoder_results": [
+            { "decoder": "zxing", "scanned": true, "confidence": 0.91, "payload_match": true, "latency_ms": 12 },
+            { "decoder": "jsqr", "scanned": true, "confidence": 0.89, "payload_match": true, "latency_ms": 9 }
+          ]
+        },
+        {
+          "name": "contrast",
+          "params": { "factor": 0.8 },
+          "decoder_results": [
+            { "decoder": "zxing", "scanned": true, "confidence": 0.88, "payload_match": true, "latency_ms": 11 },
+            { "decoder": "jsqr", "scanned": true, "confidence": 0.85, "payload_match": true, "latency_ms": 7 }
+          ]
+        },
+        {
+          "name": "rotation",
+          "params": { "angle": 15 },
+          "decoder_results": [
+            { "decoder": "zxing", "scanned": true, "confidence": 0.82, "payload_match": true, "latency_ms": 16 },
+            { "decoder": "jsqr", "scanned": true, "confidence": 0.80, "payload_match": true, "latency_ms": 10 }
+          ]
+        }
+      ],
+      "decoder_matrix": [
+        { "decoder": "zxing", "scanned": true, "confidence": 0.99, "payload_match": true, "latency_ms": 5 },
+        { "decoder": "jsqr", "scanned": true, "confidence": 0.98, "payload_match": true, "latency_ms": 4 },
+        { "decoder": "quirc", "scanned": true, "confidence": 0.97, "payload_match": true, "latency_ms": 6 }
+      ],
+      "scan_verdict": "pass",
+      "repair_attempted": false,
+      "repair_cycles": 0,
+      "export_allowed": true,
+      "threshold_note": "All decoders passed at baseline and under perturbation."
+    }
+  }
+}

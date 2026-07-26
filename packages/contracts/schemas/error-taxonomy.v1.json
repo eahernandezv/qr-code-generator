@@ -1,0 +1,157 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://qr.example.com/schemas/error-taxonomy.v1.json",
+  "title": "Error Taxonomy v1",
+  "description": "Stable error codes for cross-workstream APIs.",
+  "version": "1.0.0",
+  "status": "frozen",
+  "definitions": {
+    "ErrorCode": {
+      "type": "string",
+      "enum": [
+        "QR_PAYLOAD_TOO_LONG",
+        "QR_PAYLOAD_INVALID",
+        "QR_UNSUPPORTED_MODE",
+        "QR_MATRIX_GENERATION_FAILED",
+        "QR_RENDER_FAILED",
+        "ARTISTIC_INVALID_INPUT",
+        "ARTISTIC_PROVIDER_TIMEOUT",
+        "ARTISTIC_PROVIDER_FAILURE",
+        "ARTISTIC_MODERATION_BLOCKED",
+        "ARTISTIC_UNSCANNABLE",
+        "ARTISTIC_REPAIR_EXHAUSTED",
+        "ARTISTIC_EXPORT_NOT_ALLOWED",
+        "ARTISTIC_SAFE_FALLBACK_USED",
+        "VALIDATION_SUITE_ERROR",
+        "VALIDATION_DECODER_UNAVAILABLE",
+        "ALLOWANCE_EXHAUSTED",
+        "IDEMPOTENCY_KEY_CONFLICT",
+        "REQUEST_TIMEOUT",
+        "INTERNAL_ERROR",
+        "NOT_IMPLEMENTED"
+      ]
+    },
+    "ErrorEnvelope": {
+      "type": "object",
+      "required": ["code", "message", "request_id"],
+      "properties": {
+        "code": { "$ref": "#/definitions/ErrorCode" },
+        "message": { "type": "string", "maxLength": 512 },
+        "request_id": { "type": "string", "format": "uuid" },
+        "retryable": { "type": "boolean", "default": false },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "field": { "type": "string" },
+              "issue": { "type": "string" }
+            }
+          }
+        }
+      }
+    }
+  },
+  "errorCatalog": {
+    "QR_PAYLOAD_TOO_LONG": {
+      "message": "Payload exceeds maximum length for the selected QR version and error correction level.",
+      "retryable": false,
+      "http_status": 400
+    },
+    "QR_PAYLOAD_INVALID": {
+      "message": "Payload contains invalid characters or an unsupported scheme.",
+      "retryable": false,
+      "http_status": 400
+    },
+    "QR_UNSUPPORTED_MODE": {
+      "message": "The payload requires a QR encoding mode not supported by this version.",
+      "retryable": false,
+      "http_status": 400
+    },
+    "QR_MATRIX_GENERATION_FAILED": {
+      "message": "QR matrix generation failed due to an internal error.",
+      "retryable": true,
+      "http_status": 500
+    },
+    "QR_RENDER_FAILED": {
+      "message": "QR rendering to the requested format failed.",
+      "retryable": true,
+      "http_status": 500
+    },
+    "ARTISTIC_INVALID_INPUT": {
+      "message": "Artistic generation input failed validation.",
+      "retryable": false,
+      "http_status": 400
+    },
+    "ARTISTIC_PROVIDER_TIMEOUT": {
+      "message": "Artistic provider did not return a candidate within the allowed time.",
+      "retryable": true,
+      "http_status": 504
+    },
+    "ARTISTIC_PROVIDER_FAILURE": {
+      "message": "Artistic provider returned an error or incomplete response.",
+      "retryable": true,
+      "http_status": 502
+    },
+    "ARTISTIC_MODERATION_BLOCKED": {
+      "message": "Content safety check blocked the artistic generation request.",
+      "retryable": false,
+      "http_status": 400
+    },
+    "ARTISTIC_UNSCANNABLE": {
+      "message": "Candidate did not pass the minimum scan-validation threshold.",
+      "retryable": false,
+      "http_status": 400
+    },
+    "ARTISTIC_REPAIR_EXHAUSTED": {
+      "message": "Closed-loop repair reached the maximum number of cycles without success.",
+      "retryable": false,
+      "http_status": 400
+    },
+    "ARTISTIC_EXPORT_NOT_ALLOWED": {
+      "message": "Export is not allowed until scan_verdict is 'pass'.",
+      "retryable": false,
+      "http_status": 403
+    },
+    "ARTISTIC_SAFE_FALLBACK_USED": {
+      "message": "A safe deterministic fallback was used because the artistic candidate failed validation.",
+      "retryable": false,
+      "http_status": 200
+    },
+    "VALIDATION_SUITE_ERROR": {
+      "message": "The validation test suite encountered an internal error.",
+      "retryable": true,
+      "http_status": 500
+    },
+    "VALIDATION_DECODER_UNAVAILABLE": {
+      "message": "A requested decoder is not available in the current environment.",
+      "retryable": false,
+      "http_status": 503
+    },
+    "ALLOWANCE_EXHAUSTED": {
+      "message": "No remaining generation allowance for this project.",
+      "retryable": false,
+      "http_status": 403
+    },
+    "IDEMPOTENCY_KEY_CONFLICT": {
+      "message": "The provided idempotency key is already in use with different parameters.",
+      "retryable": false,
+      "http_status": 409
+    },
+    "REQUEST_TIMEOUT": {
+      "message": "The request exceeded its deadline.",
+      "retryable": true,
+      "http_status": 408
+    },
+    "INTERNAL_ERROR": {
+      "message": "An unexpected internal error occurred.",
+      "retryable": true,
+      "http_status": 500
+    },
+    "NOT_IMPLEMENTED": {
+      "message": "This feature is not yet implemented.",
+      "retryable": false,
+      "http_status": 501
+    }
+  }
+}

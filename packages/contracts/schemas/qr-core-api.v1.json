@@ -1,0 +1,106 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://qr.example.com/schemas/qr-core-api.v1.json",
+  "title": "QR Core API v1",
+  "description": "Payload normalization, QR matrix generation, functional masks, and deterministic rendering contracts.",
+  "version": "1.0.0",
+  "status": "frozen",
+  "definitions": {
+    "NormalizedPayload": {
+      "type": "object",
+      "required": ["original", "normalized", "mode", "version"],
+      "properties": {
+        "original": { "type": "string", "maxLength": 4096 },
+        "normalized": { "type": "string", "maxLength": 4096 },
+        "mode": { "type": "string", "enum": ["numeric", "alphanumeric", "byte", "kanji"] },
+        "version": { "type": "integer", "minimum": 1, "maximum": 40 },
+        "ec_level": { "type": "string", "enum": ["L", "M", "Q", "H"], "default": "M" },
+        "mask_pattern": { "type": "integer", "minimum": 0, "maximum": 7 }
+      }
+    },
+    "QRMatrix": {
+      "type": "object",
+      "required": ["size", "modules", "version", "ec_level", "mask_pattern"],
+      "properties": {
+        "size": { "type": "integer", "minimum": 21, "maximum": 177 },
+        "modules": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": { "type": "integer", "enum": [0, 1, -1] }
+          }
+        },
+        "version": { "type": "integer", "minimum": 1, "maximum": 40 },
+        "ec_level": { "type": "string", "enum": ["L", "M", "Q", "H"] },
+        "mask_pattern": { "type": "integer", "minimum": 0, "maximum": 7 },
+        "functional_mask": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": { "type": "boolean" }
+          }
+        }
+      }
+    },
+    "RenderOptions": {
+      "type": "object",
+      "properties": {
+        "format": { "type": "string", "enum": ["svg", "png", "canvas"] },
+        "size": { "type": "integer", "minimum": 64, "maximum": 4096 },
+        "quiet_zone": { "type": "integer", "minimum": 0, "maximum": 16, "default": 4 },
+        "color_dark": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$", "default": "#000000" },
+        "color_light": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$", "default": "#ffffff" }
+      }
+    },
+    "RenderedOutput": {
+      "type": "object",
+      "required": ["format", "data", "width", "height"],
+      "properties": {
+        "format": { "type": "string", "enum": ["svg", "png", "canvas"] },
+        "data": { "type": "string" },
+        "width": { "type": "integer" },
+        "height": { "type": "integer" },
+        "mime_type": { "type": "string" }
+      }
+    }
+  },
+  "methods": {
+    "normalizePayload": {
+      "description": "Normalize and validate a QR payload",
+      "input": {
+        "type": "object",
+        "required": ["payload"],
+        "properties": {
+          "payload": { "type": "string", "maxLength": 4096 },
+          "ec_level": { "type": "string", "enum": ["L", "M", "Q", "H"] }
+        }
+      },
+      "output": { "$ref": "#/definitions/NormalizedPayload" }
+    },
+    "generateMatrix": {
+      "description": "Generate a QR matrix from a normalized payload",
+      "input": {
+        "type": "object",
+        "required": ["normalized_payload"],
+        "properties": {
+          "normalized_payload": { "$ref": "#/definitions/NormalizedPayload" },
+          "min_version": { "type": "integer", "minimum": 1, "maximum": 40 },
+          "mask_pattern": { "type": "integer", "minimum": 0, "maximum": 7 }
+        }
+      },
+      "output": { "$ref": "#/definitions/QRMatrix" }
+    },
+    "render": {
+      "description": "Deterministically render a QR matrix to an output format",
+      "input": {
+        "type": "object",
+        "required": ["matrix", "options"],
+        "properties": {
+          "matrix": { "$ref": "#/definitions/QRMatrix" },
+          "options": { "$ref": "#/definitions/RenderOptions" }
+        }
+      },
+      "output": { "$ref": "#/definitions/RenderedOutput" }
+    }
+  }
+}

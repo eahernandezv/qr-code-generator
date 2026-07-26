@@ -10,7 +10,7 @@
     "./src/*": "./src/*"
   },
   "scripts": {
-    "lint": "echo 'Schema lint not yet configured'",
-    "test": "echo 'Fixture tests not yet configured'"
+    "lint": "node -e \"console.log('Schema lint not yet configured')\"",
+    "test": "node -e \"console.log('Fixture tests not yet configured')\""
   }
 }

@@ -1,0 +1,13 @@
+{
+  "description": "Valid normalized payload for a short URL",
+  "fixture_type": "valid",
+  "contract": "qr-core-api.v1",
+  "payload": {
+    "original": "https://example.com/campaign/abc123",
+    "normalized": "https://example.com/campaign/abc123",
+    "mode": "byte",
+    "version": 3,
+    "ec_level": "M",
+    "mask_pattern": 2
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "description": "Valid QR matrix for version 3, M error correction",
+  "fixture_type": "valid",
+  "contract": "qr-core-api.v1",
+  "matrix": {
+    "size": 29,
+    "version": 3,
+    "ec_level": "M",
+    "mask_pattern": 2,
+    "modules": [],
+    "functional_mask": []
+  }
+}

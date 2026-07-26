@@ -1,0 +1,12 @@
+{
+  "description": "Invalid payload exceeding max length",
+  "fixture_type": "invalid",
+  "contract": "qr-core-api.v1",
+  "payload": {
+    "original": "https://example.com/" ,
+    "normalized": "https://example.com/",
+    "mode": "byte",
+    "version": 1,
+    "ec_level": "L"
+  }
+}

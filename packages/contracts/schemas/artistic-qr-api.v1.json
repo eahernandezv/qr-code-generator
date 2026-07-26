@@ -1,0 +1,175 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://qr.example.com/schemas/artistic-qr-api.v1.json",
+  "title": "Artistic QR API v1",
+  "description": "Artistic QR generation, validation, repair, and export contracts.",
+  "version": "1.0.0",
+  "status": "frozen",
+  "definitions": {
+    "GenerationMode": {
+      "type": "string",
+      "enum": ["deterministic_template", "provider_generative"]
+    },
+    "CandidateState": {
+      "type": "string",
+      "enum": ["composing", "pending_validation", "validated", "failed_validation", "repaired", "export_ready", "rejected"]
+    },
+    "PerturbationTest": {
+      "type": "object",
+      "required": ["name", "params", "decoder_results"],
+      "properties": {
+        "name": { "type": "string", "enum": ["blur", "compression", "contrast", "rotation", "resize", "perspective", "lighting", "occlusion"] },
+        "params": { "type": "object" },
+        "decoder_results": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/DecoderResult" }
+        }
+      }
+    },
+    "DecoderResult": {
+      "type": "object",
+      "required": ["decoder", "scanned", "confidence"],
+      "properties": {
+        "decoder": { "type": "string", "enum": ["zxing", "quirc", "jsqr", "boofcv", "commercial"] },
+        "scanned": { "type": "boolean" },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "payload_match": { "type": "boolean" },
+        "latency_ms": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "ScanVerdict": {
+      "type": "string",
+      "enum": ["pass", "fail", "marginal", "untested"]
+    },
+    "ValidationEvidence": {
+      "type": "object",
+      "required": ["suite_version", "perturbation_tests", "decoder_matrix", "scan_verdict"],
+      "properties": {
+        "suite_version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+        "perturbation_tests": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/PerturbationTest" }
+        },
+        "decoder_matrix": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/DecoderResult" }
+        },
+        "scan_verdict": { "$ref": "#/definitions/ScanVerdict" },
+        "repair_attempted": { "type": "boolean", "default": false },
+        "repair_cycles": { "type": "integer", "minimum": 0, "default": 0 },
+        "export_allowed": { "type": "boolean" },
+        "threshold_note": { "type": "string" }
+      }
+    },
+    "CandidateProvenance": {
+      "type": "object",
+      "required": ["mode", "template_id"],
+      "properties": {
+        "mode": { "$ref": "#/definitions/GenerationMode" },
+        "template_id": { "type": "string" },
+        "provider": { "type": "string" },
+        "model": { "type": "string" },
+        "model_version": { "type": "string" },
+        "seed": { "type": "string" },
+        "artistic_strength": { "type": "number", "minimum": 0, "maximum": 1 },
+        "generation_latency_ms": { "type": "integer", "minimum": 0 },
+        "normalized_payload_ref": { "type": "string" }
+      }
+    },
+    "Candidate": {
+      "type": "object",
+      "required": ["id", "state", "provenance", "validation"],
+      "properties": {
+        "id": { "type": "string", "format": "uuid" },
+        "state": { "$ref": "#/definitions/CandidateState" },
+        "provenance": { "$ref": "#/definitions/CandidateProvenance" },
+        "validation": { "$ref": "#/definitions/ValidationEvidence" },
+        "rendered": {
+          "type": "object",
+          "properties": {
+            "svg": { "type": "string" },
+            "png_base64": { "type": "string" },
+            "width": { "type": "integer" },
+            "height": { "type": "integer" }
+          }
+        }
+      }
+    },
+    "ValidateCandidateInput": {
+      "type": "object",
+      "required": ["candidate_id", "rendered_image", "original_payload"],
+      "properties": {
+        "candidate_id": { "type": "string", "format": "uuid" },
+        "rendered_image": { "type": "string", "description": "Base64-encoded PNG or SVG string" },
+        "original_payload": { "type": "string" },
+        "image_format": { "type": "string", "enum": ["png", "svg"], "default": "png" },
+        "test_config": {
+          "type": "object",
+          "properties": {
+            "decoders": {
+              "type": "array",
+              "items": { "type": "string" },
+              "default": ["zxing", "jsqr", "quirc"]
+            },
+            "perturbations": {
+              "type": "array",
+              "items": { "type": "string" },
+              "default": ["blur", "compression", "contrast", "rotation"]
+            }
+          }
+        }
+      }
+    },
+    "ValidateCandidateOutput": {
+      "type": "object",
+      "required": ["candidate_id", "validation", "export_allowed"],
+      "properties": {
+        "candidate_id": { "type": "string", "format": "uuid" },
+        "validation": { "$ref": "#/definitions/ValidationEvidence" },
+        "export_allowed": { "type": "boolean" },
+        "safe_fallback": {
+          "type": "object",
+          "properties": {
+            "available": { "type": "boolean" },
+            "rendered": { "type": "string" }
+          }
+        }
+      }
+    },
+    "RepairCandidateInput": {
+      "type": "object",
+      "required": ["candidate_id", "validation_evidence"],
+      "properties": {
+        "candidate_id": { "type": "string", "format": "uuid" },
+        "validation_evidence": { "$ref": "#/definitions/ValidationEvidence" },
+        "repair_strategy": {
+          "type": "string",
+          "enum": ["auto", "contrast_boost", "module_reinforce", "quiet_zone_expand", "denoise"],
+          "default": "auto"
+        }
+      }
+    },
+    "RepairCandidateOutput": {
+      "type": "object",
+      "required": ["candidate_id", "repaired", "validation", "export_allowed"],
+      "properties": {
+        "candidate_id": { "type": "string", "format": "uuid" },
+        "repaired": { "type": "boolean" },
+        "validation": { "$ref": "#/definitions/ValidationEvidence" },
+        "export_allowed": { "type": "boolean" }
+      }
+    }
+  },
+  "methods": {
+    "validateCandidate": {
+      "description": "Run multi-decoder and perturbation validation on a rendered artistic candidate.",
+      "input": { "$ref": "#/definitions/ValidateCandidateInput" },
+      "output": { "$ref": "#/definitions/ValidateCandidateOutput" }
+    },
+    "repairCandidate": {
+      "description": "Attempt closed-loop repair on a failed candidate and revalidate.",
+      "input": { "$ref": "#/definitions/RepairCandidateInput" },
+      "output": { "$ref": "#/definitions/RepairCandidateOutput" }
+    }
+  }
+}
