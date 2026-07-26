@@ -1,0 +1,15 @@
+{
+  "event_id": "evt_2a3f8c11-1111-2222-3333-444444444444",
+  "event_type": "commerce.payment_succeeded.v1",
+  "schema_version": "1.0.0",
+  "occurred_at": "2026-07-26T12:00:00Z",
+  "provider": "stripe",
+  "provider_event_id": "evt_stripe_1234567890",
+  "checkout_session_id": "cs_2a3f8c11-0000-0000-0000-000000000001",
+  "offer_id": "artistic_project",
+  "amount": 1200,
+  "currency": "USD",
+  "status": "succeeded",
+  "project_access_token_hash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "idempotency_key": "idem-key-001"
+}

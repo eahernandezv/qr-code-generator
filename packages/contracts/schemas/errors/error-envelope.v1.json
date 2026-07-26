@@ -1,0 +1,47 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://qr.internal/schemas/errors/error-envelope.v1.json",
+  "title": "API Error Envelope v1",
+  "description": "Standard error response for all QR services. Never exposes stack traces or secrets.",
+  "type": "object",
+  "required": ["error"],
+  "properties": {
+    "error": {
+      "type": "object",
+      "required": ["code", "message", "request_id"],
+      "properties": {
+        "code": {
+          "type": "string",
+          "description": "Stable machine-readable error code."
+        },
+        "message": {
+          "type": "string",
+          "description": "Safe human-readable message."
+        },
+        "request_id": {
+          "type": "string",
+          "format": "uuid",
+          "description": "Request correlation id for support tracing."
+        },
+        "retryable": {
+          "type": "boolean",
+          "description": "Whether the client may retry without change."
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["field", "issue"],
+            "properties": {
+              "field": { "type": "string" },
+              "issue": { "type": "string" }
+            }
+          },
+          "description": "Field-level validation issues when applicable."
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
