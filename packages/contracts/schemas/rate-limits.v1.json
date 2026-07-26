@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://qr.internal/schemas/rate-limits.v1.json",
+  "title": "Rate Limits v1",
+  "description": "Anonymous free-preview and provider-backed generation rate controls. Owned by WS-12.",
+  "type": "object",
+  "required": ["scope", "window_seconds", "max_requests"],
+  "properties": {
+    "scope": {
+      "type": "string",
+      "description": "Rate limit scope identifier",
+      "examples": [
+        "anonymous_preview_per_ip",
+        "anonymous_preview_per_session",
+        "provider_generation_per_ip",
+        "provider_generation_per_session",
+        "provider_generation_global"
+      ]
+    },
+    "window_seconds": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Time window for limit evaluation"
+    },
+    "max_requests": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Maximum allowed requests in the window"
+    },
+    "burst_allowance": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Short-term burst tolerance"
+    },
+    "action": {
+      "type": "string",
+      "enum": ["block", "throttle", "warn", "flag"],
+      "description": "Enforcement action when limit exceeded"
+    },
+    "response_code": {
+      "type": "integer",
+      "enum": [429, 503],
+      "description": "HTTP response code for blocked requests"
+    },
+    "retry_after_seconds": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Suggested retry delay"
+    }
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://qr.internal/schemas/events/scan-events.v1.json",
+  "title": "Scan Events v1",
+  "description": "Privacy-minimized scan event schema. Owned by WS-07 Redirect Runtime; consumed by WS-09 Analytics.",
+  "type": "object",
+  "required": ["event_id", "occurred_at", "campaign_id", "route_version", "schema_version"],
+  "properties": {
+    "event_id": { "type": "string", "format": "uuid" },
+    "occurred_at": { "type": "string", "format": "date-time" },
+    "schema_version": { "type": "string", "const": "scan-events.v1" },
+    "campaign_id": { "type": "string" },
+    "route_version": { "type": "integer", "minimum": 1 },
+    "route_class": {
+      "type": "string",
+      "enum": ["hosted", "custom_domain"]
+    },
+    "response_category": {
+      "type": "string",
+      "enum": ["active_redirect", "paused", "deleted", "abuse", "unknown", "degraded"]
+    },
+    "latency_bucket_ms": {
+      "type": "string",
+      "enum": ["<10", "10-50", "50-100", "100-250", "250-500", "500-1000", ">1000"]
+    },
+    "coarse_region": {
+      "type": "string",
+      "description": "Privacy-approved coarse geolocation, e.g. 'EU', 'US-EAST', 'APAC'"
+    },
+    "device_class": {
+      "type": "string",
+      "enum": ["mobile", "tablet", "desktop", "bot", "unknown"]
+    },
+    "referrer_category": {
+      "type": "string",
+      "enum": ["direct", "search", "social", "email", "app", "unknown"]
+    },
+    "bot_classification": {
+      "type": "string",
+      "enum": ["human", "suspected_bot", "confirmed_bot", "unknown"]
+    },
+    "classifier_version": { "type": "string" }
+  }
+}

@@ -1,0 +1,73 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://qr.internal/schemas/error-taxonomy.v1.json",
+  "title": "Error Taxonomy v1",
+  "description": "Stable error codes and envelopes for all QR MVP services. Never expose stack traces, secrets, or cross-tenant existence.",
+  "type": "object",
+  "required": ["code", "message", "request_id"],
+  "properties": {
+    "code": {
+      "type": "string",
+      "description": "Stable machine-readable error code",
+      "enum": [
+        "BAD_REQUEST",
+        "UNAUTHORIZED",
+        "FORBIDDEN",
+        "NOT_FOUND",
+        "CONFLICT",
+        "TOO_MANY_REQUESTS",
+        "INTERNAL_ERROR",
+        "SERVICE_UNAVAILABLE",
+        "TIMEOUT",
+        "PAYLOAD_TOO_LARGE",
+        "UNSUPPORTED_MEDIA",
+        "VALIDATION_ERROR",
+        "RATE_LIMIT_EXCEEDED",
+        "COST_CAP_EXCEEDED",
+        "PROVIDER_ERROR",
+        "PROVIDER_TIMEOUT",
+        "GENERATION_FAILED",
+        "SCAN_VALIDATION_FAILED",
+        "UNSAFE_INPUT",
+        "CONTENT_MODERATED",
+        "ENTITLEMENT_EXHAUSTED",
+        "IDEMPOTENCY_KEY_REUSED",
+        "TENANT_ISOLATION_VIOLATION",
+        "SECRET_ROTATION_REQUIRED",
+        "FEATURE_DISABLED"
+      ]
+    },
+    "message": {
+      "type": "string",
+      "description": "Safe human-readable message. No secrets or internals.",
+      "maxLength": 512
+    },
+    "request_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Unique request identifier for tracing"
+    },
+    "details": {
+      "type": "array",
+      "description": "Optional field-level validation details",
+      "items": {
+        "type": "object",
+        "required": ["field", "issue"],
+        "properties": {
+          "field": { "type": "string" },
+          "issue": { "type": "string", "maxLength": 256 },
+          "code": { "type": "string" }
+        }
+      }
+    },
+    "retryable": {
+      "type": "boolean",
+      "description": "Whether the client should retry"
+    },
+    "retry_after_ms": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Suggested wait before retry"
+    }
+  }
+}

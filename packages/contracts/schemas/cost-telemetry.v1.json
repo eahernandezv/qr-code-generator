@@ -1,0 +1,59 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://qr.internal/schemas/cost-telemetry.v1.json",
+  "title": "Cost Telemetry v1",
+  "description": "Non-sensitive cost and provider usage telemetry for generation operations. Owned by WS-12.",
+  "type": "object",
+  "required": ["operation_id", "provider", "cost_currency", "incurred_at"],
+  "properties": {
+    "operation_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Generation operation identifier"
+    },
+    "provider": {
+      "type": "string",
+      "description": "Provider identifier (e.g., 'managed-provider-adapter')"
+    },
+    "model": {
+      "type": "string",
+      "description": "Model or service tier used"
+    },
+    "cost_amount": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Monetary cost of the operation"
+    },
+    "cost_currency": {
+      "type": "string",
+      "enum": ["USD"],
+      "description": "Currency code"
+    },
+    "cost_category": {
+      "type": "string",
+      "enum": ["generation", "validation", "repair", "fallback", "export"],
+      "description": "Cost category"
+    },
+    "incurred_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "session_id": {
+      "type": "string",
+      "description": "Anonymous session identifier for attribution"
+    },
+    "tenant_id": {
+      "type": "string",
+      "description": "Tenant scope when authenticated"
+    },
+    "capped": {
+      "type": "boolean",
+      "description": "Whether this operation hit a cost cap"
+    },
+    "cap_reason": {
+      "type": "string",
+      "enum": ["none", "daily_budget", "hourly_budget", "anomaly_threshold", "manual_override"],
+      "description": "Reason for capping if applicable"
+    }
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://qr.internal/schemas/entitlements/artistic-generation-allowance.v1.json",
+  "title": "Artistic Generation Allowance v1",
+  "description": "Provisional entitlement for artistic generation metering. Owned by WS-04 Identity & Entitlements.",
+  "type": "object",
+  "required": ["entitlement_id", "type", "state", "tenant_id"],
+  "properties": {
+    "entitlement_id": { "type": "string", "format": "uuid" },
+    "type": { "type": "string", "const": "artistic_generation_allowance" },
+    "state": {
+      "type": "string",
+      "enum": ["pending", "active", "reserved", "consumed", "under_review", "revoked", "refunded", "expired"]
+    },
+    "tenant_id": { "type": "string" },
+    "total_rounds": { "type": "integer", "minimum": 0 },
+    "consumed_rounds": { "type": "integer", "minimum": 0 },
+    "max_candidates_per_round": { "type": "integer", "minimum": 1 },
+    "created_at": { "type": "string", "format": "date-time" },
+    "expires_at": { "type": "string", "format": "date-time" }
+  }
+}

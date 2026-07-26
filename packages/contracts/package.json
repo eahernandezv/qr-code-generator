@@ -10,7 +10,8 @@
     "./src/*": "./src/*"
   },
   "scripts": {
-    "lint": "echo 'Schema lint not yet configured'",
-    "test": "echo 'Fixture tests not yet configured'"
+    "lint": "node scripts/lint-schemas.js",
+    "test": "node scripts/test-fixtures.js",
+    "validate": "node scripts/validate-contracts.js"
   }
 }

@@ -1,0 +1,112 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://qr.internal/schemas/artistic-qr-api.v1.json",
+  "title": "Artistic QR API v1",
+  "description": "Contract for artistic QR generation, validation, repair, and export. Owned by WS-03; consumed by WS-12 for telemetry and WS-13 for integration.",
+  "type": "object",
+  "required": ["request_id", "payload_reference", "generation_mode"],
+  "properties": {
+    "request_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "payload_reference": {
+      "type": "string",
+      "description": "Normalized payload reference (not the raw payload)"
+    },
+    "generation_mode": {
+      "type": "string",
+      "enum": ["deterministic_template", "provider_generative"],
+      "description": "How the candidate was produced"
+    },
+    "style_template_id": {
+      "type": "string",
+      "description": "Curated template or art direction identifier"
+    },
+    "artistic_strength": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Artistic intensity bound"
+    },
+    "candidates": {
+      "type": "array",
+      "maxItems": 16,
+      "items": {
+        "$ref": "#/definitions/candidate"
+      }
+    },
+    "validation_summary": {
+      "type": "object",
+      "properties": {
+        "suite_version": { "type": "string" },
+        "decoder_results": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "scale": { "type": "number" },
+              "perturbation": { "type": "string" },
+              "passed": { "type": "boolean" }
+            }
+          }
+        },
+        "threshold_decision": {
+          "type": "string",
+          "enum": ["exportable", "repairable", "unscannable", "rejected"]
+        },
+        "export_allowed": {
+          "type": "boolean",
+          "description": "Explicit export gate. Never inferred from a single test."
+        }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "description": "Non-sensitive provenance metadata. No secrets, prompts, or reference images.",
+      "properties": {
+        "mode": { "type": "string" },
+        "provider": { "type": "string" },
+        "model": { "type": "string" },
+        "model_version": { "type": "string" },
+        "generation_version": { "type": "string" },
+        "validation_version": { "type": "string" }
+      }
+    },
+    "cost_telemetry": {
+      "$ref": "cost-telemetry.v1.json"
+    },
+    "latency_ms": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Total generation latency in milliseconds"
+    },
+    "safety_verdict": {
+      "type": "string",
+      "enum": ["safe", "warning", "unsafe", "moderated"]
+    },
+    "fallback_used": {
+      "type": "boolean",
+      "description": "Whether deterministic fallback was applied"
+    }
+  },
+  "definitions": {
+    "candidate": {
+      "type": "object",
+      "required": ["candidate_id", "render_format"],
+      "properties": {
+        "candidate_id": { "type": "string", "format": "uuid" },
+        "render_format": { "type": "string", "enum": ["svg", "png"] },
+        "artistic_quality_score": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "scan_robustness_dimensions": {
+          "type": "object",
+          "description": "Honest scan evidence, not a universal guarantee"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,82 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://qr.internal/schemas/telemetry-conventions.v1.json",
+  "title": "Telemetry Conventions v1",
+  "description": "Observability conventions for all deployables. Owned by WS-12 Platform/Ops.",
+  "type": "object",
+  "required": ["event_id", "event_type", "occurred_at", "schema_version", "service"],
+  "properties": {
+    "event_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Unique event identifier for deduplication"
+    },
+    "event_type": {
+      "type": "string",
+      "description": "Dot-namespaced event type",
+      "examples": [
+        "telemetry.span.started",
+        "telemetry.span.ended",
+        "telemetry.metric.gauge",
+        "telemetry.metric.counter",
+        "telemetry.metric.histogram",
+        "telemetry.alert.fired",
+        "telemetry.alert.resolved",
+        "telemetry.log",
+        "telemetry.cost.incurred",
+        "telemetry.rate_limit.enforced",
+        "telemetry.provider.rotated",
+        "telemetry.safety.verdict"
+      ]
+    },
+    "occurred_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Event timestamp in UTC"
+    },
+    "schema_version": {
+      "type": "string",
+      "const": "telemetry-conventions.v1",
+      "description": "Schema version for consumer compatibility"
+    },
+    "service": {
+      "type": "string",
+      "description": "Service name emitting the event",
+      "maxLength": 64
+    },
+    "environment": {
+      "type": "string",
+      "enum": ["local", "preview", "staging", "production"],
+      "description": "Deployment environment"
+    },
+    "tenant_id": {
+      "type": "string",
+      "description": "Tenant scope when applicable. Omit for cross-tenant infra events."
+    },
+    "trace_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Distributed trace identifier"
+    },
+    "span_id": {
+      "type": "string",
+      "description": "Span identifier within a trace"
+    },
+    "parent_span_id": {
+      "type": "string",
+      "description": "Parent span identifier"
+    },
+    "payload": {
+      "type": "object",
+      "description": "Event-specific payload. Must not contain secrets, raw IPs, or PII without approval."
+    },
+    "source_version": {
+      "type": "string",
+      "description": "Git commit or release version of the emitting service"
+    },
+    "host": {
+      "type": "string",
+      "description": "Hostname or container identifier"
+    }
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "event_id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+  "event_type": "telemetry.cost.incurred",
+  "occurred_at": "2026-07-26T12:00:00Z",
+  "schema_version": "telemetry-conventions.v1",
+  "service": "artistic-qr-adapter",
+  "environment": "staging",
+  "trace_id": "c3d4e5f6-a7b8-9012-cdef-123456789012",
+  "span_id": "span-001",
+  "payload": {
+    "operation_id": "d4e5f6a7-b8c9-0123-defa-234567890123",
+    "provider": "managed-provider-adapter",
+    "model": "artistic-v1",
+    "cost_amount": 0.04,
+    "cost_currency": "USD",
+    "cost_category": "generation",
+    "capped": false,
+    "cap_reason": "none"
+  },
+  "source_version": "ws/07-platform-ops-abc1234",
+  "host": "qr-guardian-01"
+}
