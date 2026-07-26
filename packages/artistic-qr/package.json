@@ -5,9 +5,16 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./api": "./src/api/index.js"
+    ".": "./src/index.js",
+    "./art-directions": "./src/art-directions/index.js",
+    "./candidate": "./src/candidate/index.js",
+    "./validation": "./src/validation/index.js"
   },
   "scripts": {
-    "test": "echo 'Tests not yet configured'"
+    "test": "node --test src/**/*.test.js",
+    "lint": "echo 'Lint not yet configured'"
+  },
+  "dependencies": {
+    "@qr/contracts": "workspace:*"
   }
 }

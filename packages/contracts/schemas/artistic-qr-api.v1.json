@@ -1,0 +1,274 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://qr-artist.io/schemas/artistic-qr-api.v1.json",
+  "title": "Artistic QR API Contract v1",
+  "description": "Frozen contract for Artistic QR generation, validation, repair, and export. Owned by WS-03 (QR Core / Artistic Studio). Consumed by WS-02 (Design System), WS-13 (Integrator), and provider adapter.",
+  "version": "1.0.0",
+  "status": "frozen",
+  "definitions": {
+    "ArtDirection": {
+      "type": "string",
+      "enum": [
+        "minimal",
+        "gradient_mesh",
+        "organic_flora",
+        "circuit_board",
+        "watercolor",
+        "geometric_tessellation"
+      ],
+      "description": "Curated launch art directions. Each direction is a distinct visual structure, not a cosmetic color preset."
+    },
+    "GenerationMode": {
+      "type": "string",
+      "enum": ["deterministic_template", "provider_generative"],
+      "description": "How the artistic composition was produced."
+    },
+    "CandidateState": {
+      "type": "string",
+      "enum": [
+        "generating",
+        "pending_validation",
+        "scan_validated",
+        "needs_repair",
+        "repairing",
+        "repaired",
+        "unscannable",
+        "export_ready",
+        "exported",
+        "failed"
+      ],
+      "description": "Lifecycle of a single artistic candidate."
+    },
+    "ScanConfidenceLevel": {
+      "type": "string",
+      "enum": ["untested", "low", "moderate", "high", "threshold_met"],
+      "description": "Honest scan-robustness label. NEVER implies universal device guarantee."
+    },
+    "ScanValidationSuite": {
+      "type": "object",
+      "required": ["suite_version", "decoder_results", "threshold_decision", "export_allowed"],
+      "properties": {
+        "suite_version": {
+          "type": "string",
+          "description": "Version of the decoder/perturbation matrix used."
+        },
+        "decoder_results": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["decoder_id", "passed", "scale", "perturbation_type"],
+            "properties": {
+              "decoder_id": { "type": "string" },
+              "passed": { "type": "boolean" },
+              "scale": { "type": "number" },
+              "perturbation_type": {
+                "type": "string",
+                "enum": ["none", "blur", "noise", "contrast_shift", "rotation", "perspective", "print_simulation"]
+              },
+              "latency_ms": { "type": "number" },
+              "payload_match": { "type": "boolean" }
+            }
+          }
+        },
+        "threshold_decision": {
+          "type": "string",
+          "enum": ["pass", "marginal", "fail"]
+        },
+        "export_allowed": {
+          "type": "boolean",
+          "description": "True only when threshold_decision is 'pass' and no safety/repair blockers remain."
+        }
+      }
+    },
+    "Candidate": {
+      "type": "object",
+      "required": ["candidate_id", "art_direction", "generation_mode", "state", "scan_confidence", "created_at"],
+      "properties": {
+        "candidate_id": {
+          "type": "string",
+          "description": "Opaque, non-sequential public ID."
+        },
+        "art_direction": { "$ref": "#/definitions/ArtDirection" },
+        "generation_mode": { "$ref": "#/definitions/GenerationMode" },
+        "state": { "$ref": "#/definitions/CandidateState" },
+        "scan_confidence": { "$ref": "#/definitions/ScanConfidenceLevel" },
+        "validation": { "$ref": "#/definitions/ScanValidationSuite" },
+        "artistic_strength": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "0 = minimal artistic intervention; 1 = maximum artistic integration."
+        },
+        "qr_prominence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Protected QR functional area visibility. 1 = fully prominent, 0 = maximally blended."
+        },
+        "focal_area": {
+          "type": "string",
+          "enum": ["center", "top", "bottom", "left", "right", "balanced", "qr_dominant"],
+          "description": "Visual composition focal region relative to the QR module area."
+        },
+        "palette_id": { "type": "string" },
+        "seed": { "type": ["string", "null"] },
+        "provenance": {
+          "type": "object",
+          "properties": {
+            "provider_id": { "type": "string" },
+            "model_id": { "type": "string" },
+            "model_version": { "type": "string" },
+            "generation_latency_ms": { "type": "number" },
+            "cost_estimate_usd": { "type": "number" }
+          }
+        },
+        "safety_verdict": {
+          "type": "object",
+          "required": ["safe", "categories"],
+          "properties": {
+            "safe": { "type": "boolean" },
+            "categories": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          }
+        },
+        "thumbnail_url": { "type": ["string", "null"] },
+        "preview_url": { "type": ["string", "null"] },
+        "created_at": { "type": "string", "format": "date-time" },
+        "updated_at": { "type": "string", "format": "date-time" }
+      }
+    },
+    "Board": {
+      "type": "object",
+      "required": ["board_id", "payload", "candidates", "round_number", "created_at"],
+      "properties": {
+        "board_id": { "type": "string" },
+        "payload": {
+          "type": "object",
+          "required": ["type", "value"],
+          "properties": {
+            "type": { "type": "string", "enum": ["url", "text", "wifi", "email"] },
+            "value": { "type": "string" },
+            "normalized": { "type": "string" }
+          }
+        },
+        "candidates": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/Candidate" },
+          "minItems": 1,
+          "maxItems": 4,
+          "description": "Generation board with up to 4 candidates."
+        },
+        "round_number": { "type": "integer", "minimum": 1 },
+        "reference_image_id": { "type": ["string", "null"] },
+        "prompt": { "type": ["string", "null"] },
+        "created_at": { "type": "string", "format": "date-time" },
+        "completed_at": { "type": ["string", "null"], "format": "date-time" }
+      }
+    },
+    "RepairAction": {
+      "type": "object",
+      "required": ["action_id", "candidate_id", "action_type", "status"],
+      "properties": {
+        "action_id": { "type": "string" },
+        "candidate_id": { "type": "string" },
+        "action_type": {
+          "type": "string",
+          "enum": ["contrast_boost", "module_reinforce", "quiet_zone_restore", "blur_reduce", "noise_suppress", "fallback_to_deterministic"]
+        },
+        "status": {
+          "type": "string",
+          "enum": ["pending", "applied", "verified", "failed"]
+        },
+        "before_confidence": { "$ref": "#/definitions/ScanConfidenceLevel" },
+        "after_confidence": { "$ref": "#/definitions/ScanConfidenceLevel" },
+        "validation": { "$ref": "#/definitions/ScanValidationSuite" }
+      }
+    },
+    "ExportRequest": {
+      "type": "object",
+      "required": ["candidate_id", "formats"],
+      "properties": {
+        "candidate_id": { "type": "string" },
+        "formats": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["png", "svg"]
+          }
+        },
+        "size": {
+          "type": "string",
+          "enum": ["digital_sm", "digital_md", "digital_lg", "print_sm", "print_md", "print_lg"]
+        },
+        "color_space": {
+          "type": "string",
+          "enum": ["srgb", "cmyk"]
+        }
+      }
+    },
+    "ExportResult": {
+      "type": "object",
+      "required": ["export_id", "candidate_id", "status", "artifacts"],
+      "properties": {
+        "export_id": { "type": "string" },
+        "candidate_id": { "type": "string" },
+        "status": {
+          "type": "string",
+          "enum": ["pending", "processing", "ready", "failed"]
+        },
+        "artifacts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["format", "url", "width", "height"],
+            "properties": {
+              "format": { "type": "string", "enum": ["png", "svg"] },
+              "url": { "type": "string" },
+              "width": { "type": "integer" },
+              "height": { "type": "integer" },
+              "dpi": { "type": "integer" },
+              "file_size_bytes": { "type": "integer" }
+            }
+          }
+        },
+        "print_guidance": {
+          "type": "object",
+          "properties": {
+            "minimum_size_mm": { "type": "number" },
+            "recommended_size_mm": { "type": "number" },
+            "quiet_zone_mm": { "type": "number" }
+          }
+        }
+      }
+    },
+    "ErrorCode": {
+      "type": "string",
+      "enum": [
+        "ARTISTIC_PAYLOAD_INVALID",
+        "ARTISTIC_PAYLOAD_UNSUPPORTED",
+        "ARTISTIC_GENERATION_TIMEOUT",
+        "ARTISTIC_PROVIDER_ERROR",
+        "ARTISTIC_PROVIDER_UNAVAILABLE",
+        "ARTISTIC_UNSAFE_INPUT",
+        "ARTISTIC_UNSCANNABLE_OUTPUT",
+        "ARTISTIC_REPAIR_FAILED",
+        "ARTISTIC_EXPORT_NOT_ALLOWED",
+        "ARTISTIC_EXPORT_FORMAT_UNAVAILABLE",
+        "ARTISTIC_ALLOWANCE_EXHAUSTED",
+        "ARTISTIC_SEED_INVALID",
+        "ARTISTIC_REFERENCE_IMAGE_REJECTED"
+      ],
+      "description": "Stable error codes for artistic QR operations."
+    }
+  },
+  "type": "object",
+  "properties": {
+    "contract_version": { "type": "string", "const": "1.0.0" },
+    "art_directions": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/ArtDirection" }
+    }
+  }
+}

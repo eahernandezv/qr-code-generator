@@ -4,7 +4,17 @@
   "description": "Design tokens, components, and artistic style primitives",
   "private": true,
   "type": "module",
+  "exports": {
+    ".": "./src/index.js",
+    "./tokens": "./src/tokens/index.js",
+    "./themes": "./src/themes/index.js",
+    "./components": "./src/components/index.js",
+    "./artistic": "./src/artistic/index.js"
+  },
   "scripts": {
-    "test": "echo 'Tests not yet configured'"
-  }
+    "test": "node --test src/**/*.test.js",
+    "lint": "echo 'Lint not yet configured'"
+  },
+  "dependencies": {},
+  "devDependencies": {}
 }
