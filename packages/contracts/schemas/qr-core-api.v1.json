@@ -1,0 +1,155 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://qr-studio.local/schemas/qr-core-api.v1.json",
+  "title": "QR Core API v1",
+  "description": "Deterministic QR rendering, validation, and safe fallback contracts consumed by the Studio and artistic pipeline.",
+  "version": "1.0.0",
+  "definitions": {
+    "Payload": {
+      "type": "object",
+      "required": ["raw", "normalized", "mode"],
+      "properties": {
+        "raw": { "type": "string", "maxLength": 4096 },
+        "normalized": { "type": "string", "maxLength": 4096 },
+        "mode": { "type": "string", "enum": ["url", "text", "wifi", "email", "phone"] }
+      }
+    },
+    "MatrixSpec": {
+      "type": "object",
+      "required": ["version", "modules", "mask", "errorCorrectionLevel"],
+      "properties": {
+        "version": { "type": "integer", "minimum": 1, "maximum": 40 },
+        "modules": { "type": "integer" },
+        "mask": { "type": "integer", "minimum": 0, "maximum": 7 },
+        "errorCorrectionLevel": { "type": "string", "enum": ["L", "M", "Q", "H"] },
+        "functionalModuleCoords": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "x": { "type": "integer" },
+              "y": { "type": "integer" },
+              "role": { "type": "string", "enum": ["finder", "separator", "timing", "alignment", "dark_module", "format", "version_info"] }
+            }
+          }
+        }
+      }
+    },
+    "StyleSpec": {
+      "type": "object",
+      "properties": {
+        "foreground": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" },
+        "background": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" },
+        "margin": { "type": "integer", "minimum": 0, "maximum": 10 },
+        "eyeStyle": { "type": "string", "enum": ["square", "rounded", "circle", "leaf"] },
+        "moduleStyle": { "type": "string", "enum": ["square", "rounded", "dot", "diamond"] },
+        "logo": {
+          "type": "object",
+          "properties": {
+            "dataUrl": { "type": "string" },
+            "sizeRatio": { "type": "number", "minimum": 0.05, "maximum": 0.3 },
+            "cornerRadius": { "type": "number", "minimum": 0, "maximum": 1 }
+          }
+        }
+      }
+    },
+    "RenderRequest": {
+      "type": "object",
+      "required": ["payload", "format", "size"],
+      "properties": {
+        "payload": { "$ref": "#/definitions/Payload" },
+        "style": { "$ref": "#/definitions/StyleSpec" },
+        "format": { "type": "string", "enum": ["svg", "png", "pdf", "eps"] },
+        "size": { "type": "integer", "minimum": 64, "maximum": 4096 },
+        "dpi": { "type": "integer", "enum": [72, 150, 300, 600, 1200], "default": 300 }
+      }
+    },
+    "RenderResult": {
+      "type": "object",
+      "required": ["success", "format", "dataUrl", "provenance"],
+      "properties": {
+        "success": { "type": "boolean" },
+        "format": { "type": "string", "enum": ["svg", "png", "pdf", "eps"] },
+        "dataUrl": { "type": "string" },
+        "blobSizeBytes": { "type": "integer" },
+        "widthPx": { "type": "integer" },
+        "heightPx": { "type": "integer" },
+        "provenance": {
+          "type": "object",
+          "properties": {
+            "engine": { "type": "string" },
+            "version": { "type": "string" },
+            "matrixSpec": { "$ref": "#/definitions/MatrixSpec" }
+          }
+        },
+        "error": { "$ref": "#/definitions/ErrorEnvelope" }
+      }
+    },
+    "ValidationRequest": {
+      "type": "object",
+      "required": ["payload", "renderResult"],
+      "properties": {
+        "payload": { "$ref": "#/definitions/Payload" },
+        "renderResult": { "$ref": "#/definitions/RenderResult" },
+        "scales": {
+          "type": "array",
+          "items": { "type": "number", "minimum": 0.5, "maximum": 3.0 },
+          "default": [0.75, 1.0, 1.25, 1.5]
+        },
+        "perturbations": {
+          "type": "array",
+          "items": { "type": "string", "enum": ["blur", "brightness", "contrast", "rotation", "perspective", "noise", "damage"] },
+          "default": ["blur", "brightness", "contrast", "noise"]
+        }
+      }
+    },
+    "ValidationResult": {
+      "type": "object",
+      "required": ["pass", "confidence", "decoderResults"],
+      "properties": {
+        "pass": { "type": "boolean" },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "thresholdVersion": { "type": "string" },
+        "decoderResults": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "decoder": { "type": "string" },
+              "pass": { "type": "boolean" },
+              "decodedPayload": { "type": "string" },
+              "match": { "type": "boolean" },
+              "latencyMs": { "type": "integer" }
+            }
+          }
+        },
+        "perturbationSummary": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "type": { "type": "string" },
+              "passRate": { "type": "number" },
+              "details": { "type": "string" }
+            }
+          }
+        },
+        "recommendations": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "ErrorEnvelope": {
+      "type": "object",
+      "required": ["code", "message", "requestId"],
+      "properties": {
+        "code": { "type": "string" },
+        "message": { "type": "string" },
+        "requestId": { "type": "string" },
+        "retryable": { "type": "boolean" },
+        "details": { "type": "object" }
+      }
+    }
+  }
+}

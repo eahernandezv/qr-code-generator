@@ -1,0 +1,229 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://qr-studio.local/schemas/artistic-qr-api.v1.json",
+  "title": "Artistic QR API v1",
+  "description": "Artistic generation, candidate management, validation, and export artifact contracts.",
+  "version": "1.0.0",
+  "definitions": {
+    "GenerationRequest": {
+      "type": "object",
+      "required": ["projectId", "payload", "artDirection"],
+      "properties": {
+        "projectId": { "type": "string" },
+        "payload": {
+          "type": "object",
+          "required": ["raw", "normalized", "mode"],
+          "properties": {
+            "raw": { "type": "string", "maxLength": 4096 },
+            "normalized": { "type": "string", "maxLength": 4096 },
+            "mode": { "type": "string", "enum": ["url", "text", "wifi", "email", "phone"] }
+          }
+        },
+        "artDirection": {
+          "type": "object",
+          "required": ["templateId"],
+          "properties": {
+            "templateId": { "type": "string" },
+            "prompt": { "type": "string", "maxLength": 500 },
+            "referenceImage": { "type": "string" },
+            "artisticStrength": { "type": "number", "minimum": 0, "maximum": 1, "default": 0.5 },
+            "composition": { "type": "string", "enum": ["centered", "offset", "integrated", "surround"] },
+            "palette": {
+              "type": "object",
+              "properties": {
+                "primary": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" },
+                "secondary": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" },
+                "accent": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" }
+              }
+            },
+            "protectedQrProminence": { "type": "number", "minimum": 0.1, "maximum": 1, "default": 0.7 }
+          }
+        },
+        "mode": { "type": "string", "enum": ["deterministic_template", "provider_generative"], "default": "deterministic_template" },
+        "idempotencyKey": { "type": "string" }
+      }
+    },
+    "Candidate": {
+      "type": "object",
+      "required": ["candidateId", "projectId", "status", "createdAt"],
+      "properties": {
+        "candidateId": { "type": "string" },
+        "projectId": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "generating", "ready", "validating", "validated", "failed", "rejected"] },
+        "previewUrl": { "type": "string" },
+        "renderResult": {
+          "type": "object",
+          "properties": {
+            "format": { "type": "string", "enum": ["svg", "png"] },
+            "dataUrl": { "type": "string" },
+            "widthPx": { "type": "integer" },
+            "heightPx": { "type": "integer" }
+          }
+        },
+        "validationResult": {
+          "type": "object",
+          "properties": {
+            "pass": { "type": "boolean" },
+            "confidence": { "type": "number" },
+            "decoderResults": { "type": "array" },
+            "perturbationSummary": { "type": "array" }
+          }
+        },
+        "artisticScore": { "type": "number", "minimum": 0, "maximum": 1 },
+        "provenance": {
+          "type": "object",
+          "properties": {
+            "mode": { "type": "string", "enum": ["deterministic_template", "provider_generative"] },
+            "provider": { "type": "string" },
+            "model": { "type": "string" },
+            "version": { "type": "string" },
+            "seed": { "type": "string" }
+          }
+        },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "error": {
+          "type": "object",
+          "properties": {
+            "code": { "type": "string" },
+            "message": { "type": "string" }
+          }
+        }
+      }
+    },
+    "GenerationBoard": {
+      "type": "object",
+      "required": ["boardId", "projectId", "candidates", "roundNumber"],
+      "properties": {
+        "boardId": { "type": "string" },
+        "projectId": { "type": "string" },
+        "roundNumber": { "type": "integer", "minimum": 1 },
+        "candidates": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/Candidate" },
+          "minItems": 1,
+          "maxItems": 4
+        },
+        "status": { "type": "string", "enum": ["pending", "generating", "complete", "partial", "failed"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "completedAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "ExportArtifactRequest": {
+      "type": "object",
+      "required": ["projectId", "candidateId", "formats"],
+      "properties": {
+        "projectId": { "type": "string" },
+        "candidateId": { "type": "string" },
+        "formats": {
+          "type": "array",
+          "items": { "type": "string", "enum": ["svg", "png", "pdf", "eps"] },
+          "minItems": 1
+        },
+        "sizes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "label": { "type": "string" },
+              "widthPx": { "type": "integer" },
+              "heightPx": { "type": "integer" },
+              "dpi": { "type": "integer" }
+            }
+          },
+          "default": [
+            { "label": "social", "widthPx": 512, "heightPx": 512, "dpi": 72 },
+            { "label": "print-small", "widthPx": 1200, "heightPx": 1200, "dpi": 300 },
+            { "label": "print-medium", "widthPx": 2400, "heightPx": 2400, "dpi": 300 },
+            { "label": "print-large", "widthPx": 3600, "heightPx": 3600, "dpi": 300 }
+          ]
+        },
+        "includeValidationSummary": { "type": "boolean", "default": true }
+      }
+    },
+    "ExportArtifactResult": {
+      "type": "object",
+      "required": ["projectId", "candidateId", "exports", "exportAllowed"],
+      "properties": {
+        "projectId": { "type": "string" },
+        "candidateId": { "type": "string" },
+        "exportAllowed": { "type": "boolean" },
+        "exports": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "format": { "type": "string", "enum": ["svg", "png", "pdf", "eps"] },
+              "sizeLabel": { "type": "string" },
+              "dataUrl": { "type": "string" },
+              "blobSizeBytes": { "type": "integer" },
+              "widthPx": { "type": "integer" },
+              "heightPx": { "type": "integer" },
+              "dpi": { "type": "integer" }
+            }
+          }
+        },
+        "validationSummary": {
+          "type": "object",
+          "properties": {
+            "pass": { "type": "boolean" },
+            "confidence": { "type": "number" },
+            "testedDecoders": { "type": "array", "items": { "type": "string" } },
+            "testedPerturbations": { "type": "array", "items": { "type": "string" } },
+            "recommendations": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "error": {
+          "type": "object",
+          "properties": {
+            "code": { "type": "string" },
+            "message": { "type": "string" }
+          }
+        }
+      }
+    },
+    "ProjectState": {
+      "type": "object",
+      "required": ["projectId", "payload", "boards", "entitlement"],
+      "properties": {
+        "projectId": { "type": "string" },
+        "payload": { "type": "object" },
+        "artDirection": { "type": "object" },
+        "boards": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/GenerationBoard" }
+        },
+        "selectedCandidateId": { "type": "string" },
+        "entitlement": {
+          "type": "object",
+          "properties": {
+            "type": { "type": "string", "enum": ["preview", "project", "exploration"] },
+            "maxRounds": { "type": "integer" },
+            "usedRounds": { "type": "integer" },
+            "maxCandidates": { "type": "integer" },
+            "exportAllowed": { "type": "boolean" },
+            "expiresAt": { "type": "string", "format": "date-time" }
+          }
+        },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "RepairRequest": {
+      "type": "object",
+      "required": ["projectId", "candidateId"],
+      "properties": {
+        "projectId": { "type": "string" },
+        "candidateId": { "type": "string" },
+        "strategy": { "type": "string", "enum": ["auto", "contrast", "quiet_zone", "module_reinforce", "regenerate"], "default": "auto" }
+      }
+    },
+    "CancellationRequest": {
+      "type": "object",
+      "required": ["projectId", "boardId"],
+      "properties": {
+        "projectId": { "type": "string" },
+        "boardId": { "type": "string" }
+      }
+    }
+  }
+}
