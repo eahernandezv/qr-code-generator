@@ -12,8 +12,12 @@
     "build": "tsc",
     "test": "node --test dist/**/*.test.js"
   },
-  "dependencies": {},
+  "dependencies": {
+    "qrcode": "^1.5.4"
+  },
   "devDependencies": {
+    "@types/qrcode": "^1.5.6",
+    "tsx": "^4.23.1",
     "typescript": "^5.4.0"
   }
 }
