@@ -1,0 +1,10 @@
+{
+  "offerId": "invalid-offer",
+  "projectId": "proj_bad",
+  "status": "succeeded",
+  "allowance": {
+    "totalRounds": -1,
+    "consumedRounds": 5,
+    "exportAllowed": true
+  }
+}

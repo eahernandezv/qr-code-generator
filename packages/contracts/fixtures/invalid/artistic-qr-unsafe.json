@@ -1,0 +1,8 @@
+{
+  "payload": "https://example.com/artistic",
+  "artDirection": {
+    "mode": "provider_generative",
+    "prompt": "Generate illegal content involving...",
+    "artisticStrength": 1.5
+  }
+}

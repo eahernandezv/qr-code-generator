@@ -1,0 +1,10 @@
+{
+  "payload": "https://example.com/launch",
+  "format": "svg",
+  "errorCorrectionLevel": "M",
+  "margin": 4,
+  "color": {
+    "dark": "#000000",
+    "light": "#ffffff"
+  }
+}

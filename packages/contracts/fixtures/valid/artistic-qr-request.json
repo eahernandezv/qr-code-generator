@@ -1,0 +1,31 @@
+{
+  "payload": "https://example.com/artistic",
+  "artDirection": {
+    "mode": "deterministic_template",
+    "templateId": "organic-floral-v1",
+    "artisticStrength": 0.6,
+    "palette": {
+      "primary": "#2d6a4f",
+      "secondary": "#40916c",
+      "accent": "#d8f3dc"
+    }
+  },
+  "validation": {
+    "suiteVersion": "v1",
+    "decoderResults": [
+      { "decoder": "zxing", "pass": true, "confidence": 0.98, "perturbation": "none" },
+      { "decoder": "zxing", "pass": true, "confidence": 0.94, "perturbation": "blur_1px" },
+      { "decoder": "zxing", "pass": true, "confidence": 0.91, "perturbation": "noise_5pct" }
+    ],
+    "thresholdDecision": "pass",
+    "exportAllowed": true
+  },
+  "provenance": {
+    "mode": "deterministic_template",
+    "provider": "local",
+    "model": "qr-core-v1",
+    "version": "0.1.0",
+    "latencyMs": 120,
+    "costCents": 0
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "offerId": "artistic-project-12",
+  "projectId": "proj_9f8e7d6c5b4a3210",
+  "idempotencyKey": "idem_abc123def456ghi789",
+  "providerSessionId": "cs_test_a1b2c3d4e5f6",
+  "status": "succeeded",
+  "allowance": {
+    "totalRounds": 3,
+    "consumedRounds": 1,
+    "totalCandidates": 12,
+    "consumedCandidates": 4,
+    "exportAllowed": true,
+    "expiresAt": "2026-08-26T00:00:00Z"
+  },
+  "guestRecoveryToken": "recov_opaque_token_123"
+}

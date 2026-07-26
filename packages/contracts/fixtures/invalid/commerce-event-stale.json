@@ -1,0 +1,17 @@
+{
+  "event_id": "evt_stale_001",
+  "event_type": "commerce.payment_succeeded.v1",
+  "occurred_at": "2026-07-01T00:00:00Z",
+  "schema_version": "v0",
+  "aggregate_id": "purchase_stale_001",
+  "aggregate_version": 1,
+  "payload": {
+    "provider": "stripe",
+    "provider_event_id": "pi_stale_001",
+    "provider_session_id": "cs_stale_001",
+    "status": "payment_intent.succeeded",
+    "amount_cents": 1200,
+    "currency": "USD",
+    "idempotency_key": "idem_stale_001"
+  }
+}

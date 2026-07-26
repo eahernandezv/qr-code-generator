@@ -10,7 +10,10 @@
     "./src/*": "./src/*"
   },
   "scripts": {
-    "lint": "echo 'Schema lint not yet configured'",
-    "test": "echo 'Fixture tests not yet configured'"
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "vitest": "^2.0.0"
   }
 }

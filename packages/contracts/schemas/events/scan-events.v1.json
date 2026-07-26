@@ -1,0 +1,39 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "scan-events.v1",
+  "title": "Scan Events v1",
+  "description": "Privacy-minimized scan event schema",
+  "type": "object",
+  "required": ["event_id", "occurred_at", "route_version", "response_category"],
+  "properties": {
+    "event_id": { "type": "string", "format": "uuid" },
+    "occurred_at": { "type": "string", "format": "date-time" },
+    "campaign_id": { "type": "string" },
+    "route_version": { "type": "integer", "minimum": 1 },
+    "route_class": {
+      "type": "string",
+      "enum": ["hosted", "custom_domain"]
+    },
+    "response_category": {
+      "type": "string",
+      "enum": ["success", "paused", "deleted", "abuse", "unknown", "error"]
+    },
+    "latency_ms_bucket": {
+      "type": "string",
+      "enum": ["0-50", "50-100", "100-250", "250-500", "500+"]
+    },
+    "device_class": {
+      "type": "string",
+      "enum": ["mobile", "tablet", "desktop", "unknown"]
+    },
+    "referrer_category": {
+      "type": "string",
+      "enum": ["direct", "social", "search", "email", "other"]
+    },
+    "bot_classification": {
+      "type": "string",
+      "enum": ["human", "bot_confirmed", "suspected_bot", "unknown"]
+    },
+    "classifier_version": { "type": "string" }
+  }
+}

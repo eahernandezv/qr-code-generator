@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "artistic-purchase.v1",
+  "title": "Artistic Purchase API v1",
+  "description": "Guest checkout, allowance, and project-access for artistic QR",
+  "type": "object",
+  "required": ["offerId", "projectId"],
+  "properties": {
+    "offerId": {
+      "type": "string",
+      "enum": ["artistic-project-12", "artistic-exploration-5"]
+    },
+    "projectId": { "type": "string", "minLength": 1 },
+    "idempotencyKey": { "type": "string", "minLength": 16, "maxLength": 128 },
+    "providerSessionId": { "type": "string" },
+    "status": {
+      "type": "string",
+      "enum": ["pending", "succeeded", "failed", "refunded", "disputed"]
+    },
+    "allowance": {
+      "type": "object",
+      "properties": {
+        "totalRounds": { "type": "integer", "minimum": 0 },
+        "consumedRounds": { "type": "integer", "minimum": 0 },
+        "totalCandidates": { "type": "integer", "minimum": 0 },
+        "consumedCandidates": { "type": "integer", "minimum": 0 },
+        "exportAllowed": { "type": "boolean" },
+        "expiresAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "guestRecoveryToken": {
+      "type": "string",
+      "description": "Opaque token for guest project recovery without account"
+    }
+  }
+}

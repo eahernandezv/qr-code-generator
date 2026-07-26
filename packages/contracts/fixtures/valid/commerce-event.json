@@ -1,0 +1,17 @@
+{
+  "event_id": "evt_a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "event_type": "commerce.payment_succeeded.v1",
+  "occurred_at": "2026-07-26T09:30:00Z",
+  "schema_version": "v1",
+  "aggregate_id": "purchase_9f8e7d6c",
+  "aggregate_version": 1,
+  "payload": {
+    "provider": "stripe",
+    "provider_event_id": "pi_1234567890abcdef",
+    "provider_session_id": "cs_test_a1b2c3d4e5f6",
+    "status": "payment_intent.succeeded",
+    "amount_cents": 1200,
+    "currency": "USD",
+    "idempotency_key": "idem_abc123def456ghi789"
+  }
+}

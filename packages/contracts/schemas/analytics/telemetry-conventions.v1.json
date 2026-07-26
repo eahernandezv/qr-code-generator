@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "telemetry-conventions.v1",
+  "title": "Telemetry Conventions v1",
+  "description": "Observability event conventions and required dimensions",
+  "type": "object",
+  "required": ["service", "timestamp", "level"],
+  "properties": {
+    "service": { "type": "string" },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "level": {
+      "type": "string",
+      "enum": ["trace", "debug", "info", "warn", "error", "fatal"]
+    },
+    "trace_id": { "type": "string" },
+    "span_id": { "type": "string" },
+    "parent_span_id": { "type": "string" },
+    "message": { "type": "string" },
+    "attributes": { "type": "object" },
+    "metrics": {
+      "type": "object",
+      "properties": {
+        "latency_ms": { "type": "number" },
+        "cost_cents": { "type": "integer" },
+        "queue_depth": { "type": "integer" },
+        "retry_count": { "type": "integer" }
+      }
+    }
+  }
+}

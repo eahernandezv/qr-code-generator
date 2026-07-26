@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "commerce-events.v1",
+  "title": "Commerce Events v1",
+  "description": "Verified payment event schema with idempotency guarantees",
+  "definitions": {
+    "EventEnvelope": {
+      "type": "object",
+      "required": ["event_id", "event_type", "occurred_at", "schema_version", "aggregate_id", "aggregate_version"],
+      "properties": {
+        "event_id": { "type": "string", "format": "uuid" },
+        "event_type": { "type": "string" },
+        "occurred_at": { "type": "string", "format": "date-time" },
+        "schema_version": { "type": "string", "default": "v1" },
+        "aggregate_id": { "type": "string" },
+        "aggregate_version": { "type": "integer", "minimum": 1 }
+      }
+    }
+  },
+  "type": "object",
+  "allOf": [{ "$ref": "#/definitions/EventEnvelope" }],
+  "required": ["event_id", "event_type", "occurred_at", "schema_version", "aggregate_id", "aggregate_version", "payload"],
+  "properties": {
+    "payload": {
+      "type": "object",
+      "required": ["provider", "provider_event_id", "status"],
+      "properties": {
+        "provider": { "type": "string" },
+        "provider_event_id": { "type": "string" },
+        "provider_session_id": { "type": "string" },
+        "status": {
+          "type": "string",
+          "enum": ["payment_intent.created", "payment_intent.succeeded", "payment_intent.payment_failed", "charge.refunded", "charge.dispute.created"]
+        },
+        "amount_cents": { "type": "integer", "minimum": 0 },
+        "currency": { "type": "string", "pattern": "^[A-Z]{3}$" },
+        "idempotency_key": { "type": "string" }
+      }
+    }
+  }
+}

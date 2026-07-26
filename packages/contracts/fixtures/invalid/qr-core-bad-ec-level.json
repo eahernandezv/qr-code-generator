@@ -1,0 +1,5 @@
+{
+  "payload": "https://evil.example.com/<script>alert(1)</script>",
+  "format": "png",
+  "errorCorrectionLevel": "INVALID"
+}

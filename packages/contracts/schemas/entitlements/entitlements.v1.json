@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "entitlements.v1",
+  "title": "Entitlements v1",
+  "description": "Entitlement state and lifecycle schema",
+  "type": "object",
+  "required": ["entitlement_id", "tenant_id", "type", "state"],
+  "properties": {
+    "entitlement_id": { "type": "string", "format": "uuid" },
+    "tenant_id": { "type": "string" },
+    "type": {
+      "type": "string",
+      "enum": ["artistic_generation_allowance", "dynamic_campaign_slot", "custom_hostname_slot", "bulk_batch_pass"]
+    },
+    "state": {
+      "type": "string",
+      "enum": ["pending", "active", "reserved", "consumed", "under_review", "revoked", "refunded", "expired"]
+    },
+    "offer_id": { "type": "string" },
+    "purchase_event_id": { "type": "string", "format": "uuid" },
+    "created_at": { "type": "string", "format": "date-time" },
+    "expires_at": { "type": "string", "format": "date-time" },
+    "consumed_at": { "type": "string", "format": "date-time" },
+    "metadata": { "type": "object" }
+  }
+}
