@@ -77,6 +77,16 @@ describe('StudioStore', () => {
     expect(useStudioStore.getState().isGenerating).toBe(false)
   })
 
+  it('increments usedRounds up to maxRounds', () => {
+    const { incrementUsedRounds } = useStudioStore.getState()
+    expect(useStudioStore.getState().project.entitlement.usedRounds).toBe(0)
+    incrementUsedRounds()
+    expect(useStudioStore.getState().project.entitlement.usedRounds).toBe(1)
+    // Attempting past max should clamp
+    incrementUsedRounds()
+    expect(useStudioStore.getState().project.entitlement.usedRounds).toBe(1)
+  })
+
   it('persists state through reset and maintains updatedAt', () => {
     const { setPayload, resetProject } = useStudioStore.getState()
     setPayload({ raw: 'test', normalized: 'test', mode: 'text' })

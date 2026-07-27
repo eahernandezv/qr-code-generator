@@ -67,6 +67,7 @@ interface StudioStore {
   updateCandidate: (boardId: string, candidateId: string, patch: Partial<import('./types').Candidate>) => void
   selectCandidate: (candidateId: string) => void
   setIsGenerating: (v: boolean) => void
+  incrementUsedRounds: () => void
   resetProject: () => void
   cloneProject: () => ProjectState
 }
@@ -138,6 +139,18 @@ export const useStudioStore = create<StudioStore>()(
         })),
 
       setIsGenerating: (isGenerating) => set({ isGenerating }),
+
+      incrementUsedRounds: () =>
+        set((s) => ({
+          project: {
+            ...s.project,
+            entitlement: {
+              ...s.project.entitlement,
+              usedRounds: Math.min(s.project.entitlement.usedRounds + 1, s.project.entitlement.maxRounds),
+            },
+            updatedAt: nowIso(),
+          },
+        })),
 
       resetProject: () => set({ project: createProject(), activeBoardId: null }),
 

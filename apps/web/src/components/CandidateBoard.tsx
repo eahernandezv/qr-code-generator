@@ -118,7 +118,7 @@ function BoardRow({ board, selectedId, onSelect }: { board: GenerationBoard; sel
 }
 
 const CandidateBoard: React.FC = () => {
-  const { project, selectCandidate, setIsGenerating, addBoard, updateBoard, updateCandidate, isGenerating } = useStudioStore()
+  const { project, selectCandidate, setIsGenerating, addBoard, updateBoard, updateCandidate, incrementUsedRounds, isGenerating } = useStudioStore()
   const { boards, selectedCandidateId, entitlement } = project
 
   const handleGenerate = () => {
@@ -127,6 +127,7 @@ const CandidateBoard: React.FC = () => {
     if (entitlement.usedRounds >= entitlement.maxRounds) return
 
     setIsGenerating(true)
+    incrementUsedRounds()
 
     const boardId = Math.random().toString(36).slice(2)
     const now = new Date().toISOString()
