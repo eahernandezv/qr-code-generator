@@ -23,6 +23,11 @@ function resetStore() {
     },
     activeBoardId: null,
     isGenerating: false,
+    featureFlags: {
+      artistic_checkout_enabled: false,
+      artistic_generative_enabled: false,
+      artistic_refinement_enabled: false,
+    },
   })
 }
 
@@ -94,5 +99,13 @@ describe('StudioStore', () => {
     const after = useStudioStore.getState().project
     expect(after.payload.raw).toBe('')
     expect(new Date(after.updatedAt).toISOString()).toBe(after.updatedAt)
+  })
+
+  it('exposes feature flags with default values', () => {
+    const { featureFlags } = useStudioStore.getState()
+    expect(featureFlags).toBeDefined()
+    expect(typeof featureFlags.artistic_checkout_enabled).toBe('boolean')
+    expect(typeof featureFlags.artistic_generative_enabled).toBe('boolean')
+    expect(typeof featureFlags.artistic_refinement_enabled).toBe('boolean')
   })
 })

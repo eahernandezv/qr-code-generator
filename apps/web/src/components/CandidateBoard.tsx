@@ -118,8 +118,9 @@ function BoardRow({ board, selectedId, onSelect }: { board: GenerationBoard; sel
 }
 
 const CandidateBoard: React.FC = () => {
-  const { project, selectCandidate, setIsGenerating, addBoard, updateBoard, updateCandidate, incrementUsedRounds, isGenerating } = useStudioStore()
+  const { project, featureFlags, selectCandidate, setIsGenerating, addBoard, updateBoard, updateCandidate, incrementUsedRounds, isGenerating } = useStudioStore()
   const { boards, selectedCandidateId, entitlement } = project
+  const generativeEnabled = featureFlags.artistic_generative_enabled
 
   const handleGenerate = () => {
     if (isGenerating) return
@@ -186,14 +187,14 @@ const CandidateBoard: React.FC = () => {
         </div>
         <button
           onClick={handleGenerate}
-          disabled={isGenerating || !project.payload.raw.trim() || entitlement.usedRounds >= entitlement.maxRounds}
+          disabled={isGenerating || !project.payload.raw.trim() || entitlement.usedRounds >= entitlement.maxRounds || !generativeEnabled}
           className={`rounded-lg px-4 py-2 text-xs font-semibold transition-colors ${
-            isGenerating || !project.payload.raw.trim() || entitlement.usedRounds >= entitlement.maxRounds
+            isGenerating || !project.payload.raw.trim() || entitlement.usedRounds >= entitlement.maxRounds || !generativeEnabled
               ? 'cursor-not-allowed bg-slate-800 text-slate-500'
               : 'bg-studio-600 text-white hover:bg-studio-500'
           }`}
         >
-          {isGenerating ? 'Generating…' : 'Generate 4'}
+          {isGenerating ? 'Generating…' : !generativeEnabled ? 'Generation offline' : 'Generate 4'}
         </button>
       </div>
 

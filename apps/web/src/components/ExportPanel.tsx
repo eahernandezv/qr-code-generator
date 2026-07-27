@@ -25,7 +25,7 @@ function triggerDownload(dataUrl: string, filename: string) {
 }
 
 const ExportPanel: React.FC = () => {
-  const { project } = useStudioStore()
+  const { project, featureFlags } = useStudioStore()
   const { selectedCandidateId, boards, entitlement } = project
 
   const [format, setFormat] = React.useState<ExportFormat>('png')
@@ -37,7 +37,10 @@ const ExportPanel: React.FC = () => {
     .flatMap((b) => b.candidates)
     .find((c) => c.candidateId === selectedCandidateId)
 
-  const canExport = entitlement.exportAllowed || (format === 'png' && SIZES[sizeIndex].width <= 512)
+  const checkoutEnabled = featureFlags.artistic_checkout_enabled
+  const canExport =
+    checkoutEnabled &&
+    (entitlement.exportAllowed || (format === 'png' && SIZES[sizeIndex].width <= 512))
 
   const handleExport = async () => {
     if (!selectedCandidate || !canExport) return
@@ -86,7 +89,11 @@ const ExportPanel: React.FC = () => {
     <section className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4 md:p-6">
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-400">Export</h2>
-        {!entitlement.exportAllowed && (
+        {!checkoutEnabled ? (
+          <span className="rounded-full bg-slate-800 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-400">
+            Checkout offline
+          </span>
+        ) : !entitlement.exportAllowed && (
           <span className="rounded-full bg-amber-950/40 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-amber-300">
             Preview mode
           </span>
@@ -134,13 +141,15 @@ const ExportPanel: React.FC = () => {
         <div className="grid grid-cols-2 gap-2">
           {SIZES.map((s, i) => {
             const restricted = !entitlement.exportAllowed && s.width > 512
+            const checkoutBlocked = !checkoutEnabled && s.width > 512
+            const sizeDisabled = restricted || checkoutBlocked
             return (
               <button
                 key={s.label}
-                onClick={() => !restricted && setSizeIndex(i)}
-                disabled={restricted}
+                onClick={() => !sizeDisabled && setSizeIndex(i)}
+                disabled={sizeDisabled}
                 className={`rounded-lg border px-3 py-2 text-left transition-colors ${
-                  restricted
+                  sizeDisabled
                     ? 'cursor-not-allowed border-slate-900 bg-slate-950/30 text-slate-700'
                     : sizeIndex === i
                     ? 'border-studio-500/60 bg-studio-950/40 text-slate-200'
@@ -149,7 +158,10 @@ const ExportPanel: React.FC = () => {
               >
                 <span className="block text-xs font-semibold">{s.label}</span>
                 <span className="block text-[10px] text-slate-500">{s.width}×{s.height} px</span>
-                {restricted && (
+                {checkoutBlocked && (
+                  <span className="block text-[10px] text-slate-500">Checkout unavailable</span>
+                )}
+                {restricted && !checkoutBlocked && (
                   <span className="block text-[10px] text-amber-400">Purchase required</span>
                 )}
               </button>

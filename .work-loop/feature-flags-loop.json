@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "2.0.0",
+  "loopId": "feature-flags-a0",
+  "objective": "Add feature flags (artistic_checkout_enabled, artistic_generative_enabled) to QR Studio web app",
+  "scope": [
+    "Define feature flag config module in apps/web/src/",
+    "Wire flags into Store",
+    "Gate ExportPanel on artistic_checkout_enabled",
+    "Gate generation UI on artistic_generative_enabled",
+    "Add tests for flag behavior",
+    "Build green, commit, push"
+  ],
+  "nonGoals": [
+    "Backend flag service",
+    "Runtime flag toggling UI",
+    "Analytics"
+  ],
+  "acceptanceCriteria": [
+    {
+      "id": "A1",
+      "descr": "Feature flags config module exists with two booleans",
+      "evidence": "File exists and exports typed flags object"
+    },
+    {
+      "id": "A2",
+      "descr": "Store exposes feature flags and initializes from config",
+      "evidence": "Store contains flags field; test verifies presence"
+    },
+    {
+      "id": "A3",
+      "descr": "ExportPanel gates paid export on artistic_checkout_enabled",
+      "evidence": "When flag false, large-print exports are disabled/disabled UI shown"
+    },
+    {
+      "id": "A4",
+      "descr": "Generation UI gates on artistic_generative_enabled",
+      "evidence": "When flag false, generation button shows disabled state or static-only mode"
+    },
+    {
+      "id": "A5",
+      "descr": "All existing tests pass and new flag tests added",
+      "evidence": "vitest run output: all tests pass"
+    },
+    {
+      "id": "A6",
+      "descr": "Committed to ws/05-web-studio and pushed",
+      "evidence": "git log shows commit on branch; push succeeds"
+    }
+  ],
+  "status": "OPEN",
+  "cycle": 1,
+  "stage": "init",
+  "activeWorker": null,
+  "processOutcome": null,
+  "artifactDecision": "not_evaluated",
+  "criteriaLedger": {},
+  "attempts": {},
+  "authorization": {
+    "allowed": ["edit apps/web/src/*", "add new files", "run tests", "commit", "push"],
+    "requiresApproval": ["delete existing files", "change frozen contracts"]
+  },
+  "nextTransition": "A1: create feature flags config module",
+  "createdAt": "2026-07-27T19:42:00Z",
+  "updatedAt": "2026-07-27T19:42:00Z"
+}

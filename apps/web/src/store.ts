@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { ProjectState, Payload, ArtDirection, StyleSpec, Entitlement, GenerationBoard } from './types'
+import { FEATURE_FLAGS, type FeatureFlags } from './config/flags'
 
 const generateId = (): string => {
   const hex = () => Math.floor(Math.random() * 16).toString(16)
@@ -59,6 +60,7 @@ interface StudioStore {
   project: ProjectState
   activeBoardId: string | null
   isGenerating: boolean
+  featureFlags: FeatureFlags
   setPayload: (payload: Payload) => void
   setArtDirection: (art: ArtDirection) => void
   setStyle: (style: StyleSpec) => void
@@ -78,6 +80,7 @@ export const useStudioStore = create<StudioStore>()(
       project: createProject(),
       activeBoardId: null,
       isGenerating: false,
+      featureFlags: FEATURE_FLAGS,
 
       setPayload: (payload) =>
         set((s) => ({
