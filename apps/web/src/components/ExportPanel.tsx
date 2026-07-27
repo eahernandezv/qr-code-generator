@@ -2,10 +2,13 @@ import React from 'react'
 import { useStudioStore } from '../store'
 import type { ExportFormat } from '../types'
 import { toPng, toSvg } from 'html-to-image'
+import { exportToPdf, exportToEps } from '../lib/exportFormats'
 
 const FORMATS: { value: ExportFormat; label: string; ext: string; desc: string }[] = [
   { value: 'png', label: 'PNG', ext: '.png', desc: 'High-res raster' },
   { value: 'svg', label: 'SVG', ext: '.svg', desc: 'Scalable vector' },
+  { value: 'pdf', label: 'PDF', ext: '.pdf', desc: 'Print-ready document' },
+  { value: 'eps', label: 'EPS', ext: '.eps', desc: 'Vector for Illustrator' },
 ]
 
 const SIZES = [
@@ -47,10 +50,13 @@ const ExportPanel: React.FC = () => {
     setExporting(true)
 
     try {
-      // Build a hidden render node
+      const { width, height } = SIZES[sizeIndex]
+      const baseName = `artistic-qr-${project.projectId.slice(0, 6)}-${SIZES[sizeIndex].label.toLowerCase().replace(/\s/g, '-')}`
+
+      // Build a hidden render node for raster/vector capture
       const node = document.createElement('div')
-      node.style.width = `${SIZES[sizeIndex].width}px`
-      node.style.height = `${SIZES[sizeIndex].height}px`
+      node.style.width = `${width}px`
+      node.style.height = `${height}px`
       node.style.background = project.style?.background || '#f0f4ff'
       node.style.display = 'flex'
       node.style.alignItems = 'center'
@@ -67,6 +73,36 @@ const ExportPanel: React.FC = () => {
       node.appendChild(img)
       document.body.appendChild(node)
 
+      if (format === 'pdf') {
+        const dataUrl = await toPng(node, { pixelRatio: 1 })
+        document.body.removeChild(node)
+        await exportToPdf(dataUrl, {
+          filename: `${baseName}.pdf`,
+          widthPx: width,
+          heightPx: height,
+          dpi: 300,
+        })
+        setLastExport(`${baseName}.pdf`)
+        return
+      }
+
+      if (format === 'eps') {
+        const svgString = await toSvg(node, { pixelRatio: 1 })
+        document.body.removeChild(node)
+        // Decode data URL to raw SVG
+        const svgRaw = svgString.replace(/^data:image\/svg\+xml;base64,/, '')
+        const decoded = typeof atob !== 'undefined'
+          ? atob(svgRaw)
+          : Buffer.from(svgRaw, 'base64').toString('utf-8')
+        exportToEps(decoded, {
+          filename: `${baseName}.eps`,
+          widthPx: width,
+          heightPx: height,
+        })
+        setLastExport(`${baseName}.eps`)
+        return
+      }
+
       let dataUrl: string
       if (format === 'svg') {
         dataUrl = await toSvg(node, { pixelRatio: 1 })
@@ -75,9 +111,8 @@ const ExportPanel: React.FC = () => {
       }
       document.body.removeChild(node)
 
-      const filename = `artistic-qr-${project.projectId.slice(0, 6)}-${SIZES[sizeIndex].label.toLowerCase().replace(/\s/g, '-')}.${format}`
-      triggerDownload(dataUrl, filename)
-      setLastExport(filename)
+      triggerDownload(dataUrl, `${baseName}.${format}`)
+      setLastExport(`${baseName}.${format}`)
     } catch (err) {
       console.error('Export failed:', err)
     } finally {

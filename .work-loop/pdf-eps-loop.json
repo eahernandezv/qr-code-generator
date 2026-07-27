@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "2.0.0",
+  "loopId": "pdf-eps-export-a0",
+  "objective": "Add PDF and EPS export formats to QR Studio ExportPanel",
+  "scope": [
+    "Add PDF export via jspdf (client-side)",
+    "Add EPS export via SVG-to-EPS conversion",
+    "Wire into ExportPanel format selection",
+    "Gate on artistic_checkout_enabled as existing",
+    "Tests for export format paths",
+    "Build green, commit, push"
+  ],
+  "nonGoals": [
+    "Backend render pipeline for PDF/EPS",
+    "CMYK color conversion",
+    "Bleed/trim marks"
+  ],
+  "acceptanceCriteria": [
+    {
+      "id": "C1",
+      "descr": "PDF export produces a downloadable .pdf from selected candidate",
+      "evidence": "ExportPanel handles 'pdf' format, triggers download"
+    },
+    {
+      "id": "C2",
+      "descr": "EPS export produces a downloadable .eps from selected candidate",
+      "evidence": "ExportPanel handles 'eps' format, triggers download"
+    },
+    {
+      "id": "C3",
+      "descr": "Format buttons show all 4 formats (PNG, SVG, PDF, EPS)",
+      "evidence": "FORMATS array has 4 entries, all renderable"
+    },
+    {
+      "id": "C4",
+      "descr": "Large print sizes still gated by checkout flag",
+      "evidence": "Existing gate behavior preserved"
+    },
+    {
+      "id": "C5",
+      "descr": "All tests pass",
+      "evidence": "vitest run output: all tests pass"
+    },
+    {
+      "id": "C6",
+      "descr": "Committed and pushed to ws/05-web-studio",
+      "evidence": "git log shows commit; push succeeds"
+    }
+  ],
+  "status": "EXECUTING",
+  "cycle": 1,
+  "stage": "C1",
+  "activeWorker": null,
+  "processOutcome": null,
+  "artifactDecision": "not_evaluated",
+  "criteriaLedger": {},
+  "attempts": {},
+  "authorization": {
+    "allowed": ["edit apps/web/src/*", "add new files", "install deps", "run tests", "commit", "push"],
+    "requiresApproval": ["delete existing files", "change frozen contracts", "add heavy deps"]
+  },
+  "nextTransition": "C1: install jspdf, add PDF export utility",
+  "createdAt": "2026-07-27T21:35:00Z",
+  "updatedAt": "2026-07-27T21:35:00Z"
+}

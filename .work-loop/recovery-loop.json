@@ -47,14 +47,21 @@
       "evidence": "git log shows commit; push succeeds"
     }
   ],
-  "status": "EXECUTING",
+  "status": "COMPLETE",
   "cycle": 1,
-  "stage": "B1",
+  "stage": "B6",
   "activeWorker": null,
-  "processOutcome": null,
-  "artifactDecision": "not_evaluated",
-  "criteriaLedger": {},
-  "attempts": {},
+  "processOutcome": "exited",
+  "artifactDecision": "accepted",
+  "criteriaLedger": {
+    "B1": "accepted",
+    "B2": "accepted",
+    "B3": "accepted",
+    "B4": "accepted",
+    "B5": "accepted",
+    "B6": "accepted"
+  },
+  "attempts": { "B1": 1, "B2": 1, "B3": 1, "B4": 1, "B5": 1, "B6": 1 },
   "authorization": {
     "allowed": ["edit apps/web/src/*", "add new files", "run tests", "commit", "push"],
     "requiresApproval": ["delete existing files", "change frozen contracts"]
