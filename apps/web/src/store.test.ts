@@ -108,4 +108,30 @@ describe('StudioStore', () => {
     expect(typeof featureFlags.artistic_generative_enabled).toBe('boolean')
     expect(typeof featureFlags.artistic_refinement_enabled).toBe('boolean')
   })
+
+  it('hydrates project from recovery payload', () => {
+    const { hydrateProject } = useStudioStore.getState()
+    const recovered: import('./types').ProjectState = {
+      projectId: 'recovered-123',
+      payload: { raw: 'https://example.com', normalized: 'https://example.com', mode: 'url' },
+      artDirection: {
+        templateId: 'geometric',
+        artisticStrength: 0.7,
+        composition: 'centered',
+        protectedQrProminence: 0.8,
+        palette: { primary: '#ff0000', secondary: '#00ff00', accent: '#0000ff' },
+      },
+      style: { foreground: '#000000', background: '#ffffff', margin: 2, eyeStyle: 'circle', moduleStyle: 'dot' },
+      boards: [],
+      entitlement: { type: 'project', maxRounds: 3, usedRounds: 1, maxCandidates: 4, exportAllowed: true },
+      createdAt: '2024-01-01T00:00:00Z',
+      updatedAt: '2024-01-01T00:00:00Z',
+    }
+    hydrateProject(recovered)
+    const state = useStudioStore.getState()
+    expect(state.project.projectId).toBe('recovered-123')
+    expect(state.project.payload.raw).toBe('https://example.com')
+    expect(state.project.entitlement.exportAllowed).toBe(true)
+    expect(new Date(state.project.updatedAt).getTime()).toBeGreaterThan(new Date('2024-01-01T00:00:00Z').getTime())
+  })
 })

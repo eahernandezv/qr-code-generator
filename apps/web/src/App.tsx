@@ -5,6 +5,7 @@ import ArtDirectionPanel from './components/ArtDirectionPanel'
 import QRPreview from './components/QRPreview'
 import CandidateBoard from './components/CandidateBoard'
 import ExportPanel from './components/ExportPanel'
+import RecoveryPanel from './components/RecoveryPanel'
 
 const App: React.FC = () => {
   const { project, resetProject } = useStudioStore()
@@ -52,10 +53,11 @@ const App: React.FC = () => {
             </div>
           </div>
 
-          {/* Right: Candidates + Export */}
+          {/* Right: Candidates + Export + Recovery */}
           <div className="flex flex-col gap-6 lg:col-span-4">
             <CandidateBoard />
             <ExportPanel />
+            <RecoveryPanel />
           </div>
         </div>
       </main>

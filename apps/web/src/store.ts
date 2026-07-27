@@ -71,6 +71,7 @@ interface StudioStore {
   setIsGenerating: (v: boolean) => void
   incrementUsedRounds: () => void
   resetProject: () => void
+  hydrateProject: (project: ProjectState) => void
   cloneProject: () => ProjectState
 }
 
@@ -156,6 +157,12 @@ export const useStudioStore = create<StudioStore>()(
         })),
 
       resetProject: () => set({ project: createProject(), activeBoardId: null }),
+
+      hydrateProject: (project) =>
+        set({
+          project: { ...project, updatedAt: nowIso() },
+          activeBoardId: project.boards[project.boards.length - 1]?.boardId ?? null,
+        }),
 
       cloneProject: () => ({ ...get().project }),
     }),
