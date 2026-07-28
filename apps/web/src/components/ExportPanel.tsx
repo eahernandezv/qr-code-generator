@@ -1,8 +1,6 @@
 import React from 'react'
 import { useStudioStore } from '../store'
 import type { ExportFormat, ValidationResult } from '../types'
-import { toPng, toSvg } from 'html-to-image'
-import { exportToPdf, exportToEps } from '../lib/exportFormats'
 
 const FORMATS: { value: ExportFormat; label: string; ext: string; desc: string }[] = [
   { value: 'png', label: 'PNG', ext: '.png', desc: 'High-res raster' },
@@ -27,7 +25,95 @@ function triggerDownload(dataUrl: string, filename: string) {
   a.remove()
 }
 
-function ValidationSummary({ result }: { result: ValidationResult }) {
+async function waitForImageReady(image: HTMLImageElement): Promise<void> {
+  if (image.complete && image.naturalWidth > 0) {
+    await image.decode?.().catch(() => undefined)
+    return
+  }
+
+  await new Promise<void>((resolve, reject) => {
+    const timeout = window.setTimeout(
+      () => reject(new Error('Candidate artwork did not finish loading')),
+      10_000,
+    )
+    image.onload = () => {
+      window.clearTimeout(timeout)
+      resolve()
+    }
+    image.onerror = () => {
+      window.clearTimeout(timeout)
+      reject(new Error('Candidate artwork could not be loaded'))
+    }
+  })
+  await image.decode?.().catch(() => undefined)
+}
+
+async function loadCandidateImage(source: string): Promise<HTMLImageElement> {
+  if (!source) throw new Error('Candidate artwork is missing')
+  const image = new Image()
+  image.crossOrigin = 'anonymous'
+  image.src = source
+  await waitForImageReady(image)
+  return image
+}
+
+async function renderCandidatePng(
+  source: string,
+  width: number,
+  height: number,
+  background: string,
+): Promise<string> {
+  const image = await loadCandidateImage(source)
+  const canvas = document.createElement('canvas')
+  canvas.width = width
+  canvas.height = height
+  const context = canvas.getContext('2d')
+  if (!context) throw new Error('Canvas renderer unavailable')
+
+  try {
+    context.fillStyle = background
+    context.fillRect(0, 0, width, height)
+    const scale = Math.min(width / image.naturalWidth, height / image.naturalHeight)
+    const drawWidth = image.naturalWidth * scale
+    const drawHeight = image.naturalHeight * scale
+    context.drawImage(
+      image,
+      (width - drawWidth) / 2,
+      (height - drawHeight) / 2,
+      drawWidth,
+      drawHeight,
+    )
+    return canvas.toDataURL('image/png')
+  } finally {
+    canvas.width = 0
+    canvas.height = 0
+  }
+}
+
+function escapeXmlAttribute(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+}
+
+function candidateSvg(source: string, width: number, height: number, background: string): string {
+  if (!source) throw new Error('Candidate artwork is missing')
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><rect width="100%" height="100%" fill="${escapeXmlAttribute(background)}"/><image href="${escapeXmlAttribute(source)}" width="${width}" height="${height}" preserveAspectRatio="xMidYMid meet"/></svg>`
+}
+
+function svgDataUrl(svg: string): string {
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`
+}
+
+function ValidationSummary({
+  result,
+  verifiedSource,
+}: {
+  result: ValidationResult
+  verifiedSource: boolean
+}) {
   return (
     <div className="mt-3 rounded-lg border border-slate-800 bg-slate-950/50 p-3 space-y-2">
       <div className="flex items-center justify-between">
@@ -36,6 +122,11 @@ function ValidationSummary({ result }: { result: ValidationResult }) {
           {result.pass ? 'Pass' : 'Fail'}
         </span>
       </div>
+      <p className={`text-[10px] ${verifiedSource ? 'text-emerald-500' : 'text-amber-400'}`}>
+        {verifiedSource
+          ? 'Core Engine evidence'
+          : 'Evidence source not supplied — treat as fixture or unverified data'}
+      </p>
       <div className="flex items-center justify-between text-xs text-slate-500">
         <span>Confidence</span>
         <span className="tabular-nums text-slate-300">{Math.round((result.confidence ?? 0) * 100)}%</span>
@@ -93,39 +184,29 @@ function PrintPreview({
   size: typeof SIZES[number]
   candidate: import('../types').Candidate
 }) {
-  const { project } = useStudioStore()
-  const [rendered, setRendered] = React.useState<string>('')
+  const closeBtnRef = React.useRef<HTMLButtonElement>(null)
+  const previousFocusRef = React.useRef<HTMLElement | null>(null)
 
+  // Handle focus lifecycle, Escape, and the single-control focus trap.
   React.useEffect(() => {
-    if (!open || !candidate?.previewUrl) { setRendered(''); return }
-    const build = async () => {
-      try {
-        const node = document.createElement('div')
-        node.style.width = `${size.width}px`
-        node.style.height = `${size.height}px`
-        node.style.background = project.style?.background || '#f0f4ff'
-        node.style.display = 'flex'
-        node.style.alignItems = 'center'
-        node.style.justifyContent = 'center'
-        node.style.position = 'absolute'
-        node.style.left = '-9999px'
-        node.style.top = '-9999px'
-        const img = document.createElement('img')
-        img.src = candidate.previewUrl || ''
-        img.style.width = '100%'
-        img.style.height = '100%'
-        img.style.objectFit = 'contain'
-        node.appendChild(img)
-        document.body.appendChild(node)
-        const dataUrl = await toPng(node, { pixelRatio: 1 })
-        document.body.removeChild(node)
-        setRendered(dataUrl)
-      } catch {
-        setRendered(candidate.previewUrl || '')
+    if (!open) return
+    previousFocusRef.current = document.activeElement as HTMLElement | null
+    closeBtnRef.current?.focus()
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault()
+        onClose()
+      } else if (e.key === 'Tab') {
+        e.preventDefault()
+        closeBtnRef.current?.focus()
       }
     }
-    build()
-  }, [open, size, candidate?.previewUrl])
+    window.addEventListener('keydown', handleKey)
+    return () => {
+      window.removeEventListener('keydown', handleKey)
+      previousFocusRef.current?.focus()
+    }
+  }, [open, onClose])
 
   if (!open) return null
 
@@ -133,22 +214,26 @@ function PrintPreview({
   const physicalSize = `${mm(size.width)}×${mm(size.height)} mm`
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-4"
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="print-preview-title"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-4"
       onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
     >
       <div className="relative max-h-[90vh] max-w-[90vw] overflow-auto rounded-2xl border border-slate-700 bg-slate-900 p-4">
         <div className="mb-3 flex items-center justify-between">
           <div>
-            <h3 className="text-sm font-semibold text-slate-200">Print Preview</h3>
+            <h3 id="print-preview-title" className="text-sm font-semibold text-slate-200">Print Preview</h3>
             <p className="text-xs text-slate-500">{size.label} · {physicalSize}</p>
           </div>
-          <button onClick={onClose} className="rounded-lg px-3 py-1.5 text-xs font-medium text-slate-400 hover:bg-slate-800">
+          <button ref={closeBtnRef} onClick={onClose} className="rounded-lg px-3 py-1.5 text-xs font-medium text-slate-400 hover:bg-slate-800">
             Close
           </button>
         </div>
         <div className="flex items-center justify-center rounded-xl border border-slate-800 bg-slate-950 p-4">
           <img
-            src={rendered || candidate.previewUrl || ''}
+            src={candidate.previewUrl || ''}
             alt="Print preview"
             className="rounded-lg"
             style={{ maxWidth: 'min(60vw, 800px)', maxHeight: '70vh' }}
@@ -172,6 +257,7 @@ const ExportPanel: React.FC = () => {
   const [lastExport, setLastExport] = React.useState<string | null>(null)
   const [exportType, setExportType] = React.useState<'single' | 'bundle'>('single')
   const [previewOpen, setPreviewOpen] = React.useState(false)
+  const [exportError, setExportError] = React.useState<string | null>(null)
 
   const selectedCandidate = boards
     .flatMap((b) => b.candidates)
@@ -188,46 +274,25 @@ const ExportPanel: React.FC = () => {
     const f = format
     const baseName = `artistic-qr-${project.projectId.slice(0, 6)}-${s.label.toLowerCase().replace(/\s/g, '-')}`
 
-    // Build a hidden render node for raster/vector capture
-    const node = document.createElement('div')
-    node.style.width = `${s.width}px`
-    node.style.height = `${s.height}px`
-    node.style.background = project.style?.background || '#f0f4ff'
-    node.style.display = 'flex'
-    node.style.alignItems = 'center'
-    node.style.justifyContent = 'center'
-    node.style.position = 'absolute'
-    node.style.left = '-9999px'
-    node.style.top = '-9999px'
-
-    const img = document.createElement('img')
-    img.src = selectedCandidate!.previewUrl || ''
-    img.style.width = '100%'
-    img.style.height = '100%'
-    img.style.objectFit = 'contain'
-    node.appendChild(img)
-    document.body.appendChild(node)
+    const source = selectedCandidate!.previewUrl || ''
+    const background = project.style?.background || '#f0f4ff'
 
     if (f === 'pdf') {
-      const dataUrl = await toPng(node, { pixelRatio: 1 })
-      document.body.removeChild(node)
+      const { exportToPdf } = await import('../lib/exportFormats')
+      const dataUrl = await renderCandidatePng(source, s.width, s.height, background)
       await exportToPdf(dataUrl, {
         filename: `${baseName}.pdf`,
         widthPx: s.width,
         heightPx: s.height,
-        dpi: 300,
+        dpi: s.dpi,
       })
       return `${baseName}.pdf`
     }
 
+    const svg = candidateSvg(source, s.width, s.height, background)
     if (f === 'eps') {
-      const svgString = await toSvg(node, { pixelRatio: 1 })
-      document.body.removeChild(node)
-      const svgRaw = svgString.replace(/^data:image\/svg\+xml;base64,/, '')
-      const decoded = typeof atob !== 'undefined'
-        ? atob(svgRaw)
-        : Buffer.from(svgRaw, 'base64').toString('utf-8')
-      exportToEps(decoded, {
+      const { exportToEps } = await import('../lib/exportFormats')
+      exportToEps(svg, {
         filename: `${baseName}.eps`,
         widthPx: s.width,
         heightPx: s.height,
@@ -235,13 +300,9 @@ const ExportPanel: React.FC = () => {
       return `${baseName}.eps`
     }
 
-    let dataUrl: string
-    if (f === 'svg') {
-      dataUrl = await toSvg(node, { pixelRatio: 1 })
-    } else {
-      dataUrl = await toPng(node, { pixelRatio: 1 })
-    }
-    document.body.removeChild(node)
+    const dataUrl = f === 'svg'
+      ? svgDataUrl(svg)
+      : await renderCandidatePng(source, s.width, s.height, background)
     triggerDownload(dataUrl, `${baseName}.${f}`)
     return `${baseName}.${f}`
   }
@@ -249,6 +310,7 @@ const ExportPanel: React.FC = () => {
   const handleExport = async () => {
     if (!selectedCandidate || !canExport) return
     setExporting(true)
+    setExportError(null)
     try {
       if (exportType === 'bundle') {
         const names: string[] = []
@@ -263,6 +325,7 @@ const ExportPanel: React.FC = () => {
       }
     } catch (err) {
       console.error('Export failed:', err)
+      setExportError(err instanceof Error ? err.message : 'Export failed. Please try again.')
     } finally {
       setExporting(false)
     }
@@ -290,7 +353,10 @@ const ExportPanel: React.FC = () => {
           {selectedCandidate ? selectedCandidate.candidateId.slice(0, 12) : 'None'}
         </p>
         {selectedCandidate?.validationResult && (
-          <ValidationSummary result={selectedCandidate.validationResult} />
+          <ValidationSummary
+            result={selectedCandidate.validationResult}
+            verifiedSource={Boolean(selectedCandidate.renderResult?.provenance?.engine)}
+          />
         )}
       </div>
 
@@ -415,8 +481,13 @@ const ExportPanel: React.FC = () => {
       </div>
 
       {lastExport && (
-        <p className="text-center text-xs text-emerald-400">
+        <p role="status" aria-live="polite" className="text-center text-xs text-emerald-400">
           Downloaded: {lastExport}
+        </p>
+      )}
+      {exportError && (
+        <p role="alert" className="text-center text-xs text-red-400">
+          Export failed: {exportError}
         </p>
       )}
 

@@ -45,6 +45,9 @@ export function exportToEps(
 ): void {
   const { filename, widthPx, heightPx } = options
 
+  // Browser-safe UTF-8 base64; the Studio client bundle has no Node Buffer.
+  const svgBase64 = btoa(unescape(encodeURIComponent(svgString)))
+
   // Minimal EPS header with bounding box
   const epsHeader = `%!PS-Adobe-3.0 EPSF-3.0
 %%BoundingBox: 0 0 ${widthPx} ${heightPx}
@@ -57,7 +60,7 @@ export function exportToEps(
 % Some applications require raster fallback; this EPS uses SVG embedding
 
 %%BeginProlog
-/svgcontent { (${Buffer.from(svgString).toString('base64')}) } def
+/svgcontent { (${svgBase64}) } def
 %%EndProlog
 
 %%Page: 1 1

@@ -169,20 +169,31 @@ export const useStudioStore = create<StudioStore>()(
       cloneProject: () => ({ ...get().project }),
 
       cancelBoard: (boardId) =>
-        set((s) => ({
-          project: {
-            ...s.project,
-            boards: s.project.boards.map((b) =>
-              b.boardId === boardId && b.status === 'generating'
-                ? { ...b, status: 'failed' as const, completedAt: nowIso() }
-                : b
+        set((s) => {
+          const cancelled = s.project.boards.some(
+            (b) => b.boardId === boardId && b.status === 'generating'
+          )
+          return {
+            project: {
+              ...s.project,
+              boards: s.project.boards.map((b) =>
+                b.boardId === boardId && b.status === 'generating'
+                  ? { ...b, status: 'failed' as const, completedAt: nowIso() }
+                  : b
+              ),
+              entitlement: cancelled
+                ? {
+                    ...s.project.entitlement,
+                    usedRounds: Math.max(0, s.project.entitlement.usedRounds - 1),
+                  }
+                : s.project.entitlement,
+              updatedAt: nowIso(),
+            },
+            isGenerating: s.project.boards.some(
+              (b) => b.boardId !== boardId && b.status === 'generating'
             ),
-            updatedAt: nowIso(),
-          },
-          isGenerating: s.project.boards.some(
-            (b) => b.boardId !== boardId && b.status === 'generating'
-          ),
-        })),
+          }
+        }),
 
       refineFromCandidate: (candidateId, promptOverride) =>
         set((s) => {

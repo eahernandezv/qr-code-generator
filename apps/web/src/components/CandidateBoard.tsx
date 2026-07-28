@@ -124,6 +124,17 @@ const CandidateBoard: React.FC = () => {
   const refinementEnabled = featureFlags.artistic_refinement_enabled
   const [prompt, setPrompt] = React.useState('')
   const [showRefine, setShowRefine] = React.useState(false)
+  const generationTimers = React.useRef<number[]>([])
+
+  React.useEffect(() => () => {
+    generationTimers.current.forEach((timer) => window.clearTimeout(timer))
+    generationTimers.current = []
+  }, [])
+
+  const scheduleGenerationStep = (callback: () => void, delay: number) => {
+    const timer = window.setTimeout(callback, delay)
+    generationTimers.current.push(timer)
+  }
 
   const handleGenerate = () => {
     if (isGenerating) return
@@ -154,7 +165,9 @@ const CandidateBoard: React.FC = () => {
     // Simulate async generation with staggered resolution
     candidates.forEach((candidate, index) => {
       const delay = 2000 + index * 1500
-      setTimeout(() => {
+      scheduleGenerationStep(() => {
+        const liveBoard = useStudioStore.getState().project.boards.find((b) => b.boardId === boardId)
+        if (liveBoard?.status !== 'generating') return
         updateCandidate(boardId, candidate.candidateId, {
           status: 'ready',
           previewUrl: generateMockPreview(project.payload.normalized || project.payload.raw, index),
@@ -170,7 +183,9 @@ const CandidateBoard: React.FC = () => {
 
         // When last candidate finishes, update board status
         if (index === candidates.length - 1) {
-          setTimeout(() => {
+          scheduleGenerationStep(() => {
+            const finalBoard = useStudioStore.getState().project.boards.find((b) => b.boardId === boardId)
+            if (finalBoard?.status !== 'generating') return
             updateBoard(boardId, { status: 'complete', completedAt: new Date().toISOString() })
             setIsGenerating(false)
           }, 500)
@@ -196,7 +211,11 @@ const CandidateBoard: React.FC = () => {
         </div>
         {activeBoard ? (
           <button
-            onClick={() => cancelBoard(activeBoard.boardId)}
+            onClick={() => {
+              generationTimers.current.forEach((timer) => window.clearTimeout(timer))
+              generationTimers.current = []
+              cancelBoard(activeBoard.boardId)
+            }}
             className="rounded-lg border border-red-900/50 bg-red-950/30 px-4 py-2 text-xs font-semibold text-red-300 transition-colors hover:bg-red-950/50"
           >
             Cancel
@@ -259,6 +278,7 @@ const CandidateBoard: React.FC = () => {
                     refineFromCandidate(selectedCandidate.candidateId, prompt.trim())
                     setPrompt('')
                     setShowRefine(false)
+                    handleGenerate()
                   }
                 }}
                 disabled={!prompt.trim() || entitlement.usedRounds >= entitlement.maxRounds}

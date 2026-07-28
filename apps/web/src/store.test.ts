@@ -135,9 +135,10 @@ describe('StudioStore', () => {
     expect(new Date(state.project.updatedAt).getTime()).toBeGreaterThan(new Date('2024-01-01T00:00:00Z').getTime())
   })
 
-  it('cancels a generating board', () => {
-    const { addBoard, cancelBoard, setIsGenerating } = useStudioStore.getState()
+  it('cancels a generating board and restores its consumed round', () => {
+    const { addBoard, cancelBoard, setIsGenerating, incrementUsedRounds } = useStudioStore.getState()
     setIsGenerating(true)
+    incrementUsedRounds()
     addBoard({
       boardId: 'b-cancel',
       projectId: 'p1',
@@ -150,6 +151,7 @@ describe('StudioStore', () => {
     const state = useStudioStore.getState()
     const board = state.project.boards.find((b) => b.boardId === 'b-cancel')
     expect(board?.status).toBe('failed')
+    expect(state.project.entitlement.usedRounds).toBe(0)
   })
 
   it('refines art direction from a selected candidate', () => {
