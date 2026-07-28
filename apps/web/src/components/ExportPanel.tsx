@@ -57,12 +57,12 @@ async function loadCandidateImage(source: string): Promise<HTMLImageElement> {
   return image
 }
 
-async function renderCandidatePng(
+async function renderCandidateCanvas(
   source: string,
   width: number,
   height: number,
   background: string,
-): Promise<string> {
+): Promise<{ canvas: HTMLCanvasElement; context: CanvasRenderingContext2D }> {
   const image = await loadCandidateImage(source)
   const canvas = document.createElement('canvas')
   canvas.width = width
@@ -70,20 +70,52 @@ async function renderCandidatePng(
   const context = canvas.getContext('2d')
   if (!context) throw new Error('Canvas renderer unavailable')
 
+  context.fillStyle = background
+  context.fillRect(0, 0, width, height)
+  const scale = Math.min(width / image.naturalWidth, height / image.naturalHeight)
+  const drawWidth = image.naturalWidth * scale
+  const drawHeight = image.naturalHeight * scale
+  context.drawImage(
+    image,
+    (width - drawWidth) / 2,
+    (height - drawHeight) / 2,
+    drawWidth,
+    drawHeight,
+  )
+  return { canvas, context }
+}
+
+async function renderCandidatePng(
+  source: string,
+  width: number,
+  height: number,
+  background: string,
+): Promise<string> {
+  const { canvas } = await renderCandidateCanvas(source, width, height, background)
   try {
-    context.fillStyle = background
-    context.fillRect(0, 0, width, height)
-    const scale = Math.min(width / image.naturalWidth, height / image.naturalHeight)
-    const drawWidth = image.naturalWidth * scale
-    const drawHeight = image.naturalHeight * scale
-    context.drawImage(
-      image,
-      (width - drawWidth) / 2,
-      (height - drawHeight) / 2,
-      drawWidth,
-      drawHeight,
-    )
     return canvas.toDataURL('image/png')
+  } finally {
+    canvas.width = 0
+    canvas.height = 0
+  }
+}
+
+async function renderCandidateRgb(
+  source: string,
+  width: number,
+  height: number,
+  background: string,
+): Promise<Uint8Array> {
+  const { canvas, context } = await renderCandidateCanvas(source, width, height, background)
+  try {
+    const rgba = context.getImageData(0, 0, width, height).data
+    const rgb = new Uint8Array(width * height * 3)
+    for (let sourceIndex = 0, targetIndex = 0; sourceIndex < rgba.length; sourceIndex += 4) {
+      rgb[targetIndex++] = rgba[sourceIndex]
+      rgb[targetIndex++] = rgba[sourceIndex + 1]
+      rgb[targetIndex++] = rgba[sourceIndex + 2]
+    }
+    return rgb
   } finally {
     canvas.width = 0
     canvas.height = 0
@@ -289,10 +321,10 @@ const ExportPanel: React.FC = () => {
       return `${baseName}.pdf`
     }
 
-    const svg = candidateSvg(source, s.width, s.height, background)
     if (f === 'eps') {
       const { exportToEps } = await import('../lib/exportFormats')
-      exportToEps(svg, {
+      const rgb = await renderCandidateRgb(source, s.width, s.height, background)
+      exportToEps(rgb, {
         filename: `${baseName}.eps`,
         widthPx: s.width,
         heightPx: s.height,
@@ -300,6 +332,7 @@ const ExportPanel: React.FC = () => {
       return `${baseName}.eps`
     }
 
+    const svg = candidateSvg(source, s.width, s.height, background)
     const dataUrl = f === 'svg'
       ? svgDataUrl(svg)
       : await renderCandidatePng(source, s.width, s.height, background)

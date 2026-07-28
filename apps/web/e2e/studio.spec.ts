@@ -211,9 +211,12 @@ test('single exports produce inspectable PNG, SVG, PDF, and EPS files', async ({
   expect(pdf.subarray(0, 5).toString()).toBe('%PDF-')
   expect(pdf.byteLength).toBeGreaterThan(1_000)
 
-  const eps = await fs.readFile(saved.EPS, 'utf8')
-  expect(eps.startsWith('%!PS-Adobe-3.0 EPSF-3.0')).toBe(true)
-  expect(eps).toContain('%%BoundingBox: 0 0 512 512')
+  const eps = await fs.readFile(saved.EPS)
+  const epsHeader = eps.subarray(0, 512).toString('latin1')
+  expect(epsHeader).toContain('%!PS-Adobe-3.0 EPSF-3.0')
+  expect(epsHeader).toContain('%%BoundingBox: 0 0 512 512')
+  expect(epsHeader).toContain('%%BeginBinary: 786432')
+  expect(eps.byteLength).toBeGreaterThan(512 * 512 * 3)
   expect(errors).toEqual([])
 })
 

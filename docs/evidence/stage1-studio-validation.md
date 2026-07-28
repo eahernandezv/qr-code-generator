@@ -18,7 +18,7 @@ Stage 1 Studio validation and remediation passed. Browser evidence uses an expli
 - Export failures are announced with an accessible alert.
 - Validation summaries distinguish Core Engine provenance from fixture/unknown evidence.
 - PNG/PDF rendering now waits for candidate artwork and uses deterministic direct-canvas rendering; browser checks reject one-color/blank artifacts.
-- SVG/EPS paths no longer require Node `Buffer` in the browser.
+- SVG export remains vector-wrapped; EPS now embeds the actual rendered RGB artwork as efficient binary PostScript image data and no longer requires Node `Buffer`.
 - Temporary high-resolution canvases are released after export.
 - Remote Google Fonts dependency was removed to eliminate CORS/export errors and improve offline behavior.
 - PDF/EPS code is dynamically loaded; production build has no oversized-chunk warning.
@@ -38,8 +38,8 @@ pnpm test:e2e
 Observed final results:
 
 - `pnpm lint`: pass, 0 warnings/errors.
-- `pnpm test`: 8 files passed, 46 tests passed.
-- `pnpm build`: pass; 512 modules transformed; initial app chunk 212.39 kB, lazy export chunk 391.43 kB; no chunk-size warning.
+- `pnpm test`: 9 files passed, 48 tests passed.
+- `pnpm build`: pass; 512 modules transformed; initial app chunk 212.75 kB, lazy export chunk 391.19 kB; no chunk-size warning.
 - `pnpm test:e2e`: 8 Chromium tests passed in one worker/process.
 - `git diff --check`: pass.
 
@@ -69,7 +69,7 @@ Generated artifact sizes/signatures:
 
 | Artifact | Bytes | Verified signature/dimensions | SHA-256 |
 |---|---:|---|---|
-| Social EPS | 2,017 | `%!PS-Adobe-3.0 EPSF-3.0` | `2ca3139b471aa4982d7b242797431749513ba958932b357a449c1c255201fc3e` |
+| Social EPS | 786,818 | EPSF 3.0; 786,432 embedded RGB bytes; sampled pixels match PNG | `3b98b2849b3e124730b3df21e326e159bb3207ebbb3cbb46f90a2cda153e1e7e` |
 | Social PDF | 789,677 | `%PDF-1.3` | `a2279787e68992914b5877a7c3e9adb481ccc8b9a10746b11be73a1c98c2a658` |
 | Social PNG | 7,211 | PNG 512×512, >1 sampled color | `7ad71506fb697a28313170f60d679b0e9c107420ca64b6b463ac1955a226ebf0` |
 | Social SVG | 851 | `<svg xmlns=...>` | `8489c90dd6b7a1d0550f03a8f4fd9ad658c0dcece2c8e4c86e68b920672c0ee0` |
