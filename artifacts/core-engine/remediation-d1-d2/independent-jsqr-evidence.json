@@ -1,0 +1,50 @@
+{
+  "generatedAt": "2026-07-28T21:26:42.041Z",
+  "canonicalPayload": "https://example.com/Core/Exact?Case=Preserved&gate=D1-D2",
+  "cases": [
+    {
+      "name": "deterministic",
+      "file": "deterministic.png",
+      "boardStatus": "completed",
+      "requestMode": "deterministic_template",
+      "generationMode": "deterministic_template",
+      "provider": "local",
+      "exportAllowed": true,
+      "jsqrDecodedPayload": "https://example.com/Core/Exact?Case=Preserved&gate=D1-D2",
+      "exactPayloadMatch": true,
+      "sha256": "7611c9ba2cf21402b2449c7118656a22008fd68dc7c964231b1a1c29ed6d58a0"
+    },
+    {
+      "name": "artistic-deterministic",
+      "file": "artistic-deterministic.png",
+      "boardStatus": "completed",
+      "requestMode": "deterministic_template",
+      "generationMode": "deterministic_template",
+      "provider": "local",
+      "exportAllowed": true,
+      "jsqrDecodedPayload": "https://example.com/Core/Exact?Case=Preserved&gate=D1-D2",
+      "exactPayloadMatch": true,
+      "sha256": "9b1e2b8d3093a903dbae9fc0383ae58c6d1ec33577664433b36cfa858bea33ab"
+    },
+    {
+      "name": "provider-failure-fallback",
+      "file": "provider-failure-fallback.png",
+      "boardStatus": "completed",
+      "requestMode": "provider_generative",
+      "generationMode": "deterministic_template",
+      "provider": "local-safe-fallback",
+      "exportAllowed": true,
+      "jsqrDecodedPayload": "https://example.com/Core/Exact?Case=Preserved&gate=D1-D2",
+      "exactPayloadMatch": true,
+      "sha256": "7611c9ba2cf21402b2449c7118656a22008fd68dc7c964231b1a1c29ed6d58a0"
+    }
+  ],
+  "preservedFailedProvider": {
+    "file": "../high-conditioning/provider-a4a85d01-e1cf-4785-b7df-81240ce18e8e.png",
+    "localValidationPass": false,
+    "rawJsqrDecodedPayload": "",
+    "exportAllowed": false,
+    "exportDenied": true,
+    "sha256": "e5150642fc92031756c7a7b74975431731b0ba16472b933ac7af25c17dc6c204"
+  }
+}

@@ -14,11 +14,17 @@ import {
   type PythonCandidate,
 } from './provider-adapter.js';
 import { runValidation } from './validation.js';
-import { registerMatrixPayload } from './candidate-context.js';
+import { registerCandidateAuthority } from './candidate-context.js';
+import {
+  enforceGenerationSafety,
+  validateGenerationRequest,
+  type SafetyEvaluator,
+} from './request-validation.js';
 
 export interface GenerationEngineOptions {
   provider?: ProviderCallOptions;
   fallbackOnProviderFailure?: boolean;
+  safetyEvaluator?: SafetyEvaluator;
 }
 
 export async function buildBoard(
@@ -26,8 +32,10 @@ export async function buildBoard(
   request: GenerationRequest,
   options: GenerationEngineOptions = {},
 ): Promise<GenerationBoard> {
-  if (request.mode === 'provider_generative') return buildGenerativeBoard(boardId, request, options);
-  return buildDeterministicBoard(boardId, request);
+  const validated = validateGenerationRequest(request);
+  await enforceGenerationSafety(validated, options.safetyEvaluator);
+  if (validated.mode === 'provider_generative') return buildGenerativeBoard(boardId, validated, options);
+  return buildDeterministicBoard(boardId, validated);
 }
 
 function buildDeterministicBoard(
@@ -59,17 +67,17 @@ function buildDeterministicBoard(
       artisticScore: computeArtisticScore(request, index),
       provenance: {
         generationMode: 'deterministic_template',
-        provider: request.mode === 'provider_generative' ? 'local-safe-fallback' : 'local',
+        provider: originalRequest.mode === 'provider_generative' ? 'local-safe-fallback' : 'local',
         modelVersion: 'qr-core-v1',
         adapterVersion: 'artistic-qr-v1',
         validationVersion: 'scan-v1-real-75pct',
         createdAt: new Date().toISOString(),
       },
     };
-    registerMatrixPayload(candidate.matrixRef, normalized.canonical);
     const validation = runValidation(candidate, normalized.canonical);
     candidate.scanResults = [validation];
     candidate.exportAllowed = validation.pass;
+    registerCandidateAuthority(candidate, normalized.canonical, validation);
     candidates.push(candidate);
   }
 
@@ -109,10 +117,11 @@ async function buildGenerativeBoard(
   const fallbackEnabled = options.fallbackOnProviderFailure !== false;
   try {
     const result = await callProviderGenerative(request as unknown as Record<string, unknown>, options.provider);
-    if (result.status === 'cancelled') return cancelledBoard(boardId, request, result.failure?.message ?? 'Provider cancelled generation');
+    if (result.status === 'cancelled') return cancelledBoard(boardId, request, 'Provider generation was cancelled');
     if (result.status === 'failed') {
       if (fallbackEnabled) return deterministicFallback(boardId, request);
-      return failedBoard(boardId, request, result.failure?.code ?? 'GENERATION_FAILED', result.failure?.message ?? 'Provider failed', result.failure?.retryable ?? true);
+      const code = result.failure?.code ?? 'GENERATION_FAILED';
+      return failedBoard(boardId, request, code, safeProviderFailureMessage(code), result.failure?.retryable ?? true);
     }
 
     const expectedPayload = requireNormalizedPayload(request.normalizedPayload).canonical;
@@ -123,17 +132,18 @@ async function buildGenerativeBoard(
     }
     return { boardId, request, candidates, status: 'completed' };
   } catch (error) {
-    if (error instanceof ProviderAdapterError && error.code === 'CANCELLED') return cancelledBoard(boardId, request, error.message);
+    if (error instanceof ProviderAdapterError && error.code === 'CANCELLED') return cancelledBoard(boardId, request, 'Provider generation was cancelled');
     if (fallbackEnabled) return deterministicFallback(boardId, request);
     const code = error instanceof ProviderAdapterError ? error.code : 'GENERATION_FAILED';
-    return failedBoard(boardId, request, code, error instanceof Error ? error.message : String(error), error instanceof ProviderAdapterError ? error.retryable : true);
+    return failedBoard(boardId, request, code, safeProviderFailureMessage(code), error instanceof ProviderAdapterError ? error.retryable : true);
   }
 }
 
 function mapAndValidateProviderCandidate(source: PythonCandidate, expectedPayload: string): Candidate {
   const renderedFormat = source.rendered.format === 'svg' ? 'svg' : 'png-dataurl';
   const candidate: Candidate = {
-    candidateId: source.candidateId,
+    // Provider identifiers are evidence only; issue a fresh opaque engine-owned authority key.
+    candidateId: randomUUID(),
     matrixRef: source.matrixRef,
     rendered: {
       format: renderedFormat,
@@ -153,11 +163,22 @@ function mapAndValidateProviderCandidate(source: PythonCandidate, expectedPayloa
       createdAt: source.provenance.createdAt,
     },
   };
-  registerMatrixPayload(candidate.matrixRef, expectedPayload);
   const validation = runValidation(candidate, expectedPayload);
   candidate.scanResults = [validation];
   candidate.exportAllowed = validation.pass;
+  registerCandidateAuthority(candidate, expectedPayload, validation);
   return candidate;
+}
+
+function safeProviderFailureMessage(code: string): string {
+  const messages: Record<string, string> = {
+    PROVIDER_UNAVAILABLE: 'Generative provider is unavailable',
+    PROVIDER_TIMEOUT: 'Generative provider timed out',
+    PROVIDER_OUTPUT_LIMIT: 'Generative provider exceeded the output safety bound',
+    MALFORMED_PROVIDER_OUTPUT: 'Generative provider returned an invalid response',
+    PROVIDER_FAILED: 'Generative provider failed',
+  };
+  return messages[code] ?? 'Candidate generation failed';
 }
 
 function deterministicFallback(boardId: string, request: GenerationRequest): GenerationBoard {

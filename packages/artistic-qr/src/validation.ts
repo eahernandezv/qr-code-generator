@@ -110,7 +110,28 @@ export function rasterizeCandidate(candidate: Candidate): Raster {
     const png = PNG.sync.read(Buffer.from(match[1], 'base64'));
     return { width: png.width, height: png.height, data: new Uint8ClampedArray(png.data) };
   }
+  assertSafeSvg(candidate.rendered.data);
   return rasterizeSvg(candidate.rendered.data);
+}
+
+/** Reject active or unsupported SVG before any decoder treats it as inert pixels. */
+export function assertSafeSvg(svg: string): void {
+  if (svg.length === 0 || svg.length > 8 * 1024 * 1024) throw new Error('Unsafe SVG: invalid byte length');
+  if (/<!DOCTYPE|<!ENTITY/i.test(svg)) throw new Error('Unsafe SVG: declarations are not allowed');
+  if (/<\s*(?:script|foreignObject|iframe|object|embed|image|use|a|style|link|audio|video|canvas)\b/i.test(svg)) {
+    throw new Error('Unsafe SVG: active or externally resolved element');
+  }
+  if (/\s(?:on[a-z][\w:-]*)\s*=/i.test(svg)) throw new Error('Unsafe SVG: event handler attribute');
+  if (/\s(?:href|xlink:href)\s*=/i.test(svg)) throw new Error('Unsafe SVG: external reference attribute');
+  if (/\b(?:javascript|vbscript|data)\s*:/i.test(svg)) throw new Error('Unsafe SVG: executable reference');
+  if (/url\s*\(\s*(?!#[A-Za-z_][\w.-]*\s*\))/i.test(svg)) throw new Error('Unsafe SVG: external URL reference');
+
+  for (const match of svg.matchAll(/<\s*\/?\s*([A-Za-z][\w:-]*)\b/g)) {
+    const tag = match[1].toLowerCase();
+    if (tag !== 'svg' && tag !== 'g' && tag !== 'rect' && tag !== 'circle') {
+      throw new Error(`Unsafe SVG: unsupported element ${tag}`);
+    }
+  }
 }
 
 function rasterizeSvg(svg: string): Raster {

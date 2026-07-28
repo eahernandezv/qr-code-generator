@@ -9,6 +9,7 @@ export {
   exportArtifact,
   repairCandidate,
 } from './api/index.js';
+export { setCandidateAuthorityStore } from './candidate-context.js';
 
 export type {
   ArtDirection,
@@ -20,3 +21,5 @@ export type {
   ExportArtifact,
   RepairStrategy,
 } from './types.js';
+export type { CandidateAuthorityRecord, CandidateAuthorityStore } from './candidate-context.js';
+export type { SafetyEvaluator, SafetyVerdict } from './request-validation.js';

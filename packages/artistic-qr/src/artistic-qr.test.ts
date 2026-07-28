@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { normalizePayload } from '@qr/qr-core';
 import { exportArtifact, generateCandidates, repairCandidate, validateCandidate } from './index.js';
 import type { Candidate } from './types.js';
+import { runValidation } from './validation.js';
 
 const normalized = normalizePayload({ mode: 'url', content: 'https://example.com/artistic', errorCorrectionLevel: 'H' });
 
@@ -45,7 +46,7 @@ describe('objective validation and export safety', () => {
     expect(() => exportArtifact({ candidateId: corrupt.candidateId, formats: ['svg'] }, corrupt)).toThrow(/NOT_VALIDATED/);
   });
 
-  it('revalidates repairs rather than copying authorization', () => {
+  it('rejects repair when candidate authority is missing', () => {
     const corrupt: Candidate = {
       candidateId: '00000000-0000-4000-8000-000000000002',
       matrixRef: 'missing',
@@ -54,9 +55,7 @@ describe('objective validation and export safety', () => {
       exportAllowed: true,
       artisticScore: 0,
     };
-    const repaired = repairCandidate(corrupt, 'contrast_boost');
-    expect(repaired.exportAllowed).toBe(false);
-    expect(repaired.scanResults[0].pass).toBe(false);
+    expect(() => repairCandidate(corrupt, 'contrast_boost')).toThrow(/REPAIR_FAILED/);
   });
 
   it('repairs a known low-contrast matrix and authorizes only after revalidation', async () => {
@@ -90,7 +89,7 @@ describe('objective validation and export safety', () => {
         ...candidate,
         rendered: { format: 'png-dataurl', data: file.data, width: file.width, height: file.height },
       };
-      expect(validateCandidate(renderedCandidate).scannedPayload).toBe(normalized.canonical);
+      expect(runValidation(renderedCandidate, normalized.canonical).scannedPayload).toBe(normalized.canonical);
     }
   });
 
@@ -103,7 +102,7 @@ describe('objective validation and export safety', () => {
       scanResults: [{ pass: true, decoder: 'claimed', version: 'x', thresholdVersion: 'x', scannedPayload: normalized.canonical, tests: [], overallConfidence: 'high' }],
       exportAllowed: true,
     };
-    expect(validateCandidate(forged).scannedPayload).toBe(normalized.canonical);
+    expect(validateCandidate(forged).pass).toBe(false);
     expect(() => exportArtifact({ candidateId: forged.candidateId, formats: ['png'] }, forged)).toThrow(/NOT_VALIDATED/);
   });
 });

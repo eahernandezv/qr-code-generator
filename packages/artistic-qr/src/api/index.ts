@@ -16,7 +16,13 @@ import type {
 import { buildBoard, type GenerationEngineOptions } from '../engine.js';
 import { runValidation } from '../validation.js';
 import { performExport } from '../export.js';
-import { expectedPayloadForMatrix } from '../candidate-context.js';
+import {
+  authoritativeCandidate,
+  candidateAuthority,
+  candidateMatchesAuthority,
+  registerCandidateAuthority,
+  updateCandidateAuthorityDecision,
+} from '../candidate-context.js';
 
 const artDirections = [
   { id: 'editorial-illustration', name: 'Editorial Illustration', style: 'editorial-illustration', description: 'Magazine-style illustrated scenes with integrated QR modules' },
@@ -36,43 +42,69 @@ export async function generateCandidates(
 }
 
 export function validateCandidate(candidate: Candidate): ScanValidationResult {
-  return runValidation(candidate);
+  const authority = candidateAuthority(candidate.candidateId);
+  if (!authority || !candidateMatchesAuthority(candidate, authority)) return authorityRejectedValidation();
+  const validation = runValidation(authoritativeCandidate(authority), authority.expectedPayload);
+  updateCandidateAuthorityDecision(authority, validation);
+  return validation;
 }
 
 export function exportArtifact(request: ExportRequest, candidate: Candidate): ExportArtifact {
   if (request.candidateId !== candidate.candidateId) {
     throw new Error('EXPORT_FAILED: candidateId does not match the supplied candidate');
   }
-  const expectedPayload = trustedExpectedPayload(candidate);
-  const freshValidation = expectedPayload ? runValidation(candidate, expectedPayload) : undefined;
-  if (!candidate.exportAllowed || !freshValidation?.pass) {
+  const authority = candidateAuthority(candidate.candidateId);
+  if (!authority || !candidateMatchesAuthority(candidate, authority) || !authority.exportAllowed) {
     throw new Error('NOT_VALIDATED: Candidate has not passed scan validation');
   }
-  return performExport(request, candidate);
+  const trustedCandidate = authoritativeCandidate(authority);
+  const freshValidation = runValidation(trustedCandidate, authority.expectedPayload);
+  if (!freshValidation.pass) {
+    updateCandidateAuthorityDecision(authority, freshValidation);
+    throw new Error('NOT_VALIDATED: Candidate has not passed scan validation');
+  }
+  updateCandidateAuthorityDecision(authority, freshValidation);
+  return performExport(request, trustedCandidate);
 }
 
 export function repairCandidate(candidate: Candidate, strategy: RepairStrategy): Candidate {
-  const expectedPayload = trustedExpectedPayload(candidate);
+  const authority = candidateAuthority(candidate.candidateId);
+  if (!authority || !candidateMatchesAuthority(candidate, authority)) {
+    throw new Error('REPAIR_FAILED: Candidate authority is missing or does not match exact rendered bytes');
+  }
+  const trustedCandidate = authoritativeCandidate(authority);
   const repaired: Candidate = {
-    ...candidate,
+    ...trustedCandidate,
     candidateId: randomUUID(),
-    rendered: applyRepair(candidate.rendered, strategy),
+    rendered: applyRepair(trustedCandidate.rendered, strategy),
     scanResults: [],
     exportAllowed: false,
-    artisticScore: candidate.artisticScore,
-    provenance: candidate.provenance ? { ...candidate.provenance, validationVersion: 'scan-v1-real-75pct' } : undefined,
+    artisticScore: trustedCandidate.artisticScore,
+    provenance: trustedCandidate.provenance ? { ...trustedCandidate.provenance, validationVersion: 'scan-v1-real-75pct' } : undefined,
   };
-  const validation = runValidation(repaired, expectedPayload);
+  const validation = runValidation(repaired, authority.expectedPayload);
   repaired.scanResults = [validation];
-  repaired.exportAllowed = Boolean(expectedPayload) && validation.pass;
+  repaired.exportAllowed = validation.pass;
+  registerCandidateAuthority(repaired, authority.expectedPayload, validation);
   return repaired;
 }
 
-function trustedExpectedPayload(candidate: Candidate): string | undefined {
-  // A client-supplied scan result is evidence, not authority. Only a matrix
-  // reference created by this engine (or a future durable store adapter) may
-  // supply the expected payload used for repair/export authorization.
-  return expectedPayloadForMatrix(candidate.matrixRef);
+function authorityRejectedValidation(): ScanValidationResult {
+  return {
+    pass: false,
+    decoder: 'jsQR',
+    version: '1.4.0',
+    thresholdVersion: 'scan-v1-real-75pct',
+    scannedPayload: '',
+    tests: [{
+      name: 'candidate_authority',
+      pass: false,
+      scale: 1,
+      perturbation: 'none',
+      details: { reason: 'Candidate authority is missing or exact rendered bytes do not match' },
+    }],
+    overallConfidence: 'failed',
+  };
 }
 
 function applyRepair(rendered: Candidate['rendered'], strategy: RepairStrategy): Candidate['rendered'] {

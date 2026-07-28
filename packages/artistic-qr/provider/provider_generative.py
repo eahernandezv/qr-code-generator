@@ -306,7 +306,7 @@ class ReplicateAPIError(Exception):
         self.body = body
 
     def __str__(self):
-        return f"Replicate API {self.code} {self.reason}: {self.body[:200]}"
+        return f"Replicate API {self.code} {self.reason}"
 
 
 # ─── Core pipeline ──────────────────────────────────────────────
@@ -401,21 +401,14 @@ class ReplicateProvider:
         return board
 
     def _extract_url(self, request: dict[str, Any]) -> str:
-        """Extract target URL from GenerationRequest."""
-        # normalizedPayload may contain canonical URL
-        npayload = request.get("normalizedPayload", {})
-        if isinstance(npayload, dict):
-            url = npayload.get("canonical", "")
-            if url:
-                return url
-        # Fallback: try to decode from any embedded payload data
-        prompt = request.get("prompt", "")
-        # If prompt contains a URL-like string, extract it
-        import re
-        urls = re.findall(r'https?://[^\s<>"{}|\\^`\[\]]+', prompt)
-        if urls:
-            return urls[0]
-        return "https://ernestohernandez.com"
+        """Require the already validated canonical payload; never infer a destination."""
+        npayload = request.get("normalizedPayload")
+        if not isinstance(npayload, dict):
+            raise ValueError("normalizedPayload is required")
+        url = npayload.get("canonical")
+        if not isinstance(url, str) or not url:
+            raise ValueError("normalizedPayload.canonical is required")
+        return url
 
     def _map_conditioning_scale(self, strength: float, num_candidates: int) -> list[float]:
         """

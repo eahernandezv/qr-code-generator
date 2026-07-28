@@ -40,6 +40,28 @@ class ProviderBoundaryTests(unittest.TestCase):
         api.assert_called_once_with("POST", "/predictions/prediction-test/cancel", "token-test", timeout=8)
         self.assertIsNone(provider._ACTIVE_PREDICTION)
 
+    def test_destination_requires_normalized_canonical_payload(self):
+        engine = provider.ReplicateProvider(token="test")
+        expected = "https://example.com/Exact?Case=Preserved"
+        self.assertEqual(
+            engine._extract_url({"normalizedPayload": {"canonical": expected}, "prompt": "https://attacker.invalid"}),
+            expected,
+        )
+        for malformed in (
+            {},
+            {"prompt": "https://attacker.invalid"},
+            {"normalizedPayload": {}},
+            {"normalizedPayload": {"canonical": ""}},
+        ):
+            with self.subTest(malformed=malformed):
+                with self.assertRaises(ValueError):
+                    engine._extract_url(malformed)
+
+    def test_provider_api_error_string_redacts_response_body(self):
+        error = provider.ReplicateAPIError(400, "Bad Request", "secret response and destination")
+        self.assertNotIn("secret response", str(error))
+        self.assertEqual(str(error), "Replicate API 400 Bad Request")
+
     def test_cli_errors_use_nonzero_exit_and_stderr_not_contract_stdout(self):
         result = subprocess.run(
             [sys.executable, provider.__file__],

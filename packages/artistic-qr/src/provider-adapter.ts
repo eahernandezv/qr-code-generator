@@ -186,7 +186,7 @@ function runProviderOnce(request: Record<string, unknown>, options: ProviderCall
       if (code !== 0) {
         finish(new ProviderAdapterError(
           'PROVIDER_FAILED',
-          `Provider exited ${code ?? 'null'}${signal ? ` (${signal})` : ''}: ${stderr.toString('utf8').slice(0, 1000)}`,
+          `Provider process exited unsuccessfully (${code ?? 'unknown'}${signal ? `/${signal}` : ''})`,
           true,
         ));
         return;
