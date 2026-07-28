@@ -28,7 +28,7 @@ const DEFAULT_FLAGS: FeatureFlags = {
  * Vite replaces env vars at build time for static网站优化.
  */
 function buildFlags(): FeatureFlags {
-  const env = typeof import.meta !== 'undefined' ? import.meta.env : {}
+  const env = typeof import.meta !== 'undefined' ? (import.meta.env as Record<string, string | undefined>) : {}
   return {
     artistic_checkout_enabled:
       env.VITE_ARTISTIC_CHECKOUT_ENABLED === 'true' ||

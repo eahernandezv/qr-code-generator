@@ -118,9 +118,12 @@ function BoardRow({ board, selectedId, onSelect }: { board: GenerationBoard; sel
 }
 
 const CandidateBoard: React.FC = () => {
-  const { project, featureFlags, selectCandidate, setIsGenerating, addBoard, updateBoard, updateCandidate, incrementUsedRounds, isGenerating } = useStudioStore()
+  const { project, featureFlags, selectCandidate, setIsGenerating, addBoard, updateBoard, updateCandidate, incrementUsedRounds, isGenerating, cancelBoard, refineFromCandidate } = useStudioStore()
   const { boards, selectedCandidateId, entitlement } = project
   const generativeEnabled = featureFlags.artistic_generative_enabled
+  const refinementEnabled = featureFlags.artistic_refinement_enabled
+  const [prompt, setPrompt] = React.useState('')
+  const [showRefine, setShowRefine] = React.useState(false)
 
   const handleGenerate = () => {
     if (isGenerating) return
@@ -176,6 +179,12 @@ const CandidateBoard: React.FC = () => {
     })
   }
 
+  const selectedCandidate = boards
+    .flatMap((b) => b.candidates)
+    .find((c) => c.candidateId === selectedCandidateId)
+
+  const activeBoard = boards.find((b) => b.status === 'generating')
+
   return (
     <section className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4 md:p-6">
       <div className="mb-4 flex items-center justify-between">
@@ -185,17 +194,26 @@ const CandidateBoard: React.FC = () => {
             Round {entitlement.usedRounds}/{entitlement.maxRounds} · {boards.length} board{boards.length !== 1 ? 's' : ''}
           </p>
         </div>
-        <button
-          onClick={handleGenerate}
-          disabled={isGenerating || !project.payload.raw.trim() || entitlement.usedRounds >= entitlement.maxRounds || !generativeEnabled}
-          className={`rounded-lg px-4 py-2 text-xs font-semibold transition-colors ${
-            isGenerating || !project.payload.raw.trim() || entitlement.usedRounds >= entitlement.maxRounds || !generativeEnabled
-              ? 'cursor-not-allowed bg-slate-800 text-slate-500'
-              : 'bg-studio-600 text-white hover:bg-studio-500'
-          }`}
-        >
-          {isGenerating ? 'Generating…' : !generativeEnabled ? 'Generation offline' : 'Generate 4'}
-        </button>
+        {activeBoard ? (
+          <button
+            onClick={() => cancelBoard(activeBoard.boardId)}
+            className="rounded-lg border border-red-900/50 bg-red-950/30 px-4 py-2 text-xs font-semibold text-red-300 transition-colors hover:bg-red-950/50"
+          >
+            Cancel
+          </button>
+        ) : (
+          <button
+            onClick={handleGenerate}
+            disabled={isGenerating || !project.payload.raw.trim() || entitlement.usedRounds >= entitlement.maxRounds || !generativeEnabled}
+            className={`rounded-lg px-4 py-2 text-xs font-semibold transition-colors ${
+              isGenerating || !project.payload.raw.trim() || entitlement.usedRounds >= entitlement.maxRounds || !generativeEnabled
+                ? 'cursor-not-allowed bg-slate-800 text-slate-500'
+                : 'bg-studio-600 text-white hover:bg-studio-500'
+            }`}
+          >
+            {isGenerating ? 'Generating…' : !generativeEnabled ? 'Generation offline' : 'Generate 4'}
+          </button>
+        )}
       </div>
 
       {boards.length === 0 ? (
@@ -213,6 +231,47 @@ const CandidateBoard: React.FC = () => {
               onSelect={selectCandidate}
             />
           ))}
+        </div>
+      )}
+
+      {/* Refinement prompt */}
+      {refinementEnabled && selectedCandidate && boards.some((b) => b.status === 'complete') && (
+        <div className="mt-4 rounded-xl border border-slate-800 bg-slate-950/50 p-3">
+          <button
+            onClick={() => setShowRefine((v) => !v)}
+            className="flex w-full items-center justify-between text-xs font-medium text-slate-400"
+          >
+            <span>Refine from selected candidate</span>
+            <span className={`transition-transform ${showRefine ? 'rotate-180' : ''}`}>▼</span>
+          </button>
+          {showRefine && (
+            <div className="mt-3 space-y-2">
+              <textarea
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
+                placeholder="Describe changes (e.g., more watercolor, darker palette)..."
+                rows={2}
+                className="w-full rounded-lg border border-slate-800 bg-slate-950/50 px-2.5 py-2 text-xs text-slate-200 placeholder:text-slate-700 focus:border-studio-500/60 focus:outline-none resize-y"
+              />
+              <button
+                onClick={() => {
+                  if (prompt.trim() && entitlement.usedRounds < entitlement.maxRounds) {
+                    refineFromCandidate(selectedCandidate.candidateId, prompt.trim())
+                    setPrompt('')
+                    setShowRefine(false)
+                  }
+                }}
+                disabled={!prompt.trim() || entitlement.usedRounds >= entitlement.maxRounds}
+                className={`w-full rounded-lg py-2 text-xs font-semibold transition-colors ${
+                  !prompt.trim() || entitlement.usedRounds >= entitlement.maxRounds
+                    ? 'cursor-not-allowed bg-slate-800 text-slate-500'
+                    : 'bg-studio-600 text-white hover:bg-studio-500'
+                }`}
+              >
+                {entitlement.usedRounds >= entitlement.maxRounds ? 'Max rounds reached' : 'Apply & Generate New Round'}
+              </button>
+            </div>
+          )}
         </div>
       )}
     </section>

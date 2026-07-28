@@ -134,4 +134,67 @@ describe('StudioStore', () => {
     expect(state.project.entitlement.exportAllowed).toBe(true)
     expect(new Date(state.project.updatedAt).getTime()).toBeGreaterThan(new Date('2024-01-01T00:00:00Z').getTime())
   })
+
+  it('cancels a generating board', () => {
+    const { addBoard, cancelBoard, setIsGenerating } = useStudioStore.getState()
+    setIsGenerating(true)
+    addBoard({
+      boardId: 'b-cancel',
+      projectId: 'p1',
+      roundNumber: 1,
+      candidates: [],
+      status: 'generating',
+      createdAt: new Date().toISOString(),
+    })
+    cancelBoard('b-cancel')
+    const state = useStudioStore.getState()
+    const board = state.project.boards.find((b) => b.boardId === 'b-cancel')
+    expect(board?.status).toBe('failed')
+  })
+
+  it('refines art direction from a selected candidate', () => {
+    const { setPayload, addBoard, selectCandidate, refineFromCandidate } = useStudioStore.getState()
+    setPayload({ raw: 'https://example.com', normalized: 'https://example.com', mode: 'url' })
+    addBoard({
+      boardId: 'b-refine',
+      projectId: useStudioStore.getState().project.projectId,
+      roundNumber: 1,
+      candidates: [{
+        candidateId: 'c1',
+        projectId: useStudioStore.getState().project.projectId,
+        status: 'ready',
+        createdAt: new Date().toISOString(),
+      }],
+      status: 'complete',
+      createdAt: new Date().toISOString(),
+    })
+    selectCandidate('c1')
+    refineFromCandidate('c1', 'darker palette')
+    const { project } = useStudioStore.getState()
+    expect(project.artDirection.prompt).toBe('darker palette')
+    expect(project.boards[0].candidates[0].candidateId).toBe('c1')
+  })
+
+  it('does not refine when max rounds are exhausted', () => {
+    const { setPayload, addBoard, selectCandidate, refineFromCandidate, incrementUsedRounds } = useStudioStore.getState()
+    setPayload({ raw: 'https://example.com', normalized: 'https://example.com', mode: 'url' })
+    addBoard({
+      boardId: 'b-refine-2',
+      projectId: useStudioStore.getState().project.projectId,
+      roundNumber: 1,
+      candidates: [{
+        candidateId: 'c2',
+        projectId: useStudioStore.getState().project.projectId,
+        status: 'ready',
+        createdAt: new Date().toISOString(),
+      }],
+      status: 'complete',
+      createdAt: new Date().toISOString(),
+    })
+    selectCandidate('c2')
+    incrementUsedRounds() // Exhaust the single preview round
+    refineFromCandidate('c2', 'should not apply')
+    const { project } = useStudioStore.getState()
+    expect(project.artDirection.prompt).toBeUndefined()
+  })
 })

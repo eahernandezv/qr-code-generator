@@ -73,6 +73,8 @@ interface StudioStore {
   resetProject: () => void
   hydrateProject: (project: ProjectState) => void
   cloneProject: () => ProjectState
+  cancelBoard: (boardId: string) => void
+  refineFromCandidate: (candidateId: string, promptOverride?: string) => void
 }
 
 export const useStudioStore = create<StudioStore>()(
@@ -165,6 +167,42 @@ export const useStudioStore = create<StudioStore>()(
         }),
 
       cloneProject: () => ({ ...get().project }),
+
+      cancelBoard: (boardId) =>
+        set((s) => ({
+          project: {
+            ...s.project,
+            boards: s.project.boards.map((b) =>
+              b.boardId === boardId && b.status === 'generating'
+                ? { ...b, status: 'failed' as const, completedAt: nowIso() }
+                : b
+            ),
+            updatedAt: nowIso(),
+          },
+          isGenerating: s.project.boards.some(
+            (b) => b.boardId !== boardId && b.status === 'generating'
+          ),
+        })),
+
+      refineFromCandidate: (candidateId, promptOverride) =>
+        set((s) => {
+          const candidate = s.project.boards
+            .flatMap((b) => b.candidates)
+            .find((c) => c.candidateId === candidateId)
+          if (!candidate || s.project.entitlement.usedRounds >= s.project.entitlement.maxRounds) {
+            return {}
+          }
+          const refinementArt: ArtDirection = promptOverride
+            ? { ...s.project.artDirection, prompt: promptOverride }
+            : s.project.artDirection
+          return {
+            project: {
+              ...s.project,
+              artDirection: refinementArt,
+              updatedAt: nowIso(),
+            },
+          }
+        }),
     }),
     {
       name: 'qr-studio-project',

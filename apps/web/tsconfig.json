@@ -21,5 +21,6 @@
     }
   },
   "include": ["src"],
+  "exclude": ["src/app", "src/app-shell"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
