@@ -4,9 +4,9 @@ import type { ExportFormat, ValidationResult } from '../types'
 
 const FORMATS: { value: ExportFormat; label: string; ext: string; desc: string }[] = [
   { value: 'png', label: 'PNG', ext: '.png', desc: 'High-res raster' },
-  { value: 'svg', label: 'SVG', ext: '.svg', desc: 'Scalable vector' },
+  { value: 'svg', label: 'SVG', ext: '.svg', desc: 'Artwork wrapper' },
   { value: 'pdf', label: 'PDF', ext: '.pdf', desc: 'Print-ready document' },
-  { value: 'eps', label: 'EPS', ext: '.eps', desc: 'Vector for Illustrator' },
+  { value: 'eps', label: 'EPS', ext: '.eps', desc: 'Illustrator-compatible raster' },
 ]
 
 const SIZES = [
