@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event'
 import ExportPanel from './ExportPanel'
 import { useStudioStore } from '../store'
 import { FEATURE_FLAGS } from '../config/flags'
+import { guestCommerce } from '../lib/commerceClient'
 
 vi.mock('../lib/exportFormats', async () => {
   return {
@@ -52,12 +53,9 @@ function seedProjectWithCandidate(exportAllowed = false) {
   })
   state.selectCandidate('c1')
   if (exportAllowed) {
-    useStudioStore.setState((s) => ({
-      project: {
-        ...s.project,
-        entitlement: { ...s.project.entitlement, exportAllowed: true, maxRounds: 3, usedRounds: 0 },
-      },
-    }))
+    useStudioStore.getState().syncCommerceEntitlement(
+      guestCommerce.grantPaidTestAccess(state.project.projectId),
+    )
   }
 }
 
@@ -114,7 +112,7 @@ describe('ExportPanel', () => {
     expect(screen.queryByText(/Format/i)).not.toBeInTheDocument()
   })
 
-  it('restricts large sizes when export is not allowed', () => {
+  it('keeps every finished export size locked in free preview', () => {
     seedProjectWithCandidate(false)
     useStudioStore.setState((s) => ({
       featureFlags: { ...s.featureFlags, artistic_checkout_enabled: true },
@@ -127,7 +125,7 @@ describe('ExportPanel', () => {
     expect(screen.getAllByText(/Purchase required/i).length).toBeGreaterThanOrEqual(1)
 
     const socialBtn = screen.getByRole('button', { name: /Social/i })
-    expect(socialBtn).not.toBeDisabled()
+    expect(socialBtn).toBeDisabled()
   })
 
   it('opens and closes print preview overlay', async () => {
@@ -184,6 +182,24 @@ describe('ExportPanel', () => {
     expect(screen.getByText(/Validation Summary/i)).toBeInTheDocument()
     expect(screen.queryByText(/Decoders/i)).not.toBeInTheDocument()
     expect(screen.queryByText(/Perturbation Tests/i)).not.toBeInTheDocument()
+  })
+
+  it('denies export when only local browser entitlement is tampered', async () => {
+    seedProjectWithCandidate(false)
+    useStudioStore.setState((state) => ({
+      featureFlags: { ...state.featureFlags, artistic_checkout_enabled: true },
+      project: {
+        ...state.project,
+        entitlement: { ...state.project.entitlement, exportAllowed: true, checkoutStatus: 'succeeded' },
+      },
+    }))
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined)
+    render(<ExportPanel />)
+
+    await userEvent.click(screen.getByRole('button', { name: 'Export PNG' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('verified project access')
+    consoleError.mockRestore()
   })
 
   it('announces canvas export failures', async () => {

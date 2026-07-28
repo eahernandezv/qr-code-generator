@@ -1,124 +1,101 @@
 import React from 'react'
 import { useStudioStore } from '../store'
+import { guestCommerce } from '../lib/commerceClient'
 
-type RecoveryState = 'idle' | 'loading' | 'success' | 'not_found' | 'expired' | 'invalid'
+type RecoveryState = 'idle' | 'loading' | 'success' | 'invalid' | 'expired' | 'replayed' | 'service_error'
 
 interface RecoveryPanelProps {
   onRecovered?: () => void
 }
 
-function validateProjectShape(data: unknown): data is import('../types').ProjectState {
-  if (!data || typeof data !== 'object') return false
-  const d = data as Record<string, unknown>
-  return (
-    typeof d.projectId === 'string' &&
-    d.payload !== undefined &&
-    d.artDirection !== undefined &&
-    Array.isArray(d.boards) &&
-    d.entitlement !== undefined &&
-    typeof d.createdAt === 'string'
-  )
-}
-
 const RecoveryPanel: React.FC<RecoveryPanelProps> = ({ onRecovered }) => {
   const [input, setInput] = React.useState('')
   const [status, setStatus] = React.useState<RecoveryState>('idle')
-  const [recoveredProjectId, setRecoveredProjectId] = React.useState<string | null>(null)
-  const { hydrateProject } = useStudioStore()
+  const [replacementCode, setReplacementCode] = React.useState<string | null>(null)
+  const { syncCommerceEntitlement } = useStudioStore()
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    const trimmed = input.trim()
-    if (!trimmed) {
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault()
+    const recoveryCode = input.trim()
+    if (!recoveryCode) {
       setStatus('invalid')
       return
     }
-
     setStatus('loading')
-
-    // Simulate async recovery lookup.
-    // In production this calls a backend endpoint:
-    //   GET /api/projects/:id/recover  or  POST /api/recover { token }
+    setReplacementCode(null)
     try {
-      // Try localStorage first (guest session persistence)
-      const stored = typeof localStorage !== 'undefined'
-        ? localStorage.getItem(`qr-studio-recovery-${trimmed}`)
-        : null
-
-      if (stored) {
-        const parsed = JSON.parse(stored)
-        if (validateProjectShape(parsed)) {
-          hydrateProject(parsed)
-          setRecoveredProjectId(parsed.projectId)
-          setStatus('success')
-          onRecovered?.()
-          return
-        }
-      }
-
-      // Fallback: try loading from a well-known demo/seed project
-      // In the real implementation this would be the API call.
-      await new Promise((resolve) => setTimeout(resolve, 800))
-
-      // For now, simulate not-found when localStorage miss
-      setStatus('not_found')
-    } catch {
-      setStatus('invalid')
+      const recovered = await guestCommerce.recover(recoveryCode)
+      syncCommerceEntitlement(recovered.entitlement)
+      setInput('')
+      setReplacementCode(recovered.replacementRecoveryCode)
+      setStatus('success')
+      onRecovered?.()
+    } catch (recoveryError) {
+      const code = typeof recoveryError === 'object' && recoveryError && 'code' in recoveryError
+        ? String((recoveryError as { code: unknown }).code)
+        : ''
+      if (code === 'project_access_expired') setStatus('expired')
+      else if (code === 'project_access_replayed') setStatus('replayed')
+      else if (code === 'project_access_invalid') setStatus('invalid')
+      else setStatus('service_error')
     }
   }
 
-  const stateMeta: Record<RecoveryState, { label: string; color: string }> = {
-    idle: { label: '', color: '' },
-    loading: { label: 'Recovering…', color: 'text-slate-400' },
-    success: { label: `Recovered project ${recoveredProjectId?.slice(0, 8) ?? ''}`, color: 'text-emerald-400' },
-    not_found: { label: 'Project not found. Check your ID or link.', color: 'text-amber-400' },
-    expired: { label: 'Recovery link expired.', color: 'text-rose-400' },
-    invalid: { label: 'Invalid project ID or token.', color: 'text-rose-400' },
+  const messages: Record<Exclude<RecoveryState, 'idle' | 'loading'>, string> = {
+    success: 'Guest project access recovered. Paid capabilities are active again.',
+    invalid: 'Recovery code is invalid. Check the code and try again.',
+    expired: 'Recovery code expired. Start a new preview; no access was granted.',
+    replayed: 'That one-time recovery code was already used. Use its replacement code.',
+    service_error: 'Recovery service is unavailable. Your code was not consumed; retry shortly.',
   }
 
-  const meta = stateMeta[status]
-
   return (
-    <section className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4 md:p-6">
+    <section className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4 md:p-6" aria-labelledby="recovery-heading">
       <div className="mb-4">
-        <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-400">Recover Project</h2>
-        <p className="mt-0.5 text-xs text-slate-500">
-          Enter your project ID or recovery link to resume editing
-        </p>
+        <h2 id="recovery-heading" className="text-sm font-semibold uppercase tracking-wider text-slate-400">Recover Project</h2>
+        <p className="mt-0.5 text-xs text-slate-500">Use the opaque one-time code from guest checkout. No account is created.</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-3">
+      <form onSubmit={(event) => void handleSubmit(event)} className="space-y-3">
+        <label htmlFor="recovery-code" className="text-xs font-medium text-slate-400">Recovery code</label>
         <input
-          type="text"
+          id="recovery-code"
+          type="password"
+          autoComplete="off"
+          spellCheck={false}
           value={input}
-          onChange={(e) => { setInput(e.target.value); if (status !== 'idle') setStatus('idle') }}
-          placeholder="project-id or recovery-token"
+          onChange={(event) => {
+            setInput(event.target.value)
+            if (status !== 'idle') setStatus('idle')
+          }}
+          placeholder="Paste one-time recovery code"
           className="w-full rounded-lg border border-slate-800 bg-slate-950/50 px-3 py-2 text-sm text-slate-200 placeholder:text-slate-700 focus:border-studio-500/60 focus:outline-none"
           disabled={status === 'loading'}
         />
-
         <button
           type="submit"
           disabled={status === 'loading' || !input.trim()}
-          className={`w-full rounded-lg py-2.5 text-sm font-semibold transition-colors ${
-            status === 'loading' || !input.trim()
-              ? 'cursor-not-allowed bg-slate-800 text-slate-500'
-              : 'bg-studio-600 text-white hover:bg-studio-500'
-          }`}
+          className="w-full rounded-lg bg-studio-600 py-2.5 text-sm font-semibold text-white hover:bg-studio-500 disabled:cursor-not-allowed disabled:bg-slate-800 disabled:text-slate-500"
         >
-          {status === 'loading' ? 'Recovering…' : 'Recover Project'}
+          {status === 'loading' ? 'Recovering…' : 'Recover guest project'}
         </button>
       </form>
 
-      {status !== 'idle' && (
-        <p className={`mt-3 text-center text-xs ${meta.color}`}>{meta.label}</p>
-      )}
-
-      {status === 'success' && (
-        <p className="mt-2 text-center text-[10px] text-slate-500">
-          Your project has been restored. You can continue editing.
+      {status !== 'idle' && status !== 'loading' && (
+        <p role={status === 'success' ? 'status' : 'alert'} className={`mt-3 text-xs ${status === 'success' ? 'text-emerald-300' : 'text-rose-300'}`}>
+          {messages[status]}
         </p>
       )}
+
+      {replacementCode && (
+        <div className="mt-3 rounded-lg border border-sky-900/40 bg-sky-950/20 p-3">
+          <p className="text-xs text-sky-200">Save the replacement recovery code; the code you entered cannot be replayed.</p>
+          <code className="mt-1 block break-all rounded bg-slate-950 p-2 text-[10px] text-slate-300">{replacementCode}</code>
+          <button type="button" className="mt-2 text-[10px] text-sky-300 underline" onClick={() => setReplacementCode(null)}>I saved it — hide code</button>
+        </div>
+      )}
+
+      <p className="mt-3 text-[10px] text-slate-600">Codes are submitted in the request body and are not stored in this browser.</p>
     </section>
   )
 }

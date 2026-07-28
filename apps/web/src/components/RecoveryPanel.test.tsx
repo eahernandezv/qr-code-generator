@@ -1,85 +1,84 @@
-import { describe, it, expect, beforeEach } from 'vitest'
-import { render, screen, act, waitFor } from '@testing-library/react'
+import { beforeEach, describe, expect, it } from 'vitest'
+import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import RecoveryPanel from './RecoveryPanel'
 import { useStudioStore } from '../store'
 import { FEATURE_FLAGS } from '../config/flags'
+import { guestCommerce } from '../lib/commerceClient'
 
-function resetStore() {
-  const { resetProject } = useStudioStore.getState()
-  resetProject()
+beforeEach(() => {
+  useStudioStore.getState().resetProject()
   useStudioStore.setState({ featureFlags: { ...FEATURE_FLAGS } })
+})
+
+async function purchasedRecoveryCode(): Promise<string> {
+  const projectId = useStudioStore.getState().project.projectId
+  const checkout = await guestCommerce.startCheckout({
+    projectId,
+    offerId: 'artistic_project',
+    idempotencyKey: crypto.randomUUID(),
+  })
+  await guestCommerce.completeTestPayment(checkout.checkoutSessionId)
+  guestCommerce.clearAccess()
+  return checkout.recoveryCode!
 }
 
 describe('RecoveryPanel', () => {
-  beforeEach(() => {
-    resetStore()
-    localStorage.clear()
+  it('renders an opaque, non-autofill recovery form', () => {
+    render(<RecoveryPanel />)
+    const input = screen.getByLabelText('Recovery code')
+    expect(input).toHaveAttribute('type', 'password')
+    expect(input).toHaveAttribute('autocomplete', 'off')
+    expect(screen.getByRole('button', { name: /Recover guest project/i })).toBeDisabled()
   })
 
-  it('renders recovery form', () => {
+  it('recovers paid guest access and rotates the one-time code', async () => {
+    const recoveryCode = await purchasedRecoveryCode()
     render(<RecoveryPanel />)
-    expect(screen.getByPlaceholderText(/project-id or recovery-token/i)).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Recover Project/i })).toBeInTheDocument()
+    await userEvent.type(screen.getByLabelText('Recovery code'), recoveryCode)
+    await userEvent.click(screen.getByRole('button', { name: /Recover guest project/i }))
+
+    expect(await screen.findByRole('status')).toHaveTextContent('Paid capabilities are active again')
+    expect(screen.getByText(/replacement recovery code/i)).toBeInTheDocument()
+    expect(useStudioStore.getState().project.entitlement.checkoutStatus).toBe('succeeded')
+    expect(localStorage.getItem(recoveryCode)).toBeNull()
   })
 
-  it('shows invalid status for empty input when form submitted directly', async () => {
+  it('rejects invalid, expired, and replayed recovery capabilities', async () => {
+    const user = userEvent.setup()
+    const recoveryCode = await purchasedRecoveryCode()
     render(<RecoveryPanel />)
-    const form = screen.getByRole('button', { name: /Recover Project/i }).closest('form')!
-    await act(async () => {
-      // Submit form bypassing disabled button (accessibility edge-case)
-      form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))
-    })
-    expect(screen.getByText(/Invalid project ID or token/i)).toBeInTheDocument()
-  })
+    const input = screen.getByLabelText('Recovery code')
 
-  it('recovers project from localStorage', async () => {
-    const recovered = {
-      projectId: 'recovered-123',
-      payload: { raw: 'https://example.com', normalized: 'https://example.com', mode: 'url' },
-      artDirection: {
-        templateId: 'geometric',
-        artisticStrength: 0.7,
-        composition: 'centered',
-        protectedQrProminence: 0.8,
-        palette: { primary: '#ff0000', secondary: '#00ff00', accent: '#0000ff' },
-      },
-      style: { foreground: '#000000', background: '#ffffff', margin: 2, eyeStyle: 'circle', moduleStyle: 'dot' },
-      boards: [],
-      entitlement: { type: 'project', maxRounds: 3, usedRounds: 1, maxCandidates: 4, exportAllowed: true },
-      createdAt: '2024-01-01T00:00:00Z',
-      updatedAt: '2024-01-01T00:00:00Z',
-    }
-    localStorage.setItem('qr-studio-recovery-recovered-123', JSON.stringify(recovered))
+    await user.type(input, 'invalid-recovery-code')
+    await user.click(screen.getByRole('button', { name: /Recover guest project/i }))
+    expect(await screen.findByRole('alert')).toHaveTextContent('invalid')
 
-    render(<RecoveryPanel />)
-    const input = screen.getByPlaceholderText(/project-id or recovery-token/i)
-    await act(async () => {
-      await userEvent.type(input, 'recovered-123')
-    })
-    await act(async () => {
-      await userEvent.click(screen.getByRole('button', { name: /Recover Project/i }))
-    })
+    await user.clear(input)
+    await user.type(input, recoveryCode)
+    await user.click(screen.getByRole('button', { name: /Recover guest project/i }))
+    expect(await screen.findByRole('status')).toHaveTextContent('active again')
 
-    // "Recovered project " + projectId.slice(0,8) = "Recovered project recovered" ... slice(0,8) => "recovere"
-    expect(screen.getByText(/Recovered project recovere/i)).toBeInTheDocument()
-    const state = useStudioStore.getState()
-    expect(state.project.projectId).toBe('recovered-123')
-    expect(state.project.entitlement.exportAllowed).toBe(true)
-  })
+    await user.type(input, recoveryCode)
+    await user.click(screen.getByRole('button', { name: /Recover guest project/i }))
+    expect(await screen.findByRole('alert')).toHaveTextContent('already used')
 
-  it('shows not found for missing localStorage entry', async () => {
-    render(<RecoveryPanel />)
-    const input = screen.getByPlaceholderText(/project-id or recovery-token/i)
-    await act(async () => {
-      await userEvent.type(input, 'missing-id')
+    const expiredCode = await purchasedRecoveryCode()
+    // Re-establish access only to target the current mock project, then expire its code.
+    const currentId = useStudioStore.getState().project.projectId
+    guestCommerce.grantPaidTestAccess(currentId)
+    // The expiry helper targets active project; start a dedicated checkout so code maps to it.
+    const expiredCheckout = await guestCommerce.startCheckout({
+      projectId: `${currentId}-expired`,
+      offerId: 'artistic_project',
+      idempotencyKey: crypto.randomUUID(),
     })
-    await act(async () => {
-      await userEvent.click(screen.getByRole('button', { name: /Recover Project/i }))
-    })
-
-    await waitFor(() => {
-      expect(screen.getByText(/Project not found/i)).toBeInTheDocument()
-    }, { timeout: 2000 })
+    await guestCommerce.completeTestPayment(expiredCheckout.checkoutSessionId)
+    guestCommerce.expireRecoveryForTest()
+    guestCommerce.clearAccess()
+    await user.clear(input)
+    await user.type(input, expiredCheckout.recoveryCode ?? expiredCode)
+    await user.click(screen.getByRole('button', { name: /Recover guest project/i }))
+    expect(await screen.findByRole('alert')).toHaveTextContent('expired')
   })
 })

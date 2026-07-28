@@ -1,6 +1,7 @@
 import React from 'react'
 import { useStudioStore } from '../store'
 import type { Candidate, CandidateStatus, GenerationBoard } from '../types'
+import { guestCommerce } from '../lib/commerceClient'
 
 const statusMeta: Record<CandidateStatus, { label: string; color: string; bg: string }> = {
   pending: { label: 'Pending', color: 'text-slate-400', bg: 'bg-slate-800' },
@@ -118,12 +119,17 @@ function BoardRow({ board, selectedId, onSelect }: { board: GenerationBoard; sel
 }
 
 const CandidateBoard: React.FC = () => {
-  const { project, featureFlags, selectCandidate, setIsGenerating, addBoard, updateBoard, updateCandidate, incrementUsedRounds, isGenerating, cancelBoard, refineFromCandidate } = useStudioStore()
+  const {
+    project, featureFlags, selectCandidate, setIsGenerating, addBoard, updateBoard,
+    updateCandidate, isGenerating, cancelBoard, refineFromCandidate,
+    consumePreviewRoundIfSuccessful, syncCommerceEntitlement,
+  } = useStudioStore()
   const { boards, selectedCandidateId, entitlement } = project
   const generativeEnabled = featureFlags.artistic_generative_enabled
   const refinementEnabled = featureFlags.artistic_refinement_enabled
   const [prompt, setPrompt] = React.useState('')
   const [showRefine, setShowRefine] = React.useState(false)
+  const [allowanceError, setAllowanceError] = React.useState<string | null>(null)
   const generationTimers = React.useRef<number[]>([])
 
   React.useEffect(() => () => {
@@ -142,7 +148,7 @@ const CandidateBoard: React.FC = () => {
     if (entitlement.usedRounds >= entitlement.maxRounds) return
 
     setIsGenerating(true)
-    incrementUsedRounds()
+    setAllowanceError(null)
 
     const boardId = Math.random().toString(36).slice(2)
     const now = new Date().toISOString()
@@ -188,6 +194,17 @@ const CandidateBoard: React.FC = () => {
             if (finalBoard?.status !== 'generating') return
             updateBoard(boardId, { status: 'complete', completedAt: new Date().toISOString() })
             setIsGenerating(false)
+            if (useStudioStore.getState().project.entitlement.type === 'preview') {
+              consumePreviewRoundIfSuccessful(boardId)
+            } else {
+              void guestCommerce.recordGeneration({
+                operationId: boardId,
+                outcome: 'succeeded',
+                candidateCount: candidates.length,
+              }).then(syncCommerceEntitlement).catch((error: unknown) => {
+                setAllowanceError(error instanceof Error ? error.message : 'Allowance could not be confirmed.')
+              })
+            }
           }, 500)
         }
       }, delay)
@@ -215,6 +232,15 @@ const CandidateBoard: React.FC = () => {
               generationTimers.current.forEach((timer) => window.clearTimeout(timer))
               generationTimers.current = []
               cancelBoard(activeBoard.boardId)
+              if (entitlement.type !== 'preview') {
+                void guestCommerce.recordGeneration({
+                  operationId: activeBoard.boardId,
+                  outcome: 'canceled',
+                  candidateCount: 0,
+                }).then(syncCommerceEntitlement).catch((error: unknown) => {
+                  setAllowanceError(error instanceof Error ? error.message : 'Cancellation could not be confirmed.')
+                })
+              }
             }}
             className="rounded-lg border border-red-900/50 bg-red-950/30 px-4 py-2 text-xs font-semibold text-red-300 transition-colors hover:bg-red-950/50"
           >
@@ -234,6 +260,12 @@ const CandidateBoard: React.FC = () => {
           </button>
         )}
       </div>
+
+      {allowanceError && (
+        <p role="alert" className="mb-3 rounded-lg border border-amber-900/40 bg-amber-950/30 p-2 text-xs text-amber-300">
+          {allowanceError}
+        </p>
+      )}
 
       {boards.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-800 py-12">

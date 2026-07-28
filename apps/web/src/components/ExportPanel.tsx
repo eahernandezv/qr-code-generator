@@ -1,6 +1,7 @@
 import React from 'react'
 import { useStudioStore } from '../store'
 import type { ExportFormat, ValidationResult } from '../types'
+import { guestCommerce } from '../lib/commerceClient'
 
 const FORMATS: { value: ExportFormat; label: string; ext: string; desc: string }[] = [
   { value: 'png', label: 'PNG', ext: '.png', desc: 'High-res raster' },
@@ -280,7 +281,7 @@ function PrintPreview({
 }
 
 const ExportPanel: React.FC = () => {
-  const { project, featureFlags } = useStudioStore()
+  const { project, featureFlags, syncCommerceEntitlement } = useStudioStore()
   const { selectedCandidateId, boards, entitlement } = project
 
   const [format, setFormat] = React.useState<ExportFormat>('png')
@@ -290,6 +291,8 @@ const ExportPanel: React.FC = () => {
   const [exportType, setExportType] = React.useState<'single' | 'bundle'>('single')
   const [previewOpen, setPreviewOpen] = React.useState(false)
   const [exportError, setExportError] = React.useState<string | null>(null)
+  const [authorizedCandidateId, setAuthorizedCandidateId] = React.useState<string | null>(null)
+  const pendingAuthorization = React.useRef<{ candidateId: string; requestId: string } | null>(null)
 
   const selectedCandidate = boards
     .flatMap((b) => b.candidates)
@@ -297,9 +300,9 @@ const ExportPanel: React.FC = () => {
 
   const checkoutEnabled = featureFlags.artistic_checkout_enabled
   const currentSize = SIZES[sizeIndex]
-  const canExport =
-    checkoutEnabled &&
-    (entitlement.exportAllowed || (format === 'png' && currentSize.width <= 512))
+  const canExport = checkoutEnabled && (
+    entitlement.exportAllowed || authorizedCandidateId === selectedCandidate?.candidateId
+  )
 
   async function renderExport(sizeOverride?: typeof SIZES[number]) {
     const s = sizeOverride || currentSize
@@ -345,6 +348,16 @@ const ExportPanel: React.FC = () => {
     setExporting(true)
     setExportError(null)
     try {
+      const pending = pendingAuthorization.current?.candidateId === selectedCandidate.candidateId
+        ? pendingAuthorization.current
+        : { candidateId: selectedCandidate.candidateId, requestId: crypto.randomUUID() }
+      pendingAuthorization.current = pending
+      const authorized = await guestCommerce.authorizeExport({
+        exportRequestId: pending.requestId,
+        candidateId: selectedCandidate.candidateId,
+      })
+      setAuthorizedCandidateId(selectedCandidate.candidateId)
+      syncCommerceEntitlement(authorized)
       if (exportType === 'bundle') {
         const names: string[] = []
         for (const s of SIZES) {
@@ -356,6 +369,7 @@ const ExportPanel: React.FC = () => {
         const name = await renderExport()
         setLastExport(name!)
       }
+      pendingAuthorization.current = null
     } catch (err) {
       console.error('Export failed:', err)
       setExportError(err instanceof Error ? err.message : 'Export failed. Please try again.')
@@ -372,7 +386,7 @@ const ExportPanel: React.FC = () => {
           <span className="rounded-full bg-slate-800 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-400">
             Checkout offline
           </span>
-        ) : !entitlement.exportAllowed && (
+        ) : !canExport && (
           <span className="rounded-full bg-amber-950/40 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-amber-300">
             Preview mode
           </span>
@@ -410,16 +424,16 @@ const ExportPanel: React.FC = () => {
             </button>
             <button
               onClick={() => setExportType('bundle')}
-              disabled={!entitlement.exportAllowed}
+              disabled={!canExport}
               className={`rounded-lg border px-3 py-2 text-center text-xs font-medium transition-colors ${
-                !entitlement.exportAllowed
+                !canExport
                   ? 'cursor-not-allowed border-slate-900 bg-slate-950/30 text-slate-700'
                   : exportType === 'bundle'
                   ? 'border-studio-500/60 bg-studio-950/40 text-slate-200'
                   : 'border-slate-800 bg-slate-900 text-slate-400 hover:border-slate-700'
               }`}
             >
-              {!entitlement.exportAllowed ? 'Bundle requires purchase' : 'Bundle (all sizes)'}
+              {!canExport ? 'Bundle requires purchase' : 'Bundle (all sizes)'}
             </button>
           </div>
         </div>
@@ -454,8 +468,8 @@ const ExportPanel: React.FC = () => {
           <label className="mb-2 block text-xs font-medium text-slate-400">Size</label>
           <div className="grid grid-cols-2 gap-2">
             {SIZES.map((s, i) => {
-              const restricted = !entitlement.exportAllowed && s.width > 512
-              const checkoutBlocked = !checkoutEnabled && s.width > 512
+              const restricted = !canExport
+              const checkoutBlocked = !checkoutEnabled
               const sizeDisabled = restricted || checkoutBlocked
               return (
                 <button

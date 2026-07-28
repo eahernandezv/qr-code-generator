@@ -1,6 +1,7 @@
 import { cleanup } from '@testing-library/react'
 import '@testing-library/jest-dom/vitest'
 import { afterEach, beforeEach, vi } from 'vitest'
+import { guestCommerce } from '../lib/commerceClient'
 
 Object.defineProperty(globalThis, 'IS_REACT_ACT_ENVIRONMENT', {
   configurable: true,
@@ -43,6 +44,7 @@ const mockCanvasContext = {
 
 beforeEach(() => {
   localStorage.clear()
+  guestCommerce.reset()
   const globalCtx = globalThis as any
   if (globalCtx.HTMLCanvasElement) {
     globalCtx.HTMLCanvasElement.prototype.getContext = function (contextId: string) {

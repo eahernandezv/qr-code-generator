@@ -143,6 +143,11 @@ export interface Entitlement {
   usedRounds: number
   maxCandidates: number
   exportAllowed: boolean
+  checkoutStatus?: 'idle' | 'pending' | 'succeeded' | 'failed' | 'canceled' | 'expired'
+  candidatesConsumed?: number
+  exportsAllowed?: number
+  exportsConsumed?: number
+  extraExplorationAvailable?: boolean
   expiresAt?: string
 }
 

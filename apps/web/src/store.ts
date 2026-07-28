@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { ProjectState, Payload, ArtDirection, StyleSpec, Entitlement, GenerationBoard } from './types'
 import { FEATURE_FLAGS, type FeatureFlags } from './config/flags'
+import { guestCommerce, type CheckoutStatus, type CommerceEntitlementSnapshot } from './lib/commerceClient'
 
 const generateId = (): string => {
   const hex = () => Math.floor(Math.random() * 16).toString(16)
@@ -42,6 +43,11 @@ const defaultEntitlement = (): Entitlement => ({
   usedRounds: 0,
   maxCandidates: 4,
   exportAllowed: false,
+  checkoutStatus: 'idle',
+  candidatesConsumed: 0,
+  exportsAllowed: 0,
+  exportsConsumed: 0,
+  extraExplorationAvailable: false,
   expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
 })
 
@@ -70,6 +76,9 @@ interface StudioStore {
   selectCandidate: (candidateId: string) => void
   setIsGenerating: (v: boolean) => void
   incrementUsedRounds: () => void
+  setCheckoutStatus: (status: CheckoutStatus) => void
+  syncCommerceEntitlement: (entitlement: CommerceEntitlementSnapshot) => void
+  consumePreviewRoundIfSuccessful: (boardId: string) => void
   resetProject: () => void
   hydrateProject: (project: ProjectState) => void
   cloneProject: () => ProjectState
@@ -158,7 +167,65 @@ export const useStudioStore = create<StudioStore>()(
           },
         })),
 
-      resetProject: () => set({ project: createProject(), activeBoardId: null }),
+      setCheckoutStatus: (checkoutStatus) =>
+        set((s) => ({
+          project: {
+            ...s.project,
+            entitlement: { ...s.project.entitlement, checkoutStatus },
+            updatedAt: nowIso(),
+          },
+        })),
+
+      syncCommerceEntitlement: (commerce) =>
+        set((s) => ({
+          project: {
+            ...s.project,
+            projectId: commerce.projectId,
+            entitlement: {
+              type: commerce.extraExplorationPurchased ? 'exploration' : 'project',
+              maxRounds: commerce.totalRounds,
+              usedRounds: commerce.roundsConsumed,
+              maxCandidates: commerce.totalCandidates,
+              candidatesConsumed: commerce.candidatesConsumed,
+              exportAllowed: commerce.finishedArtworksConsumed < commerce.totalFinishedArtworks,
+              exportsAllowed: commerce.totalFinishedArtworks,
+              exportsConsumed: commerce.finishedArtworksConsumed,
+              extraExplorationAvailable: !commerce.extraExplorationPurchased,
+              checkoutStatus: commerce.status === 'active' ? 'succeeded' : 'pending',
+            },
+            updatedAt: nowIso(),
+          },
+        })),
+
+      consumePreviewRoundIfSuccessful: (boardId) =>
+        set((s) => {
+          const board = s.project.boards.find((item) => item.boardId === boardId)
+          const successfulCandidates = board?.candidates.filter(
+            (candidate) => candidate.status === 'ready' || candidate.status === 'validated',
+          ).length ?? 0
+          if (s.project.entitlement.type !== 'preview' || board?.status !== 'complete' || successfulCandidates === 0) {
+            return {}
+          }
+          return {
+            project: {
+              ...s.project,
+              entitlement: {
+                ...s.project.entitlement,
+                usedRounds: Math.min(s.project.entitlement.usedRounds + 1, s.project.entitlement.maxRounds),
+                candidatesConsumed: Math.min(
+                  (s.project.entitlement.candidatesConsumed ?? 0) + successfulCandidates,
+                  s.project.entitlement.maxCandidates,
+                ),
+              },
+              updatedAt: nowIso(),
+            },
+          }
+        }),
+
+      resetProject: () => {
+        guestCommerce.clearAccess()
+        set({ project: createProject(), activeBoardId: null, isGenerating: false })
+      },
 
       hydrateProject: (project) =>
         set({
@@ -170,9 +237,6 @@ export const useStudioStore = create<StudioStore>()(
 
       cancelBoard: (boardId) =>
         set((s) => {
-          const cancelled = s.project.boards.some(
-            (b) => b.boardId === boardId && b.status === 'generating'
-          )
           return {
             project: {
               ...s.project,
@@ -181,12 +245,7 @@ export const useStudioStore = create<StudioStore>()(
                   ? { ...b, status: 'failed' as const, completedAt: nowIso() }
                   : b
               ),
-              entitlement: cancelled
-                ? {
-                    ...s.project.entitlement,
-                    usedRounds: Math.max(0, s.project.entitlement.usedRounds - 1),
-                  }
-                : s.project.entitlement,
+              entitlement: s.project.entitlement,
               updatedAt: nowIso(),
             },
             isGenerating: s.project.boards.some(

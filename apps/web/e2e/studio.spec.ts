@@ -2,7 +2,7 @@ import { test, expect, type Page } from '@playwright/test'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 
-const evidenceRoot = path.resolve(process.cwd(), '../../.work-loop/evidence/stage1-studio')
+const evidenceRoot = path.resolve(process.cwd(), '../../.work-loop/evidence/stage2-commerce/browser')
 const exportDir = path.join(evidenceRoot, 'exports')
 const screenshotDir = path.join(evidenceRoot, 'screenshots')
 
@@ -60,6 +60,7 @@ function projectState(options: { selected?: boolean; exhausted?: boolean; coreEv
 
 async function seed(page: Page, project = projectState()) {
   await page.addInitScript((state) => {
+    window.__QR_TEST_PAID_PROJECT_ID__ = state.projectId
     localStorage.setItem('qr-studio-project', JSON.stringify({
       state: { project: state, activeBoardId: 'board-1' },
       version: 0,
