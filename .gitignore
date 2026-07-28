@@ -36,6 +36,9 @@ npm-debug.log*
 .eslintcache
 .parcel-cache
 .cache/
+.work-loop/
+__pycache__/
+*.py[cod]
 
 # Package manager
 package-lock.json

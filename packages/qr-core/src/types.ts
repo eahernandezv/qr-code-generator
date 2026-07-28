@@ -86,3 +86,12 @@ export interface ScanTestResult {
   latencyMs: number;
   details?: Record<string, unknown>;
 }
+
+export class QrCoreError extends Error {
+  code: string;
+  constructor(code: string, message?: string) {
+    super(message ? `${code}: ${message}` : code);
+    this.name = 'QrCoreError';
+    this.code = code;
+  }
+}

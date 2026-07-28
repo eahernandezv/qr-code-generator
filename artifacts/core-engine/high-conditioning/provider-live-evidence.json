@@ -1,0 +1,149 @@
+{
+  "generatedAt": "2026-07-28T10:32:12.018Z",
+  "elapsedMs": 30249,
+  "generationRequest": {
+    "mode": "provider_generative",
+    "prompt": "A refined Japanese botanical ink illustration, clear QR geometry, white quiet zone, premium editorial composition",
+    "artisticStrength": 1.0,
+    "seed": 424242,
+    "canonicalPayload": "https://example.com/artistic-qr-live-proof"
+  },
+  "boardId": "567ea616-9a39-4ff9-8074-e56e91fa4ad7",
+  "status": "completed",
+  "candidateCount": 1,
+  "candidates": [
+    {
+      "candidateId": "a4a85d01-e1cf-4785-b7df-81240ce18e8e",
+      "matrixRef": "567ea616-9a39-4ff9-8074-e56e91fa4ad7-c0",
+      "provenance": {
+        "generationMode": "provider_generative",
+        "provider": "replicate",
+        "modelVersion": "zylim0702/qr_code_controlnet@628e604e13cf63d8",
+        "adapterVersion": "qr-creator-gen-v1",
+        "validationVersion": "scan-v1",
+        "createdAt": "2026-07-28T10:32:11.929591+00:00"
+      },
+      "artisticScore": 0.75,
+      "rendered": {
+        "format": "png-dataurl",
+        "width": 768,
+        "height": 768,
+        "byteLength": 1715102
+      },
+      "localValidation": {
+        "pass": false,
+        "decoder": "jsQR",
+        "version": "1.4.0",
+        "thresholdVersion": "scan-v1-real-75pct",
+        "scannedPayload": "",
+        "tests": [
+          {
+            "name": "decode_raw",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "none",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 542.001,
+              "width": 768,
+              "height": 768
+            }
+          },
+          {
+            "name": "decode_0.5x",
+            "pass": false,
+            "scale": 0.5,
+            "perturbation": "none",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 164.473,
+              "width": 384,
+              "height": 384
+            }
+          },
+          {
+            "name": "decode_2x",
+            "pass": false,
+            "scale": 2,
+            "perturbation": "none",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 753.703,
+              "width": 1536,
+              "height": 1536
+            }
+          },
+          {
+            "name": "blur_light",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "blur",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 301.029,
+              "width": 768,
+              "height": 768
+            }
+          },
+          {
+            "name": "noise_light",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "noise",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 259.903,
+              "width": 768,
+              "height": 768
+            }
+          },
+          {
+            "name": "contrast_low",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "contrast",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 267.567,
+              "width": 768,
+              "height": 768
+            }
+          },
+          {
+            "name": "rotation_2deg",
+            "pass": true,
+            "scale": 1,
+            "perturbation": "rotation",
+            "details": {
+              "decodedPayload": "https://example.com/artistic-qr-live-proof",
+              "payloadMatches": true,
+              "latencyMs": 260.204,
+              "width": 768,
+              "height": 768
+            }
+          },
+          {
+            "name": "perspective_mild",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "perspective",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 264.092,
+              "width": 768,
+              "height": 768
+            }
+          }
+        ],
+        "overallConfidence": "failed"
+      }
+    }
+  ]
+}

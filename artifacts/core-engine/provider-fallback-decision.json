@@ -1,0 +1,28 @@
+{
+  "generatedAt": "2026-07-28T10:43:46.636Z",
+  "input": {
+    "liveProviderBoardId": "567ea616-9a39-4ff9-8074-e56e91fa4ad7",
+    "liveCandidateId": "a4a85d01-e1cf-4785-b7df-81240ce18e8e",
+    "liveValidationPass": false,
+    "liveValidationThreshold": "scan-v1-real-75pct"
+  },
+  "decision": {
+    "finalBoardStatus": "completed",
+    "finalCandidateCount": 4,
+    "finalGenerationModes": [
+      "deterministic_template"
+    ],
+    "exportAllowed": [
+      true,
+      true,
+      true,
+      true
+    ],
+    "scannedPayloads": [
+      "https://example.com/artistic-qr-live-proof",
+      "https://example.com/artistic-qr-live-proof",
+      "https://example.com/artistic-qr-live-proof",
+      "https://example.com/artistic-qr-live-proof"
+    ]
+  }
+}

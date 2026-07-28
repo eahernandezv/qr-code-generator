@@ -11,6 +11,8 @@
   "scripts": {
     "build": "npm run build --workspaces",
     "test": "npm test --workspaces",
-    "lint": "npm run lint --workspaces"
+    "lint": "npm run lint --workspaces",
+    "build:core": "npm run build --workspace=@qr/qr-core && npm run build --workspace=@qr/artistic-qr",
+    "test:core": "npm run build:core && npm test --workspace=@qr/qr-core && npm test --workspace=@qr/artistic-qr"
   }
 }
