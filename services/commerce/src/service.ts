@@ -1,6 +1,7 @@
 import { createHash, randomBytes, randomUUID } from 'node:crypto'
 import { getOffer } from './lib/offers.js'
 import type { CheckoutProvider } from './provider.js'
+import { MemoryCommerceRepository, type CommerceRepository, type PersistedCommerceState } from './repository.js'
 import {
   CommerceError,
   type CheckoutSession,
@@ -46,6 +47,7 @@ export interface CommerceServiceOptions {
   now?: () => number
   token?: () => string
   id?: () => string
+  repository?: CommerceRepository
 }
 
 /**
@@ -58,6 +60,7 @@ export class CommerceService {
   private readonly now: () => number
   private readonly token: () => string
   private readonly id: () => string
+  private readonly repository: CommerceRepository
   private readonly sessions = new Map<string, CheckoutSession>()
   private readonly idempotency = new Map<string, IdempotencyRecord>()
   private readonly processedEvents = new Map<string, PaymentEventResult>()
@@ -74,6 +77,8 @@ export class CommerceService {
     this.now = options.now ?? Date.now
     this.token = options.token ?? (() => randomBytes(32).toString('base64url'))
     this.id = options.id ?? randomUUID
+    this.repository = options.repository ?? new MemoryCommerceRepository()
+    this.hydrate(this.repository.load())
   }
 
   async startCheckout(input: StartCheckoutInput): Promise<StartCheckoutResult> {
@@ -165,6 +170,8 @@ export class CommerceService {
       })
     }
 
+    this.persist()
+
     return {
       session: cloneSession(session),
       redirectUrl: providerResult.redirectUrl,
@@ -173,10 +180,12 @@ export class CommerceService {
     }
   }
 
-  processPaymentEvent(event: PaymentEvent): PaymentEventResult {
-    if (!event.verified) {
-      throw new CommerceError('payment_unverified', 'Payment event signature was not verified.')
-    }
+  processPaymentWebhook(rawPayload: string, signature: string): PaymentEventResult {
+    const event = this.provider.verifyWebhook(rawPayload, signature)
+    return this.applyPaymentEvent(event)
+  }
+
+  private applyPaymentEvent(event: PaymentEvent): PaymentEventResult {
     const duplicate = this.processedEvents.get(event.providerEventId)
     if (duplicate) {
       const currentSession = this.requireSession(event.checkoutSessionId)
@@ -211,6 +220,7 @@ export class CommerceService {
       entitlement: entitlement ? snapshot(entitlement) : undefined,
     }
     this.processedEvents.set(event.providerEventId, result)
+    this.persist()
     return result
   }
 
@@ -241,6 +251,7 @@ export class CommerceService {
       projectId: record.projectId,
       expiresAt: this.now() + RECOVERY_TTL_MS,
     })
+    this.persist()
     return {
       projectId: record.projectId,
       projectAccessToken,
@@ -280,6 +291,7 @@ export class CommerceService {
     }
     const resultSnapshot = snapshot(entitlement)
     this.generationOperations.set(operationKey, { fingerprint, result: resultSnapshot })
+    this.persist()
     return { ...resultSnapshot }
   }
 
@@ -311,7 +323,12 @@ export class CommerceService {
       entitlement: snapshot(entitlement),
     }
     this.exportOperations.set(operationKey, { fingerprint, result })
+    this.persist()
     return { authorizationId: result.authorizationId, entitlement: { ...result.entitlement } }
+  }
+
+  entitlementForAccess(projectAccessToken: string): EntitlementSnapshot {
+    return snapshot(this.requireActiveEntitlement(this.requireProjectId(projectAccessToken)))
   }
 
   private grantCheckout(session: CheckoutSession): void {
@@ -359,6 +376,39 @@ export class CommerceService {
 
   private isoNow(): string {
     return new Date(this.now()).toISOString()
+  }
+
+  private hydrate(state: PersistedCommerceState): void {
+    for (const session of state.sessions) this.sessions.set(session.checkoutSessionId, session)
+    for (const [key, value] of state.idempotency) this.idempotency.set(key, value)
+    for (const [key, value] of state.processedEvents) this.processedEvents.set(key, value)
+    for (const [key, value] of state.access) this.access.set(key, value)
+    for (const [key, value] of state.recovery) this.recovery.set(key, value)
+    for (const value of state.entitlements) this.entitlements.set(value.projectId, {
+      ...value,
+      grantedCheckoutIds: new Set(value.grantedCheckoutIds),
+      finishedCandidateIds: new Set(value.finishedCandidateIds),
+    })
+    for (const [key, value] of state.generationOperations) this.generationOperations.set(key, value)
+    for (const [key, value] of state.exportOperations) this.exportOperations.set(key, value)
+  }
+
+  private persist(): void {
+    this.repository.save({
+      schemaVersion: 1,
+      sessions: Array.from(this.sessions.values(), cloneSession),
+      idempotency: Array.from(this.idempotency.entries()),
+      processedEvents: Array.from(this.processedEvents.entries()),
+      access: Array.from(this.access.entries()),
+      recovery: Array.from(this.recovery.entries()),
+      entitlements: Array.from(this.entitlements.values(), (value) => ({
+        ...snapshot(value),
+        grantedCheckoutIds: Array.from(value.grantedCheckoutIds),
+        finishedCandidateIds: Array.from(value.finishedCandidateIds),
+      })),
+      generationOperations: Array.from(this.generationOperations.entries()),
+      exportOperations: Array.from(this.exportOperations.entries()),
+    })
   }
 }
 

@@ -3,6 +3,9 @@ import react from '@vitejs/plugin-react'
 import { resolve } from 'path'
 
 export default defineConfig({
+  define: {
+    'import.meta.env.VITE_COMMERCE_TEST_MODE': JSON.stringify('true'),
+  },
   plugins: [react()],
   resolve: {
     alias: {

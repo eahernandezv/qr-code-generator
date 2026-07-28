@@ -1,4 +1,5 @@
 export * from './types.js'
 export * from './provider.js'
+export * from './repository.js'
 export * from './service.js'
 export { OFFER_CATALOG, getOffer } from './lib/offers.js'

@@ -2,6 +2,7 @@ import React from 'react'
 import { useStudioStore } from '../store'
 import {
   COMMERCE_OFFERS,
+  COMMERCE_TEST_MODE,
   guestCommerce,
   type CheckoutView,
   type CommerceOfferId,
@@ -52,6 +53,19 @@ const CheckoutPanel: React.FC = () => {
     } finally {
       setBusy(false)
     }
+  }
+
+  const refreshPayment = async () => {
+    if (!checkout) return
+    setBusy(true); setError(null)
+    try {
+      const refreshed = await guestCommerce.refreshCheckout(checkout.checkoutSessionId)
+      setCheckout(refreshed.checkout)
+      if (refreshed.entitlement) syncCommerceEntitlement(refreshed.entitlement)
+      else setCheckoutStatus(refreshed.checkout.status)
+    } catch (paymentError) {
+      setError(paymentError instanceof Error ? paymentError.message : 'Payment status is unavailable.')
+    } finally { setBusy(false) }
   }
 
   const markTerminal = async (status: 'failed' | 'canceled') => {
@@ -110,22 +124,17 @@ const CheckoutPanel: React.FC = () => {
           <p role="status" aria-live="polite" className="text-xs text-amber-200">
             {busy ? 'Waiting for payment confirmation…' : 'Checkout created. Confirmation may take a moment.'}
           </p>
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() => void completePayment()}
-            className="w-full rounded-lg bg-studio-600 px-3 py-2 text-xs font-semibold text-white hover:bg-studio-500 disabled:bg-slate-800"
-          >
-            Complete test payment
-          </button>
-          <div className="grid grid-cols-2 gap-2">
-            <button type="button" disabled={busy} onClick={() => void markTerminal('failed')} className="rounded-lg border border-red-900/50 px-2 py-2 text-xs text-red-300 disabled:opacity-50">
-              Simulate failure
-            </button>
-            <button type="button" disabled={busy} onClick={() => void markTerminal('canceled')} className="rounded-lg border border-slate-700 px-2 py-2 text-xs text-slate-300 disabled:opacity-50">
-              Cancel checkout
-            </button>
-          </div>
+          {COMMERCE_TEST_MODE ? (
+            <>
+              <button type="button" disabled={busy} onClick={() => void completePayment()} className="w-full rounded-lg bg-studio-600 px-3 py-2 text-xs font-semibold text-white hover:bg-studio-500 disabled:bg-slate-800">Complete test payment</button>
+              <div className="grid grid-cols-2 gap-2">
+                <button type="button" disabled={busy} onClick={() => void markTerminal('failed')} className="rounded-lg border border-red-900/50 px-2 py-2 text-xs text-red-300 disabled:opacity-50">Simulate failure</button>
+                <button type="button" disabled={busy} onClick={() => void markTerminal('canceled')} className="rounded-lg border border-slate-700 px-2 py-2 text-xs text-slate-300 disabled:opacity-50">Cancel checkout</button>
+              </div>
+            </>
+          ) : (
+            <button type="button" disabled={busy} onClick={() => void refreshPayment()} className="w-full rounded-lg border border-studio-600/50 px-3 py-2 text-xs font-semibold text-studio-200 disabled:opacity-50">Check payment status</button>
+          )}
         </div>
       )}
 
@@ -167,7 +176,7 @@ const CheckoutPanel: React.FC = () => {
 
       {error && <p role="alert" className="mt-3 text-xs text-red-300">{error}</p>}
       <p className="mt-3 text-[10px] text-slate-600">
-        Test-mode payment adapter. No live charge or production credential is used. Purchase does not imply scan validation.
+        {COMMERCE_TEST_MODE ? 'Local test-payment adapter. No charge is made.' : 'Payment and export access are verified by the commerce service.'} Purchase does not imply scan validation.
       </p>
       <span className="sr-only">Project price {COMMERCE_OFFERS.artistic_project.amountCents / 100} dollars</span>
     </section>

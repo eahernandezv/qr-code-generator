@@ -7,9 +7,11 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "assert:production-commerce": "node scripts/assert-production-commerce.mjs",
     "preview": "vite preview",
     "test": "vitest run",
     "test:e2e": "FONTCONFIG_FILE=${PLAYWRIGHT_FONTCONFIG_FILE:-$HOME/.cache/ms-playwright/local-fonts.conf} LD_LIBRARY_PATH=${PLAYWRIGHT_LD_LIBRARY_PATH:-$HOME/.cache/ms-playwright/local-libs/usr/lib/x86_64-linux-gnu} playwright test",
+    "test:e2e:production-commerce": "FONTCONFIG_FILE=${PLAYWRIGHT_FONTCONFIG_FILE:-$HOME/.cache/ms-playwright/local-fonts.conf} LD_LIBRARY_PATH=${PLAYWRIGHT_LD_LIBRARY_PATH:-$HOME/.cache/ms-playwright/local-libs/usr/lib/x86_64-linux-gnu} playwright test --config playwright.production.config.ts",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
@@ -36,6 +38,7 @@
     "eslint": "^8.57.0",
     "eslint-plugin-react-hooks": "^4.6.2",
     "eslint-plugin-react-refresh": "^0.4.7",
+    "happy-dom": "20.8.9",
     "jsdom": "^24.1.3",
     "postcss": "^8.4.38",
     "tailwindcss": "^3.4.4",

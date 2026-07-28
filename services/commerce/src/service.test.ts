@@ -1,6 +1,10 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { OFFER_CATALOG } from './lib/offers.js'
 import { MockCheckoutProvider } from './provider.js'
+import { JsonFileCommerceRepository } from './repository.js'
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { CommerceService } from './service.js'
 import { CommerceError, type PaymentEvent } from './types.js'
 
@@ -30,8 +34,12 @@ function event(
     checkoutSessionId,
     type,
     occurredAt: new Date(now).toISOString(),
-    verified: true,
   }
+}
+
+function deliver(target: CommerceService, adapter: MockCheckoutProvider, paymentEvent: PaymentEvent) {
+  const raw = JSON.stringify(paymentEvent)
+  return target.processPaymentWebhook(raw, adapter.signWebhook(raw))
 }
 
 async function buyProject() {
@@ -39,7 +47,7 @@ async function buyProject() {
     offerId: 'artistic_project',
     idempotencyKey: `project-checkout-${++serial}`,
   })
-  const result = service.processPaymentEvent(event(checkout.session.checkoutSessionId, 'succeeded'))
+  const result = deliver(service, provider, event(checkout.session.checkoutSessionId, 'succeeded'))
   return {
     ...checkout,
     accessToken: checkout.projectAccessToken!,
@@ -89,9 +97,9 @@ describe('checkout and payment idempotency', () => {
   it('does not double-grant duplicate success and ignores reordered failure after success', async () => {
     const checkout = await service.startCheckout({ offerId: 'artistic_project', idempotencyKey: 'payment-order' })
     const success = event(checkout.session.checkoutSessionId, 'succeeded', 'provider-success')
-    const first = service.processPaymentEvent(success)
-    const duplicate = service.processPaymentEvent(success)
-    const staleFailure = service.processPaymentEvent(event(checkout.session.checkoutSessionId, 'failed', 'provider-failed-late'))
+    const first = deliver(service, provider, success)
+    const duplicate = deliver(service, provider, success)
+    const staleFailure = deliver(service, provider, event(checkout.session.checkoutSessionId, 'failed', 'provider-failed-late'))
     expect(first.entitlement?.totalCandidates).toBe(12)
     expect(duplicate.duplicate).toBe(true)
     expect(duplicate.entitlement?.totalCandidates).toBe(12)
@@ -99,20 +107,20 @@ describe('checkout and payment idempotency', () => {
     expect(staleFailure.session.status).toBe('succeeded')
   })
 
-  it('rejects an unverified webhook before entitlement mutation', async () => {
-    const checkout = await service.startCheckout({ offerId: 'artistic_project', idempotencyKey: 'unsigned-event' })
-    expect(() => service.processPaymentEvent({
-      ...event(checkout.session.checkoutSessionId, 'succeeded'),
-      verified: false,
-    })).toThrowError(expect.objectContaining({ code: 'payment_unverified' }))
+  it('verifies raw signatures and rejects invalid or modified payloads before mutation', async () => {
+    const checkout = await service.startCheckout({ offerId: 'artistic_project', idempotencyKey: 'signed-event' })
+    const payment = event(checkout.session.checkoutSessionId, 'succeeded'); const raw = JSON.stringify(payment)
+    expect(() => service.processPaymentWebhook(raw, '0'.repeat(64))).toThrowError(expect.objectContaining({ code: 'payment_unverified' }))
+    expect(() => service.processPaymentWebhook(raw.replace('succeeded', 'failed'), provider.signWebhook(raw))).toThrowError(expect.objectContaining({ code: 'payment_unverified' }))
     expect(service.checkoutStatus(checkout.session.checkoutSessionId).status).toBe('pending')
+    expect(service.processPaymentWebhook(raw, provider.signWebhook(raw)).session.status).toBe('succeeded')
   })
 
   it('allows a verified success to supersede earlier failed or canceled delivery', async () => {
     for (const prior of ['failed', 'canceled'] as const) {
       const checkout = await service.startCheckout({ offerId: 'artistic_project', idempotencyKey: `recover-${prior}` })
-      service.processPaymentEvent(event(checkout.session.checkoutSessionId, prior))
-      const recovered = service.processPaymentEvent(event(checkout.session.checkoutSessionId, 'succeeded'))
+      deliver(service, provider, event(checkout.session.checkoutSessionId, prior))
+      const recovered = deliver(service, provider, event(checkout.session.checkoutSessionId, 'succeeded'))
       expect(recovered.session.status).toBe('succeeded')
       expect(recovered.entitlement?.status).toBe('active')
     }
@@ -156,8 +164,8 @@ describe('authoritative allowance and export mutations', () => {
       idempotencyKey: 'extra-checkout',
       projectAccessToken: project.accessToken,
     })
-    const granted = service.processPaymentEvent(event(extra.session.checkoutSessionId, 'succeeded', 'extra-success'))
-    const duplicate = service.processPaymentEvent(event(extra.session.checkoutSessionId, 'succeeded', 'extra-success'))
+    const granted = deliver(service, provider, event(extra.session.checkoutSessionId, 'succeeded', 'extra-success'))
+    const duplicate = deliver(service, provider, event(extra.session.checkoutSessionId, 'succeeded', 'extra-success'))
     expect(granted.entitlement).toMatchObject({
       totalRounds: 5,
       totalCandidates: 20,
@@ -228,3 +236,40 @@ describe('error shape', () => {
     expect(error).toMatchObject({ name: 'CommerceError', code: 'payment_unverified' })
   })
 })
+
+
+describe('durable repository restart guarantees', () => {
+  it('preserves purchase, dedupe, allowance, artwork identity and recovery replay using hashes only', async () => {
+    const directory = mkdtempSync(join(tmpdir(), 'qr-commerce-')); const path = join(directory, 'state.json')
+    try {
+      const repository = new JsonFileCommerceRepository(path); const initial = serviceWith(repository)
+      const checkout = await initial.startCheckout({ offerId: 'artistic_project', idempotencyKey: 'durable-buy' })
+      const payment = event(checkout.session.checkoutSessionId, 'succeeded', 'durable-event'); deliver(initial, provider, payment)
+      initial.recordGeneration(checkout.projectAccessToken!, { operationId: 'round-1', outcome: 'succeeded', candidateCount: 4 })
+      initial.authorizeExport(checkout.projectAccessToken!, { exportRequestId: 'export-1', candidateId: 'artwork-a' })
+      const restarted = serviceWith(repository)
+      expect(deliver(restarted, provider, payment)).toMatchObject({ duplicate: true, entitlement: { roundsConsumed: 1, finishedArtworksConsumed: 1 } })
+      expect(restarted.recordGeneration(checkout.projectAccessToken!, { operationId: 'round-1', outcome: 'succeeded', candidateCount: 4 }).roundsConsumed).toBe(1)
+      expect(restarted.authorizeExport(checkout.projectAccessToken!, { exportRequestId: 'export-2', candidateId: 'artwork-a' }).entitlement.finishedArtworksConsumed).toBe(1)
+      expect(() => restarted.authorizeExport(checkout.projectAccessToken!, { exportRequestId: 'export-3', candidateId: 'artwork-b' })).toThrowError(expect.objectContaining({ code: 'exports_exhausted' }))
+      const recovered = restarted.recover(checkout.recoveryCode!); const restartedAgain = serviceWith(repository)
+      expect(restartedAgain.entitlementForAccess(recovered.projectAccessToken)).toMatchObject({ roundsConsumed: 1, finishedArtworksConsumed: 1 })
+      expect(() => restartedAgain.recover(checkout.recoveryCode!)).toThrowError(expect.objectContaining({ code: 'project_access_replayed' }))
+      const persisted = readFileSync(path, 'utf8')
+      for (const rawCapability of [checkout.projectAccessToken!, checkout.recoveryCode!, recovered.projectAccessToken, recovered.replacementRecoveryCode]) expect(persisted).not.toContain(rawCapability)
+      expect(persisted).toContain('sha256:')
+    } finally { rmSync(directory, { recursive: true, force: true }) }
+  })
+  it('preserves recovery expiry across restart', async () => {
+    const directory = mkdtempSync(join(tmpdir(), 'qr-commerce-expiry-'))
+    try {
+      const repository = new JsonFileCommerceRepository(join(directory, 'state.json')); const initial = serviceWith(repository)
+      const checkout = await initial.startCheckout({ offerId: 'artistic_project', idempotencyKey: 'expiry-buy' })
+      deliver(initial, provider, event(checkout.session.checkoutSessionId, 'succeeded', 'expiry-event')); now += 31 * 24 * 60 * 60 * 1000
+      expect(() => serviceWith(repository).recover(checkout.recoveryCode!)).toThrowError(expect.objectContaining({ code: 'project_access_expired' }))
+    } finally { rmSync(directory, { recursive: true, force: true }) }
+  })
+})
+function serviceWith(repository: JsonFileCommerceRepository): CommerceService {
+  return new CommerceService(provider, { repository, now: () => now, id: () => `id-${++serial}`, token: () => `test-capability-${++serial}-${'x'.repeat(32)}` })
+}

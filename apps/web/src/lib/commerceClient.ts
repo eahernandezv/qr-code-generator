@@ -26,11 +26,27 @@ export const COMMERCE_OFFERS = Object.freeze({
   extra_exploration: Object.freeze({ amountCents: 500, rounds: 2, candidates: 8, artworks: 1 }),
 })
 
-class CommerceClientError extends Error {
+export class CommerceClientError extends Error {
   constructor(readonly code: string, message: string) {
     super(message)
     this.name = 'CommerceClientError'
   }
+}
+
+export interface CommerceClient {
+  startCheckout(input: { projectId: string; offerId: CommerceOfferId; idempotencyKey: string }): Promise<CheckoutView>
+  refreshCheckout(checkoutSessionId: string): Promise<{ checkout: CheckoutView; entitlement?: CommerceEntitlementSnapshot }>
+  completeTestPayment(checkoutSessionId: string): Promise<CommerceEntitlementSnapshot>
+  setTestPaymentStatus(checkoutSessionId: string, status: 'failed' | 'canceled'): Promise<void>
+  recordGeneration(input: { operationId: string; outcome: 'succeeded' | 'failed' | 'canceled'; candidateCount: number }): Promise<CommerceEntitlementSnapshot>
+  authorizeExport(input: { exportRequestId: string; candidateId: string }): Promise<CommerceEntitlementSnapshot>
+  recover(recoveryCode: string): Promise<{ entitlement: CommerceEntitlementSnapshot; replacementRecoveryCode: string }>
+  checkout(checkoutSessionId: string): CheckoutView
+  clearAccess(): void
+  reset(): void
+  failProviderOnce(): void
+  grantPaidTestAccess(projectId: string): CommerceEntitlementSnapshot
+  expireRecoveryForTest(): void
 }
 
 interface MockProjectRecord extends CommerceEntitlementSnapshot {
@@ -59,7 +75,7 @@ interface MockCheckoutRecord {
  * sessionStorage. Production replaces this adapter with HTTP calls to
  * @qr/commerce; no payment-provider SDK is coupled to Studio components.
  */
-class MockGuestCommerceClient {
+class MockGuestCommerceClient implements CommerceClient {
   private projects = new Map<string, MockProjectRecord>()
   private checkouts = new Map<string, MockCheckoutRecord>()
   private idempotency = new Map<string, string>()
@@ -147,6 +163,12 @@ class MockGuestCommerceClient {
     }
     this.activeAccessCapability = checkout.accessCapability
     return snapshot(project)
+  }
+
+  async refreshCheckout(checkoutSessionId: string) {
+    const record = this.requireCheckout(checkoutSessionId)
+    const project = this.projects.get(record.projectId)
+    return { checkout: this.publicCheckout(record), entitlement: project?.status === 'active' ? snapshot(project) : undefined }
   }
 
   async setTestPaymentStatus(checkoutSessionId: string, status: 'failed' | 'canceled'): Promise<void> {
@@ -316,7 +338,43 @@ function snapshot(project: MockProjectRecord): CommerceEntitlementSnapshot {
   }
 }
 
-export const guestCommerce = new MockGuestCommerceClient()
+class HttpGuestCommerceClient implements CommerceClient {
+  private accessToken: string | null = null
+  private readonly checkouts = new Map<string, CheckoutView>()
+  constructor(private readonly baseUrl = import.meta.env.VITE_COMMERCE_API_URL || '/api/commerce') {}
+  async startCheckout(input: { projectId: string; offerId: CommerceOfferId; idempotencyKey: string }): Promise<CheckoutView> {
+    const result = await this.request<CheckoutView & { projectAccessToken?: string }>('/checkouts', { method: 'POST', body: JSON.stringify({ offerId: input.offerId, idempotencyKey: input.idempotencyKey }) })
+    if (result.projectAccessToken) this.accessToken = result.projectAccessToken
+    const checkout = publicCheckout(result); this.checkouts.set(checkout.checkoutSessionId, checkout); return checkout
+  }
+  async refreshCheckout(checkoutSessionId: string) {
+    const result = await this.request<CheckoutView & { entitlement?: CommerceEntitlementSnapshot }>(`/checkouts/${encodeURIComponent(checkoutSessionId)}`)
+    const checkout = publicCheckout(result); this.checkouts.set(checkoutSessionId, checkout); return { checkout, entitlement: result.entitlement }
+  }
+  async completeTestPayment(): Promise<CommerceEntitlementSnapshot> { throw new CommerceClientError('payment_unverified', 'Test payment controls are unavailable.') }
+  async setTestPaymentStatus(): Promise<void> { throw new CommerceClientError('payment_unverified', 'Test payment controls are unavailable.') }
+  async recordGeneration(input: { operationId: string; outcome: 'succeeded'|'failed'|'canceled'; candidateCount: number }) { return this.request<CommerceEntitlementSnapshot>('/generations', { method: 'POST', body: JSON.stringify(input) }) }
+  async authorizeExport(input: { exportRequestId: string; candidateId: string }) { const result = await this.request<{ entitlement: CommerceEntitlementSnapshot }>('/exports', { method: 'POST', body: JSON.stringify(input) }); return result.entitlement }
+  async recover(recoveryCode: string) { const result = await this.request<{ projectAccessToken: string; entitlement: CommerceEntitlementSnapshot; replacementRecoveryCode: string }>('/recovery', { method: 'POST', body: JSON.stringify({ recoveryCode }) }); this.accessToken = result.projectAccessToken; return result }
+  checkout(checkoutSessionId: string): CheckoutView { const value=this.checkouts.get(checkoutSessionId); if(!value) throw new CommerceClientError('checkout_session_not_found','Checkout session was not found.'); return value }
+  clearAccess() { this.accessToken = null }
+  reset() { this.clearAccess(); this.checkouts.clear() }
+  failProviderOnce() { throw new CommerceClientError('bad_request','Test controls are unavailable.') }
+  grantPaidTestAccess(): CommerceEntitlementSnapshot { throw new CommerceClientError('payment_unverified','Test grants are unavailable.') }
+  expireRecoveryForTest() { throw new CommerceClientError('bad_request','Test controls are unavailable.') }
+  private async request<T>(path: string, init: RequestInit = {}): Promise<T> {
+    const headers = new Headers(init.headers); headers.set('Content-Type','application/json'); if(this.accessToken) headers.set('Authorization',`Bearer ${this.accessToken}`)
+    let response: Response
+    try { response = await fetch(`${this.baseUrl}${path}`, { ...init, headers }) } catch { throw new CommerceClientError('service_unavailable','Commerce service is unavailable. Paid rounds and exports remain locked.') }
+    const value = response.status === 204 ? undefined : await response.json().catch(() => ({})) as {code?:unknown;message?:unknown}|undefined
+    if (!response.ok) throw new CommerceClientError(String(value?.code ?? 'service_unavailable'), String(value?.message ?? 'Commerce service is unavailable.'))
+    return value as T
+  }
+}
+function publicCheckout(value: CheckoutView): CheckoutView { return { checkoutSessionId:value.checkoutSessionId, offerId:value.offerId, amountCents:value.amountCents, status:value.status, recoveryCode:value.recoveryCode } }
+export const COMMERCE_TEST_MODE = import.meta.env.DEV && import.meta.env.VITE_COMMERCE_TEST_MODE === 'true'
+export const guestCommerce: CommerceClient = COMMERCE_TEST_MODE ? new MockGuestCommerceClient() : new HttpGuestCommerceClient()
+
 
 declare global {
   interface Window {
@@ -330,7 +388,7 @@ declare global {
   }
 }
 
-if (typeof window !== 'undefined' && import.meta.env.DEV && import.meta.env.VITE_COMMERCE_TEST_MODE === 'true') {
+if (typeof window !== 'undefined' && COMMERCE_TEST_MODE) {
   window.__QR_COMMERCE_TEST__ = {
     grantPaidAccess: (projectId) => guestCommerce.grantPaidTestAccess(projectId),
     clearAccess: () => guestCommerce.clearAccess(),
