@@ -14,12 +14,17 @@
     "./api": {
       "types": "./dist/api/index.d.ts",
       "default": "./dist/api/index.js"
+    },
+    "./service": {
+      "types": "./dist/http-service.d.ts",
+      "default": "./dist/http-service.js"
     }
   },
   "scripts": {
     "build": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\" && tsc",
     "test": "vitest run && python3 -m unittest discover -s provider -p 'test_*.py'",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "start:service": "node dist/http-service-main.js"
   },
   "dependencies": {
     "@qr/qr-core": "0.1.0",

@@ -9,7 +9,7 @@ export {
   exportArtifact,
   repairCandidate,
 } from './api/index.js';
-export { setCandidateAuthorityStore } from './candidate-context.js';
+export { InMemoryCandidateAuthorityStore, setCandidateAuthorityStore } from './candidate-context.js';
 
 export type {
   ArtDirection,
