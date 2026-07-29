@@ -19,7 +19,7 @@ export interface CandidateAuthorityStore {
   put(record: CandidateAuthorityRecord): void;
 }
 
-class InMemoryCandidateAuthorityStore implements CandidateAuthorityStore {
+export class InMemoryCandidateAuthorityStore implements CandidateAuthorityStore {
   private readonly records = new Map<string, CandidateAuthorityRecord>();
   constructor(private readonly maxEntries = 10_000) {}
 
