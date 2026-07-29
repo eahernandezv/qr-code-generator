@@ -14,6 +14,54 @@ const svgArtwork = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`
   <rect x="96" y="96" width="320" height="320" fill="#181b3a"/>
 </svg>`)}`
 
+function coreCandidateFixture() {
+  const ids = [
+    '10000000-0000-4000-8000-000000000001',
+    '10000000-0000-4000-8000-000000000002',
+    '10000000-0000-4000-8000-000000000003',
+    '10000000-0000-4000-8000-000000000004',
+  ]
+  const svg = decodeURIComponent(svgArtwork.split(',')[1])
+  return {
+    success: true,
+    board: {
+      boardId: '20000000-0000-4000-8000-000000000001',
+      status: 'completed',
+      candidates: ids.map((candidateId) => ({
+        candidateId,
+        matrixRef: 'qr:1:0:test',
+        rendered: { format: 'svg', data: svg, width: 512, height: 512 },
+        scanResults: [{
+          pass: true,
+          decoder: 'fixture-decoder',
+          version: 'test',
+          thresholdVersion: 'scan-v1',
+          scannedPayload: 'https://example.com/',
+          tests: [{ name: 'baseline', pass: true, scale: 1, perturbation: 'none' }],
+          overallConfidence: 'high',
+        }],
+        exportAllowed: true,
+        artisticScore: 0.8,
+        provenance: {
+          generationMode: 'deterministic_template',
+          provider: 'test-fixture',
+          modelVersion: 'fixture',
+          adapterVersion: 'artistic-qr-test-fixture',
+          validationVersion: 'scan-v1',
+          createdAt: '2026-07-29T23:00:00.000Z',
+        },
+      })),
+    },
+  }
+}
+
+async function routeCandidateFixture(page: Page, delayMs = 0) {
+  await page.route('**/api/artistic-qr/candidates', async (route) => {
+    if (delayMs > 0) await new Promise((resolve) => setTimeout(resolve, delayMs))
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(coreCandidateFixture()) })
+  })
+}
+
 function projectState(options: { selected?: boolean; exhausted?: boolean; coreEvidence?: boolean } = {}) {
   const now = '2026-07-28T09:00:00.000Z'
   const selected = options.selected ?? true
@@ -152,33 +200,51 @@ test.beforeAll(async () => {
 
 test('cancellation stops pending work and recovers Generate UI', async ({ page }) => {
   const errors = await assertNoConsoleErrors(page)
+  await routeCandidateFixture(page, 15_000)
   await page.goto('/')
   await page.getByPlaceholder('Enter url…').fill('https://example.com')
   await page.getByRole('button', { name: 'Generate 4' }).click()
   await expect(page.getByRole('button', { name: 'Cancel' })).toBeVisible()
   await page.getByRole('button', { name: 'Cancel' }).click()
-  await expect(page.getByText('failed', { exact: true })).toBeVisible()
+  await expect(page.getByText('No candidates yet')).toBeVisible()
   await expect(page.getByRole('button', { name: 'Generate 4' })).toBeEnabled()
-  await page.waitForTimeout(7_000)
-  await expect(page.getByText('failed', { exact: true })).toBeVisible()
+  await page.waitForTimeout(1_000)
+  await expect(page.getByText('No candidates yet')).toBeVisible()
   expect(errors).toEqual([])
 })
 
 test('refinement starts a new round and exhausted state remains disabled', async ({ page }) => {
   const errors = await assertNoConsoleErrors(page)
+  await routeCandidateFixture(page)
   await seed(page)
   await page.goto('/')
   await page.getByText('Refine from selected candidate').click()
   await page.getByPlaceholder(/Describe changes/).fill('Use a darker indigo palette')
   await page.getByRole('button', { name: 'Apply & Generate New Round' }).click()
-  await expect(page.getByRole('button', { name: 'Cancel' })).toBeVisible()
+  await expect(page.getByText('Round 2')).toBeVisible()
+  await expect(page.getByText('complete', { exact: true }).last()).toBeVisible()
   const persistedPrompt = await page.evaluate(() => {
     const stored = JSON.parse(localStorage.getItem('qr-studio-project') || '{}')
     return stored.state.project.artDirection.prompt
   })
   expect(persistedPrompt).toBe('Use a darker indigo palette')
-  await page.getByRole('button', { name: 'Cancel' }).click()
   expect(errors).toEqual([])
+})
+
+test('Core generation outage is visible and retry remains possible', async ({ page }) => {
+  await page.route('**/api/artistic-qr/candidates', (route) => route.abort('connectionrefused'))
+  await page.goto('/')
+  await page.getByPlaceholder('Enter url…').fill('https://example.com')
+  await page.getByRole('button', { name: 'Generate 4' }).click()
+  await expect(page.getByRole('alert')).toContainText('Core generation service is unavailable')
+  await expect(page.getByRole('button', { name: 'Generate 4' })).toBeEnabled()
+  await expect(page.getByText('No candidates yet')).toBeVisible()
+
+  await page.unroute('**/api/artistic-qr/candidates')
+  await routeCandidateFixture(page)
+  await page.getByRole('button', { name: 'Generate 4' }).click()
+  await expect(page.getByText('complete', { exact: true })).toBeVisible()
+  await expect(page.getByText('Validated', { exact: true })).toHaveCount(4)
 })
 
 test('exhausted refinement remains disabled in the browser', async ({ page }) => {

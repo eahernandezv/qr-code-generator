@@ -2,6 +2,7 @@ import React from 'react'
 import { useStudioStore } from '../store'
 import type { Candidate, CandidateStatus, GenerationBoard } from '../types'
 import { guestCommerce } from '../lib/commerceClient'
+import { coreGenerationClient } from '../lib/coreGenerationClient'
 
 const statusMeta: Record<CandidateStatus, { label: string; color: string; bg: string }> = {
   pending: { label: 'Pending', color: 'text-slate-400', bg: 'bg-slate-800' },
@@ -120,8 +121,8 @@ function BoardRow({ board, selectedId, onSelect }: { board: GenerationBoard; sel
 
 const CandidateBoard: React.FC = () => {
   const {
-    project, featureFlags, selectCandidate, setIsGenerating, addBoard, updateBoard,
-    updateCandidate, isGenerating, cancelBoard, refineFromCandidate,
+    project, featureFlags, selectCandidate, setIsGenerating, addBoard,
+    isGenerating, cancelBoard, refineFromCandidate,
     consumePreviewRoundIfSuccessful, syncCommerceEntitlement,
   } = useStudioStore()
   const { boards, selectedCandidateId, entitlement } = project
@@ -130,85 +131,55 @@ const CandidateBoard: React.FC = () => {
   const [prompt, setPrompt] = React.useState('')
   const [showRefine, setShowRefine] = React.useState(false)
   const [allowanceError, setAllowanceError] = React.useState<string | null>(null)
-  const generationTimers = React.useRef<number[]>([])
+  const [generationError, setGenerationError] = React.useState<string | null>(null)
+  const generationAbort = React.useRef<AbortController | null>(null)
 
   React.useEffect(() => () => {
-    generationTimers.current.forEach((timer) => window.clearTimeout(timer))
-    generationTimers.current = []
+    generationAbort.current?.abort()
   }, [])
 
-  const scheduleGenerationStep = (callback: () => void, delay: number) => {
-    const timer = window.setTimeout(callback, delay)
-    generationTimers.current.push(timer)
-  }
-
-  const handleGenerate = () => {
+  const handleGenerate = async () => {
     if (isGenerating) return
-    if (!project.payload.raw.trim()) return
+    const liveProject = useStudioStore.getState().project
+    if (!liveProject.payload.raw.trim()) return
     if (entitlement.usedRounds >= entitlement.maxRounds) return
 
     setIsGenerating(true)
     setAllowanceError(null)
-
-    const boardId = Math.random().toString(36).slice(2)
-    const now = new Date().toISOString()
-    const candidates: import('../types').Candidate[] = Array.from({ length: 4 }, () => ({
-      candidateId: Math.random().toString(36).slice(2),
-      projectId: project.projectId,
-      status: 'generating',
-      createdAt: now,
-    }))
-
-    addBoard({
-      boardId,
-      projectId: project.projectId,
-      roundNumber: boards.length + 1,
-      candidates,
-      status: 'generating',
-      createdAt: now,
-    })
-
-    // Simulate async generation with staggered resolution
-    candidates.forEach((candidate, index) => {
-      const delay = 2000 + index * 1500
-      scheduleGenerationStep(() => {
-        const liveBoard = useStudioStore.getState().project.boards.find((b) => b.boardId === boardId)
-        if (liveBoard?.status !== 'generating') return
-        updateCandidate(boardId, candidate.candidateId, {
-          status: 'ready',
-          previewUrl: generateMockPreview(project.payload.normalized || project.payload.raw, index),
-          artisticScore: 0.6 + Math.random() * 0.35,
-          renderResult: {
-            success: true,
-            format: 'png',
-            dataUrl: '',
-            widthPx: 1024,
-            heightPx: 1024,
-          },
-        })
-
-        // When last candidate finishes, update board status
-        if (index === candidates.length - 1) {
-          scheduleGenerationStep(() => {
-            const finalBoard = useStudioStore.getState().project.boards.find((b) => b.boardId === boardId)
-            if (finalBoard?.status !== 'generating') return
-            updateBoard(boardId, { status: 'complete', completedAt: new Date().toISOString() })
-            setIsGenerating(false)
-            if (useStudioStore.getState().project.entitlement.type === 'preview') {
-              consumePreviewRoundIfSuccessful(boardId)
-            } else {
-              void guestCommerce.recordGeneration({
-                operationId: boardId,
-                outcome: 'succeeded',
-                candidateCount: candidates.length,
-              }).then(syncCommerceEntitlement).catch((error: unknown) => {
-                setAllowanceError(error instanceof Error ? error.message : 'Allowance could not be confirmed.')
-              })
-            }
-          }, 500)
+    setGenerationError(null)
+    const controller = new AbortController()
+    generationAbort.current = controller
+    try {
+      const board = await coreGenerationClient.generateBoard({
+        projectId: liveProject.projectId,
+        roundNumber: liveProject.boards.length + 1,
+        payload: liveProject.payload,
+        artDirection: liveProject.artDirection,
+        style: liveProject.style,
+        signal: controller.signal,
+      })
+      addBoard(board)
+      if (useStudioStore.getState().project.entitlement.type === 'preview') {
+        consumePreviewRoundIfSuccessful(board.boardId)
+      } else {
+        try {
+          syncCommerceEntitlement(await guestCommerce.recordGeneration({
+            operationId: board.boardId,
+            outcome: 'succeeded',
+            candidateCount: board.candidates.length,
+          }))
+        } catch (error) {
+          setAllowanceError(error instanceof Error ? error.message : 'Allowance could not be confirmed.')
         }
-      }, delay)
-    })
+      }
+    } catch (error) {
+      if (!(error instanceof DOMException && error.name === 'AbortError')) {
+        setGenerationError(error instanceof Error ? error.message : 'Core candidate generation failed. Please try again.')
+      }
+    } finally {
+      if (generationAbort.current === controller) generationAbort.current = null
+      setIsGenerating(false)
+    }
   }
 
   const selectedCandidate = boards
@@ -216,6 +187,7 @@ const CandidateBoard: React.FC = () => {
     .find((c) => c.candidateId === selectedCandidateId)
 
   const activeBoard = boards.find((b) => b.status === 'generating')
+  const generationActive = isGenerating || Boolean(activeBoard)
 
   return (
     <section className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4 md:p-6">
@@ -226,15 +198,15 @@ const CandidateBoard: React.FC = () => {
             Round {entitlement.usedRounds}/{entitlement.maxRounds} · {boards.length} board{boards.length !== 1 ? 's' : ''}
           </p>
         </div>
-        {activeBoard ? (
+        {generationActive ? (
           <button
             onClick={() => {
-              generationTimers.current.forEach((timer) => window.clearTimeout(timer))
-              generationTimers.current = []
-              cancelBoard(activeBoard.boardId)
+              generationAbort.current?.abort()
+              if (activeBoard) cancelBoard(activeBoard.boardId)
+              else setIsGenerating(false)
               if (entitlement.type !== 'preview') {
                 void guestCommerce.recordGeneration({
-                  operationId: activeBoard.boardId,
+                  operationId: activeBoard?.boardId ?? crypto.randomUUID(),
                   outcome: 'canceled',
                   candidateCount: 0,
                 }).then(syncCommerceEntitlement).catch((error: unknown) => {
@@ -267,6 +239,12 @@ const CandidateBoard: React.FC = () => {
         </p>
       )}
 
+      {generationError && (
+        <p role="alert" className="mb-3 rounded-lg border border-red-900/40 bg-red-950/30 p-2 text-xs text-red-300">
+          {generationError}
+        </p>
+      )}
+
       {boards.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-800 py-12">
           <p className="text-sm text-slate-500">No candidates yet</p>
@@ -283,6 +261,12 @@ const CandidateBoard: React.FC = () => {
             />
           ))}
         </div>
+      )}
+
+      {boards.some((board) => board.status === 'complete') && (
+        <p className="mt-3 text-[10px] text-slate-600">
+          Core keeps candidate authority in process memory. If the Core service restarts, regenerate before export.
+        </p>
       )}
 
       {/* Refinement prompt */}
@@ -328,41 +312,6 @@ const CandidateBoard: React.FC = () => {
       )}
     </section>
   )
-}
-
-// Deterministic mock preview using canvas dataURL
-function generateMockPreview(payload: string, index: number): string {
-  const canvas = document.createElement('canvas')
-  canvas.width = 256
-  canvas.height = 256
-  const ctx = canvas.getContext('2d')!
-  const hues = [220, 10, 140, 40]
-  const hue = hues[index % hues.length]
-  // Background gradient
-  const grad = ctx.createLinearGradient(0, 0, 256, 256)
-  grad.addColorStop(0, `hsl(${hue}, 60%, 90%)`)
-  grad.addColorStop(1, `hsl(${hue}, 50%, 80%)`)
-  ctx.fillStyle = grad
-  ctx.fillRect(0, 0, 256, 256)
-  // QR-ish grid
-  ctx.fillStyle = `hsl(${hue}, 60%, 20%)`
-  const seed = payload.length + index * 7
-  for (let y = 0; y < 32; y++) {
-    for (let x = 0; x < 32; x++) {
-      const on = ((seed + x * 13 + y * 17) % 7) > 2
-      if (on) ctx.fillRect(x * 8, y * 8, 8, 8)
-    }
-  }
-  // Finder patterns
-  ctx.fillStyle = `hsl(${hue}, 70%, 15%)`
-  ;[0, 24, 0].forEach((_offset, i) => {
-    const ox = i === 2 ? 0 : i * 200
-    const oy = i === 2 ? 200 : 0
-    ctx.fillRect(ox, oy, 56, 56)
-    ctx.clearRect(ox + 8, oy + 8, 40, 40)
-    ctx.fillRect(ox + 16, oy + 16, 24, 24)
-  })
-  return canvas.toDataURL('image/png')
 }
 
 export default CandidateBoard
