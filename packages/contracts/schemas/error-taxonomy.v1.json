@@ -1,0 +1,64 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://qr-studio.local/schemas/error-taxonomy.v1.json",
+  "title": "Error Taxonomy v1",
+  "description": "Stable error codes shared across all QR services.",
+  "version": "1.0.0",
+  "definitions": {
+    "ErrorCode": {
+      "type": "string",
+      "enum": [
+        "qr.payload.invalid",
+        "qr.payload.unsafe",
+        "qr.payload.too_long",
+        "qr.render.failed",
+        "qr.render.unsupported_format",
+        "qr.validation.unscannable",
+        "qr.validation.decoder_timeout",
+        "artistic.generation.provider_error",
+        "artistic.generation.timeout",
+        "artistic.generation.content_safety",
+        "artistic.generation.cost_cap_exceeded",
+        "artistic.generation.all_unscannable",
+        "artistic.candidate.not_found",
+        "artistic.export.not_allowed",
+        "artistic.export.validation_failed",
+        "artistic.project.not_found",
+        "artistic.project.access_denied",
+        "artistic.entitlement.exhausted",
+        "artistic.entitlement.expired",
+        "checkout.session.failed",
+        "checkout.webhook.invalid_signature",
+        "checkout.webhook.duplicate_event",
+        "checkout.payment.pending",
+        "checkout.payment.failed",
+        "checkout.refund.in_review",
+        "system.internal_error",
+        "system.rate_limited",
+        "system.service_unavailable",
+        "system.unknown_request"
+      ]
+    },
+    "ErrorEnvelope": {
+      "type": "object",
+      "required": ["code", "message", "requestId"],
+      "properties": {
+        "code": { "$ref": "#/definitions/ErrorCode" },
+        "message": { "type": "string" },
+        "requestId": { "type": "string", "format": "uuid" },
+        "retryable": { "type": "boolean" },
+        "fieldDetails": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "field": { "type": "string" },
+              "code": { "type": "string" },
+              "message": { "type": "string" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

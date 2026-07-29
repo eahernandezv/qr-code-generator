@@ -15,18 +15,18 @@ apps/web/src/app-shell/** @eahernandezv
 tests/contract/** @eahernandezv
 tests/e2e/** @eahernandezv
 
-# Design System and Artistic Direction (WS-02 / qr-artist Agent 2)
+# Design System and Artistic Direction (absorbed by qr-creator / Core Engine)
 packages/design-system/** @eahernandezv
 
-# QR Core, Static Studio, Artistic Studio (WS-03 / qr-creator + qr-validator Agent 3)
+# QR Core, Static Studio, Artistic Studio (qr-creator / Core Engine)
 packages/qr-core/** @eahernandezv
 packages/artistic-qr/** @eahernandezv
 apps/web/src/features/static-studio/** @eahernandezv
 apps/web/src/features/artistic-studio/** @eahernandezv
 
-# Guest Commerce (WS-05 narrow subset / qr-checkout Agent 6)
+# Guest Commerce (qr-studio / Studio-Commerce)
 services/commerce/** @eahernandezv
 
-# Platform and Ops (WS-12 / qr-guardian Agent 7)
+# Platform and Ops (QR Product Architect + qr-studio)
 packages/telemetry/** @eahernandezv
 .github/workflows/** @eahernandezv

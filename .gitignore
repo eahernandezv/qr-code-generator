@@ -1,26 +1,46 @@
+# Dependencies
 node_modules/
 .pnp
 .pnp.js
+
+# Build outputs
 .next/
 out/
 dist/
 build/
 *.tsbuildinfo
+
+# Testing
 coverage/
+
+# Environment variables
 .env
 .env.local
 .env.*.local
+
+# IDEs
 .idea/
 .vscode/
 *.swp
 *.swo
+
+# OS
 .DS_Store
 Thumbs.db
+
+# Logs
 *.log
 npm-debug.log*
+
+# Cache
 .eslintcache
 .parcel-cache
 .cache/
+.work-loop/
+__pycache__/
+*.py[cod]
+
+# Package manager
 package-lock.json
 yarn.lock
 pnpm-lock.yaml

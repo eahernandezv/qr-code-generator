@@ -1,1 +1,16 @@
-{"name":"@qr/contracts","version":"0.1.0","description":"QR MVP cross-workstream contracts: schemas, fixtures, error codes","private":true,"type":"module","scripts":{"lint":"echo 'Schema lint not yet configured'","test":"echo 'Fixture tests not yet configured'"}}
+{
+  "name": "@qr/contracts",
+  "version": "0.1.0",
+  "description": "QR MVP cross-workstream contracts: schemas, fixtures, error codes",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./schemas/*": "./schemas/*",
+    "./fixtures/*": "./fixtures/*",
+    "./src/*": "./src/*"
+  },
+  "scripts": {
+    "lint": "echo 'Schema lint not yet configured'",
+    "test": "echo 'Fixture tests not yet configured'"
+  }
+}

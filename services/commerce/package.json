@@ -1,1 +1,24 @@
-{"name":"@qr/commerce","version":"0.1.0","description":"Guest purchase and allowance verification","private":true,"type":"module"}
+{
+  "name": "@qr/commerce",
+  "version": "0.1.0",
+  "description": "Guest-only Artistic QR checkout, allowance, recovery, and export authorization boundary.",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "lint": "eslint src --ext ts --report-unused-disable-directives --max-warnings 0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "@typescript-eslint/eslint-plugin": "7",
+    "@typescript-eslint/parser": "7",
+    "eslint": "^8.57.0",
+    "happy-dom": "20.8.9",
+    "typescript": "^5.4.5",
+    "vitest": "^1.6.0"
+  }
+}

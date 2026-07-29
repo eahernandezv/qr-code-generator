@@ -1,0 +1,100 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://qr.internal/schemas/commerce/payment-event.v1.json",
+  "title": "Commerce Payment Event v1",
+  "description": "Immutable payment event from provider webhook, consumed by entitlement and analytics systems. Idempotent by event_id.",
+  "type": "object",
+  "required": [
+    "event_id",
+    "event_type",
+    "schema_version",
+    "occurred_at",
+    "provider",
+    "provider_event_id",
+    "checkout_session_id",
+    "offer_id",
+    "amount",
+    "currency",
+    "status",
+    "project_access_token_hash"
+  ],
+  "properties": {
+    "event_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Internal event idempotency key. UUID v4 preferred."
+    },
+    "event_type": {
+      "type": "string",
+      "enum": [
+        "commerce.payment_succeeded.v1",
+        "commerce.payment_failed.v1",
+        "commerce.payment_refunded.v1",
+        "commerce.payment_disputed.v1",
+        "commerce.payment_canceled.v1"
+      ],
+      "description": "Stable commerce event type including schema version suffix."
+    },
+    "schema_version": {
+      "type": "string",
+      "const": "1.0.0",
+      "description": "Schema version of this event envelope."
+    },
+    "occurred_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "UTC ISO-8601 timestamp when the provider recorded the event."
+    },
+    "provider": {
+      "type": "string",
+      "enum": ["stripe"],
+      "description": "Payment provider code."
+    },
+    "provider_event_id": {
+      "type": "string",
+      "description": "Provider-side event id (e.g., Stripe event id). Used for deduplication and reconciliation."
+    },
+    "checkout_session_id": {
+      "type": "string",
+      "description": "Internal checkout session id that generated this payment."
+    },
+    "offer_id": {
+      "type": "string",
+      "enum": ["artistic_project", "extra_exploration"],
+      "description": "Offer catalog identifier."
+    },
+    "amount": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Amount in smallest currency unit (cents)."
+    },
+    "currency": {
+      "type": "string",
+      "pattern": "^[A-Z]{3}$",
+      "description": "ISO-4217 currency code."
+    },
+    "status": {
+      "type": "string",
+      "enum": ["succeeded", "failed", "refunded", "disputed", "canceled"],
+      "description": "Normalized payment status."
+    },
+    "project_access_token_hash": {
+      "type": "string",
+      "description": "SHA-256 hash of the opaque project access token. Never the raw token."
+    },
+    "idempotency_key": {
+      "type": "string",
+      "description": "Client-supplied idempotency key from checkout creation, echoed for traceability."
+    },
+    "failure_reason": {
+      "type": "string",
+      "description": "Provider failure code or message when status is failed."
+    },
+    "refund_amount": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Refunded amount in smallest currency unit, when applicable."
+    }
+  },
+  "additionalProperties": false
+}
