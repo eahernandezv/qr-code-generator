@@ -1,0 +1,8 @@
+{
+  "decoder": "OpenCV QRCodeDetector",
+  "version": "4.12.0",
+  "artifact": "artifacts/core-engine/fallback-512x512.png",
+  "success": true,
+  "decodedPayload": "https://example.com/artistic-qr-safe-fallback",
+  "pointsDetected": true
+}

@@ -1,0 +1,570 @@
+{
+  "generatedAt": "2026-07-28T10:43:40.111Z",
+  "normalizedPayload": {
+    "canonical": "https://example.com/artistic-qr-safe-fallback",
+    "mode": "url",
+    "byteLength": 45,
+    "version": 6,
+    "errorCorrectionLevel": "H",
+    "maskPattern": 6
+  },
+  "board": {
+    "boardId": "6fa10f35-6b6c-4f4a-9693-b98c4b598838",
+    "status": "completed",
+    "candidateCount": 4,
+    "candidates": [
+      {
+        "candidateId": "1b919098-fb78-421e-ab8e-e3c516922021",
+        "exportAllowed": true,
+        "artisticScore": 0.55,
+        "provenance": {
+          "generationMode": "deterministic_template",
+          "provider": "local",
+          "modelVersion": "qr-core-v1",
+          "adapterVersion": "artistic-qr-v1",
+          "validationVersion": "scan-v1-real-75pct",
+          "createdAt": "2026-07-28T10:43:35.160Z"
+        },
+        "scanResults": [
+          {
+            "pass": true,
+            "decoder": "jsQR",
+            "version": "1.4.0",
+            "thresholdVersion": "scan-v1-real-75pct",
+            "scannedPayload": "https://example.com/artistic-qr-safe-fallback",
+            "tests": [
+              {
+                "name": "decode_raw",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "https://example.com/artistic-qr-safe-fallback",
+                  "payloadMatches": true,
+                  "latencyMs": 78.288,
+                  "width": 392,
+                  "height": 392
+                }
+              },
+              {
+                "name": "decode_0.5x",
+                "pass": true,
+                "scale": 0.5,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "https://example.com/artistic-qr-safe-fallback",
+                  "payloadMatches": true,
+                  "latencyMs": 47.339,
+                  "width": 196,
+                  "height": 196
+                }
+              },
+              {
+                "name": "decode_2x",
+                "pass": true,
+                "scale": 2,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "https://example.com/artistic-qr-safe-fallback",
+                  "payloadMatches": true,
+                  "latencyMs": 83.865,
+                  "width": 784,
+                  "height": 784
+                }
+              },
+              {
+                "name": "blur_light",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "blur",
+                "details": {
+                  "decodedPayload": "https://example.com/artistic-qr-safe-fallback",
+                  "payloadMatches": true,
+                  "latencyMs": 29.971,
+                  "width": 392,
+                  "height": 392
+                }
+              },
+              {
+                "name": "noise_light",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "noise",
+                "details": {
+                  "decodedPayload": "https://example.com/artistic-qr-safe-fallback",
+                  "payloadMatches": true,
+                  "latencyMs": 50.051,
+                  "width": 392,
+                  "height": 392
+                }
+              },
+              {
+                "name": "contrast_low",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "contrast",
+                "details": {
+                  "decodedPayload": "https://example.com/artistic-qr-safe-fallback",
+                  "payloadMatches": true,
+                  "latencyMs": 26.085,
+                  "width": 392,
+                  "height": 392
+                }
+              },
+              {
+                "name": "rotation_2deg",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "rotation",
+                "details": {
+                  "decodedPayload": "https://example.com/artistic-qr-safe-fallback",
+                  "payloadMatches": true,
+                  "latencyMs": 36.652,
+                  "width": 392,
+                  "height": 392
+                }
+              },
+              {
+                "name": "perspective_mild",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "perspective",
+                "details": {
+                  "decodedPayload": "https://example.com/artistic-qr-safe-fallback",
+                  "payloadMatches": true,
+                  "latencyMs": 31.915,
+                  "width": 392,
+                  "height": 392
+                }
+              }
+            ],
+            "overallConfidence": "high"
+          }
+        ]
+      },
+      {
+        "candidateId": "b25e0f0a-3dc5-4f08-83e6-fb1074180639",
+        "exportAllowed": true,
+        "artisticScore": 0.45,
+        "provenance": {
+          "generationMode": "deterministic_template",
+          "provider": "local",
+          "modelVersion": "qr-core-v1",
+          "adapterVersion": "artistic-qr-v1",
+          "validationVersion": "scan-v1-real-75pct",
+          "createdAt": "2026-07-28T10:43:35.928Z"
+        },
+        "scanResults": [
+          {
+            "pass": true,
+            "decoder": "jsQR",
+            "version": "1.4.0",
+            "thresholdVersion": "scan-v1-real-75pct",
+            "scannedPayload": "https://example.com/artistic-qr-safe-fallback",
+            "tests": [
+              {
+                "name": "decode_raw",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "https://example.com/artistic-qr-safe-fallback",
+                  "payloadMatches": true,
+                  "latencyMs": 85.226,
+                  "width": 441,
+                  "height": 441
+                }
+              },
+              {
+                "name": "decode_0.5x",
+                "pass": true,
+                "scale": 0.5,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "https://example.com/artistic-qr-safe-fallback",
+                  "payloadMatches": true,
+                  "latencyMs": 21.89,
+                  "width": 221,
+                  "height": 221
+                }
+              },
+              {
+                "name": "decode_2x",
+                "pass": true,
+                "scale": 2,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "https://example.com/artistic-qr-safe-fallback",
+                  "payloadMatches": true,
+                  "latencyMs": 120.411,
+                  "width": 882,
+                  "height": 882
+                }
+              },
+              {
+                "name": "blur_light",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "blur",
+                "details": {
+                  "decodedPayload": "https://example.com/artistic-qr-safe-fallback",
+                  "payloadMatches": true,
+                  "latencyMs": 37.518,
+                  "width": 441,
+                  "height": 441
+                }
+              },
+              {
+                "name": "noise_light",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "noise",
+                "details": {
+                  "decodedPayload": "https://example.com/artistic-qr-safe-fallback",
+                  "payloadMatches": true,
+                  "latencyMs": 42.373,
+                  "width": 441,
+                  "height": 441
+                }
+              },
+              {
+                "name": "contrast_low",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "contrast",
+                "details": {
+                  "decodedPayload": "https://example.com/artistic-qr-safe-fallback",
+                  "payloadMatches": true,
+                  "latencyMs": 38.804,
+                  "width": 441,
+                  "height": 441
+                }
+              },
+              {
+                "name": "rotation_2deg",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "rotation",
+                "details": {
+                  "decodedPayload": "https://example.com/artistic-qr-safe-fallback",
+                  "payloadMatches": true,
+                  "latencyMs": 64.839,
+                  "width": 441,
+                  "height": 441
+                }
+              },
+              {
+                "name": "perspective_mild",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "perspective",
+                "details": {
+                  "decodedPayload": "https://example.com/artistic-qr-safe-fallback",
+                  "payloadMatches": true,
+                  "latencyMs": 42.915,
+                  "width": 441,
+                  "height": 441
+                }
+              }
+            ],
+            "overallConfidence": "high"
+          }
+        ]
+      },
+      {
+        "candidateId": "5a95dd68-9772-45d9-a565-7df37c010790",
+        "exportAllowed": true,
+        "artisticScore": 0.55,
+        "provenance": {
+          "generationMode": "deterministic_template",
+          "provider": "local",
+          "modelVersion": "qr-core-v1",
+          "adapterVersion": "artistic-qr-v1",
+          "validationVersion": "scan-v1-real-75pct",
+          "createdAt": "2026-07-28T10:43:36.754Z"
+        },
+        "scanResults": [
+          {
+            "pass": true,
+            "decoder": "jsQR",
+            "version": "1.4.0",
+            "thresholdVersion": "scan-v1-real-75pct",
+            "scannedPayload": "https://example.com/artistic-qr-safe-fallback",
+            "tests": [
+              {
+                "name": "decode_raw",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "https://example.com/artistic-qr-safe-fallback",
+                  "payloadMatches": true,
+                  "latencyMs": 45.853,
+                  "width": 490,
+                  "height": 490
+                }
+              },
+              {
+                "name": "decode_0.5x",
+                "pass": true,
+                "scale": 0.5,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "https://example.com/artistic-qr-safe-fallback",
+                  "payloadMatches": true,
+                  "latencyMs": 18.176,
+                  "width": 245,
+                  "height": 245
+                }
+              },
+              {
+                "name": "decode_2x",
+                "pass": true,
+                "scale": 2,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "https://example.com/artistic-qr-safe-fallback",
+                  "payloadMatches": true,
+                  "latencyMs": 164.784,
+                  "width": 980,
+                  "height": 980
+                }
+              },
+              {
+                "name": "blur_light",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "blur",
+                "details": {
+                  "decodedPayload": "https://example.com/artistic-qr-safe-fallback",
+                  "payloadMatches": true,
+                  "latencyMs": 46.11,
+                  "width": 490,
+                  "height": 490
+                }
+              },
+              {
+                "name": "noise_light",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "noise",
+                "details": {
+                  "decodedPayload": "https://example.com/artistic-qr-safe-fallback",
+                  "payloadMatches": true,
+                  "latencyMs": 43.771,
+                  "width": 490,
+                  "height": 490
+                }
+              },
+              {
+                "name": "contrast_low",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "contrast",
+                "details": {
+                  "decodedPayload": "https://example.com/artistic-qr-safe-fallback",
+                  "payloadMatches": true,
+                  "latencyMs": 40.477,
+                  "width": 490,
+                  "height": 490
+                }
+              },
+              {
+                "name": "rotation_2deg",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "rotation",
+                "details": {
+                  "decodedPayload": "https://example.com/artistic-qr-safe-fallback",
+                  "payloadMatches": true,
+                  "latencyMs": 60.992,
+                  "width": 490,
+                  "height": 490
+                }
+              },
+              {
+                "name": "perspective_mild",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "perspective",
+                "details": {
+                  "decodedPayload": "https://example.com/artistic-qr-safe-fallback",
+                  "payloadMatches": true,
+                  "latencyMs": 45.103,
+                  "width": 490,
+                  "height": 490
+                }
+              }
+            ],
+            "overallConfidence": "high"
+          }
+        ]
+      },
+      {
+        "candidateId": "6e6bcf7c-512d-4cd8-959f-cb63218a9137",
+        "exportAllowed": false,
+        "artisticScore": 0.45,
+        "provenance": {
+          "generationMode": "deterministic_template",
+          "provider": "local",
+          "modelVersion": "qr-core-v1",
+          "adapterVersion": "artistic-qr-v1",
+          "validationVersion": "scan-v1-real-75pct",
+          "createdAt": "2026-07-28T10:43:37.625Z"
+        },
+        "scanResults": [
+          {
+            "pass": false,
+            "decoder": "jsQR",
+            "version": "1.4.0",
+            "thresholdVersion": "scan-v1-real-75pct",
+            "scannedPayload": "",
+            "tests": [
+              {
+                "name": "decode_raw",
+                "pass": false,
+                "scale": 1,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "",
+                  "payloadMatches": false,
+                  "latencyMs": 110.516,
+                  "width": 539,
+                  "height": 539
+                }
+              },
+              {
+                "name": "decode_0.5x",
+                "pass": true,
+                "scale": 0.5,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "https://example.com/artistic-qr-safe-fallback",
+                  "payloadMatches": true,
+                  "latencyMs": 22.439,
+                  "width": 270,
+                  "height": 270
+                }
+              },
+              {
+                "name": "decode_2x",
+                "pass": true,
+                "scale": 2,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "https://example.com/artistic-qr-safe-fallback",
+                  "payloadMatches": true,
+                  "latencyMs": 156.324,
+                  "width": 1078,
+                  "height": 1078
+                }
+              },
+              {
+                "name": "blur_light",
+                "pass": false,
+                "scale": 1,
+                "perturbation": "blur",
+                "details": {
+                  "decodedPayload": "",
+                  "payloadMatches": false,
+                  "latencyMs": 136.325,
+                  "width": 539,
+                  "height": 539
+                }
+              },
+              {
+                "name": "noise_light",
+                "pass": false,
+                "scale": 1,
+                "perturbation": "noise",
+                "details": {
+                  "decodedPayload": "",
+                  "payloadMatches": false,
+                  "latencyMs": 102.366,
+                  "width": 539,
+                  "height": 539
+                }
+              },
+              {
+                "name": "contrast_low",
+                "pass": false,
+                "scale": 1,
+                "perturbation": "contrast",
+                "details": {
+                  "decodedPayload": "",
+                  "payloadMatches": false,
+                  "latencyMs": 105.522,
+                  "width": 539,
+                  "height": 539
+                }
+              },
+              {
+                "name": "rotation_2deg",
+                "pass": false,
+                "scale": 1,
+                "perturbation": "rotation",
+                "details": {
+                  "decodedPayload": "",
+                  "payloadMatches": false,
+                  "latencyMs": 168.618,
+                  "width": 539,
+                  "height": 539
+                }
+              },
+              {
+                "name": "perspective_mild",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "perspective",
+                "details": {
+                  "decodedPayload": "https://example.com/artistic-qr-safe-fallback",
+                  "payloadMatches": true,
+                  "latencyMs": 57.74,
+                  "width": 539,
+                  "height": 539
+                }
+              }
+            ],
+            "overallConfidence": "failed"
+          }
+        ]
+      }
+    ]
+  },
+  "selectedCandidateId": "1b919098-fb78-421e-ab8e-e3c516922021",
+  "artifactId": "2d51ecf7-9a20-4b8f-8f21-55328d43f8dc",
+  "files": [
+    {
+      "name": "fallback-512x512.png",
+      "width": 512,
+      "height": 512,
+      "format": "png",
+      "bytes": 4854,
+      "sha256": "0544fae350877677ef40d2e7507e7543398722a59d25106abca5e8566f68b9a4"
+    },
+    {
+      "name": "fallback-1024x1024.png",
+      "width": 1024,
+      "height": 1024,
+      "format": "png",
+      "bytes": 8923,
+      "sha256": "3aef3405e803c9beef6f6c828c4a53cb0e2fb4cbadaab084bb097d90fd97d875"
+    },
+    {
+      "name": "fallback-512x512.svg",
+      "width": 512,
+      "height": 512,
+      "format": "svg",
+      "bytes": 50305,
+      "sha256": "12106f39a755e25a2cd0f278e00ad4cca1cb33d250edacbeb0418b8adcb8f7fc"
+    },
+    {
+      "name": "fallback-1024x1024.svg",
+      "width": 1024,
+      "height": 1024,
+      "format": "svg",
+      "bytes": 50307,
+      "sha256": "87eb209b8a9286150dd1991304b3ec5b0569ab590efdeb455ed4b7be60eb34fb"
+    }
+  ]
+}
