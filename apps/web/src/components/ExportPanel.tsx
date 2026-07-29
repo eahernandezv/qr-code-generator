@@ -1,13 +1,14 @@
 import React from 'react'
 import { useStudioStore } from '../store'
-import type { ExportFormat, ValidationResult } from '../types'
+import type { ValidationResult } from '../types'
 import { guestCommerce } from '../lib/commerceClient'
 
-const FORMATS: { value: ExportFormat; label: string; ext: string; desc: string }[] = [
-  { value: 'png', label: 'PNG', ext: '.png', desc: 'High-res raster' },
-  { value: 'svg', label: 'SVG', ext: '.svg', desc: 'Artwork wrapper' },
-  { value: 'pdf', label: 'PDF', ext: '.pdf', desc: 'Print-ready document' },
-  { value: 'eps', label: 'EPS', ext: '.eps', desc: 'Illustrator-compatible raster' },
+import type { CoreExportArtifact, CoreExportRequest } from '../lib/coreExportClient'
+import { coreExportClient } from '../lib/coreExportClient'
+
+const FORMATS: { value: CoreExportRequest['formats'][number]; label: string; ext: string; desc: string }[] = [
+  { value: 'png', label: 'PNG', ext: '.png', desc: 'Core-validated raster' },
+  { value: 'svg', label: 'SVG', ext: '.svg', desc: 'Core-validated vector' },
 ]
 
 const SIZES = [
@@ -26,118 +27,10 @@ function triggerDownload(dataUrl: string, filename: string) {
   a.remove()
 }
 
-async function waitForImageReady(image: HTMLImageElement): Promise<void> {
-  if (image.complete && image.naturalWidth > 0) {
-    await image.decode?.().catch(() => undefined)
-    return
-  }
-
-  await new Promise<void>((resolve, reject) => {
-    const timeout = window.setTimeout(
-      () => reject(new Error('Candidate artwork did not finish loading')),
-      10_000,
-    )
-    image.onload = () => {
-      window.clearTimeout(timeout)
-      resolve()
-    }
-    image.onerror = () => {
-      window.clearTimeout(timeout)
-      reject(new Error('Candidate artwork could not be loaded'))
-    }
-  })
-  await image.decode?.().catch(() => undefined)
-}
-
-async function loadCandidateImage(source: string): Promise<HTMLImageElement> {
-  if (!source) throw new Error('Candidate artwork is missing')
-  const image = new Image()
-  image.crossOrigin = 'anonymous'
-  image.src = source
-  await waitForImageReady(image)
-  return image
-}
-
-async function renderCandidateCanvas(
-  source: string,
-  width: number,
-  height: number,
-  background: string,
-): Promise<{ canvas: HTMLCanvasElement; context: CanvasRenderingContext2D }> {
-  const image = await loadCandidateImage(source)
-  const canvas = document.createElement('canvas')
-  canvas.width = width
-  canvas.height = height
-  const context = canvas.getContext('2d')
-  if (!context) throw new Error('Canvas renderer unavailable')
-
-  context.fillStyle = background
-  context.fillRect(0, 0, width, height)
-  const scale = Math.min(width / image.naturalWidth, height / image.naturalHeight)
-  const drawWidth = image.naturalWidth * scale
-  const drawHeight = image.naturalHeight * scale
-  context.drawImage(
-    image,
-    (width - drawWidth) / 2,
-    (height - drawHeight) / 2,
-    drawWidth,
-    drawHeight,
-  )
-  return { canvas, context }
-}
-
-async function renderCandidatePng(
-  source: string,
-  width: number,
-  height: number,
-  background: string,
-): Promise<string> {
-  const { canvas } = await renderCandidateCanvas(source, width, height, background)
-  try {
-    return canvas.toDataURL('image/png')
-  } finally {
-    canvas.width = 0
-    canvas.height = 0
-  }
-}
-
-async function renderCandidateRgb(
-  source: string,
-  width: number,
-  height: number,
-  background: string,
-): Promise<Uint8Array> {
-  const { canvas, context } = await renderCandidateCanvas(source, width, height, background)
-  try {
-    const rgba = context.getImageData(0, 0, width, height).data
-    const rgb = new Uint8Array(width * height * 3)
-    for (let sourceIndex = 0, targetIndex = 0; sourceIndex < rgba.length; sourceIndex += 4) {
-      rgb[targetIndex++] = rgba[sourceIndex]
-      rgb[targetIndex++] = rgba[sourceIndex + 1]
-      rgb[targetIndex++] = rgba[sourceIndex + 2]
-    }
-    return rgb
-  } finally {
-    canvas.width = 0
-    canvas.height = 0
-  }
-}
-
-function escapeXmlAttribute(value: string): string {
-  return value
-    .replace(/&/g, '&amp;')
-    .replace(/"/g, '&quot;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-}
-
-function candidateSvg(source: string, width: number, height: number, background: string): string {
-  if (!source) throw new Error('Candidate artwork is missing')
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><rect width="100%" height="100%" fill="${escapeXmlAttribute(background)}"/><image href="${escapeXmlAttribute(source)}" width="${width}" height="${height}" preserveAspectRatio="xMidYMid meet"/></svg>`
-}
-
-function svgDataUrl(svg: string): string {
-  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`
+function artifactDownloadHref(file: CoreExportArtifact['files'][number]): string {
+  return file.format === 'svg'
+    ? `data:image/svg+xml;charset=utf-8,${encodeURIComponent(file.data)}`
+    : file.data
 }
 
 function ValidationSummary({
@@ -284,7 +177,7 @@ const ExportPanel: React.FC = () => {
   const { project, featureFlags, syncCommerceEntitlement } = useStudioStore()
   const { selectedCandidateId, boards, entitlement } = project
 
-  const [format, setFormat] = React.useState<ExportFormat>('png')
+  const [format, setFormat] = React.useState<CoreExportRequest['formats'][number]>('png')
   const [sizeIndex, setSizeIndex] = React.useState(0)
   const [exporting, setExporting] = React.useState(false)
   const [lastExport, setLastExport] = React.useState<string | null>(null)
@@ -304,49 +197,22 @@ const ExportPanel: React.FC = () => {
     entitlement.exportAllowed || authorizedCandidateId === selectedCandidate?.candidateId
   )
 
-  async function renderExport(sizeOverride?: typeof SIZES[number]) {
-    const s = sizeOverride || currentSize
-    const f = format
-    const baseName = `artistic-qr-${project.projectId.slice(0, 6)}-${s.label.toLowerCase().replace(/\s/g, '-')}`
-
-    const source = selectedCandidate!.previewUrl || ''
-    const background = project.style?.background || '#f0f4ff'
-
-    if (f === 'pdf') {
-      const { exportToPdf } = await import('../lib/exportFormats')
-      const dataUrl = await renderCandidatePng(source, s.width, s.height, background)
-      await exportToPdf(dataUrl, {
-        filename: `${baseName}.pdf`,
-        widthPx: s.width,
-        heightPx: s.height,
-        dpi: s.dpi,
-      })
-      return `${baseName}.pdf`
-    }
-
-    if (f === 'eps') {
-      const { exportToEps } = await import('../lib/exportFormats')
-      const rgb = await renderCandidateRgb(source, s.width, s.height, background)
-      exportToEps(rgb, {
-        filename: `${baseName}.eps`,
-        widthPx: s.width,
-        heightPx: s.height,
-      })
-      return `${baseName}.eps`
-    }
-
-    const svg = candidateSvg(source, s.width, s.height, background)
-    const dataUrl = f === 'svg'
-      ? svgDataUrl(svg)
-      : await renderCandidatePng(source, s.width, s.height, background)
-    triggerDownload(dataUrl, `${baseName}.${f}`)
-    return `${baseName}.${f}`
+  function downloadArtifact(artifact: CoreExportArtifact, requestedSizes: typeof SIZES) {
+    return artifact.files.map((file) => {
+      const size = requestedSizes.find((item) => item.width === file.width && item.height === file.height)
+      if (!size) throw new Error('Core export returned an unexpected artifact size.')
+      const baseName = `artistic-qr-${project.projectId.slice(0, 6)}-${size.label.toLowerCase().replace(/\s/g, '-')}`
+      const filename = `${baseName}.${file.format}`
+      triggerDownload(artifactDownloadHref(file), filename)
+      return filename
+    })
   }
 
   const handleExport = async () => {
     if (!selectedCandidate || !canExport) return
     setExporting(true)
     setExportError(null)
+    setLastExport(null)
     try {
       const pending = pendingAuthorization.current?.candidateId === selectedCandidate.candidateId
         ? pendingAuthorization.current
@@ -358,17 +224,20 @@ const ExportPanel: React.FC = () => {
       })
       setAuthorizedCandidateId(selectedCandidate.candidateId)
       syncCommerceEntitlement(authorized)
-      if (exportType === 'bundle') {
-        const names: string[] = []
-        for (const s of SIZES) {
-          const name = await renderExport(s)
-          names.push(name)
-        }
-        setLastExport(`Bundle: ${names.length} files`)
-      } else {
-        const name = await renderExport()
-        setLastExport(name!)
-      }
+
+      const requestedSizes = exportType === 'bundle' ? SIZES : [currentSize]
+      const artifact = await coreExportClient.exportArtifact({
+        candidateId: selectedCandidate.candidateId,
+        formats: [format],
+        sizes: requestedSizes.map((size) => ({
+          label: size.label,
+          widthPx: size.width,
+          heightPx: size.height,
+          dpi: size.dpi,
+        })),
+      })
+      const names = downloadArtifact(artifact, requestedSizes)
+      setLastExport(exportType === 'bundle' ? `Bundle: ${names.length} files` : names[0])
       pendingAuthorization.current = null
     } catch (err) {
       console.error('Export failed:', err)
