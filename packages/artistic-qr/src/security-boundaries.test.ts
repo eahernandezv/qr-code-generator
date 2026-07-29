@@ -75,6 +75,49 @@ describe('D1 exact-byte candidate authority and SVG safety', () => {
     expect(runValidation(exported, normalized.canonical).scannedPayload).toBe(normalized.canonical);
   });
 
+  it.each(['png', 'svg'] as const)('rejects a non-square %s after the final export transform', async (format) => {
+    const genuine = await authorizedCandidate();
+    expect(() => exportArtifact({
+      candidateId: genuine.candidateId,
+      formats: [format],
+      sizes: [{ label: 'distorted', widthPx: 512, heightPx: 256 }],
+    }, genuine)).toThrow(/NOT_VALIDATED.*post-transform scan validation/i);
+  });
+
+  it('fails a multi-file export closed when a later transformed file is invalid', async () => {
+    const genuine = await authorizedCandidate();
+    expect(() => exportArtifact({
+      candidateId: genuine.candidateId,
+      formats: ['png'],
+      sizes: [
+        { label: 'valid-first', widthPx: 512, heightPx: 512 },
+        { label: 'invalid-second', widthPx: 512, heightPx: 256 },
+      ],
+    }, genuine)).toThrow(/NOT_VALIDATED.*post-transform scan validation/i);
+  });
+
+  it('preserves valid square PNG and SVG exports after final-byte validation', async () => {
+    const genuine = await authorizedCandidate();
+    const artifact = exportArtifact({
+      candidateId: genuine.candidateId,
+      formats: ['png', 'svg'],
+      sizes: [{ label: 'square', widthPx: 512, heightPx: 512 }],
+    }, genuine);
+    expect(artifact.files.map((file) => file.format)).toEqual(['png', 'svg']);
+    for (const file of artifact.files) {
+      const exported: Candidate = {
+        ...genuine,
+        rendered: {
+          format: file.format === 'png' ? 'png-dataurl' : 'svg',
+          data: file.data,
+          width: file.width,
+          height: file.height,
+        },
+      };
+      expect(runValidation(exported, normalized.canonical).pass).toBe(true);
+    }
+  }, 15_000);
+
   it('denies export after simulated process restart loses the default authority record', async () => {
     const genuine = await authorizedCandidate();
     resetCandidateAuthorityStore();

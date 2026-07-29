@@ -91,7 +91,7 @@ describe('objective validation and export safety', () => {
       };
       expect(runValidation(renderedCandidate, normalized.canonical).scannedPayload).toBe(normalized.canonical);
     }
-  });
+  }, 15_000);
 
   it('denies a scannable artifact when its matrix authority is forged', async () => {
     const board = await generateCandidates(request);

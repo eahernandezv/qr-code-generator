@@ -2,9 +2,9 @@
 import { randomUUID } from 'node:crypto';
 import { PNG } from 'pngjs';
 import type { ExportRequest, ExportArtifact, Candidate } from './types.js';
-import { rasterizeCandidate, resizeRasterTo } from './validation.js';
+import { rasterizeCandidate, resizeRasterTo, runValidation } from './validation.js';
 
-export function performExport(request: ExportRequest, candidate: Candidate): ExportArtifact {
+export function performExport(request: ExportRequest, candidate: Candidate, expectedPayload: string): ExportArtifact {
   const sizes = request.sizes?.length
     ? request.sizes
     : [{ label: 'native', widthPx: candidate.rendered.width, heightPx: candidate.rendered.height }];
@@ -17,7 +17,7 @@ export function performExport(request: ExportRequest, candidate: Candidate): Exp
       }
       for (const size of sizes) {
         assertSize(size.widthPx, size.heightPx);
-        files.push({
+        appendValidatedFile(files, candidate, expectedPayload, {
           format: 'svg',
           data: resizeSvg(candidate.rendered.data, size.widthPx, size.heightPx),
           width: size.widthPx,
@@ -36,7 +36,7 @@ export function performExport(request: ExportRequest, candidate: Candidate): Exp
       const png = new PNG({ width: raster.width, height: raster.height });
       png.data = Buffer.from(raster.data);
       const encoded = PNG.sync.write(png, { colorType: 6 });
-      files.push({
+      appendValidatedFile(files, candidate, expectedPayload, {
         format: 'png',
         data: `data:image/png;base64,${encoded.toString('base64')}`,
         width: raster.width,
@@ -58,6 +58,27 @@ export function performExport(request: ExportRequest, candidate: Candidate): Exp
       validationVersion: candidate.provenance?.validationVersion ?? 'scan-v1-real-75pct',
     },
   };
+}
+
+function appendValidatedFile(
+  files: ExportArtifact['files'],
+  candidate: Candidate,
+  expectedPayload: string,
+  file: ExportArtifact['files'][number],
+): void {
+  const exportedCandidate: Candidate = {
+    ...candidate,
+    rendered: {
+      format: file.format === 'png' ? 'png-dataurl' : 'svg',
+      data: file.data,
+      width: file.width,
+      height: file.height,
+    },
+  };
+  if (file.width !== file.height || !runValidation(exportedCandidate, expectedPayload).pass) {
+    throw new Error(`NOT_VALIDATED: ${file.format.toUpperCase()} failed post-transform scan validation`);
+  }
+  files.push(file);
 }
 
 function resizeSvg(svg: string, width: number, height: number): string {
