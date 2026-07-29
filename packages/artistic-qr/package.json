@@ -27,7 +27,7 @@
     "start:service": "node dist/http-service-main.js"
   },
   "dependencies": {
-    "@qr/qr-core": "0.1.0",
+    "@qr/qr-core": "workspace:*",
     "jsqr": "1.4.0",
     "pngjs": "7.0.0"
   },
