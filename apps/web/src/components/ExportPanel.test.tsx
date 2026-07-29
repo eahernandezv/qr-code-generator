@@ -5,6 +5,7 @@ import ExportPanel from './ExportPanel'
 import { useStudioStore } from '../store'
 import { FEATURE_FLAGS } from '../config/flags'
 import { guestCommerce } from '../lib/commerceClient'
+import { coreExportClient } from '../lib/coreExportClient'
 
 vi.mock('../lib/exportFormats', async () => {
   return {
@@ -12,6 +13,12 @@ vi.mock('../lib/exportFormats', async () => {
     exportToEps: vi.fn(() => Promise.resolve()),
   }
 })
+
+vi.mock('../lib/coreExportClient', () => ({
+  coreExportClient: { exportArtifact: vi.fn() },
+}))
+
+const exportArtifactMock = vi.mocked(coreExportClient.exportArtifact)
 
 function resetStore() {
   const { resetProject } = useStudioStore.getState()
@@ -63,6 +70,16 @@ describe('ExportPanel', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     resetStore()
+    exportArtifactMock.mockResolvedValue({
+      artifactId: 'artifact-1',
+      candidateId: 'c1',
+      files: [{ format: 'png', data: 'data:image/png;base64,dmFsaWRhdGVk', width: 512, height: 512 }],
+      provenance: {
+        generationMode: 'deterministic_template',
+        adapterVersion: 'artistic-qr-v1',
+        validationVersion: 'scan-v1-real-75pct',
+      },
+    })
   })
 
   it('shows checkout offline when checkout is disabled', () => {
@@ -202,20 +219,80 @@ describe('ExportPanel', () => {
     consoleError.mockRestore()
   })
 
-  it('announces canvas export failures', async () => {
+  it('shows Core final-byte validation rejection without downloading or announcing success', async () => {
     seedProjectWithCandidate(true)
     useStudioStore.setState((s) => ({
       featureFlags: { ...s.featureFlags, artistic_checkout_enabled: true },
     }))
-    const getContext = vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null)
+    exportArtifactMock.mockRejectedValueOnce(new Error('NOT_VALIDATED: PNG failed post-transform scan validation'))
+    const anchorClick = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined)
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined)
     render(<ExportPanel />)
 
     await userEvent.click(screen.getByRole('button', { name: 'Export PNG' }))
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('Canvas renderer unavailable')
+    expect(await screen.findByRole('alert')).toHaveTextContent('NOT_VALIDATED')
+    expect(screen.queryByText(/Downloaded:/i)).not.toBeInTheDocument()
+    expect(anchorClick).not.toHaveBeenCalled()
     expect(consoleError).toHaveBeenCalledWith('Export failed:', expect.any(Error))
-    getContext.mockRestore()
+    anchorClick.mockRestore()
     consoleError.mockRestore()
+  })
+
+  it('retries a rejected Core export with the same candidate and request identity', async () => {
+    seedProjectWithCandidate(true)
+    useStudioStore.setState((s) => ({
+      featureFlags: { ...s.featureFlags, artistic_checkout_enabled: true },
+    }))
+    const authorization = vi.spyOn(guestCommerce, 'authorizeExport')
+    exportArtifactMock
+      .mockRejectedValueOnce(new Error('NOT_VALIDATED: PNG failed post-transform scan validation'))
+      .mockResolvedValueOnce({
+        artifactId: 'artifact-2',
+        candidateId: 'c1',
+        files: [{ format: 'png', data: 'data:image/png;base64,cmV0cnk=', width: 512, height: 512 }],
+        provenance: {
+          generationMode: 'deterministic_template',
+          adapterVersion: 'artistic-qr-v1',
+          validationVersion: 'scan-v1-real-75pct',
+        },
+      })
+    const anchorClick = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined)
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined)
+    render(<ExportPanel />)
+
+    const exportButton = screen.getByRole('button', { name: 'Export PNG' })
+    await userEvent.click(exportButton)
+    expect(await screen.findByRole('alert')).toHaveTextContent('NOT_VALIDATED')
+    await userEvent.click(exportButton)
+
+    expect(await screen.findByRole('status')).toHaveTextContent('Downloaded:')
+    expect(exportArtifactMock).toHaveBeenCalledTimes(2)
+    expect(exportArtifactMock.mock.calls[0][0]).toEqual(exportArtifactMock.mock.calls[1][0])
+    expect(authorization).toHaveBeenCalledTimes(2)
+    expect(authorization.mock.calls[0][0]).toEqual(authorization.mock.calls[1][0])
+    expect(anchorClick).toHaveBeenCalledTimes(1)
+    anchorClick.mockRestore()
+    consoleError.mockRestore()
+  })
+
+  it('downloads the exact validated artifact returned by Core', async () => {
+    seedProjectWithCandidate(true)
+    useStudioStore.setState((s) => ({
+      featureFlags: { ...s.featureFlags, artistic_checkout_enabled: true },
+    }))
+    const anchorClick = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined)
+    render(<ExportPanel />)
+
+    await userEvent.click(screen.getByRole('button', { name: 'Export PNG' }))
+
+    expect(await screen.findByRole('status')).toHaveTextContent('Downloaded:')
+    expect(exportArtifactMock).toHaveBeenCalledWith({
+      candidateId: 'c1',
+      formats: ['png'],
+      sizes: [{ label: 'Social (512×512)', widthPx: 512, heightPx: 512, dpi: 72 }],
+    })
+    expect(anchorClick).toHaveBeenCalledTimes(1)
+    anchorClick.mockRestore()
   })
 })

@@ -9,6 +9,42 @@ async function consoleErrors(page: Page) {
 }
 
 test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => {
+    window.__QR_CORE_EXPORT_TEST__ = {
+      async exportArtifact(request) {
+        const files = []
+        for (const format of request.formats) {
+          for (const size of request.sizes ?? []) {
+            const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size.widthPx}" height="${size.heightPx}" viewBox="0 0 512 512"><rect width="512" height="512" fill="#fff"/><rect x="32" y="32" width="448" height="448" fill="#181b3a"/><rect x="64" y="64" width="384" height="384" fill="#fff"/></svg>`
+            if (format === 'svg') {
+              files.push({ format, data: svg, width: size.widthPx, height: size.heightPx })
+              continue
+            }
+            const image = new Image()
+            image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`
+            await image.decode()
+            const canvas = document.createElement('canvas')
+            canvas.width = size.widthPx
+            canvas.height = size.heightPx
+            canvas.getContext('2d')!.drawImage(image, 0, 0, size.widthPx, size.heightPx)
+            files.push({ format, data: canvas.toDataURL('image/png'), width: size.widthPx, height: size.heightPx })
+            canvas.width = 0
+            canvas.height = 0
+          }
+        }
+        return {
+          artifactId: crypto.randomUUID(),
+          candidateId: request.candidateId,
+          files,
+          provenance: {
+            generationMode: 'deterministic_template',
+            adapterVersion: 'artistic-qr-v1',
+            validationVersion: 'scan-v1-real-75pct',
+          },
+        }
+      },
+    }
+  })
   await page.goto('/')
   await page.evaluate(() => window.__QR_COMMERCE_TEST__?.reset())
   await page.reload()
