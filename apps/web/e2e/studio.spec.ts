@@ -59,13 +59,61 @@ function projectState(options: { selected?: boolean; exhausted?: boolean; coreEv
 }
 
 async function seed(page: Page, project = projectState()) {
-  await page.addInitScript((state) => {
+  await page.addInitScript(({ state, artwork }) => {
     window.__QR_TEST_PAID_PROJECT_ID__ = state.projectId
+    const coreTestState = window as typeof window & {
+      __QR_CORE_EXPORT_CALLS__: unknown[]
+      __QR_CORE_EXPORT_FAILURES__: number
+    }
+    coreTestState.__QR_CORE_EXPORT_CALLS__ = []
+    coreTestState.__QR_CORE_EXPORT_FAILURES__ = 0
+    window.__QR_CORE_EXPORT_TEST__ = {
+      async exportArtifact(request) {
+        coreTestState.__QR_CORE_EXPORT_CALLS__.push(JSON.parse(JSON.stringify(request)))
+        if (coreTestState.__QR_CORE_EXPORT_FAILURES__ > 0) {
+          coreTestState.__QR_CORE_EXPORT_FAILURES__ -= 1
+          throw new Error('NOT_VALIDATED: PNG failed post-transform scan validation')
+        }
+        const files = []
+        for (const format of request.formats) {
+          for (const size of request.sizes ?? []) {
+            if (format === 'svg') {
+              const svg = decodeURIComponent(artwork.split(',')[1])
+                .replace('width="512"', `width="${size.widthPx}"`)
+                .replace('height="512"', `height="${size.heightPx}"`)
+              files.push({ format, data: svg, width: size.widthPx, height: size.heightPx })
+              continue
+            }
+            const image = new Image()
+            image.src = artwork
+            await image.decode()
+            const canvas = document.createElement('canvas')
+            canvas.width = size.widthPx
+            canvas.height = size.heightPx
+            const context = canvas.getContext('2d')!
+            context.drawImage(image, 0, 0, size.widthPx, size.heightPx)
+            files.push({ format, data: canvas.toDataURL('image/png'), width: size.widthPx, height: size.heightPx })
+            canvas.width = 0
+            canvas.height = 0
+          }
+        }
+        return {
+          artifactId: `artifact-${coreTestState.__QR_CORE_EXPORT_CALLS__.length}`,
+          candidateId: request.candidateId,
+          files,
+          provenance: {
+            generationMode: 'deterministic_template',
+            adapterVersion: 'artistic-qr-v1',
+            validationVersion: 'scan-v1-real-75pct',
+          },
+        }
+      },
+    }
     localStorage.setItem('qr-studio-project', JSON.stringify({
       state: { project: state, activeBoardId: 'board-1' },
       version: 0,
     }))
-  }, project)
+  }, { state: project, artwork: svgArtwork })
 }
 
 async function assertNoConsoleErrors(page: Page) {
@@ -179,11 +227,50 @@ test('all print sizes show correct physical dimensions without clipping', async 
   expect(errors).toEqual([])
 })
 
-test('single exports produce inspectable PNG, SVG, PDF, and EPS files', async ({ page }) => {
+test('Core export rejection is visible, downloads nothing, and retries idempotently', async ({ page }) => {
+  await seed(page)
+  await page.goto('/')
+  await page.evaluate(() => {
+    const state = window as typeof window & { __QR_CORE_EXPORT_FAILURES__: number }
+    state.__QR_CORE_EXPORT_FAILURES__ = 1
+  })
+  const downloads: import('@playwright/test').Download[] = []
+  page.on('download', (download) => downloads.push(download))
+
+  await page.getByRole('button', { name: 'Export PNG' }).click()
+
+  await expect(page.getByRole('alert')).toContainText('NOT_VALIDATED')
+  await expect(page.getByText(/Downloaded:/)).toHaveCount(0)
+  expect(downloads).toHaveLength(0)
+  const afterFailure = await page.evaluate(() => {
+    const state = window as typeof window & { __QR_CORE_EXPORT_CALLS__: unknown[] }
+    const stored = JSON.parse(localStorage.getItem('qr-studio-project') || '{}')
+    return { calls: state.__QR_CORE_EXPORT_CALLS__, consumed: stored.state.project.entitlement.exportsConsumed }
+  })
+  expect(afterFailure.calls).toHaveLength(1)
+  expect(afterFailure.consumed).toBe(1)
+
+  const [download] = await Promise.all([
+    page.waitForEvent('download'),
+    page.getByRole('button', { name: 'Export PNG' }).click(),
+  ])
+  await expect(page.getByRole('status')).toContainText(download.suggestedFilename())
+  const afterRetry = await page.evaluate(() => {
+    const state = window as typeof window & { __QR_CORE_EXPORT_CALLS__: unknown[] }
+    const stored = JSON.parse(localStorage.getItem('qr-studio-project') || '{}')
+    return { calls: state.__QR_CORE_EXPORT_CALLS__, consumed: stored.state.project.entitlement.exportsConsumed }
+  })
+  expect(afterRetry.calls).toHaveLength(2)
+  expect(afterRetry.calls[1]).toEqual(afterRetry.calls[0])
+  expect(afterRetry.consumed).toBe(1)
+  expect(downloads).toHaveLength(1)
+})
+
+test('single exports produce inspectable Core-returned PNG and SVG files', async ({ page }) => {
   const errors = await assertNoConsoleErrors(page)
   await seed(page)
   await page.goto('/')
-  const formats = ['PNG', 'SVG', 'PDF', 'EPS'] as const
+  const formats = ['PNG', 'SVG'] as const
   const saved: Record<string, string> = {}
 
   for (const format of formats) {
@@ -207,17 +294,6 @@ test('single exports produce inspectable PNG, SVG, PDF, and EPS files', async ({
   const svg = await fs.readFile(saved.SVG, 'utf8')
   expect(svg).toContain('<svg')
   expect(svg).toMatch(/width=["']512["']/)
-
-  const pdf = await fs.readFile(saved.PDF)
-  expect(pdf.subarray(0, 5).toString()).toBe('%PDF-')
-  expect(pdf.byteLength).toBeGreaterThan(1_000)
-
-  const eps = await fs.readFile(saved.EPS)
-  const epsHeader = eps.subarray(0, 512).toString('latin1')
-  expect(epsHeader).toContain('%!PS-Adobe-3.0 EPSF-3.0')
-  expect(epsHeader).toContain('%%BoundingBox: 0 0 512 512')
-  expect(epsHeader).toContain('%%BeginBinary: 786432')
-  expect(eps.byteLength).toBeGreaterThan(512 * 512 * 3)
   expect(errors).toEqual([])
 })
 
