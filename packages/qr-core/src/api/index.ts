@@ -1,83 +1,131 @@
-/**
- * QR Core API surface
- * Implements: normalizePayload, generateMatrix, renderDeterministic, decodeMatrix
- */
-
+/** QR Core API surface matching qr-core-api.v1. */
+import * as QRCode from 'qrcode';
+import * as jsQRModule from 'jsqr';
 import {
   type QrPayload,
   type NormalizedPayload,
   type QrMatrix,
   type RenderOptions,
   type RenderedArtifact,
+  QrCoreError,
 } from '../types.js';
-import { buildMatrix, computeOptimalMask } from '../matrix.js';
-import { renderSvg } from '../render.js';
+import { generateMatrix as generateMatrixImpl } from '../lib/matrix.js';
+import { renderPng, renderSvg } from '../render.js';
 
 export function normalizePayload(payload: QrPayload): NormalizedPayload {
-  const mode = payload.mode;
   let canonical = payload.content.trim();
+  if (!canonical) {
+    throw new QrCoreError('MALFORMED_PAYLOAD', 'Payload content must not be empty');
+  }
 
-  if (mode === 'url') {
-    canonical = canonical.toLowerCase();
-    if (!/^https?:\/\//.test(canonical) && !/^mailto:|^tel:/.test(canonical)) {
-      canonical = 'https://' + canonical.replace(/^\/+/, '');
+  if (payload.mode === 'url') {
+    if (!/^[a-z][a-z0-9+.-]*:\/\//i.test(canonical)) {
+      canonical = `https://${canonical.replace(/^\/+/, '')}`;
+    }
+    try {
+      const parsed = new URL(canonical);
+      if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+        throw new QrCoreError('UNSUPPORTED_SCHEME', `Unsupported URL scheme ${parsed.protocol}`);
+      }
+      canonical = parsed.toString();
+    } catch (error) {
+      if (error instanceof QrCoreError) throw error;
+      throw new QrCoreError(
+        'MALFORMED_PAYLOAD',
+        error instanceof Error ? error.message : 'Invalid URL payload',
+      );
     }
   }
 
   const byteLength = new TextEncoder().encode(canonical).length;
-  const errorCorrectionLevel: NormalizedPayload['errorCorrectionLevel'] = payload.errorCorrectionLevel ?? 'M';
-
-  // Compute minimal version (simplified; real implementation needs mode-specific capacity tables)
-  const version = payload.version ?? estimateVersion(byteLength, errorCorrectionLevel);
-  const maskPattern = payload.maskPattern ?? computeOptimalMask(canonical, version, errorCorrectionLevel);
-
-  if (byteLength > capacityForVersion(version, errorCorrectionLevel)) {
-    throw new Error('PAYLOAD_TOO_LONG: Payload exceeds maximum capacity');
+  if (byteLength > 2953) {
+    throw new QrCoreError('PAYLOAD_TOO_LONG', 'Payload exceeds the contract maximum of 2953 bytes');
   }
 
-  return {
-    canonical,
-    mode,
-    byteLength,
-    version,
-    errorCorrectionLevel,
-    maskPattern,
-  };
+  try {
+    const encoded = QRCode.create(canonical, {
+      version: payload.version,
+      errorCorrectionLevel: payload.errorCorrectionLevel ?? 'M',
+      maskPattern: payload.maskPattern as QRCode.QRCodeMaskPattern | undefined,
+    });
+    if (encoded.maskPattern === undefined) {
+      throw new Error('QR encoder did not select a mask pattern');
+    }
+    return {
+      canonical,
+      mode: payload.mode,
+      byteLength,
+      version: encoded.version,
+      errorCorrectionLevel: payload.errorCorrectionLevel ?? 'M',
+      maskPattern: encoded.maskPattern,
+    };
+  } catch (error) {
+    if (error instanceof QrCoreError) throw error;
+    const message = error instanceof Error ? error.message : 'QR encoder rejected the payload';
+    throw new QrCoreError('PAYLOAD_TOO_LONG', message);
+  }
 }
 
 export function generateMatrix(normalized: NormalizedPayload): QrMatrix {
-  return buildMatrix(normalized);
+  return generateMatrixImpl(normalized);
 }
 
 export function renderDeterministic(
   matrix: QrMatrix,
-  options: RenderOptions = {}
+  options: RenderOptions = {},
 ): RenderedArtifact {
   const format = options.format ?? 'svg';
-  if (format !== 'svg' && format !== 'png-dataurl') {
-    throw new Error('UNSUPPORTED_FORMAT: Only svg and png-dataurl are supported');
+  try {
+    if (format === 'svg') return renderSvg(matrix, options);
+    if (format === 'png-dataurl') return renderPng(matrix, options);
+    throw new QrCoreError('UNSUPPORTED_FORMAT', `Unsupported deterministic render format: ${String(format)}`);
+  } catch (error) {
+    if (error instanceof QrCoreError) throw error;
+    throw new QrCoreError('RENDER_FAILED', error instanceof Error ? error.message : 'Unable to render QR artifact');
   }
-  return renderSvg(matrix, options);
 }
 
+/** Decode the rendered module grid with jsQR; this does not trust encoder metadata. */
 export function decodeMatrix(matrix: QrMatrix): { payload: string; success: boolean } {
-  // Stub: deterministic decode for test validation
-  // Real implementation would use Reed-Solomon decoding + bit extraction
-  return { payload: '', success: false };
-}
-
-// Simplified capacity estimation (bytes for alphanumeric/binary modes)
-function estimateVersion(byteLength: number, ecl: string): number {
-  // Binary mode capacity per version for M (~15%): v1=14, v2=26, v3=42, v5=72, v10=174, v20=370, v40=852
-  const capacitiesM = [0, 14, 26, 42, 62, 84, 106, 122, 152, 180, 213, 251, 287, 331, 362, 412, 450, 504, 560, 624, 666, 711, 779, 857, 911, 997, 1059, 1125, 1190, 1264, 1370, 1452, 1538, 1628, 1722, 1809, 1911, 1989, 2099, 2213, 2331];
-  for (let v = 1; v <= 40; v++) {
-    if (capacitiesM[v] && capacitiesM[v] >= byteLength) return v;
+  if (
+    !Number.isInteger(matrix.size) ||
+    matrix.size < 21 ||
+    matrix.modules.length !== matrix.size ||
+    matrix.modules.some((row) => row.length !== matrix.size || row.some((value) => value !== 0 && value !== 1))
+  ) {
+    return { payload: '', success: false };
   }
-  throw new Error('VERSION_OVERFLOW: Payload requires QR version > 40');
-}
 
-function capacityForVersion(version: number, ecl: string): number {
-  const capacitiesM = [0, 14, 26, 42, 62, 84, 106, 122, 152, 180, 213, 251, 287, 331, 362, 412, 450, 504, 560, 624, 666, 711, 779, 857, 911, 997, 1059, 1125, 1190, 1264, 1370, 1452, 1538, 1628, 1722, 1809, 1911, 1989, 2099, 2213, 2331];
-  const factor = ecl === 'L' ? 1.15 : ecl === 'M' ? 1.0 : ecl === 'Q' ? 0.8 : 0.65;
-  return Math.floor((capacitiesM[version] ?? 0) * factor);
+  const quietZone = 4;
+  const modulePixels = 8;
+  const width = (matrix.size + quietZone * 2) * modulePixels;
+  const pixels = new Uint8ClampedArray(width * width * 4);
+  pixels.fill(255);
+
+  for (let row = 0; row < matrix.size; row += 1) {
+    for (let column = 0; column < matrix.size; column += 1) {
+      if (matrix.modules[row][column] !== 1) continue;
+      const startX = (column + quietZone) * modulePixels;
+      const startY = (row + quietZone) * modulePixels;
+      for (let y = 0; y < modulePixels; y += 1) {
+        for (let x = 0; x < modulePixels; x += 1) {
+          const offset = ((startY + y) * width + startX + x) * 4;
+          pixels[offset] = 0;
+          pixels[offset + 1] = 0;
+          pixels[offset + 2] = 0;
+          pixels[offset + 3] = 255;
+        }
+      }
+    }
+  }
+
+  type Decoder = (
+    data: Uint8ClampedArray,
+    width: number,
+    height: number,
+    options?: { inversionAttempts?: 'dontInvert' | 'onlyInvert' | 'attemptBoth' | 'invertFirst' },
+  ) => { data: string } | null;
+  const decoder = ((jsQRModule as unknown as { default?: Decoder }).default ?? jsQRModule) as Decoder;
+  const decoded = decoder(pixels, width, width, { inversionAttempts: 'dontInvert' });
+  return decoded ? { payload: decoded.data, success: true } : { payload: '', success: false };
 }

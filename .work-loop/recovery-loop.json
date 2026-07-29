@@ -1,0 +1,72 @@
+{
+  "schemaVersion": "2.0.0",
+  "loopId": "guest-recovery-a0",
+  "objective": "Add guest project-access recovery UI to QR Studio",
+  "scope": [
+    "Add recovery route/component (access via link/token)",
+    "Store action to hydrate project from recovery payload",
+    "UI for entering project ID or recovery token",
+    "Handle not-found / expired / invalid states",
+    "Tests for recovery flow",
+    "Build green, commit, push"
+  ],
+  "nonGoals": [
+    "Backend recovery endpoint",
+    "Email delivery",
+    "Persistent backend storage"
+  ],
+  "acceptanceCriteria": [
+    {
+      "id": "B1",
+      "descr": "Recovery component exists with input for project ID/token",
+      "evidence": "File exists, renders input + submit"
+    },
+    {
+      "id": "B2",
+      "descr": "Store has hydrateProject action that replaces current project",
+      "evidence": "Store test verifies hydrateProject replaces state"
+    },
+    {
+      "id": "B3",
+      "descr": "Recovery UI shows loading, success, and error states",
+      "evidence": "Component handles all three states visibly"
+    },
+    {
+      "id": "B4",
+      "descr": "AppShell or main page exposes recovery entry point",
+      "evidence": "Recovery is reachable from the main app shell"
+    },
+    {
+      "id": "B5",
+      "descr": "All tests pass",
+      "evidence": "vitest run output: all tests pass"
+    },
+    {
+      "id": "B6",
+      "descr": "Committed and pushed to ws/05-web-studio",
+      "evidence": "git log shows commit; push succeeds"
+    }
+  ],
+  "status": "COMPLETE",
+  "cycle": 1,
+  "stage": "B6",
+  "activeWorker": null,
+  "processOutcome": "exited",
+  "artifactDecision": "accepted",
+  "criteriaLedger": {
+    "B1": "accepted",
+    "B2": "accepted",
+    "B3": "accepted",
+    "B4": "accepted",
+    "B5": "accepted",
+    "B6": "accepted"
+  },
+  "attempts": { "B1": 1, "B2": 1, "B3": 1, "B4": 1, "B5": 1, "B6": 1 },
+  "authorization": {
+    "allowed": ["edit apps/web/src/*", "add new files", "run tests", "commit", "push"],
+    "requiresApproval": ["delete existing files", "change frozen contracts"]
+  },
+  "nextTransition": "B1: create RecoveryPanel component",
+  "createdAt": "2026-07-27T19:50:00Z",
+  "updatedAt": "2026-07-27T19:50:00Z"
+}

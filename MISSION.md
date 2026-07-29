@@ -1,22 +1,21 @@
-# MISSION — Agent 3 (qr-creator / qr-validator)
-**Branch:** `ws/03-qr-core`
-**Status:** STARTED — contracts frozen, begin implementation
+# MISSION — Agent 5 (qr-studio)
+**Branch:** `ws/05-web-studio`
+**Status:** STARTED — contracts frozen
 
 ## Your scope
-1. `packages/qr-core/` — QR matrix generation, functional masks, deterministic rendering
-2. `packages/artistic-qr/` — Artistic generation adapter (provider-neutral job submission)
-3. `apps/web/src/features/static-studio/` — Static QR studio module
-4. `apps/web/src/features/artistic-studio/` — Artistic studio module
+1. `apps/web/src/app-shell/` — Web shell, route composition, navigation (integrator-owned but you build initial scaffold)
+2. Feature module mounting for static-studio and artistic-studio
+3. Export pipeline: SVG/PNG/PDF/EPS download UX
+4. Guest project-access recovery UI
 
-## Frozen contracts you must implement
-- `packages/contracts/schemas/qr-core-api.v1.json` — normalizePayload, generateMatrix, renderDeterministic
-- `packages/contracts/schemas/artistic-qr-api.v1.json` — generateCandidates, validateCandidate, exportArtifact
+## Frozen contracts
+- `packages/contracts/schemas/artistic-qr-api.v1.json` — exportArtifact endpoint
+- `packages/contracts/schemas/qr-core-api.v1.json` — renderDeterministic endpoint
 
 ## Constraints
-- Use deterministic template as baseline; provider_generative is optional for Wave 0
-- All candidates must pass scan validation before export_allowed = true
-- Prompts/reference images NEVER stored in public provenance
-- Safe fallback must always produce a valid standard QR on demand
+- Shell remains usable when paid APIs are unavailable
+- Export formats: svg, png, pdf, eps (300–1200 dpi)
+- Feature flags: artistic_checkout_enabled, artistic_generative_enabled
 
 ## Start signal
-Begin coding immediately. Push commits to `ws/03-qr-core`. Tag commit messages with `[needs-review]` when ready for integrator merge.
+Begin coding immediately. Push commits to `ws/05-web-studio`.

@@ -3,6 +3,7 @@
  * Implements: generateCandidates, validateCandidate, exportArtifact, repairCandidate
  */
 
+import { randomUUID } from 'node:crypto';
 import type {
   GenerationRequest,
   GenerationBoard,
@@ -12,9 +13,16 @@ import type {
   ExportArtifact,
   RepairStrategy,
 } from '../types.js';
-import { buildBoard } from '../engine.js';
+import { buildBoard, type GenerationEngineOptions } from '../engine.js';
 import { runValidation } from '../validation.js';
 import { performExport } from '../export.js';
+import {
+  authoritativeCandidate,
+  candidateAuthority,
+  candidateMatchesAuthority,
+  registerCandidateAuthority,
+  updateCandidateAuthorityDecision,
+} from '../candidate-context.js';
 
 const artDirections = [
   { id: 'editorial-illustration', name: 'Editorial Illustration', style: 'editorial-illustration', description: 'Magazine-style illustrated scenes with integrated QR modules' },
@@ -25,70 +33,108 @@ const artDirections = [
   { id: 'playful-character', name: 'Playful Character', style: 'playful-character', description: 'Character and object-driven playful designs' },
 ];
 
-export function generateCandidates(request: GenerationRequest): GenerationBoard {
+export async function generateCandidates(
+  request: GenerationRequest,
+  options: GenerationEngineOptions = {},
+): Promise<GenerationBoard> {
   const boardId = cryptoRandomUUID();
-
-  if (request.mode === 'provider_generative') {
-    // Generative path is gated for MVP; return graceful unavailable
-    return {
-      boardId,
-      request,
-      candidates: [],
-      status: 'failed',
-      failure: {
-        code: 'UNSUPPORTED_MODE',
-        message: 'Provider generative mode is not enabled in this release. Use deterministic_template.',
-        retryable: false,
-        safeFallbackAvailable: true,
-      },
-    };
-  }
-
-  return buildBoard(boardId, request);
+  return buildBoard(boardId, request, options);
 }
 
 export function validateCandidate(candidate: Candidate): ScanValidationResult {
-  return runValidation(candidate);
+  const authority = candidateAuthority(candidate.candidateId);
+  if (!authority || !candidateMatchesAuthority(candidate, authority)) return authorityRejectedValidation();
+  const validation = runValidation(authoritativeCandidate(authority), authority.expectedPayload);
+  updateCandidateAuthorityDecision(authority, validation);
+  return validation;
 }
 
 export function exportArtifact(request: ExportRequest, candidate: Candidate): ExportArtifact {
-  if (!candidate.exportAllowed) {
+  if (request.candidateId !== candidate.candidateId) {
+    throw new Error('EXPORT_FAILED: candidateId does not match the supplied candidate');
+  }
+  const authority = candidateAuthority(candidate.candidateId);
+  if (!authority || !candidateMatchesAuthority(candidate, authority) || !authority.exportAllowed) {
     throw new Error('NOT_VALIDATED: Candidate has not passed scan validation');
   }
-  return performExport(request, candidate);
+  const trustedCandidate = authoritativeCandidate(authority);
+  const freshValidation = runValidation(trustedCandidate, authority.expectedPayload);
+  if (!freshValidation.pass) {
+    updateCandidateAuthorityDecision(authority, freshValidation);
+    throw new Error('NOT_VALIDATED: Candidate has not passed scan validation');
+  }
+  updateCandidateAuthorityDecision(authority, freshValidation);
+  return performExport(request, trustedCandidate);
 }
 
 export function repairCandidate(candidate: Candidate, strategy: RepairStrategy): Candidate {
-  // Repair applies the strategy and re-runs validation
-  // For deterministic templates, repair is a re-render with adjusted parameters
+  const authority = candidateAuthority(candidate.candidateId);
+  if (!authority || !candidateMatchesAuthority(candidate, authority)) {
+    throw new Error('REPAIR_FAILED: Candidate authority is missing or does not match exact rendered bytes');
+  }
+  const trustedCandidate = authoritativeCandidate(authority);
   const repaired: Candidate = {
-    ...candidate,
-    candidateId: cryptoRandomUUID(),
+    ...trustedCandidate,
+    candidateId: randomUUID(),
+    rendered: applyRepair(trustedCandidate.rendered, strategy),
     scanResults: [],
     exportAllowed: false,
-    artisticScore: candidate.artisticScore,
+    artisticScore: trustedCandidate.artisticScore,
+    provenance: trustedCandidate.provenance ? { ...trustedCandidate.provenance, validationVersion: 'scan-v1-real-75pct' } : undefined,
   };
-
-  // Apply repair logic based on strategy
-  if (strategy === 'contrast_boost' || strategy === 'module_reinforce') {
-    // These are no-ops for deterministic templates (already optimal)
-    // but the validation will still run
-  }
-
-  const validation = runValidation(repaired);
+  const validation = runValidation(repaired, authority.expectedPayload);
   repaired.scanResults = [validation];
   repaired.exportAllowed = validation.pass;
-
+  registerCandidateAuthority(repaired, authority.expectedPayload, validation);
   return repaired;
 }
 
-function cryptoRandomUUID(): string {
-  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-    return crypto.randomUUID();
+function authorityRejectedValidation(): ScanValidationResult {
+  return {
+    pass: false,
+    decoder: 'jsQR',
+    version: '1.4.0',
+    thresholdVersion: 'scan-v1-real-75pct',
+    scannedPayload: '',
+    tests: [{
+      name: 'candidate_authority',
+      pass: false,
+      scale: 1,
+      perturbation: 'none',
+      details: { reason: 'Candidate authority is missing or exact rendered bytes do not match' },
+    }],
+    overallConfidence: 'failed',
+  };
+}
+
+function applyRepair(rendered: Candidate['rendered'], strategy: RepairStrategy): Candidate['rendered'] {
+  if (rendered.format !== 'svg') return { ...rendered };
+  let data = rendered.data;
+  let width = rendered.width;
+  let height = rendered.height;
+  if (strategy === 'contrast_boost' || strategy === 'composite_rerender') {
+    let drawableIndex = 0;
+    data = data.replace(/<(rect|circle)\b[^>]*>/gi, (element) => {
+      const fill = drawableIndex++ === 0 ? '#ffffff' : '#000000';
+      return /\sfill=["'][^"']*["']/i.test(element)
+        ? element.replace(/\sfill=["'][^"']*["']/i, ` fill="${fill}"`)
+        : element.replace(/>$/, ` fill="${fill}">`);
+    });
   }
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-    const r = (Math.random() * 16) | 0;
-    const v = c === 'x' ? r : (r & 0x3) | 0x8;
-    return v.toString(16);
-  });
+  if (strategy === 'module_reinforce' || strategy === 'composite_rerender') {
+    data = data.replace(/\s(?:rx|ry)=["'][^"']*["']/gi, '');
+  }
+  if (strategy === 'quiet_zone_enforce' || strategy === 'composite_rerender') {
+    const padding = Math.max(4, Math.round(Math.min(width, height) * 0.05));
+    width += padding * 2;
+    height += padding * 2;
+    data = data
+      .replace(/<svg\b[^>]*>/i, `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><g transform="translate(${padding} ${padding})">`)
+      .replace(/<\/svg>\s*$/i, '</g></svg>');
+  }
+  return { ...rendered, data, width, height };
+}
+
+function cryptoRandomUUID(): string {
+  return randomUUID();
 }

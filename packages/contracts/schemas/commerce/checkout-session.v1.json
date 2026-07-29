@@ -1,0 +1,84 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://qr.internal/schemas/commerce/checkout-session.v1.json",
+  "title": "Commerce Checkout Session v1",
+  "description": "Guest checkout session for one-time artistic QR purchases. No customer identity required.",
+  "type": "object",
+  "required": [
+    "checkout_session_id",
+    "schema_version",
+    "created_at",
+    "offer_id",
+    "amount",
+    "currency",
+    "status",
+    "idempotency_key",
+    "project_access_token_hash",
+    "provider",
+    "provider_checkout_session_id"
+  ],
+  "properties": {
+    "checkout_session_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Internal checkout session id."
+    },
+    "schema_version": {
+      "type": "string",
+      "const": "1.0.0"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "offer_id": {
+      "type": "string",
+      "enum": ["artistic_project", "extra_exploration"]
+    },
+    "amount": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "currency": {
+      "type": "string",
+      "pattern": "^[A-Z]{3}$"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["pending", "succeeded", "failed", "canceled", "expired"]
+    },
+    "idempotency_key": {
+      "type": "string",
+      "description": "Client-supplied idempotency key. Must be unique per mutation."
+    },
+    "project_access_token_hash": {
+      "type": "string",
+      "description": "SHA-256 hash of the opaque project access token bound to this checkout."
+    },
+    "provider": {
+      "type": "string",
+      "enum": ["stripe"]
+    },
+    "provider_checkout_session_id": {
+      "type": "string",
+      "description": "Provider-side checkout session id (e.g., Stripe cs_xxx)."
+    },
+    "canceled_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "success_url": {
+      "type": "string",
+      "format": "uri"
+    },
+    "cancel_url": {
+      "type": "string",
+      "format": "uri"
+    }
+  },
+  "additionalProperties": false
+}

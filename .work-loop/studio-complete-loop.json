@@ -1,0 +1,85 @@
+{
+  "schemaVersion": "2.0.0",
+  "loopId": "studio-complete-a0",
+  "objective": "Complete QR Studio A0 mission: cancellation, refinement, print preview, standard-size bundle, validation summary",
+  "scope": [
+    "Cancellation UX for generating boards",
+    "Variation/Refinement workflow from selected candidate",
+    "Print Preview overlay for print sizes",
+    "Standard-size export bundle (all 4 sizes at once)",
+    "Validation Summary presentation in ExportPanel",
+    "Store tests for cancel and refine actions",
+    "Build green and committed to ws/05-web-studio"
+  ],
+  "nonGoals": [
+    "Backend integration for real candidate generation",
+    "Payment integration",
+    "Production deployment"
+  ],
+  "acceptanceCriteria": [
+    {
+      "id": "S1",
+      "descr": "Cancel button visible during generation; cancelBoard action updates board status to failed",
+      "evidence": "CandidateBoard shows Cancel when board is generating; store cancelBoard test verified"
+    },
+    {
+      "id": "S2",
+      "descr": "Refinement panel visible when candidate selected and generation complete; refineFromCandidate updates art direction",
+      "evidence": "CandidateBoard shows refinement UI; store refine test verified"
+    },
+    {
+      "id": "S3",
+      "descr": "Print Preview modal shows full-screen overlay with size info and rendered preview",
+      "evidence": "ExportPanel has Preview at size button and PrintPreview overlay component"
+    },
+    {
+      "id": "S4",
+      "descr": "Bundle export mode exports all 4 standard sizes sequentially",
+      "evidence": "ExportPanel has single/bundle toggle; bundle calls renderExport for each size"
+    },
+    {
+      "id": "S5",
+      "descr": "Validation Summary renders in ExportPanel with pass/fail, decoders, perturbations, recommendations",
+      "evidence": "ValidationSummary component with all sections present inside ExportPanel"
+    },
+    {
+      "id": "S6",
+      "descr": "All 12 store tests pass",
+      "evidence": "vitest run: 12 tests pass"
+    },
+    {
+      "id": "S7",
+      "descr": "TypeScript build succeeds with no errors",
+      "evidence": "pnpm build: zero errors"
+    },
+    {
+      "id": "S8",
+      "descr": "Committed and pushed to ws/05-web-studio",
+      "evidence": "git log shows commit on branch; push succeeds"
+    }
+  ],
+  "status": "IN_PROGRESS",
+  "cycle": 1,
+  "stage": "S8",
+  "activeWorker": null,
+  "processOutcome": null,
+  "artifactDecision": null,
+  "criteriaLedger": {
+    "S1": "accepted",
+    "S2": "accepted",
+    "S3": "accepted",
+    "S4": "accepted",
+    "S5": "accepted",
+    "S6": "accepted",
+    "S7": "accepted",
+    "S8": "pending"
+  },
+  "attempts": { "S1": 1, "S2": 1, "S3": 1, "S4": 1, "S5": 1, "S6": 1, "S7": 1, "S8": 1 },
+  "authorization": {
+    "allowed": ["edit apps/web/src/*", "add new files", "run tests", "commit", "push"],
+    "requiresApproval": ["delete existing files", "change frozen contracts", "add heavy deps"]
+  },
+  "nextTransition": "Stage S8: commit and push",
+  "createdAt": "2026-07-28T05:01:00Z",
+  "updatedAt": "2026-07-28T05:01:00Z"
+}
