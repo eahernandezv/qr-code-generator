@@ -7,6 +7,7 @@ import { FEATURE_FLAGS } from '../config/flags'
 import { guestCommerce } from '../lib/commerceClient'
 
 beforeEach(() => {
+  guestCommerce.reset()
   useStudioStore.getState().resetProject()
   useStudioStore.setState({
     featureFlags: { ...FEATURE_FLAGS, artistic_checkout_enabled: true },
@@ -14,6 +15,17 @@ beforeEach(() => {
 })
 
 describe('CheckoutPanel', () => {
+  it('preserves the provider redirect URL in the checkout view', async () => {
+    const checkout = await guestCommerce.startCheckout({
+      projectId: useStudioStore.getState().project.projectId,
+      offerId: 'artistic_project',
+      idempotencyKey: crypto.randomUUID(),
+    })
+
+    expect(checkout.redirectUrl).toBe(`mock-checkout:${checkout.checkoutSessionId}`)
+    expect(guestCommerce.checkout(checkout.checkoutSessionId).redirectUrl).toBe(checkout.redirectUrl)
+  })
+
   it('is completely hidden when artistic checkout is disabled', () => {
     useStudioStore.setState({ featureFlags: { ...FEATURE_FLAGS, artistic_checkout_enabled: false } })
     const { container } = render(<CheckoutPanel />)
@@ -26,6 +38,11 @@ describe('CheckoutPanel', () => {
     expect(screen.getByText(/12 candidates · 3 rounds · 1 finished artwork/i)).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: /Start guest checkout — \$12/i }))
     expect(await screen.findByText(/Checkout created/i)).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Continue to secure checkout' })).toHaveAttribute(
+      'href',
+      expect.stringMatching(/^mock-checkout:checkout_/),
+    )
+    expect(screen.getByRole('link', { name: 'Continue to secure checkout' })).toHaveAttribute('target', '_blank')
     const recoveryCode = screen.getByText((_, element) => element?.tagName === 'CODE').textContent!
     expect(JSON.stringify(localStorage)).not.toContain(recoveryCode)
 
