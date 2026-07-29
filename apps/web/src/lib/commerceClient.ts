@@ -18,6 +18,7 @@ export interface CheckoutView {
   offerId: CommerceOfferId
   amountCents: number
   status: Exclude<CheckoutStatus, 'idle'>
+  redirectUrl: string
   recoveryCode?: string
 }
 
@@ -65,6 +66,7 @@ interface MockCheckoutRecord {
   offerId: CommerceOfferId
   amountCents: number
   status: Exclude<CheckoutStatus, 'idle'>
+  redirectUrl: string
   accessCapability: string
   recoveryCode?: string
 }
@@ -133,9 +135,11 @@ class MockGuestCommerceClient implements CommerceClient {
       offerId: input.offerId,
       amountCents: COMMERCE_OFFERS[input.offerId].amountCents,
       status: 'pending',
+      redirectUrl: '',
       accessCapability: project.accessCapability,
       recoveryCode,
     }
+    checkout.redirectUrl = `mock-checkout:${checkout.checkoutSessionId}`
     this.checkouts.set(checkout.checkoutSessionId, checkout)
     this.idempotency.set(input.idempotencyKey, checkout.checkoutSessionId)
     return this.publicCheckout(checkout)
@@ -303,6 +307,7 @@ class MockGuestCommerceClient implements CommerceClient {
       offerId: checkout.offerId,
       amountCents: checkout.amountCents,
       status: checkout.status,
+      redirectUrl: checkout.redirectUrl,
       recoveryCode: checkout.recoveryCode,
     }
   }
@@ -348,8 +353,10 @@ class HttpGuestCommerceClient implements CommerceClient {
     const checkout = publicCheckout(result); this.checkouts.set(checkout.checkoutSessionId, checkout); return checkout
   }
   async refreshCheckout(checkoutSessionId: string) {
-    const result = await this.request<CheckoutView & { entitlement?: CommerceEntitlementSnapshot }>(`/checkouts/${encodeURIComponent(checkoutSessionId)}`)
-    const checkout = publicCheckout(result); this.checkouts.set(checkoutSessionId, checkout); return { checkout, entitlement: result.entitlement }
+    const result = await this.request<Omit<CheckoutView, 'redirectUrl'> & { redirectUrl?: string; entitlement?: CommerceEntitlementSnapshot }>(`/checkouts/${encodeURIComponent(checkoutSessionId)}`)
+    const redirectUrl = result.redirectUrl ?? this.checkouts.get(checkoutSessionId)?.redirectUrl
+    if (!redirectUrl) throw new CommerceClientError('checkout_redirect_unavailable', 'Checkout destination is unavailable.')
+    const checkout = publicCheckout({ ...result, redirectUrl }); this.checkouts.set(checkoutSessionId, checkout); return { checkout, entitlement: result.entitlement }
   }
   async completeTestPayment(): Promise<CommerceEntitlementSnapshot> { throw new CommerceClientError('payment_unverified', 'Test payment controls are unavailable.') }
   async setTestPaymentStatus(): Promise<void> { throw new CommerceClientError('payment_unverified', 'Test payment controls are unavailable.') }
@@ -371,7 +378,7 @@ class HttpGuestCommerceClient implements CommerceClient {
     return value as T
   }
 }
-function publicCheckout(value: CheckoutView): CheckoutView { return { checkoutSessionId:value.checkoutSessionId, offerId:value.offerId, amountCents:value.amountCents, status:value.status, recoveryCode:value.recoveryCode } }
+function publicCheckout(value: CheckoutView): CheckoutView { return { checkoutSessionId:value.checkoutSessionId, offerId:value.offerId, amountCents:value.amountCents, status:value.status, redirectUrl:value.redirectUrl, recoveryCode:value.recoveryCode } }
 export const COMMERCE_TEST_MODE = import.meta.env.DEV && import.meta.env.VITE_COMMERCE_TEST_MODE === 'true'
 export const guestCommerce: CommerceClient = COMMERCE_TEST_MODE ? new MockGuestCommerceClient() : new HttpGuestCommerceClient()
 

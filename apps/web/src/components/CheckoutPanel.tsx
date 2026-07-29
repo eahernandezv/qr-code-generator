@@ -124,6 +124,14 @@ const CheckoutPanel: React.FC = () => {
           <p role="status" aria-live="polite" className="text-xs text-amber-200">
             {busy ? 'Waiting for payment confirmation…' : 'Checkout created. Confirmation may take a moment.'}
           </p>
+          <a
+            href={checkout.redirectUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block w-full rounded-lg bg-studio-600 px-3 py-2 text-center text-xs font-semibold text-white hover:bg-studio-500"
+          >
+            Continue to secure checkout
+          </a>
           {COMMERCE_TEST_MODE ? (
             <>
               <button type="button" disabled={busy} onClick={() => void completePayment()} className="w-full rounded-lg bg-studio-600 px-3 py-2 text-xs font-semibold text-white hover:bg-studio-500 disabled:bg-slate-800">Complete test payment</button>

@@ -9,15 +9,25 @@ test.beforeEach(async ({ page }) => {
 })
 
 test('production checkout uses HTTP authority and exposes no mock payment controls', async ({ page, request }) => {
+  const projectPayload = 'https://example.com/customer-project'
+  await page.getByPlaceholder('Enter url…').fill(projectPayload)
   const responsePromise = page.waitForResponse((response) => response.url() === `${api}/api/commerce/checkouts` && response.request().method() === 'POST')
   await page.getByRole('button', { name: /Start guest checkout — \$12/ }).click()
   const checkoutResponse = await responsePromise
   expect(checkoutResponse.status()).toBe(201)
-  const checkout = await checkoutResponse.json() as { checkoutSessionId: string }
+  const checkout = await checkoutResponse.json() as { checkoutSessionId: string; redirectUrl: string }
 
   await expect(page.getByRole('button', { name: 'Complete test payment' })).toHaveCount(0)
   await expect(page.getByRole('button', { name: 'Simulate failure' })).toHaveCount(0)
   await expect(page.getByRole('button', { name: 'Cancel checkout' })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Check payment status' })).toBeVisible()
+  const checkoutLink = page.getByRole('link', { name: 'Continue to secure checkout' })
+  await expect(checkoutLink).toBeVisible()
+  await expect(checkoutLink).toHaveAttribute('href', checkout.redirectUrl)
+  await expect(checkoutLink).toHaveAttribute('target', '_blank')
+
+  await checkoutLink.click({ noWaitAfter: true })
+  await expect(page.getByPlaceholder('Enter url…')).toHaveValue(projectPayload)
   await expect(page.getByRole('button', { name: 'Check payment status' })).toBeVisible()
 
   const eventResult = await request.post(`${api}/__test__/commerce/checkouts/${checkout.checkoutSessionId}/events`, { data: { type: 'succeeded', providerEventId: `browser-success-${crypto.randomUUID()}` } })
