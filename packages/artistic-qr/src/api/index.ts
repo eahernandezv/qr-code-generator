@@ -64,7 +64,7 @@ export function exportArtifact(request: ExportRequest, candidate: Candidate): Ex
     throw new Error('NOT_VALIDATED: Candidate has not passed scan validation');
   }
   updateCandidateAuthorityDecision(authority, freshValidation);
-  return performExport(request, trustedCandidate);
+  return performExport(request, trustedCandidate, authority.expectedPayload);
 }
 
 export function repairCandidate(candidate: Candidate, strategy: RepairStrategy): Candidate {
