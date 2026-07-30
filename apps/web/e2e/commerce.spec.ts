@@ -1,4 +1,34 @@
 import { expect, test, type Page } from '@playwright/test'
+import fs from 'node:fs/promises'
+import path from 'node:path'
+import { createArtisticQrHttpService } from '../../../packages/artistic-qr/dist/http-service.js'
+
+let coreService: ReturnType<typeof createArtisticQrHttpService> | undefined
+let coreBaseUrl = ''
+
+test.beforeAll(async () => {
+  coreService = createArtisticQrHttpService()
+  await new Promise<void>((resolve, reject) => {
+    coreService!.server.once('error', reject)
+    coreService!.server.listen(0, '127.0.0.1', resolve)
+  })
+  const address = coreService.server.address()
+  if (!address || typeof address === 'string') throw new Error('Core test service did not bind a TCP port')
+  coreBaseUrl = `http://127.0.0.1:${address.port}`
+})
+
+test.afterAll(async () => {
+  if (!coreService) return
+  await new Promise<void>((resolve, reject) => coreService!.server.close((error) => error ? reject(error) : resolve()))
+})
+
+async function routeToRealCore(page: Page) {
+  await page.route('**/api/artistic-qr/**', async (route) => {
+    const suffix = new URL(route.request().url()).pathname.replace('/api/artistic-qr', '')
+    const response = await route.fetch({ url: `${coreBaseUrl}${suffix}` })
+    await route.fulfill({ response })
+  })
+}
 
 async function consoleErrors(page: Page) {
   const errors: string[] = []
@@ -52,10 +82,17 @@ test.beforeEach(async ({ page }) => {
 
 test('free preview → $12 checkout → paid refinement → service-authorized export', async ({ page }) => {
   const errors = await consoleErrors(page)
+  await routeToRealCore(page)
+  await page.evaluate(() => { delete window.__QR_CORE_EXPORT_TEST__ })
   await page.getByPlaceholder('Enter url…').fill('https://example.com')
   await page.getByRole('button', { name: 'Generate 4' }).click()
   await expect(page.getByText('complete', { exact: true })).toBeVisible({ timeout: 12_000 })
-  await page.getByText('Ready', { exact: true }).first().click()
+  await page.getByText('Validated', { exact: true }).first().click()
+  const firstCoreCandidateId = await page.evaluate(() => {
+    const stored = JSON.parse(localStorage.getItem('qr-studio-project') || '{}')
+    return stored.state.project.selectedCandidateId as string
+  })
+  expect(firstCoreCandidateId).toMatch(/^[0-9a-f-]{36}$/)
   await expect(page.getByRole('button', { name: 'Purchase to export' })).toBeDisabled()
 
   await page.getByRole('button', { name: /Start guest checkout — \$12/ }).click()
@@ -70,15 +107,24 @@ test('free preview → $12 checkout → paid refinement → service-authorized e
   await expect(page.getByText('Round 2')).toBeVisible()
   await expect(page.getByText('complete', { exact: true }).last()).toBeVisible({ timeout: 12_000 })
   await expect(page.getByText(/Successful rounds/).locator('..')).toContainText('1 / 3')
-  await page.getByText('Ready', { exact: true }).last().click()
+  await page.getByText('Validated', { exact: true }).last().click()
+  const exportedCoreCandidateId = await page.evaluate(() => {
+    const stored = JSON.parse(localStorage.getItem('qr-studio-project') || '{}')
+    return stored.state.project.selectedCandidateId as string
+  })
 
   const [download] = await Promise.all([
     page.waitForEvent('download'),
     page.getByRole('button', { name: 'Export PNG' }).click(),
   ])
   expect(download.suggestedFilename()).toMatch(/\.png$/)
+  expect(exportedCoreCandidateId).toMatch(/^[0-9a-f-]{36}$/)
   await expect(page.getByRole('status').filter({ hasText: 'Downloaded:' })).toBeVisible()
   await expect(page.getByText(/Purchase does not imply scan validation/)).toBeVisible()
+  const evidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-a3-controlled-demo')
+  await fs.mkdir(evidenceDir, { recursive: true })
+  await download.saveAs(path.join(evidenceDir, 'core-generated-export.png'))
+  await page.screenshot({ path: path.join(evidenceDir, 'generation-checkout-export.png'), fullPage: true })
   expect(errors).toEqual([])
 })
 

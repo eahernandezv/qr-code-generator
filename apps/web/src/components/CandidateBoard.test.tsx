@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach } from 'vitest'
-import { render, screen, act } from '@testing-library/react'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { render, screen, act, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import CandidateBoard from './CandidateBoard'
 import { useStudioStore } from '../store'
@@ -72,9 +72,56 @@ function seedGeneratingBoard() {
   state.setIsGenerating(true)
 }
 
+function coreBoardResponse() {
+  return {
+    success: true,
+    board: {
+      boardId: 'core-board-1',
+      status: 'completed',
+      candidates: Array.from({ length: 4 }, (_, index) => ({
+        candidateId: `core-candidate-${index + 1}`,
+        matrixRef: `qr:1:0:${index}`,
+        rendered: {
+          format: 'svg',
+          data: '<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256"><rect width="256" height="256"/></svg>',
+          width: 256,
+          height: 256,
+        },
+        scanResults: [{
+          pass: true,
+          decoder: 'jsqr',
+          version: '1.4.0',
+          thresholdVersion: 'scan-v1',
+          scannedPayload: 'https://example.com/',
+          tests: [{ name: 'baseline', pass: true, scale: 1, perturbation: 'none' }],
+          overallConfidence: 'high',
+        }],
+        exportAllowed: true,
+        artisticScore: 0.8,
+        provenance: {
+          generationMode: 'deterministic_template',
+          provider: 'local',
+          modelVersion: 'qr-core-v1',
+          adapterVersion: 'artistic-qr-v1',
+          validationVersion: 'scan-v1-real-75pct',
+          createdAt: '2026-07-29T23:00:00.000Z',
+        },
+      })),
+    },
+  }
+}
+
+function successfulCoreFetch() {
+  return vi.fn().mockResolvedValue(new Response(JSON.stringify(coreBoardResponse()), {
+    status: 200,
+    headers: { 'Content-Type': 'application/json' },
+  }))
+}
+
 describe('CandidateBoard', () => {
   beforeEach(() => {
     resetStore()
+    vi.stubGlobal('fetch', successfulCoreFetch())
   })
 
   it('shows empty state when no candidates exist', () => {
@@ -95,6 +142,48 @@ describe('CandidateBoard', () => {
     render(<CandidateBoard />)
     const btn = screen.getByRole('button', { name: /Generation offline/i })
     expect(btn).toBeDisabled()
+  })
+
+  it('calls Core /candidates and stores four authoritative candidate IDs and rendered previews', async () => {
+    seedPayload()
+    enableFlags({ artistic_generative_enabled: true })
+    render(<CandidateBoard />)
+
+    await userEvent.click(screen.getByRole('button', { name: /Generate 4/i }))
+
+    await waitFor(() => expect(useStudioStore.getState().project.boards).toHaveLength(1))
+    const fetchMock = vi.mocked(fetch)
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(fetchMock.mock.calls[0][0]).toBe('/api/artistic-qr/candidates')
+    const request = fetchMock.mock.calls[0][1]
+    expect(request?.method).toBe('POST')
+    const body = JSON.parse(String(request?.body))
+    expect(body.mode).toBe('deterministic_template')
+    expect(body.normalizedPayload.canonical).toBe('https://example.com/')
+
+    const candidates = useStudioStore.getState().project.boards[0].candidates
+    expect(candidates.map((candidate) => candidate.candidateId)).toEqual([
+      'core-candidate-1', 'core-candidate-2', 'core-candidate-3', 'core-candidate-4',
+    ])
+    expect(candidates.every((candidate) => candidate.previewUrl?.startsWith('data:image/svg+xml'))).toBe(true)
+    expect(candidates.every((candidate) => candidate.renderResult?.provenance?.engine === 'artistic-qr-v1')).toBe(true)
+  })
+
+  it('shows Core generation failure without creating mock candidates and permits retry', async () => {
+    seedPayload()
+    enableFlags({ artistic_generative_enabled: true })
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      success: false,
+      code: 'PROVIDER_FAILED',
+      message: 'Candidate generation failed',
+    }), { status: 502, headers: { 'Content-Type': 'application/json' } })))
+    render(<CandidateBoard />)
+
+    await userEvent.click(screen.getByRole('button', { name: /Generate 4/i }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('PROVIDER_FAILED: Candidate generation failed')
+    expect(useStudioStore.getState().project.boards).toHaveLength(0)
+    expect(screen.getByRole('button', { name: /Generate 4/i })).toBeEnabled()
   })
 
   it('shows cancel button when a board is generating', () => {
