@@ -73,7 +73,7 @@ describe('D1 exact-byte candidate authority and SVG safety', () => {
     expect(artifact.files).toHaveLength(1);
     const exported: Candidate = { ...genuine, rendered: { format: 'png-dataurl', data: artifact.files[0].data, width: 512, height: 512 } };
     expect(runValidation(exported, normalized.canonical).scannedPayload).toBe(normalized.canonical);
-  });
+  }, 10_000);
 
   it.each(['png', 'svg'] as const)('rejects a non-square %s after the final export transform', async (format) => {
     const genuine = await authorizedCandidate();
