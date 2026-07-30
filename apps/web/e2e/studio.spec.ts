@@ -62,7 +62,7 @@ async function routeCandidateFixture(page: Page, delayMs = 0) {
   })
 }
 
-function projectState(options: { selected?: boolean; exhausted?: boolean; coreEvidence?: boolean } = {}) {
+function projectState(options: { selected?: boolean; exhausted?: boolean; coreEvidence?: boolean; exportAllowed?: boolean } = {}) {
   const now = '2026-07-28T09:00:00.000Z'
   const selected = options.selected ?? true
   const renderResult = options.coreEvidence ? {
@@ -99,7 +99,7 @@ function projectState(options: { selected?: boolean; exhausted?: boolean; coreEv
     selectedCandidateId: selected ? 'candidate-1' : undefined,
     entitlement: {
       type: 'project', maxRounds: 3, usedRounds: options.exhausted ? 3 : 0,
-      maxCandidates: 4, exportAllowed: true,
+      maxCandidates: 4, exportAllowed: options.exportAllowed ?? true,
     },
     createdAt: now,
     updatedAt: now,
@@ -291,6 +291,36 @@ test('all print sizes show correct physical dimensions without clipping', async 
     await expect(opener).toBeFocused()
   }
   expect(errors).toEqual([])
+})
+
+test('preview mode configures size, format, and bundle intent without exporting', async ({ page }) => {
+  await seed(page, projectState({ exportAllowed: false, coreEvidence: true }))
+  await page.goto('/')
+
+  await expect(page.getByText('Selected candidate', { exact: true })).toBeVisible()
+  await expect(page.getByText('Validation Summary')).toBeVisible()
+
+  const largeSize = page.getByRole('button', { name: /Large Print/ })
+  await expect(largeSize).toBeEnabled()
+  await largeSize.click()
+  await expect(largeSize).toHaveAttribute('aria-pressed', 'true')
+
+  const svg = page.getByRole('button', { name: /^SVG/ })
+  await svg.click()
+  await expect(svg).toHaveAttribute('aria-pressed', 'true')
+  await expect(page.getByRole('button', { name: 'Purchase to export selected SVG' })).toBeDisabled()
+
+  const bundle = page.getByRole('button', { name: 'Bundle (all sizes)' })
+  await expect(bundle).toBeEnabled()
+  await bundle.click()
+  await expect(bundle).toHaveAttribute('aria-pressed', 'true')
+  await expect(page.getByText(/downloading the selected bundle requires purchase/i)).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Purchase to export selected bundle' })).toBeDisabled()
+
+  const exportCalls = await page.evaluate(() => (
+    window as typeof window & { __QR_CORE_EXPORT_CALLS__: unknown[] }
+  ).__QR_CORE_EXPORT_CALLS__)
+  expect(exportCalls).toEqual([])
 })
 
 test('Core export rejection is visible, downloads nothing, and retries idempotently', async ({ page }) => {
