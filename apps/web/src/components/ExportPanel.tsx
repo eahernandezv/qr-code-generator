@@ -283,6 +283,7 @@ const ExportPanel: React.FC = () => {
           <div className="grid grid-cols-2 gap-2">
             <button
               onClick={() => setExportType('single')}
+              aria-pressed={exportType === 'single'}
               className={`rounded-lg border px-3 py-2 text-center text-xs font-medium transition-colors ${
                 exportType === 'single'
                   ? 'border-studio-500/60 bg-studio-950/40 text-slate-200'
@@ -293,18 +294,21 @@ const ExportPanel: React.FC = () => {
             </button>
             <button
               onClick={() => setExportType('bundle')}
-              disabled={!canExport}
+              aria-pressed={exportType === 'bundle'}
               className={`rounded-lg border px-3 py-2 text-center text-xs font-medium transition-colors ${
-                !canExport
-                  ? 'cursor-not-allowed border-slate-900 bg-slate-950/30 text-slate-700'
-                  : exportType === 'bundle'
+                exportType === 'bundle'
                   ? 'border-studio-500/60 bg-studio-950/40 text-slate-200'
                   : 'border-slate-800 bg-slate-900 text-slate-400 hover:border-slate-700'
               }`}
             >
-              {!canExport ? 'Bundle requires purchase' : 'Bundle (all sizes)'}
+              Bundle (all sizes)
             </button>
           </div>
+          {!canExport && (
+            <p className="mt-2 text-[10px] text-amber-400">
+              Choose your export mode now; downloading the selected bundle requires purchase.
+            </p>
+          )}
         </div>
       )}
 
@@ -317,6 +321,7 @@ const ExportPanel: React.FC = () => {
               <button
                 key={f.value}
                 onClick={() => setFormat(f.value)}
+                aria-pressed={format === f.value}
                 className={`rounded-lg border px-3 py-2 text-left transition-colors ${
                   format === f.value
                     ? 'border-studio-500/60 bg-studio-950/40 text-slate-200'
@@ -337,14 +342,14 @@ const ExportPanel: React.FC = () => {
           <label className="mb-2 block text-xs font-medium text-slate-400">Size</label>
           <div className="grid grid-cols-2 gap-2">
             {SIZES.map((s, i) => {
-              const restricted = !canExport
               const checkoutBlocked = !checkoutEnabled
-              const sizeDisabled = restricted || checkoutBlocked
+              const sizeDisabled = checkoutBlocked
               return (
                 <button
                   key={s.label}
                   onClick={() => !sizeDisabled && setSizeIndex(i)}
                   disabled={sizeDisabled}
+                  aria-pressed={sizeIndex === i}
                   className={`rounded-lg border px-3 py-2 text-left transition-colors ${
                     sizeDisabled
                       ? 'cursor-not-allowed border-slate-900 bg-slate-950/30 text-slate-700'
@@ -357,9 +362,6 @@ const ExportPanel: React.FC = () => {
                   <span className="block text-[10px] text-slate-500">{s.width}×{s.height} px</span>
                   {checkoutBlocked && (
                     <span className="block text-[10px] text-slate-500">Checkout unavailable</span>
-                  )}
-                  {restricted && !checkoutBlocked && (
-                    <span className="block text-[10px] text-amber-400">Purchase required</span>
                   )}
                 </button>
               )
@@ -392,7 +394,13 @@ const ExportPanel: React.FC = () => {
               : 'bg-studio-600 text-white hover:bg-studio-500'
           }`}
         >
-          {exporting ? 'Exporting…' : canExport ? (exportType === 'bundle' ? 'Export Bundle' : `Export ${format.toUpperCase()}`) : 'Purchase to export'}
+          {exporting
+            ? 'Exporting…'
+            : canExport
+              ? (exportType === 'bundle' ? 'Export Bundle' : `Export ${format.toUpperCase()}`)
+              : exportType === 'bundle'
+                ? 'Purchase to export selected bundle'
+                : `Purchase to export selected ${format.toUpperCase()}`}
         </button>
       </div>
 

@@ -129,7 +129,7 @@ describe('ExportPanel', () => {
     expect(screen.queryByText(/Format/i)).not.toBeInTheDocument()
   })
 
-  it('keeps every finished export size locked in free preview', () => {
+  it('lets preview users choose sizes and bundle intent while export stays paid-gated', async () => {
     seedProjectWithCandidate(false)
     useStudioStore.setState((s) => ({
       featureFlags: { ...s.featureFlags, artistic_checkout_enabled: true },
@@ -137,12 +137,23 @@ describe('ExportPanel', () => {
     render(<ExportPanel />)
 
     const largeSizeBtn = screen.getByRole('button', { name: /Large Print/i })
-    expect(largeSizeBtn).toBeDisabled()
-    // "Purchase required" appears on each blocked size button
-    expect(screen.getAllByText(/Purchase required/i).length).toBeGreaterThanOrEqual(1)
+    expect(largeSizeBtn).toBeEnabled()
+    await userEvent.click(largeSizeBtn)
+    expect(largeSizeBtn).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('button', { name: 'Purchase to export selected PNG' })).toBeDisabled()
 
-    const socialBtn = screen.getByRole('button', { name: /Social/i })
-    expect(socialBtn).toBeDisabled()
+    const svgButton = screen.getByRole('button', { name: /^SVG/ })
+    await userEvent.click(svgButton)
+    expect(svgButton).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('button', { name: 'Purchase to export selected SVG' })).toBeDisabled()
+
+    const bundleButton = screen.getByRole('button', { name: 'Bundle (all sizes)' })
+    expect(bundleButton).toBeEnabled()
+    await userEvent.click(bundleButton)
+    expect(bundleButton).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByText(/downloading the selected bundle requires purchase/i)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Purchase to export selected bundle' })).toBeDisabled()
+    expect(exportArtifactMock).not.toHaveBeenCalled()
   })
 
   it('opens and closes print preview overlay', async () => {
