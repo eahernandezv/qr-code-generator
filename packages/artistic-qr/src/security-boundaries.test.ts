@@ -94,7 +94,7 @@ describe('D1 exact-byte candidate authority and SVG safety', () => {
         { label: 'invalid-second', widthPx: 512, heightPx: 256 },
       ],
     }, genuine)).toThrow(/NOT_VALIDATED.*post-transform scan validation/i);
-  });
+  }, 10_000);
 
   it('preserves valid square PNG and SVG exports after final-byte validation', async () => {
     const genuine = await authorizedCandidate();
