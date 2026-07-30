@@ -8,10 +8,12 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "assert:production-commerce": "node scripts/assert-production-commerce.mjs",
+    "start:production-runtime": "node scripts/production-server.mjs",
     "preview": "vite preview",
     "test": "vitest run",
     "test:e2e": "FONTCONFIG_FILE=${PLAYWRIGHT_FONTCONFIG_FILE:-$HOME/.cache/ms-playwright/local-fonts.conf} LD_LIBRARY_PATH=${PLAYWRIGHT_LD_LIBRARY_PATH:-$HOME/.cache/ms-playwright/local-libs/usr/lib/x86_64-linux-gnu} playwright test",
     "test:e2e:production-commerce": "FONTCONFIG_FILE=${PLAYWRIGHT_FONTCONFIG_FILE:-$HOME/.cache/ms-playwright/local-fonts.conf} LD_LIBRARY_PATH=${PLAYWRIGHT_LD_LIBRARY_PATH:-$HOME/.cache/ms-playwright/local-libs/usr/lib/x86_64-linux-gnu} playwright test --config playwright.production.config.ts",
+    "test:e2e:production-runtime": "FONTCONFIG_FILE=${PLAYWRIGHT_FONTCONFIG_FILE:-$HOME/.cache/ms-playwright/local-fonts.conf} LD_LIBRARY_PATH=${PLAYWRIGHT_LD_LIBRARY_PATH:-$HOME/.cache/ms-playwright/local-libs/usr/lib/x86_64-linux-gnu} playwright test --config playwright.production-runtime.config.ts",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
