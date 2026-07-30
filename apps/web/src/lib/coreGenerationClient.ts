@@ -1,31 +1,5 @@
-import QRCode from 'qrcode'
 import type { ArtDirection, Candidate, GenerationBoard, Payload, StyleSpec, ValidationResult } from '../types'
-
-interface CoreNormalizedPayload {
-  canonical: string
-  mode: Payload['mode']
-  byteLength: number
-  version: number
-  errorCorrectionLevel: 'M'
-  maskPattern: number
-}
-
-interface CoreGenerationRequest {
-  normalizedPayload: CoreNormalizedPayload
-  mode: 'deterministic_template'
-  prompt?: string
-  artisticStrength?: number
-  palette?: {
-    primary?: string
-    secondary?: string
-    accent?: string
-    background?: string
-  }
-  composition?: {
-    focalArea?: 'center' | 'balanced'
-    qrProminence?: number
-  }
-}
+import { buildStudioGenerationRequest } from './studioGenerationRequest'
 
 interface CoreScanResult {
   pass: boolean
@@ -80,7 +54,7 @@ export class CoreGenerationClient {
   constructor(private readonly baseUrl = import.meta.env.VITE_ARTISTIC_QR_API_URL || '/api/artistic-qr') {}
 
   async generateBoard(input: StudioGenerationInput): Promise<GenerationBoard> {
-    const request = generationRequest(input)
+    const request = buildStudioGenerationRequest(input)
     let response: Response
     try {
       response = await fetch(`${this.baseUrl}/candidates`, {
@@ -102,49 +76,6 @@ export class CoreGenerationClient {
       throw new Error(`${code}${message}`)
     }
     return mapBoard(value, input)
-  }
-}
-
-function generationRequest(input: StudioGenerationInput): CoreGenerationRequest {
-  const normalizedPayload = normalizeForCore(input.payload)
-  const composition = input.artDirection.composition
-  return {
-    normalizedPayload,
-    mode: 'deterministic_template',
-    ...(input.artDirection.prompt ? { prompt: input.artDirection.prompt } : {}),
-    ...(typeof input.artDirection.artisticStrength === 'number'
-      ? { artisticStrength: input.artDirection.artisticStrength }
-      : {}),
-    palette: {
-      ...input.artDirection.palette,
-      ...(input.style?.background ? { background: input.style.background } : {}),
-    },
-    composition: {
-      focalArea: composition === 'centered' ? 'center' : 'balanced',
-      qrProminence: input.artDirection.protectedQrProminence,
-    },
-  }
-}
-
-function normalizeForCore(payload: Payload): CoreNormalizedPayload {
-  let canonical = payload.normalized || payload.raw.trim()
-  if (!canonical) throw new Error('Payload content must not be empty.')
-  if (payload.mode === 'url') {
-    const parsed = new URL(canonical)
-    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') throw new Error('Payload URL scheme is unsupported.')
-    canonical = parsed.toString()
-  }
-  const byteLength = new TextEncoder().encode(canonical).length
-  if (byteLength > 2953) throw new Error('Payload exceeds the QR capacity.')
-  const encoded = QRCode.create(canonical, { errorCorrectionLevel: 'M' })
-  if (encoded.maskPattern === undefined) throw new Error('QR payload normalization failed.')
-  return {
-    canonical,
-    mode: payload.mode,
-    byteLength,
-    version: encoded.version,
-    errorCorrectionLevel: 'M',
-    maskPattern: encoded.maskPattern,
   }
 }
 

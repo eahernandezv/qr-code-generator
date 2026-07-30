@@ -7,6 +7,9 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': resolve(__dirname, 'src'),
+      // Core's root API includes Node-only PNG support. Studio preview is SVG-only,
+      // so keep that unreachable implementation out of the browser bundle.
+      pngjs: resolve(__dirname, 'src/lib/pngjsBrowserStub.ts'),
     },
   },
   server: {

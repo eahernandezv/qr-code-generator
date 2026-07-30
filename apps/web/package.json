@@ -19,6 +19,8 @@
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
   },
   "dependencies": {
+    "@qr/artistic-qr": "workspace:*",
+    "@qr/qr-core": "workspace:*",
     "jspdf": "^4.2.1",
     "qrcode": "^1.5.3",
     "react": "^18.3.1",

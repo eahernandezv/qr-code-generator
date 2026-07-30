@@ -198,6 +198,45 @@ test.beforeAll(async () => {
   await fs.mkdir(screenshotDir, { recursive: true })
 })
 
+test('Core-backed preview controls and candidate request share the same fidelity mapping', async ({ page }) => {
+  let candidateRequest: Record<string, unknown> | undefined
+  await page.route('**/api/artistic-qr/candidates', async (route) => {
+    candidateRequest = route.request().postDataJSON() as Record<string, unknown>
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(coreCandidateFixture()) })
+  })
+  await page.goto('/')
+  await page.getByPlaceholder('Enter url…').fill('https://example.com')
+  await page.getByRole('button', { name: 'Berry' }).click()
+
+  const preview = page.getByRole('img', { name: 'QR Preview' })
+  const berry = await preview.getAttribute('src')
+  expect(berry).toContain('%23c9184a')
+  expect(berry).toContain('%23f9e8ef')
+  await page.getByRole('button', { name: 'Geometric' }).click()
+  const geometric = await preview.getAttribute('src')
+  expect(geometric).not.toBe(berry)
+  await page.getByRole('slider').nth(0).fill('0.1')
+  const subtle = await preview.getAttribute('src')
+  expect(subtle).not.toBe(geometric)
+  await page.getByRole('button', { name: 'Offset' }).click()
+  const offset = await preview.getAttribute('src')
+  expect(offset).not.toBe(subtle)
+  await page.getByRole('slider').nth(1).fill('0.8')
+  expect(await preview.getAttribute('src')).not.toBe(offset)
+
+  const evidencePath = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b2b-core-backed-preview-fidelity/berry-preview.png')
+  await fs.mkdir(path.dirname(evidencePath), { recursive: true })
+  await page.screenshot({ path: evidencePath, fullPage: true })
+  await page.getByRole('button', { name: 'Generate 4' }).click()
+  await expect(page.getByText('Validated', { exact: true })).toHaveCount(4)
+  expect(candidateRequest).toMatchObject({
+    artDirectionId: 'architectural-geometric',
+    artisticStrength: 0.1,
+    palette: { primary: '#c9184a', background: '#f9e8ef' },
+    composition: { focalArea: 'right', qrProminence: 0.8 },
+  })
+})
+
 test('cancellation stops pending work and recovers Generate UI', async ({ page }) => {
   const errors = await assertNoConsoleErrors(page)
   await routeCandidateFixture(page, 15_000)
