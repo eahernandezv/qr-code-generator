@@ -10,6 +10,7 @@ export {
   repairCandidate,
 } from './api/index.js';
 export { InMemoryCandidateAuthorityStore, setCandidateAuthorityStore } from './candidate-context.js';
+export { resolveArtisticRenderIntent } from './render-intent.js';
 
 export type {
   ArtDirection,
@@ -22,4 +23,5 @@ export type {
   RepairStrategy,
 } from './types.js';
 export type { CandidateAuthorityRecord, CandidateAuthorityStore } from './candidate-context.js';
+export type { ArtisticRenderIntent, ArtisticStyleFamily } from './render-intent.js';
 export type { SafetyEvaluator, SafetyVerdict } from './request-validation.js';

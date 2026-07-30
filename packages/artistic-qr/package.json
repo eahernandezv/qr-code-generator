@@ -15,6 +15,10 @@
       "types": "./dist/api/index.d.ts",
       "default": "./dist/api/index.js"
     },
+    "./render-intent": {
+      "types": "./dist/render-intent.d.ts",
+      "default": "./dist/render-intent.js"
+    },
     "./service": {
       "types": "./dist/http-service.d.ts",
       "default": "./dist/http-service.js"

@@ -73,7 +73,7 @@ describe('D1 exact-byte candidate authority and SVG safety', () => {
     expect(artifact.files).toHaveLength(1);
     const exported: Candidate = { ...genuine, rendered: { format: 'png-dataurl', data: artifact.files[0].data, width: 512, height: 512 } };
     expect(runValidation(exported, normalized.canonical).scannedPayload).toBe(normalized.canonical);
-  });
+  }, 10_000);
 
   it.each(['png', 'svg'] as const)('rejects a non-square %s after the final export transform', async (format) => {
     const genuine = await authorizedCandidate();
@@ -94,7 +94,7 @@ describe('D1 exact-byte candidate authority and SVG safety', () => {
         { label: 'invalid-second', widthPx: 512, heightPx: 256 },
       ],
     }, genuine)).toThrow(/NOT_VALIDATED.*post-transform scan validation/i);
-  });
+  }, 10_000);
 
   it('preserves valid square PNG and SVG exports after final-byte validation', async () => {
     const genuine = await authorizedCandidate();

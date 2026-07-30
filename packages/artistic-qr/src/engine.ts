@@ -3,7 +3,6 @@ import { createHash, randomUUID } from 'node:crypto';
 import type { GenerationRequest, GenerationBoard, Candidate } from './types.js';
 import {
   type NormalizedPayload,
-  type RenderOptions,
   generateMatrix,
   renderDeterministic,
 } from '@qr/qr-core';
@@ -15,6 +14,7 @@ import {
 } from './provider-adapter.js';
 import { runValidation } from './validation.js';
 import { registerCandidateAuthority } from './candidate-context.js';
+import { resolveArtisticRenderIntent } from './render-intent.js';
 import {
   enforceGenerationSafety,
   validateGenerationRequest,
@@ -51,8 +51,9 @@ function buildDeterministicBoard(
     .slice(0, 24);
 
   const candidates: Candidate[] = [];
+  const renderIntent = resolveArtisticRenderIntent(request);
   for (let index = 0; index < 4; index += 1) {
-    const rendered = renderDeterministic(matrix, computeRenderOptions(request, index));
+    const rendered = renderDeterministic(matrix, renderIntent.candidateOptions[index]);
     const candidate: Candidate = {
       candidateId: randomUUID(),
       matrixRef: `qr:${matrix.version}:${matrix.maskPattern}:${matrixDigest}`,
@@ -82,26 +83,6 @@ function buildDeterministicBoard(
   }
 
   return { boardId, request: originalRequest, candidates, status: 'completed' };
-}
-
-function computeRenderOptions(request: GenerationRequest, index: number): RenderOptions {
-  const palette = request.palette;
-  const variants: Array<{ shape: RenderOptions['shape']; eyeShape: RenderOptions['eyeShape'] }> = [
-    { shape: 'square', eyeShape: 'square' },
-    { shape: 'rounded', eyeShape: 'square' },
-    { shape: 'circle', eyeShape: 'square' },
-    { shape: 'rounded', eyeShape: 'rounded' },
-  ];
-  const variant = variants[index % variants.length];
-  return {
-    format: 'svg',
-    moduleSize: 8 + index,
-    margin: 4,
-    colorDark: palette?.primary ?? '#1a1a2e',
-    colorLight: palette?.background ?? '#ffffff',
-    shape: variant.shape,
-    eyeShape: variant.eyeShape,
-  };
 }
 
 function computeArtisticScore(request: GenerationRequest, index: number): number {
