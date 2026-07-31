@@ -1,17 +1,7 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import QRPreview from './QRPreview'
 import { useStudioStore } from '../store'
-
-vi.mock('qrcode', async () => {
-  return {
-    default: {
-      toDataURL: vi.fn((_payload: string, _opts: unknown) =>
-        Promise.resolve('data:image/png;base64,mockedqr'),
-      ),
-    },
-  }
-})
 
 describe('QRPreview', () => {
   it('shows placeholder when no payload is entered', () => {

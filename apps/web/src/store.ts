@@ -26,6 +26,7 @@ const defaultArtDirection = (): ArtDirection => ({
     primary: '#5b6ef5',
     secondary: '#323eaf',
     accent: '#a5bdff',
+    background: '#f0f4ff',
   },
 })
 
