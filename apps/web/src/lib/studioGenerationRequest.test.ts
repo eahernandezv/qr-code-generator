@@ -77,4 +77,19 @@ describe('Studio canonical generation request and predictive preview', () => {
       colorIntensity: 'punchy',
     })).not.toBe(balanced)
   })
+
+  it.each(['watercolor', 'geometric', 'minimalist'])(
+    'gives %s distinct scan-safe low, expressive, and high strength previews and requests',
+    (templateId) => {
+      const subtleRequest = request({ templateId, artisticStrength: 0 })
+      const expressiveRequest = request({ templateId, artisticStrength: 0.5 })
+      const boldRequest = request({ templateId, artisticStrength: 1 })
+      expect(subtleRequest.artisticStrength).toBe(0)
+      expect(expressiveRequest.artisticStrength).toBe(0.5)
+      expect(boldRequest.artisticStrength).toBe(1)
+      expect(renderStudioPreview(subtleRequest).data).not.toBe(renderStudioPreview(expressiveRequest).data)
+      expect(renderStudioPreview(expressiveRequest).data).not.toBe(renderStudioPreview(boldRequest).data)
+      expect(renderStudioPreview(subtleRequest).data).not.toBe(renderStudioPreview(boldRequest).data)
+    },
+  )
 })

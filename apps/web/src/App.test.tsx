@@ -35,25 +35,32 @@ describe('App integration', () => {
     expect(screen.getByRole('heading', { name: /Recover Project/i })).toBeInTheDocument()
   })
 
-  it('exposes truthful QR Frame, patterned palette, and color intensity controls', async () => {
+  it('uses compact palette dropdowns, preserves request fields, and hides QR Frame', async () => {
     const user = userEvent.setup()
     render(<App />)
 
-    expect(screen.getByText('QR Frame')).toBeInTheDocument()
-    expect(screen.queryByText('Composition')).not.toBeInTheDocument()
-    expect(screen.getByText(/does not reposition surrounding artwork/i)).toBeInTheDocument()
-    expect(screen.getByText('Patterned Palette Presets')).toBeInTheDocument()
+    expect(screen.queryByText('QR Frame')).not.toBeInTheDocument()
+    expect(screen.getByRole('combobox', { name: 'Solid Palette Presets' })).toHaveValue('Studio Blue')
+    expect(screen.getByRole('combobox', { name: 'Patterned Palette Presets' })).toHaveValue('')
 
-    await user.click(screen.getByRole('button', { name: 'Rainbow diagonal' }))
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Patterned Palette Presets' }), 'Rainbow diagonal')
     await user.click(screen.getByRole('button', { name: 'Punchy' }))
     expect(useStudioStore.getState().project.artDirection).toMatchObject({
       paletteFamily: 'rainbow',
       palettePattern: 'diagonalGradient',
       colorIntensity: 'punchy',
     })
+    expect(screen.getByRole('combobox', { name: 'Patterned Palette Presets' })).toHaveValue('Rainbow diagonal')
 
-    await user.click(screen.getByRole('button', { name: 'Berry' }))
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Solid Palette Presets' }), 'Berry')
     expect(useStudioStore.getState().project.artDirection).toMatchObject({ palettePattern: 'solid' })
     expect(useStudioStore.getState().project.artDirection.paletteFamily).toBeUndefined()
+    expect(screen.getByRole('combobox', { name: 'Solid Palette Presets' })).toHaveValue('Berry')
+  })
+
+  it('truthfully constrains Artistic Strength to three meaningful render stages', () => {
+    render(<App />)
+    expect(screen.getByRole('slider', { name: 'Artistic Strength' })).toHaveAttribute('step', '0.5')
+    expect(screen.getByText(/Three scan-safe stages change module treatment and framing/i)).toBeInTheDocument()
   })
 })
