@@ -17,6 +17,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@qr/qr-core':
+        specifier: workspace:*
+        version: link:../../packages/qr-core
       jspdf:
         specifier: ^4.2.1
         version: 4.2.1
