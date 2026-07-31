@@ -3,7 +3,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { normalizePayload } from '../packages/qr-core/dist/index.js';
 import { exportArtifact, generateCandidates } from '../packages/artistic-qr/dist/index.js';
-import { PNG } from 'pngjs';
+import { PNG } from '../packages/artistic-qr/node_modules/pngjs/lib/png.js';
 import { rasterizeCandidate, resizeRasterTo, runValidation } from '../packages/artistic-qr/dist/validation.js';
 
 const label = process.argv[2] ?? 'current';
