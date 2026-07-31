@@ -84,7 +84,7 @@ test('free preview → $12 checkout → paid refinement → service-authorized e
   const errors = await consoleErrors(page)
   await routeToRealCore(page)
   await page.evaluate(() => { delete window.__QR_CORE_EXPORT_TEST__ })
-  await page.getByPlaceholder('Enter url…').fill('https://example.com')
+  await page.getByPlaceholder('Enter destination URL…').fill('https://example.com')
   await page.getByRole('button', { name: 'Generate 4' }).click()
   await expect(page.getByText('complete', { exact: true })).toBeVisible({ timeout: 12_000 })
   await page.getByText('Validated', { exact: true }).first().click()

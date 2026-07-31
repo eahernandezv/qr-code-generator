@@ -5,23 +5,32 @@ import { buildStudioGenerationRequest, renderStudioPreview } from '../lib/studio
 interface QRPreviewProps {
   size?: number
   className?: string
+  useDemoWhenEmpty?: boolean
 }
 
-const QRPreview: React.FC<QRPreviewProps> = ({ size = 320, className = '' }) => {
+const DEMO_PAYLOAD = {
+  raw: 'https://example.com/your-design',
+  normalized: 'https://example.com/your-design',
+  mode: 'url' as const,
+}
+
+const QRPreview: React.FC<QRPreviewProps> = ({ size = 320, className = '', useDemoWhenEmpty = false }) => {
   const { project } = useStudioStore()
   const [dataUrl, setDataUrl] = React.useState<string>('')
   const [error, setError] = React.useState<string | null>(null)
   const { payload, artDirection } = project
+  const isDemo = useDemoWhenEmpty && !payload.raw.trim()
+  const previewPayload = isDemo ? DEMO_PAYLOAD : payload
 
   React.useEffect(() => {
-    if (!payload.raw.trim()) {
+    if (!previewPayload.raw.trim()) {
       setDataUrl('')
       setError(null)
       return
     }
 
     try {
-      const request = buildStudioGenerationRequest({ payload, artDirection })
+      const request = buildStudioGenerationRequest({ payload: previewPayload, artDirection })
       const artifact = renderStudioPreview(request)
       const url = artifact.format === 'svg'
         ? `data:image/svg+xml;charset=utf-8,${encodeURIComponent(artifact.data)}`
@@ -32,7 +41,7 @@ const QRPreview: React.FC<QRPreviewProps> = ({ size = 320, className = '' }) => 
       setDataUrl('')
       setError(caught instanceof Error ? caught.message : 'Render failed')
     }
-  }, [payload, artDirection])
+  }, [previewPayload, artDirection])
 
   return (
     <div className={`relative flex flex-col items-center ${className}`}>
@@ -40,7 +49,7 @@ const QRPreview: React.FC<QRPreviewProps> = ({ size = 320, className = '' }) => 
         className="relative flex items-center justify-center rounded-2xl border border-slate-800 bg-slate-900/60"
         style={{ width: size + 32, height: size + 32 }}
       >
-        {!payload.raw.trim() ? (
+        {!previewPayload.raw.trim() ? (
           <div className="text-center">
             <p className="text-sm text-slate-500">Enter a payload to preview</p>
           </div>
@@ -61,7 +70,7 @@ const QRPreview: React.FC<QRPreviewProps> = ({ size = 320, className = '' }) => 
       </div>
 
       <p className="mt-2 text-xs text-slate-500">
-        {payload.raw.trim() ? `Predictive Core preview · ${size}×${size} px` : ''}
+        {previewPayload.raw.trim() ? `${isDemo ? 'Demo destination' : 'Predictive Core preview'} · ${size}×${size} px` : ''}
       </p>
     </div>
   )

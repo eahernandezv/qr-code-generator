@@ -10,7 +10,7 @@ test.beforeEach(async ({ page }) => {
 
 test('production checkout uses HTTP authority and exposes no mock payment controls', async ({ page, request }) => {
   const projectPayload = 'https://example.com/customer-project'
-  await page.getByPlaceholder('Enter url…').fill(projectPayload)
+  await page.getByPlaceholder('Enter destination URL…').fill(projectPayload)
   const responsePromise = page.waitForResponse((response) => response.url() === `${api}/api/commerce/checkouts` && response.request().method() === 'POST')
   await page.getByRole('button', { name: /Start guest checkout — \$12/ }).click()
   const checkoutResponse = await responsePromise
@@ -27,7 +27,7 @@ test('production checkout uses HTTP authority and exposes no mock payment contro
   await expect(checkoutLink).toHaveAttribute('target', '_blank')
 
   await checkoutLink.click({ noWaitAfter: true })
-  await expect(page.getByPlaceholder('Enter url…')).toHaveValue(projectPayload)
+  await expect(page.getByPlaceholder('Enter destination URL…')).toHaveValue(projectPayload)
   await expect(page.getByRole('button', { name: 'Check payment status' })).toBeVisible()
 
   const eventResult = await request.post(`${api}/__test__/commerce/checkouts/${checkout.checkoutSessionId}/events`, { data: { type: 'succeeded', providerEventId: `browser-success-${crypto.randomUUID()}` } })

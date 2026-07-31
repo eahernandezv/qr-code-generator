@@ -21,17 +21,16 @@ describe('PayloadInput', () => {
     expect(screen.getByRole('textbox')).toHaveAttribute('rows', '2')
   })
 
-  it('switches modes and updates payload placeholder', async () => {
+  it('keeps the activation stage focused on one destination URL', () => {
     render(<PayloadInput />)
-    await act(async () => {
-      await userEvent.click(screen.getByRole('button', { name: /Text/i }))
-    })
-    expect(screen.getByPlaceholderText(/Enter text/i)).toBeInTheDocument()
+    expect(screen.getByRole('textbox', { name: 'Final destination URL' })).toHaveAttribute('placeholder', 'Enter destination URL…')
+    expect(screen.queryByRole('button', { name: 'Text' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Wi-Fi' })).not.toBeInTheDocument()
   })
 
   it('normalizes a URL with https prefix', async () => {
     render(<PayloadInput />)
-    const textarea = screen.getByPlaceholderText(/Enter url/i)
+    const textarea = screen.getByPlaceholderText(/Enter destination URL/i)
     await act(async () => {
       await userEvent.type(textarea, 'example.com')
     })
@@ -40,7 +39,7 @@ describe('PayloadInput', () => {
 
   it('shows validation error for invalid URL (host with space)', async () => {
     render(<PayloadInput />)
-    const textarea = screen.getByPlaceholderText(/Enter url/i)
+    const textarea = screen.getByPlaceholderText(/Enter destination URL/i)
     await act(async () => {
       await userEvent.clear(textarea)
       await userEvent.type(textarea, 'foo bar')
@@ -51,7 +50,7 @@ describe('PayloadInput', () => {
   it('limits payload length indicator', async () => {
     render(<PayloadInput />)
     expect(screen.getByText(/0\/4096/i)).toBeInTheDocument()
-    const textarea = screen.getByPlaceholderText(/Enter url/i)
+    const textarea = screen.getByPlaceholderText(/Enter destination URL/i)
     await act(async () => {
       await userEvent.type(textarea, 'hello')
     })

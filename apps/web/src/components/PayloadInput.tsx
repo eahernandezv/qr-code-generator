@@ -2,14 +2,6 @@ import React, { useCallback } from 'react'
 import { useStudioStore } from '../store'
 import type { Payload, QrMode } from '../types'
 
-const MODES: { value: QrMode; label: string }[] = [
-  { value: 'url', label: 'URL' },
-  { value: 'text', label: 'Text' },
-  { value: 'email', label: 'Email' },
-  { value: 'phone', label: 'Phone' },
-  { value: 'wifi', label: 'Wi-Fi' },
-]
-
 function normalizeUrl(raw: string): string {
   let url = raw.trim()
   if (!url) return ''
@@ -62,31 +54,20 @@ const PayloadInput: React.FC = () => {
 
   return (
     <section className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4 md:p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-400">Payload</h2>
+      <div className="mb-3 flex items-start justify-between">
+        <div>
+          <h2 className="text-sm font-semibold text-slate-200">Destination</h2>
+          <p className="mt-0.5 text-[10px] text-slate-500">Bind the real URL before generation and checkout.</p>
+        </div>
         <span className="text-xs text-slate-500">{payload.raw.length}/4096</span>
       </div>
 
-      <div className="flex flex-wrap gap-2 mb-3">
-        {MODES.map((m) => (
-          <button
-            key={m.value}
-            onClick={() => handleChange('mode', m.value)}
-            className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
-              payload.mode === m.value
-                ? 'bg-studio-600 text-white'
-                : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
-            }`}
-          >
-            {m.label}
-          </button>
-        ))}
-      </div>
-
+      <label htmlFor="destination-url" className="sr-only">Final destination URL</label>
       <textarea
+        id="destination-url"
         value={payload.raw}
         onChange={(e) => handleChange('raw', e.target.value)}
-        placeholder={`Enter ${payload.mode}…`}
+        placeholder="Enter destination URL…"
         rows={2}
         className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-slate-100 placeholder-slate-600 outline-none transition-colors focus:border-studio-500 focus:ring-1 focus:ring-studio-500/50 resize-y"
       />
