@@ -23,5 +23,12 @@ export type {
   RepairStrategy,
 } from './types.js';
 export type { CandidateAuthorityRecord, CandidateAuthorityStore } from './candidate-context.js';
-export type { ArtisticRenderIntent, ArtisticStyleFamily } from './render-intent.js';
+export type {
+  ArtisticCompositionTreatment,
+  ArtisticCompositionTreatmentId,
+  ArtisticRenderIntent,
+  ArtisticStrengthTreatment,
+  ArtisticStyleFamily,
+  QrProminenceTreatment,
+} from './render-intent.js';
 export type { SafetyEvaluator, SafetyVerdict } from './request-validation.js';
