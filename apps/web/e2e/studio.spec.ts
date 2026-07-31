@@ -5,7 +5,7 @@ import path from 'node:path'
 const evidenceRoot = path.resolve(process.cwd(), '../../.work-loop/evidence/stage2-commerce/browser')
 const exportDir = path.join(evidenceRoot, 'exports')
 const screenshotDir = path.join(evidenceRoot, 'screenshots')
-const b5EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b5-patterned-palette-color-intensity-ui')
+const b9EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b9-art-direction-layout-semantics')
 
 const svgArtwork = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
@@ -197,10 +197,10 @@ async function sampledColorCount(page: Page, png: Buffer): Promise<number> {
 test.beforeAll(async () => {
   await fs.mkdir(exportDir, { recursive: true })
   await fs.mkdir(screenshotDir, { recursive: true })
-  await fs.mkdir(b5EvidenceDir, { recursive: true })
+  await fs.mkdir(b9EvidenceDir, { recursive: true })
 })
 
-test('patterned palette, intensity, QR Frame copy, four candidates, and export gate stay wired', async ({ page }) => {
+test('compact palette controls, hidden QR Frame, canonical request, and export gate stay wired', async ({ page }) => {
   const errors = await assertNoConsoleErrors(page)
   let candidateRequest: Record<string, unknown> | undefined
   await page.route('**/api/artistic-qr/candidates', async (route) => {
@@ -211,17 +211,19 @@ test('patterned palette, intensity, QR Frame copy, four candidates, and export g
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/')
   await page.getByPlaceholder('Enter url…').fill('https://example.com')
-  await expect(page.getByText('QR Frame', { exact: true })).toBeVisible()
-  await expect(page.getByText('Composition', { exact: true })).toHaveCount(0)
-  await expect(page.getByRole('button', { name: 'Classic' })).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Soft frame' })).toBeVisible()
-  await page.locator('section').filter({ hasText: 'Art Direction' }).screenshot({
-    path: path.join(b5EvidenceDir, 'mobile-art-panel.png'),
+  await expect(page.getByPlaceholder('Enter url…')).toHaveAttribute('rows', '2')
+  await expect(page.getByText('QR Frame', { exact: true })).toHaveCount(0)
+  await expect(page.getByRole('combobox', { name: 'Solid Palette Presets' })).toHaveValue('Studio Blue')
+  await expect(page.getByRole('combobox', { name: 'Patterned Palette Presets' })).toHaveValue('')
+  await page.screenshot({
+    path: path.join(b9EvidenceDir, 'mobile-two-row-compact-dropdowns.png'),
+    fullPage: true,
   })
 
   const preview = page.getByRole('img', { name: 'QR Preview' })
   await page.setViewportSize({ width: 1440, height: 1100 })
-  await page.getByRole('button', { name: 'Rainbow diagonal' }).click()
+  await page.getByRole('combobox', { name: 'Patterned Palette Presets' }).selectOption({ label: 'Rainbow diagonal' })
+  await expect(page.getByRole('combobox', { name: 'Patterned Palette Presets' })).toHaveValue('Rainbow diagonal')
   const rainbowBalanced = await preview.getAttribute('src')
   await page.getByRole('button', { name: 'Mellow' }).click()
   await expect.poll(async () => preview.getAttribute('src')).not.toBe(rainbowBalanced)
@@ -230,13 +232,13 @@ test('patterned palette, intensity, QR Frame copy, four candidates, and export g
   await expect.poll(async () => preview.getAttribute('src')).not.toBe(rainbowMellow)
   const rainbowPunchy = await preview.getAttribute('src')
   expect(rainbowPunchy).not.toBe(rainbowBalanced)
-  await page.locator('main').screenshot({ path: path.join(b5EvidenceDir, 'desktop-rainbow-diagonal-punchy.png') })
+  await page.locator('main').screenshot({ path: path.join(b9EvidenceDir, 'patterned-rainbow-diagonal-selected.png') })
 
-  await page.getByRole('button', { name: 'Trans safe diagonal' }).click()
+  await page.getByRole('combobox', { name: 'Patterned Palette Presets' }).selectOption({ label: 'Trans safe diagonal' })
   await page.getByRole('button', { name: 'Balanced' }).click()
   const transBalanced = await preview.getAttribute('src')
   expect(transBalanced).not.toBe(rainbowPunchy)
-  await page.locator('main').screenshot({ path: path.join(b5EvidenceDir, 'desktop-trans-safe-diagonal-balanced.png') })
+  await page.locator('main').screenshot({ path: path.join(b9EvidenceDir, 'patterned-trans-safe-diagonal-selected.png') })
 
   await page.getByRole('button', { name: 'Generate 4' }).click()
   await expect(page.getByText('Validated', { exact: true })).toHaveCount(4)
@@ -248,7 +250,7 @@ test('patterned palette, intensity, QR Frame copy, four candidates, and export g
   await page.getByRole('button', { name: /Candidate 100000/ }).first().click()
   await expect(page.getByRole('button', { name: 'Purchase to export selected PNG' })).toBeDisabled()
   await page.locator('section').filter({ has: page.getByRole('heading', { name: 'Export' }) }).screenshot({
-    path: path.join(b5EvidenceDir, 'export-paid-gating-patterned-candidate.png'),
+    path: path.join(b9EvidenceDir, 'export-paid-gating-patterned-candidate.png'),
   })
   expect(errors).toEqual([])
 })
@@ -263,28 +265,34 @@ test('Core-backed preview controls and candidate request share the same fidelity
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/')
   await page.getByPlaceholder('Enter url…').fill('https://example.com')
-  await page.getByRole('button', { name: 'Berry', exact: true }).click()
+  await page.getByRole('combobox', { name: 'Solid Palette Presets' }).selectOption({ label: 'Berry' })
+  await expect(page.getByRole('combobox', { name: 'Solid Palette Presets' })).toHaveValue('Berry')
 
   const preview = page.getByRole('img', { name: 'QR Preview' })
   const berry = await preview.getAttribute('src')
   expect(berry).toContain('%23c9184a')
   expect(berry).toContain('%23f9e8ef')
-  const evidencePath = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b2d-core-backed-preview-fidelity/berry-preview-mobile.png')
+  const evidencePath = path.join(b9EvidenceDir, 'solid-berry-selected-mobile.png')
   await fs.mkdir(path.dirname(evidencePath), { recursive: true })
   await page.screenshot({ path: evidencePath, fullPage: true })
 
   await page.setViewportSize({ width: 1280, height: 900 })
   await page.getByRole('button', { name: 'Geometric' }).click()
+  await expect.poll(() => preview.getAttribute('src')).not.toBe(berry)
   const geometric = await preview.getAttribute('src')
-  expect(geometric).not.toBe(berry)
-  await page.getByRole('slider').nth(0).fill('0.1')
+  const strength = page.getByRole('slider', { name: 'Artistic Strength' })
+  await expect(strength).toHaveAttribute('step', '0.5')
+  await strength.fill('0')
+  await expect.poll(() => preview.getAttribute('src')).not.toBe(geometric)
   const subtle = await preview.getAttribute('src')
-  expect(subtle).not.toBe(geometric)
-  await page.getByRole('button', { name: 'Bold frame' }).click()
+  await page.locator('main').screenshot({ path: path.join(b9EvidenceDir, 'strength-geometric-low.png') })
+  await strength.fill('1')
   await expect.poll(() => preview.getAttribute('src')).not.toBe(subtle)
-  const offset = await preview.getAttribute('src')
-  await page.getByRole('slider').nth(1).fill('0.8')
-  await expect.poll(() => preview.getAttribute('src')).not.toBe(offset)
+  const bold = await preview.getAttribute('src')
+  await page.locator('main').screenshot({ path: path.join(b9EvidenceDir, 'strength-geometric-high.png') })
+  expect(bold).not.toBe(subtle)
+  await page.getByRole('slider', { name: 'QR Prominence' }).fill('0.8')
+  await expect.poll(() => preview.getAttribute('src')).not.toBe(bold)
 
   const desktopEvidencePath = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b2d-core-backed-preview-fidelity/preview-controls-desktop.png')
   await page.screenshot({ path: desktopEvidencePath, fullPage: true })
@@ -292,9 +300,9 @@ test('Core-backed preview controls and candidate request share the same fidelity
   await expect(page.getByText('Validated', { exact: true })).toHaveCount(4)
   expect(candidateRequest).toMatchObject({
     artDirectionId: 'architectural-geometric',
-    artisticStrength: 0.1,
+    artisticStrength: 1,
     palette: { primary: '#c9184a', background: '#f9e8ef' },
-    composition: { focalArea: 'right', qrProminence: 0.8 },
+    composition: { focalArea: 'center', qrProminence: 0.8 },
   })
   expect(errors).toEqual([])
 })

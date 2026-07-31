@@ -1,21 +1,8 @@
 import React from 'react'
 import { useStudioStore } from '../store'
-import type {
-  ArtDirection,
-  ColorIntensity,
-  CompositionType,
-  PaletteFamily,
-  PalettePattern,
-} from '../types'
+import type { ArtDirection, ColorIntensity, PaletteFamily, PalettePattern } from '../types'
 
 const TEMPLATES = ['watercolor', 'geometric', 'minimalist']
-
-const QR_FRAMES: { value: CompositionType; label: string }[] = [
-  { value: 'integrated', label: 'Classic' },
-  { value: 'centered', label: 'Soft frame' },
-  { value: 'offset', label: 'Bold frame' },
-  { value: 'surround', label: 'Poster frame' },
-]
 
 const SOLID_PRESETS = [
   { name: 'Studio Blue', primary: '#5b6ef5', secondary: '#323eaf', accent: '#a5bdff', background: '#f0f4ff' },
@@ -52,34 +39,28 @@ const INTENSITIES: Array<{ value: ColorIntensity; label: string }> = [
 const ArtDirectionPanel: React.FC = () => {
   const { project, setArtDirection } = useStudioStore()
   const art = project.artDirection
-
-  const update = (patch: Partial<ArtDirection>) =>
-    setArtDirection({ ...art, ...patch })
+  const update = (patch: Partial<ArtDirection>) => setArtDirection({ ...art, ...patch })
+  const selectedSolid = SOLID_PRESETS.find((preset) =>
+    !art.paletteFamily && art.palette?.primary === preset.primary
+  ) ?? SOLID_PRESETS[0]
+  const selectedPatterned = PATTERNED_PRESETS.find((preset) =>
+    art.paletteFamily === preset.family && art.palettePattern === preset.pattern
+  )
 
   return (
     <section className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4 md:p-6">
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-400">Art Direction</h2>
-        <span className="rounded-full bg-slate-800 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-500">
-          {art.templateId}
-        </span>
+        <span className="rounded-full bg-slate-800 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-500">{art.templateId}</span>
       </div>
 
       <div className="mb-5">
         <label className="mb-2 block text-xs font-medium text-slate-400">Template</label>
         <div className="flex flex-wrap gap-2">
           {TEMPLATES.map((template) => (
-            <button
-              key={template}
-              type="button"
-              aria-pressed={art.templateId === template}
+            <button key={template} type="button" aria-pressed={art.templateId === template}
               onClick={() => update({ templateId: template })}
-              className={`rounded-lg px-3 py-1.5 text-xs font-medium capitalize transition-colors ${
-                art.templateId === template
-                  ? 'bg-studio-600 text-white'
-                  : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
-              }`}
-            >
+              className={`rounded-lg px-3 py-1.5 text-xs font-medium capitalize transition-colors ${art.templateId === template ? 'bg-studio-600 text-white' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}`}>
               {template}
             </button>
           ))}
@@ -87,65 +68,41 @@ const ArtDirectionPanel: React.FC = () => {
       </div>
 
       <div className="mb-5">
-        <label className="mb-2 block text-xs font-medium text-slate-400">Solid Palette Presets</label>
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-          {SOLID_PRESETS.map((preset) => {
-            const selected = !art.paletteFamily && art.palette?.primary === preset.primary
-            return (
-              <button
-                key={preset.name}
-                type="button"
-                aria-pressed={selected}
-                onClick={() => update({
-                  paletteFamily: undefined,
-                  palettePattern: 'solid',
-                  palette: {
-                    primary: preset.primary,
-                    secondary: preset.secondary,
-                    accent: preset.accent,
-                    background: preset.background,
-                  },
-                })}
-                className={`flex items-center gap-2 rounded-lg border px-2.5 py-2 text-left text-xs transition-colors ${
-                  selected
-                    ? 'border-studio-500/60 bg-studio-950/40 text-slate-200'
-                    : 'border-slate-800 bg-slate-900 text-slate-400 hover:border-slate-700'
-                }`}
-              >
-                <span className="flex h-4 w-4 shrink-0 overflow-hidden rounded-full">
-                  <span className="h-full w-1/3" style={{ background: preset.primary }} />
-                  <span className="h-full w-1/3" style={{ background: preset.secondary }} />
-                  <span className="h-full w-1/3" style={{ background: preset.accent }} />
-                </span>
-                {preset.name}
-              </button>
-            )
-          })}
+        <label htmlFor="solid-palette" className="mb-2 block text-xs font-medium text-slate-400">Solid Palette Presets</label>
+        <div className="flex items-center gap-2">
+          <span aria-hidden="true" className="flex h-5 w-5 shrink-0 overflow-hidden rounded-full">
+            <span className="h-full w-1/3" style={{ background: selectedSolid.primary }} />
+            <span className="h-full w-1/3" style={{ background: selectedSolid.secondary }} />
+            <span className="h-full w-1/3" style={{ background: selectedSolid.accent }} />
+          </span>
+          <select id="solid-palette" value={selectedSolid.name}
+            onChange={(event) => {
+              const preset = SOLID_PRESETS.find((item) => item.name === event.target.value)
+              if (!preset) return
+              update({ paletteFamily: undefined, palettePattern: 'solid', palette: {
+                primary: preset.primary, secondary: preset.secondary, accent: preset.accent, background: preset.background,
+              } })
+            }}
+            className="min-w-0 flex-1 rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-xs text-slate-200 outline-none focus:border-studio-500 focus:ring-1 focus:ring-studio-500/50">
+            {SOLID_PRESETS.map((preset) => <option key={preset.name}>{preset.name}</option>)}
+          </select>
         </div>
       </div>
 
       <div className="mb-5">
-        <label className="mb-2 block text-xs font-medium text-slate-400">Patterned Palette Presets</label>
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-          {PATTERNED_PRESETS.map((preset) => {
-            const selected = art.paletteFamily === preset.family && art.palettePattern === preset.pattern
-            return (
-              <button
-                key={preset.name}
-                type="button"
-                aria-pressed={selected}
-                onClick={() => update({ paletteFamily: preset.family, palettePattern: preset.pattern })}
-                className={`flex items-center gap-2 rounded-lg border px-2.5 py-2 text-left text-xs transition-colors ${
-                  selected
-                    ? 'border-studio-500/60 bg-studio-950/40 text-slate-200'
-                    : 'border-slate-800 bg-slate-900 text-slate-400 hover:border-slate-700'
-                }`}
-              >
-                <span className="h-4 w-4 shrink-0 rounded-full" style={{ background: preset.swatch }} />
-                {preset.name}
-              </button>
-            )
-          })}
+        <label htmlFor="patterned-palette" className="mb-2 block text-xs font-medium text-slate-400">Patterned Palette Presets</label>
+        <div className="flex items-center gap-2">
+          <span aria-hidden="true" className="h-5 w-5 shrink-0 rounded-full border border-slate-700"
+            style={{ background: selectedPatterned?.swatch ?? '#334155' }} />
+          <select id="patterned-palette" value={selectedPatterned?.name ?? ''}
+            onChange={(event) => {
+              const preset = PATTERNED_PRESETS.find((item) => item.name === event.target.value)
+              if (preset) update({ paletteFamily: preset.family, palettePattern: preset.pattern })
+            }}
+            className="min-w-0 flex-1 rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-xs text-slate-200 outline-none focus:border-studio-500 focus:ring-1 focus:ring-studio-500/50">
+            <option value="" disabled>Choose a patterned palette</option>
+            {PATTERNED_PRESETS.map((preset) => <option key={preset.name}>{preset.name}</option>)}
+          </select>
         </div>
       </div>
 
@@ -155,94 +112,43 @@ const ArtDirectionPanel: React.FC = () => {
           {INTENSITIES.map((intensity) => {
             const selected = (art.colorIntensity ?? 'balanced') === intensity.value
             return (
-              <button
-                key={intensity.value}
-                type="button"
-                aria-pressed={selected}
+              <button key={intensity.value} type="button" aria-pressed={selected}
                 onClick={() => update({ colorIntensity: intensity.value })}
-                className={`rounded-lg border px-2 py-2 text-center text-xs font-medium transition-colors ${
-                  selected
-                    ? 'border-studio-500/60 bg-studio-950/40 text-slate-200'
-                    : 'border-slate-800 bg-slate-900 text-slate-400 hover:border-slate-700'
-                }`}
-              >
+                className={`rounded-lg border px-2 py-2 text-center text-xs font-medium transition-colors ${selected ? 'border-studio-500/60 bg-studio-950/40 text-slate-200' : 'border-slate-800 bg-slate-900 text-slate-400 hover:border-slate-700'}`}>
                 {intensity.label}
               </button>
             )
           })}
         </div>
-        <p className="mt-2 text-[10px] leading-relaxed text-slate-600">
-          Mellow softens the palette; Punchy increases vibrance while Core keeps scan-safe contrast.
-        </p>
+        <p className="mt-2 text-[10px] leading-relaxed text-slate-600">Mellow softens the palette; Punchy increases vibrance while Core keeps scan-safe contrast.</p>
       </div>
 
       <div className="mb-5">
         <div className="mb-2 flex items-center justify-between">
-          <label className="text-xs font-medium text-slate-400">Artistic Strength</label>
-          <span className="text-xs tabular-nums text-slate-500">
-            {Math.round((art.artisticStrength ?? 0.5) * 100)}%
-          </span>
+          <label htmlFor="artistic-strength" className="text-xs font-medium text-slate-400">Artistic Strength</label>
+          <span className="text-xs tabular-nums text-slate-500">{Math.round((art.artisticStrength ?? 0.5) * 100)}%</span>
         </div>
-        <input
-          aria-label="Artistic Strength"
-          type="range"
-          min={0}
-          max={1}
-          step={0.05}
-          value={art.artisticStrength ?? 0.5}
+        <input id="artistic-strength" aria-label="Artistic Strength" aria-describedby="artistic-strength-help"
+          type="range" min={0} max={1} step={0.5} value={art.artisticStrength ?? 0.5}
           onChange={(event) => update({ artisticStrength: Number(event.target.value) })}
-          className="h-2 w-full cursor-pointer appearance-none rounded-full bg-slate-800 accent-studio-500"
-        />
+          className="h-2 w-full cursor-pointer appearance-none rounded-full bg-slate-800 accent-studio-500" />
         <div className="mt-1 flex justify-between text-[10px] text-slate-600">
-          <span>Subtle</span>
-          <span>Bold</span>
+          <span>Subtle</span><span>Expressive</span><span>Bold</span>
         </div>
-      </div>
-
-      <div className="mb-5">
-        <label className="mb-2 block text-xs font-medium text-slate-400">QR Frame</label>
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-          {QR_FRAMES.map((frame) => {
-            const selected = art.composition === frame.value
-            return (
-              <button
-                key={frame.value}
-                type="button"
-                aria-pressed={selected}
-                onClick={() => update({ composition: frame.value })}
-                className={`rounded-lg border px-2 py-2 text-center text-xs font-medium transition-colors ${
-                  selected
-                    ? 'border-studio-500/60 bg-studio-950/40 text-slate-200'
-                    : 'border-slate-800 bg-slate-900 text-slate-400 hover:border-slate-700'
-                }`}
-              >
-                {frame.label}
-              </button>
-            )
-          })}
-        </div>
-        <p className="mt-2 text-[10px] leading-relaxed text-slate-600">
-          QR Frame changes the code’s eye treatment and space around it. It does not reposition surrounding artwork in deterministic mode.
+        <p id="artistic-strength-help" className="mt-2 text-[10px] leading-relaxed text-slate-600">
+          Three scan-safe stages change module treatment and framing for every template.
         </p>
       </div>
 
       <div>
         <div className="mb-2 flex items-center justify-between">
           <label className="text-xs font-medium text-slate-400">QR Prominence</label>
-          <span className="text-xs tabular-nums text-slate-500">
-            {Math.round((art.protectedQrProminence ?? 0.7) * 100)}%
-          </span>
+          <span className="text-xs tabular-nums text-slate-500">{Math.round((art.protectedQrProminence ?? 0.7) * 100)}%</span>
         </div>
-        <input
-          aria-label="QR Prominence"
-          type="range"
-          min={0.1}
-          max={1}
-          step={0.05}
+        <input aria-label="QR Prominence" type="range" min={0.1} max={1} step={0.05}
           value={art.protectedQrProminence ?? 0.7}
           onChange={(event) => update({ protectedQrProminence: Number(event.target.value) })}
-          className="h-2 w-full cursor-pointer appearance-none rounded-full bg-slate-800 accent-studio-500"
-        />
+          className="h-2 w-full cursor-pointer appearance-none rounded-full bg-slate-800 accent-studio-500" />
       </div>
     </section>
   )

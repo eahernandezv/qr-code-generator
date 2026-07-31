@@ -87,7 +87,7 @@ const PayloadInput: React.FC = () => {
         value={payload.raw}
         onChange={(e) => handleChange('raw', e.target.value)}
         placeholder={`Enter ${payload.mode}…`}
-        rows={3}
+        rows={2}
         className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-slate-100 placeholder-slate-600 outline-none transition-colors focus:border-studio-500 focus:ring-1 focus:ring-studio-500/50 resize-y"
       />
 

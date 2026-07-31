@@ -16,6 +16,11 @@ describe('PayloadInput', () => {
     resetStore()
   })
 
+  it('uses a compact two-row textarea', () => {
+    render(<PayloadInput />)
+    expect(screen.getByRole('textbox')).toHaveAttribute('rows', '2')
+  })
+
   it('switches modes and updates payload placeholder', async () => {
     render(<PayloadInput />)
     await act(async () => {
