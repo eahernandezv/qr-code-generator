@@ -1,13 +1,35 @@
 import type { RenderOptions } from '@qr/qr-core';
 import type { GenerationRequest, Palette } from './types.js';
 
+type ModuleShape = NonNullable<RenderOptions['shape']>;
+
 export type ArtisticStyleFamily = 'watercolor' | 'geometric' | 'minimalist';
+export type ArtisticStrengthTreatment = 'subtle' | 'expressive' | 'bold';
+export type ArtisticCompositionTreatmentId = 'classic' | 'soft-frame' | 'bold-frame' | 'poster-frame';
+export type QrProminenceTreatment = 'spacious' | 'standard' | 'dominant';
+
+export interface ArtisticCompositionTreatment {
+  id: ArtisticCompositionTreatmentId;
+  eyeShape: ModuleShape;
+  framingModules: number;
+}
 
 export interface ArtisticRenderIntent {
   styleFamily: ArtisticStyleFamily;
+  /** Template is the module-shape visual language. */
+  templateTreatment: ArtisticStyleFamily;
   artisticStrength: number;
+  /** Strength selects a visible stage within the template's shape language. */
+  strengthTreatment: ArtisticStrengthTreatment;
   focalArea: NonNullable<NonNullable<GenerationRequest['composition']>['focalArea']>;
+  /**
+   * The deterministic renderer cannot express artwork placement. Composition is therefore
+   * truthfully reduced to a QR frame treatment, not presented here as spatial artwork layout.
+   */
+  compositionTreatment: ArtisticCompositionTreatment;
   qrProminence: number;
+  /** Prominence independently controls the protected quiet-zone baseline. */
+  prominenceTreatment: QrProminenceTreatment;
   palette: { primary: string; background: string };
   candidateOptions: readonly [RenderOptions, RenderOptions, RenderOptions, RenderOptions];
   previewOptions: RenderOptions;
@@ -26,32 +48,38 @@ export function resolveArtisticRenderIntent(request: GenerationRequest): Artisti
   const qrProminence = clamp01(request.composition?.qrProminence ?? 0.65);
   const focalArea = request.composition?.focalArea ?? 'balanced';
   const styleFamily = resolveStyleFamily(request.artDirectionId, request.prompt);
+  const strengthTreatment = resolveStrengthTreatment(artisticStrength);
+  const compositionTreatment = resolveCompositionTreatment(focalArea);
+  const prominenceTreatment = resolveProminenceTreatment(qrProminence);
   const palette = resolvePalette(request.palette);
 
-  const quietZone = qrProminence >= 0.72 ? 4 : qrProminence >= 0.38 ? 5 : 6;
-  // Keep the proven baseline raster scale; prominence is expressed by quiet-zone ratio.
-  const baseModuleSize = 8;
-  const focalOffset = ({ balanced: 0, center: 1, top: 2, right: 3, bottom: 1, left: 3 } as const)[focalArea];
-  const styles = styleVariants(styleFamily, artisticStrength);
+  const quietZone = prominenceTreatment === 'dominant' ? 4 : prominenceTreatment === 'standard' ? 5 : 6;
+  // Strength framing visibly changes QR-to-canvas ratio without reducing the
+  // prominence-owned protected quiet-zone baseline.
+  const strengthFramingModules = strengthTreatment === 'subtle' ? 2 : strengthTreatment === 'expressive' ? 1 : 0;
+  const margin = quietZone + compositionTreatment.framingModules + strengthFramingModules;
+  const shapes = styleVariants(styleFamily, strengthTreatment);
+  const strengthScale = strengthTreatment === 'subtle' ? 8 : strengthTreatment === 'expressive' ? 9 : 10;
 
-  const candidateOptions = Array.from({ length: 4 }, (_, index): RenderOptions => {
-    const style = styles[(index + focalOffset) % styles.length];
-    return {
-      format: 'svg',
-      moduleSize: baseModuleSize + index,
-      margin: quietZone,
-      colorDark: palette.primary,
-      colorLight: palette.background,
-      shape: style.shape,
-      eyeShape: style.eyeShape,
-    };
-  }) as unknown as ArtisticRenderIntent['candidateOptions'];
+  const candidateOptions = Array.from({ length: 4 }, (_, index): RenderOptions => ({
+    format: 'svg',
+    moduleSize: strengthScale + index,
+    margin,
+    colorDark: palette.primary,
+    colorLight: palette.background,
+    shape: shapes[index],
+    eyeShape: compositionTreatment.eyeShape,
+  })) as unknown as ArtisticRenderIntent['candidateOptions'];
 
   return {
     styleFamily,
+    templateTreatment: styleFamily,
     artisticStrength,
+    strengthTreatment,
     focalArea,
+    compositionTreatment,
     qrProminence,
+    prominenceTreatment,
     palette,
     candidateOptions,
     previewOptions: candidateOptions[0],
@@ -76,33 +104,53 @@ function resolvePalette(palette?: Palette): { primary: string; background: strin
   };
 }
 
+function resolveStrengthTreatment(strength: number): ArtisticStrengthTreatment {
+  if (strength < 0.34) return 'subtle';
+  if (strength < 0.67) return 'expressive';
+  return 'bold';
+}
+
+function resolveProminenceTreatment(prominence: number): QrProminenceTreatment {
+  if (prominence >= 0.72) return 'dominant';
+  if (prominence >= 0.38) return 'standard';
+  return 'spacious';
+}
+
+function resolveCompositionTreatment(
+  focalArea: NonNullable<NonNullable<GenerationRequest['composition']>['focalArea']>,
+): ArtisticCompositionTreatment {
+  switch (focalArea) {
+    case 'center':
+      return { id: 'soft-frame', eyeShape: 'rounded', framingModules: 0 };
+    case 'left':
+    case 'right':
+      return { id: 'bold-frame', eyeShape: 'square', framingModules: 1 };
+    case 'top':
+    case 'bottom':
+      return { id: 'poster-frame', eyeShape: 'square', framingModules: 2 };
+    case 'balanced':
+      return { id: 'classic', eyeShape: 'square', framingModules: 0 };
+  }
+}
+
 function styleVariants(
   family: ArtisticStyleFamily,
-  strength: number,
-): Array<{ shape: RenderOptions['shape']; eyeShape: RenderOptions['eyeShape'] }> {
-  if (strength < 0.25) return [
-    { shape: 'square', eyeShape: 'square' },
-    { shape: 'square', eyeShape: 'square' },
-    { shape: 'rounded', eyeShape: 'square' },
-    { shape: 'square', eyeShape: 'rounded' },
-  ];
-  if (family === 'watercolor') return [
-    { shape: 'rounded', eyeShape: 'rounded' },
-    { shape: 'circle', eyeShape: 'square' },
-    { shape: 'rounded', eyeShape: 'square' },
-    { shape: 'circle', eyeShape: 'rounded' },
-  ];
-  if (family === 'geometric') return [
-    { shape: 'square', eyeShape: 'square' },
-    { shape: 'rounded', eyeShape: 'square' },
-    { shape: 'square', eyeShape: 'rounded' },
-    { shape: 'rounded', eyeShape: 'rounded' },
-  ];
+  strength: ArtisticStrengthTreatment,
+): readonly [ModuleShape, ModuleShape, ModuleShape, ModuleShape] {
+  // Avoid fully circular data modules: they are materially weaker under the real
+  // perturbation suite. The third strength level is also visible in framing and scale.
+  const progression: Record<ArtisticStyleFamily, readonly [ModuleShape, ModuleShape, ModuleShape]> = {
+    watercolor: ['square', 'rounded', 'rounded'],
+    geometric: ['rounded', 'square', 'square'],
+    minimalist: ['square', 'square', 'rounded'],
+  };
+  const strengthIndex = strength === 'subtle' ? 0 : strength === 'expressive' ? 1 : 2;
+  const familyShapes = progression[family];
   return [
-    { shape: 'square', eyeShape: 'rounded' },
-    { shape: 'rounded', eyeShape: 'rounded' },
-    { shape: 'square', eyeShape: 'square' },
-    { shape: 'rounded', eyeShape: 'square' },
+    familyShapes[strengthIndex],
+    familyShapes[(strengthIndex + 1) % familyShapes.length],
+    familyShapes[(strengthIndex + 2) % familyShapes.length],
+    familyShapes[strengthIndex],
   ];
 }
 
