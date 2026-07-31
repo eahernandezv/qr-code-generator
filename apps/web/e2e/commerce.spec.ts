@@ -75,7 +75,7 @@ test.beforeEach(async ({ page }) => {
       },
     }
   })
-  await page.goto('/')
+  await page.goto('/?workflow=internal')
   await page.evaluate(() => window.__QR_COMMERCE_TEST__?.reset())
   await page.reload()
 })

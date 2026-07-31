@@ -44,6 +44,10 @@ export function buildStudioGenerationRequest(input: {
     ...(artDirection.paletteFamily ? { paletteFamily: artDirection.paletteFamily } : {}),
     ...(artDirection.palettePattern ? { palettePattern: artDirection.palettePattern } : {}),
     ...(artDirection.colorIntensity ? { colorIntensity: artDirection.colorIntensity } : {}),
+    ...(artDirection.moduleStyle ? {
+      moduleShape: artDirection.moduleStyle === 'dot' ? 'circle' : artDirection.moduleStyle,
+    } : {}),
+    ...(artDirection.eyeStyle ? { eyeShape: artDirection.eyeStyle } : {}),
     composition: {
       focalArea: FOCAL_AREAS[artDirection.composition ?? 'centered'],
       qrProminence: artDirection.protectedQrProminence,

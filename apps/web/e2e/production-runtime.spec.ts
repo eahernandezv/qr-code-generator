@@ -26,7 +26,7 @@ test('normal Studio path uses real Core and commerce HTTP authorities', async ({
   page.on('pageerror', (error) => pageErrors.push(error.message))
   page.on('console', (message) => { if (message.type() === 'error') consoleErrors.push(message.text()) })
 
-  await page.goto('/')
+  await page.goto('/?workflow=internal')
   await page.evaluate(() => localStorage.clear())
   await page.reload()
   await page.getByPlaceholder('Enter destination URL…').fill('https://example.com/production-runtime-proof')

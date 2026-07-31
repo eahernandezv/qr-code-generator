@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test'
 const api = 'http://127.0.0.1:4174'
 
 test.beforeEach(async ({ page }) => {
-  await page.goto('/')
+  await page.goto('/?workflow=internal')
   await page.evaluate(() => localStorage.clear())
   await page.reload()
 })

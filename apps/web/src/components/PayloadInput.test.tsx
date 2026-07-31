@@ -6,54 +6,49 @@ import { useStudioStore } from '../store'
 import { FEATURE_FLAGS } from '../config/flags'
 
 function resetStore() {
-  const { resetProject } = useStudioStore.getState()
-  resetProject()
+  useStudioStore.getState().resetProject()
   useStudioStore.setState({ featureFlags: { ...FEATURE_FLAGS } })
 }
 
 describe('PayloadInput', () => {
-  beforeEach(() => {
-    resetStore()
-  })
+  beforeEach(resetStore)
 
-  it('uses a compact two-row textarea', () => {
+  it('shows a compact content selector and two-row input', () => {
     render(<PayloadInput />)
-    expect(screen.getByRole('textbox')).toHaveAttribute('rows', '2')
-  })
-
-  it('keeps the activation stage focused on one destination URL', () => {
-    render(<PayloadInput />)
-    expect(screen.getByRole('textbox', { name: 'Final destination URL' })).toHaveAttribute('placeholder', 'Enter destination URL…')
-    expect(screen.queryByRole('button', { name: 'Text' })).not.toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Wi-Fi' })).not.toBeInTheDocument()
+    expect(screen.getByRole('textbox', { name: 'Final destination URL' })).toHaveAttribute('rows', '2')
+    expect(screen.getByRole('button', { name: 'URL' })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('button', { name: 'Email' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Text' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Phone' })).toBeInTheDocument()
   })
 
   it('normalizes a URL with https prefix', async () => {
     render(<PayloadInput />)
-    const textarea = screen.getByPlaceholderText(/Enter destination URL/i)
-    await act(async () => {
-      await userEvent.type(textarea, 'example.com')
-    })
-    expect(screen.getByText(/Normalized:/i)).toHaveTextContent('https://example.com')
+    await act(async () => userEvent.type(screen.getByRole('textbox'), 'example.com'))
+    expect(screen.getByText(/Encoded:/i)).toHaveTextContent('https://example.com')
   })
 
-  it('shows validation error for invalid URL (host with space)', async () => {
+  it('switches to Email and constructs a mailto payload', async () => {
+    const user = userEvent.setup()
     render(<PayloadInput />)
-    const textarea = screen.getByPlaceholderText(/Enter destination URL/i)
-    await act(async () => {
-      await userEvent.clear(textarea)
-      await userEvent.type(textarea, 'foo bar')
+    await user.click(screen.getByRole('button', { name: 'Email' }))
+    const input = screen.getByRole('textbox', { name: 'Email address' })
+    expect(input).toHaveAttribute('placeholder', 'name@example.com')
+    await user.type(input, 'studio@example.com')
+    expect(useStudioStore.getState().project.payload).toMatchObject({
+      mode: 'email',
+      normalized: 'mailto:studio@example.com',
     })
-    expect(screen.getByText(/Invalid URL/i)).toBeInTheDocument()
   })
 
-  it('limits payload length indicator', async () => {
+  it('validates URL and Email input truthfully', async () => {
+    const user = userEvent.setup()
     render(<PayloadInput />)
-    expect(screen.getByText(/0\/4096/i)).toBeInTheDocument()
-    const textarea = screen.getByPlaceholderText(/Enter destination URL/i)
-    await act(async () => {
-      await userEvent.type(textarea, 'hello')
-    })
-    expect(screen.getByText(/5\/4096/i)).toBeInTheDocument()
+    await user.type(screen.getByRole('textbox'), 'foo bar')
+    expect(screen.getByRole('alert')).toHaveTextContent('Invalid URL')
+    await user.click(screen.getByRole('button', { name: 'Email' }))
+    await user.clear(screen.getByRole('textbox'))
+    await user.type(screen.getByRole('textbox'), 'not-an-email')
+    expect(screen.getByRole('alert')).toHaveTextContent('Invalid email address')
   })
 })

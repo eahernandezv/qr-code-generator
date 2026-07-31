@@ -24,6 +24,8 @@ const defaultArtDirection = (): ArtDirection => ({
   protectedQrProminence: 0.7,
   palettePattern: 'solid',
   colorIntensity: 'balanced',
+  moduleStyle: 'square',
+  eyeStyle: 'rounded',
   palette: {
     primary: '#5b6ef5',
     secondary: '#323eaf',
