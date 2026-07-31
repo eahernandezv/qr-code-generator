@@ -6,8 +6,9 @@ import {
   generateMatrix as generateBrowserMatrix,
   normalizePayload as normalizeBrowserPayload,
   renderDeterministicSvg,
+  resolveModuleColor as resolveBrowserModuleColor,
 } from './browser.js';
-import { generateMatrix, normalizePayload, renderDeterministic } from './index.js';
+import { generateMatrix, normalizePayload, renderDeterministic, resolveModuleColor } from './index.js';
 
 const sourceRoot = dirname(fileURLToPath(import.meta.url));
 
@@ -22,6 +23,9 @@ describe('@qr/qr-core/browser boundary', () => {
       colorLight: '#f9e8ef',
       shape: 'rounded' as const,
       eyeShape: 'square' as const,
+      modulePalette: ['#9b2948', '#087044', '#175ea8'] as const,
+      palettePattern: 'diagonalGradient' as const,
+      functionalColor: '#111827',
     };
     const browserNormalized = normalizeBrowserPayload(input);
     const serverNormalized = normalizePayload(input);
@@ -29,6 +33,9 @@ describe('@qr/qr-core/browser boundary', () => {
     const browserMatrix = generateBrowserMatrix(browserNormalized);
     const serverMatrix = generateMatrix(serverNormalized);
     expect(browserMatrix).toEqual(serverMatrix);
+    expect(resolveBrowserModuleColor(browserMatrix, 0, 0, options)).toBe('#111827');
+    expect(resolveBrowserModuleColor(browserMatrix, 12, 12, options))
+      .toBe(resolveModuleColor(serverMatrix, 12, 12, options));
     expect(renderDeterministicSvg(browserMatrix, options)).toEqual(renderDeterministic(serverMatrix, options));
   });
 
