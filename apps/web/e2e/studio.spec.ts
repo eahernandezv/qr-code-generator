@@ -281,10 +281,10 @@ test('Core-backed preview controls and candidate request share the same fidelity
   const subtle = await preview.getAttribute('src')
   expect(subtle).not.toBe(geometric)
   await page.getByRole('button', { name: 'Bold frame' }).click()
+  await expect.poll(() => preview.getAttribute('src')).not.toBe(subtle)
   const offset = await preview.getAttribute('src')
-  expect(offset).not.toBe(subtle)
   await page.getByRole('slider').nth(1).fill('0.8')
-  expect(await preview.getAttribute('src')).not.toBe(offset)
+  await expect.poll(() => preview.getAttribute('src')).not.toBe(offset)
 
   const desktopEvidencePath = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b2d-core-backed-preview-fidelity/preview-controls-desktop.png')
   await page.screenshot({ path: desktopEvidencePath, fullPage: true })
