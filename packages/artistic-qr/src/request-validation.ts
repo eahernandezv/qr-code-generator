@@ -11,7 +11,10 @@ const ART_DIRECTIONS = new Set([
 ]);
 const FOCAL_AREAS = new Set(['center', 'top', 'bottom', 'left', 'right', 'balanced']);
 const MIME_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp']);
-const REQUEST_KEYS = new Set(['normalizedPayload', 'mode', 'artDirectionId', 'prompt', 'referenceImage', 'artisticStrength', 'palette', 'composition', 'seed']);
+const PALETTE_FAMILIES = new Set(['rainbow', 'pride', 'trans', 'bi', 'berry', 'forest']);
+const PALETTE_PATTERNS = new Set(['solid', 'horizontalGradient', 'verticalGradient', 'diagonalGradient', 'flagRows', 'spiral', 'radialRings']);
+const COLOR_INTENSITIES = new Set(['mellow', 'balanced', 'punchy']);
+const REQUEST_KEYS = new Set(['normalizedPayload', 'mode', 'artDirectionId', 'prompt', 'referenceImage', 'artisticStrength', 'palette', 'paletteFamily', 'palettePattern', 'colorIntensity', 'composition', 'seed']);
 const PAYLOAD_KEYS = new Set(['canonical', 'mode', 'byteLength', 'version', 'errorCorrectionLevel', 'maskPattern']);
 const PALETTE_KEYS = new Set(['primary', 'secondary', 'accent', 'background']);
 const COMPOSITION_KEYS = new Set(['focalArea', 'qrProminence']);
@@ -47,6 +50,9 @@ export function validateGenerationRequest(value: unknown): GenerationRequest {
   }
   optionalString(request, 'prompt', 0, 2000);
   optionalFiniteRange(request, 'artisticStrength', 0, 1);
+  optionalEnum(request, 'paletteFamily', PALETTE_FAMILIES);
+  optionalEnum(request, 'palettePattern', PALETTE_PATTERNS);
+  optionalEnum(request, 'colorIntensity', COLOR_INTENSITIES);
   if (request.seed !== undefined && (!Number.isSafeInteger(request.seed) || Math.abs(request.seed as number) > 2_147_483_647)) {
     throw malformed('Seed is invalid');
   }
@@ -141,6 +147,11 @@ function optionalString(record: Record<string, unknown>, key: string, minimum: n
 function optionalFiniteRange(record: Record<string, unknown>, key: string, minimum: number, maximum: number): void {
   const value = record[key];
   if (value !== undefined && (typeof value !== 'number' || !Number.isFinite(value) || value < minimum || value > maximum)) throw malformed(`${key} is invalid`);
+}
+
+function optionalEnum(record: Record<string, unknown>, key: string, values: Set<string>): void {
+  const value = record[key];
+  if (value !== undefined && (typeof value !== 'string' || !values.has(value))) throw malformed(`${key} is invalid`);
 }
 
 function requireRecord(value: unknown, label: string): Record<string, unknown> {

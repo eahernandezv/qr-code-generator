@@ -2,13 +2,13 @@
 import type { QrMatrix, RenderOptions, RenderedArtifact } from './types.js';
 import { PNG } from 'pngjs';
 import { renderSvg } from './svg-renderer.js';
+import { resolveModuleColor } from './patterned-palette.js';
 
 export { renderSvg } from './svg-renderer.js';
 
 export function renderPng(matrix: QrMatrix, options: RenderOptions): RenderedArtifact {
   const moduleSize = options.moduleSize ?? 4;
   const margin = options.margin ?? 4;
-  const colorDark = parseColor(options.colorDark ?? '#000000');
   const colorLight = parseColor(options.colorLight ?? '#ffffff');
   const shape = options.shape ?? 'square';
   const eyeShape = options.eyeShape ?? 'square';
@@ -36,7 +36,7 @@ export function renderPng(matrix: QrMatrix, options: RenderOptions): RenderedArt
         (row + margin) * moduleSize,
         moduleSize,
         isFinder(column, row) ? eyeShape : shape,
-        colorDark,
+        parseColor(resolveModuleColor(matrix, column, row, options)),
       );
     }
   }

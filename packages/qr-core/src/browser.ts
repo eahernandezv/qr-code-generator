@@ -11,4 +11,6 @@ export type {
   FunctionalRegions,
   FinderPattern,
   TimingPattern,
+  PalettePattern,
 } from './types.js';
+export { resolveModuleColor, isFunctionalModule } from './patterned-palette.js';

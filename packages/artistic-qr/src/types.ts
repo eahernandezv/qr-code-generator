@@ -41,6 +41,17 @@ export interface Palette {
   background?: string;
 }
 
+export type PaletteFamily = 'rainbow' | 'pride' | 'trans' | 'bi' | 'berry' | 'forest';
+export type PalettePattern =
+  | 'solid'
+  | 'horizontalGradient'
+  | 'verticalGradient'
+  | 'diagonalGradient'
+  | 'flagRows'
+  | 'spiral'
+  | 'radialRings';
+export type ColorIntensity = 'mellow' | 'balanced' | 'punchy';
+
 export interface Composition {
   focalArea?: 'center' | 'top' | 'bottom' | 'left' | 'right' | 'balanced';
   qrProminence?: number;
@@ -54,6 +65,9 @@ export interface GenerationRequest {
   referenceImage?: ReferenceImage;
   artisticStrength?: number;
   palette?: Palette;
+  paletteFamily?: PaletteFamily;
+  palettePattern?: PalettePattern;
+  colorIntensity?: ColorIntensity;
   composition?: Composition;
   seed?: number;
 }

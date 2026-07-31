@@ -6,6 +6,14 @@ export type ErrorCorrectionLevel = 'L' | 'M' | 'Q' | 'H';
 export type QrMode = 'url' | 'text' | 'email' | 'phone' | 'wifi';
 export type ModuleShape = 'square' | 'circle' | 'rounded';
 export type RenderFormat = 'svg' | 'png-dataurl' | 'canvas';
+export type PalettePattern =
+  | 'solid'
+  | 'horizontalGradient'
+  | 'verticalGradient'
+  | 'diagonalGradient'
+  | 'flagRows'
+  | 'spiral'
+  | 'radialRings';
 
 export interface QrPayload {
   mode: QrMode;
@@ -62,6 +70,10 @@ export interface RenderOptions {
   colorLight?: string;
   shape?: ModuleShape;
   eyeShape?: ModuleShape;
+  /** Ordered, scan-safe active-module colors. The first color is used for functional modules. */
+  modulePalette?: readonly string[];
+  palettePattern?: PalettePattern;
+  functionalColor?: string;
 }
 
 export interface RenderedArtifact {
