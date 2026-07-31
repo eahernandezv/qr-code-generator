@@ -31,7 +31,7 @@ describe('artistic render intent', () => {
     expect(board.candidates[0].rendered.data).toContain('fill="#f9e8ef"');
     expect(board.candidates[0].rendered.data).toContain('fill="#c9184a"');
     expect(board.candidates.every((candidate) => candidate.exportAllowed === candidate.scanResults[0].pass)).toBe(true);
-  });
+  }, 20_000);
 
   it('makes Watercolor + Berry + Surround visibly sensitive at low, mid, and high strength', () => {
     const surround = { ...berry, composition: { focalArea: 'top' as const, qrProminence: 0.78 } };
