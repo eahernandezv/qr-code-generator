@@ -13,6 +13,19 @@ export type ModuleStyle = 'square' | 'rounded' | 'dot' | 'diamond'
 
 export type CompositionType = 'centered' | 'offset' | 'integrated' | 'surround'
 
+export type PaletteFamily = 'rainbow' | 'pride' | 'trans' | 'bi' | 'berry' | 'forest'
+
+export type PalettePattern =
+  | 'solid'
+  | 'horizontalGradient'
+  | 'verticalGradient'
+  | 'diagonalGradient'
+  | 'flagRows'
+  | 'spiral'
+  | 'radialRings'
+
+export type ColorIntensity = 'mellow' | 'balanced' | 'punchy'
+
 export type ExportFormat = 'svg' | 'png' | 'pdf' | 'eps'
 
 export type CandidateStatus =
@@ -48,6 +61,9 @@ export interface ArtDirection {
   artisticStrength?: number
   composition?: CompositionType
   palette?: Palette
+  paletteFamily?: PaletteFamily
+  palettePattern?: PalettePattern
+  colorIntensity?: ColorIntensity
   protectedQrProminence?: number
 }
 

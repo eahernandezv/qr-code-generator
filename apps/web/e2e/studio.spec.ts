@@ -5,6 +5,7 @@ import path from 'node:path'
 const evidenceRoot = path.resolve(process.cwd(), '../../.work-loop/evidence/stage2-commerce/browser')
 const exportDir = path.join(evidenceRoot, 'exports')
 const screenshotDir = path.join(evidenceRoot, 'screenshots')
+const b5EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b5-patterned-palette-color-intensity-ui')
 
 const svgArtwork = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
@@ -196,6 +197,60 @@ async function sampledColorCount(page: Page, png: Buffer): Promise<number> {
 test.beforeAll(async () => {
   await fs.mkdir(exportDir, { recursive: true })
   await fs.mkdir(screenshotDir, { recursive: true })
+  await fs.mkdir(b5EvidenceDir, { recursive: true })
+})
+
+test('patterned palette, intensity, QR Frame copy, four candidates, and export gate stay wired', async ({ page }) => {
+  const errors = await assertNoConsoleErrors(page)
+  let candidateRequest: Record<string, unknown> | undefined
+  await page.route('**/api/artistic-qr/candidates', async (route) => {
+    candidateRequest = route.request().postDataJSON() as Record<string, unknown>
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(coreCandidateFixture()) })
+  })
+
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/')
+  await page.getByPlaceholder('Enter url…').fill('https://example.com')
+  await expect(page.getByText('QR Frame', { exact: true })).toBeVisible()
+  await expect(page.getByText('Composition', { exact: true })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Classic' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Soft frame' })).toBeVisible()
+  await page.locator('section').filter({ hasText: 'Art Direction' }).screenshot({
+    path: path.join(b5EvidenceDir, 'mobile-art-panel.png'),
+  })
+
+  const preview = page.getByRole('img', { name: 'QR Preview' })
+  await page.setViewportSize({ width: 1440, height: 1100 })
+  await page.getByRole('button', { name: 'Rainbow diagonal' }).click()
+  const rainbowBalanced = await preview.getAttribute('src')
+  await page.getByRole('button', { name: 'Mellow' }).click()
+  await expect.poll(async () => preview.getAttribute('src')).not.toBe(rainbowBalanced)
+  const rainbowMellow = await preview.getAttribute('src')
+  await page.getByRole('button', { name: 'Punchy' }).click()
+  await expect.poll(async () => preview.getAttribute('src')).not.toBe(rainbowMellow)
+  const rainbowPunchy = await preview.getAttribute('src')
+  expect(rainbowPunchy).not.toBe(rainbowBalanced)
+  await page.locator('main').screenshot({ path: path.join(b5EvidenceDir, 'desktop-rainbow-diagonal-punchy.png') })
+
+  await page.getByRole('button', { name: 'Trans safe diagonal' }).click()
+  await page.getByRole('button', { name: 'Balanced' }).click()
+  const transBalanced = await preview.getAttribute('src')
+  expect(transBalanced).not.toBe(rainbowPunchy)
+  await page.locator('main').screenshot({ path: path.join(b5EvidenceDir, 'desktop-trans-safe-diagonal-balanced.png') })
+
+  await page.getByRole('button', { name: 'Generate 4' }).click()
+  await expect(page.getByText('Validated', { exact: true })).toHaveCount(4)
+  expect(candidateRequest).toMatchObject({
+    paletteFamily: 'trans',
+    palettePattern: 'diagonalGradient',
+    colorIntensity: 'balanced',
+  })
+  await page.getByRole('button', { name: /Candidate 100000/ }).first().click()
+  await expect(page.getByRole('button', { name: 'Purchase to export selected PNG' })).toBeDisabled()
+  await page.locator('section').filter({ has: page.getByRole('heading', { name: 'Export' }) }).screenshot({
+    path: path.join(b5EvidenceDir, 'export-paid-gating-patterned-candidate.png'),
+  })
+  expect(errors).toEqual([])
 })
 
 test('Core-backed preview controls and candidate request share the same fidelity mapping', async ({ page }) => {
@@ -208,7 +263,7 @@ test('Core-backed preview controls and candidate request share the same fidelity
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/')
   await page.getByPlaceholder('Enter url…').fill('https://example.com')
-  await page.getByRole('button', { name: 'Berry' }).click()
+  await page.getByRole('button', { name: 'Berry', exact: true }).click()
 
   const preview = page.getByRole('img', { name: 'QR Preview' })
   const berry = await preview.getAttribute('src')
@@ -225,11 +280,11 @@ test('Core-backed preview controls and candidate request share the same fidelity
   await page.getByRole('slider').nth(0).fill('0.1')
   const subtle = await preview.getAttribute('src')
   expect(subtle).not.toBe(geometric)
-  await page.getByRole('button', { name: 'Offset' }).click()
+  await page.getByRole('button', { name: 'Bold frame' }).click()
+  await expect.poll(() => preview.getAttribute('src')).not.toBe(subtle)
   const offset = await preview.getAttribute('src')
-  expect(offset).not.toBe(subtle)
   await page.getByRole('slider').nth(1).fill('0.8')
-  expect(await preview.getAttribute('src')).not.toBe(offset)
+  await expect.poll(() => preview.getAttribute('src')).not.toBe(offset)
 
   const desktopEvidencePath = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b2d-core-backed-preview-fidelity/preview-controls-desktop.png')
   await page.screenshot({ path: desktopEvidencePath, fullPage: true })
