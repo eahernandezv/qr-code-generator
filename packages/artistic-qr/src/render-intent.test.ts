@@ -74,9 +74,12 @@ describe('artistic render intent', () => {
     const request = { ...berry, paletteFamily: 'trans' as const, palettePattern: 'diagonalGradient' as const, colorIntensity: 'punchy' as const };
     const firstIntent = resolveArtisticRenderIntent(request);
     expect(resolveArtisticRenderIntent(request)).toEqual(firstIntent);
+    expect(firstIntent.candidateOptions.map((option) => option.shape)).toEqual(['square', 'square', 'square', 'square']);
+    expect(firstIntent.candidateOptions.map((option) => option.moduleSize)).toEqual([10, 11, 10, 11]);
+    expect(firstIntent.candidateOptions.map((option) => option.margin)).toEqual([4, 4, 6, 6]);
     const board = await generateCandidates(request);
     expect(board.candidates).toHaveLength(4);
-    expect(board.candidates.some((candidate) => candidate.exportAllowed)).toBe(true);
+    expect(board.candidates.every((candidate) => candidate.exportAllowed)).toBe(true);
     expect(board.candidates.every((candidate) => candidate.exportAllowed === candidate.scanResults[0].pass)).toBe(true);
   }, 20_000);
 

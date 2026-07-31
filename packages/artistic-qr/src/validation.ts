@@ -251,6 +251,25 @@ export function resizeRasterTo(source: Raster, width: number, height: number): R
     throw new Error('Invalid export dimensions');
   }
   const data = new Uint8ClampedArray(width * height * 4);
+  fill(data, [255, 255, 255, 255]);
+  // Default Studio exports upscale the native QR. Use an integer scale and center it
+  // instead of stretching modules onto fractional pixel boundaries. This preserves
+  // crisp, equal-width modules and adds only quiet-zone canvas; validation still runs
+  // against the exact exported pixels.
+  const integerScale = Math.floor(Math.min(width / source.width, height / source.height));
+  if (integerScale >= 1) {
+    const renderedWidth = source.width * integerScale;
+    const renderedHeight = source.height * integerScale;
+    const offsetX = Math.floor((width - renderedWidth) / 2);
+    const offsetY = Math.floor((height - renderedHeight) / 2);
+    for (let y = 0; y < renderedHeight; y += 1) for (let x = 0; x < renderedWidth; x += 1) {
+      const sourceX = Math.floor(x / integerScale);
+      const sourceY = Math.floor(y / integerScale);
+      const sourceOffset = (sourceY * source.width + sourceX) * 4;
+      data.set(source.data.subarray(sourceOffset, sourceOffset + 4), ((offsetY + y) * width + offsetX + x) * 4);
+    }
+    return { width, height, data };
+  }
   for (let y = 0; y < height; y += 1) for (let x = 0; x < width; x += 1) {
     const sourceX = Math.min(source.width - 1, Math.floor(x * source.width / width));
     const sourceY = Math.min(source.height - 1, Math.floor(y * source.height / height));
