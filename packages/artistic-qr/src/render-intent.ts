@@ -113,10 +113,10 @@ export function resolveArtisticRenderIntent(request: GenerationRequest): Artisti
 
   const candidateOptions = Array.from({ length: 4 }, (_, index): RenderOptions => ({
     format: 'svg',
-    // Eleven-pixel square modules at the prominence-owned margin are stable across
-    // the real perturbation matrix. For risky patterned combinations, converge the
-    // four options on this deterministic safe fallback rather than emitting a known
-    // weak variant and misrepresenting it as merely artistic diversity.
+    // Ten/eleven-pixel square modules plus two scan-safe quiet-zone framings are
+    // stable across the real perturbation matrix. For risky patterned combinations,
+    // use these four deterministic render variants rather than emitting a known weak
+    // rounded-module candidate or collapsing the board to duplicate bytes.
     moduleSize: patternedScale ? 10 + (index % 2) : strengthScale + index,
     margin: patternedScale ? margin + (index >= 2 ? 2 : 0) : margin,
     colorDark: palette.primary,
