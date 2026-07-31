@@ -4,6 +4,7 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 
 const evidenceRoot = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-a4-production-runtime')
+const b7EvidenceRoot = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b7-production-runtime-refine-visibility')
 const exportPath = path.join(evidenceRoot, 'artistic-qr-production-runtime.svg')
 const metadataPath = path.join(evidenceRoot, 'browser-proof.json')
 
@@ -16,6 +17,7 @@ function sameOriginApi(pathname: string) {
 
 test.beforeAll(async () => {
   await fs.mkdir(evidenceRoot, { recursive: true })
+  await fs.mkdir(b7EvidenceRoot, { recursive: true })
 })
 
 test('normal Studio path uses real Core and commerce HTTP authorities', async ({ page, request }) => {
@@ -43,6 +45,7 @@ test('normal Studio path uses real Core and commerce HTTP authorities', async ({
   const previewSource = await firstPreview.getAttribute('src')
   expect(previewSource).toContain(encodeURIComponent(initialBody.board.candidates[0].rendered.data).slice(0, 120))
   await firstPreview.locator('..').click()
+  await expect(page.getByRole('button', { name: 'Refine from selected candidate' })).toHaveCount(0)
 
   const checkoutResponsePromise = page.waitForResponse(sameOriginApi('/api/commerce/checkouts'))
   await page.getByRole('button', { name: /Start guest checkout — \$12/ }).click()
@@ -59,7 +62,10 @@ test('normal Studio path uses real Core and commerce HTTP authorities', async ({
   await page.getByRole('button', { name: 'Check payment status' }).click()
   await expect(page.getByText('Paid access active')).toBeVisible()
 
-  await page.getByText('Refine from selected candidate').click()
+  const refinementControl = page.getByRole('button', { name: 'Refine from selected candidate' })
+  await expect(refinementControl).toBeVisible()
+  await expect(refinementControl).toHaveAttribute('aria-expanded', 'true')
+  await page.screenshot({ path: path.join(b7EvidenceRoot, 'paid-refinement-visible.png'), fullPage: true })
   await page.getByPlaceholder(/Describe changes/).fill('Use a darker indigo palette')
   const refinementCandidatesResponse = page.waitForResponse(sameOriginApi('/api/artistic-qr/candidates'))
   const refinementAllowanceResponse = page.waitForResponse(sameOriginApi('/api/commerce/generations'))
@@ -68,6 +74,7 @@ test('normal Studio path uses real Core and commerce HTTP authorities', async ({
   expect((await refinementAllowanceResponse).status()).toBe(200)
   await expect(page.getByText('Round 2')).toBeVisible()
   await expect(page.getByRole('img', { name: /^Candidate / })).toHaveCount(8)
+  await page.screenshot({ path: path.join(b7EvidenceRoot, 'round-2-after-refinement.png'), fullPage: true })
 
   const roundTwo = page.getByText('Round 2').locator('../..')
   await roundTwo.getByText('Validated', { exact: true }).first().click()

@@ -185,6 +185,15 @@ const CandidateBoard: React.FC = () => {
   const selectedCandidate = boards
     .flatMap((b) => b.candidates)
     .find((c) => c.candidateId === selectedCandidateId)
+  const hasCompletedBoard = boards.some((board) => board.status === 'complete')
+  const canRefineSelectedCandidate = refinementEnabled
+    && entitlement.type !== 'preview'
+    && Boolean(selectedCandidate)
+    && hasCompletedBoard
+
+  React.useEffect(() => {
+    if (canRefineSelectedCandidate) setShowRefine(true)
+  }, [canRefineSelectedCandidate])
 
   const activeBoard = boards.find((b) => b.status === 'generating')
   const generationActive = isGenerating || Boolean(activeBoard)
@@ -263,24 +272,31 @@ const CandidateBoard: React.FC = () => {
         </div>
       )}
 
-      {boards.some((board) => board.status === 'complete') && (
+      {hasCompletedBoard && (
         <p className="mt-3 text-[10px] text-slate-600">
           Core keeps candidate authority in process memory. If the Core service restarts, regenerate before export.
         </p>
       )}
 
       {/* Refinement prompt */}
-      {refinementEnabled && selectedCandidate && boards.some((b) => b.status === 'complete') && (
-        <div className="mt-4 rounded-xl border border-slate-800 bg-slate-950/50 p-3">
+      {canRefineSelectedCandidate && selectedCandidate && (
+        <div
+          aria-labelledby="selected-candidate-refinement-label"
+          className="mt-4 rounded-xl border border-studio-700/60 bg-slate-950/50 p-3"
+          role="region"
+        >
           <button
+            aria-controls="selected-candidate-refinement-form"
+            aria-expanded={showRefine}
             onClick={() => setShowRefine((v) => !v)}
-            className="flex w-full items-center justify-between text-xs font-medium text-slate-400"
+            className="flex w-full items-center justify-between text-xs font-semibold text-slate-200"
+            type="button"
           >
-            <span>Refine from selected candidate</span>
-            <span className={`transition-transform ${showRefine ? 'rotate-180' : ''}`}>▼</span>
+            <span id="selected-candidate-refinement-label">Refine from selected candidate</span>
+            <span aria-hidden="true" className={`transition-transform ${showRefine ? 'rotate-180' : ''}`}>▼</span>
           </button>
           {showRefine && (
-            <div className="mt-3 space-y-2">
+            <div className="mt-3 space-y-2" id="selected-candidate-refinement-form">
               <textarea
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}

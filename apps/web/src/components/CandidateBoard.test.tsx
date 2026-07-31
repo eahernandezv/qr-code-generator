@@ -29,6 +29,21 @@ function seedPayload() {
   setPayload({ raw: 'https://example.com', normalized: 'https://example.com', mode: 'url' })
 }
 
+function seedPaidEntitlement(maxRounds = 3, usedRounds = 0) {
+  useStudioStore.setState((state) => ({
+    project: {
+      ...state.project,
+      entitlement: {
+        ...state.project.entitlement,
+        type: 'project',
+        maxRounds,
+        usedRounds,
+        exportAllowed: true,
+      },
+    },
+  }))
+}
+
 function seedCompleteBoard() {
   const state = useStudioStore.getState()
   const candidate: Candidate = {
@@ -217,16 +232,19 @@ describe('CandidateBoard', () => {
     expect(screen.getByRole('button', { name: /Generate 4/i })).toBeInTheDocument()
   })
 
-  it('shows refinement UI only when enabled and candidate selected', () => {
+  it('shows expanded refinement UI only for a paid selected candidate', () => {
     seedPayload()
+    seedPaidEntitlement()
     enableFlags({ artistic_generative_enabled: true, artistic_refinement_enabled: true })
     seedCompleteBoard()
     render(<CandidateBoard />)
-    expect(screen.getByText(/Refine from selected candidate/i)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Refine from selected candidate/i })).toHaveAttribute('aria-expanded', 'true')
+    expect(screen.getByPlaceholderText(/Describe changes/i)).toBeVisible()
   })
 
   it('does not show refinement UI when feature disabled', () => {
     seedPayload()
+    seedPaidEntitlement()
     enableFlags({ artistic_generative_enabled: true, artistic_refinement_enabled: false })
     seedCompleteBoard()
     render(<CandidateBoard />)
@@ -235,28 +253,20 @@ describe('CandidateBoard', () => {
 
   it('does not show refinement UI when no candidate is selected', () => {
     seedPayload()
+    seedPaidEntitlement()
     enableFlags({ artistic_generative_enabled: true, artistic_refinement_enabled: true })
     seedCompleteBoard()
-    // deselect candidate
     useStudioStore.getState().selectCandidate('')
     render(<CandidateBoard />)
     expect(screen.queryByText(/Refine from selected candidate/i)).not.toBeInTheDocument()
   })
 
-  it('disables refinement when max rounds are exhausted', async () => {
+  it('disables refinement when max rounds are exhausted', () => {
     seedPayload()
+    seedPaidEntitlement(1, 1)
     enableFlags({ artistic_generative_enabled: true, artistic_refinement_enabled: true })
     seedCompleteBoard()
-    // exhaust rounds
-    act(() => {
-      useStudioStore.getState().incrementUsedRounds()
-    })
     render(<CandidateBoard />)
-
-    const refineToggle = screen.getByText(/Refine from selected candidate/i)
-    await act(async () => {
-      await userEvent.click(refineToggle)
-    })
 
     const applyBtn = screen.getByRole('button', { name: /Max rounds reached/i })
     expect(applyBtn).toBeDisabled()
@@ -264,14 +274,10 @@ describe('CandidateBoard', () => {
 
   it('updates art direction prompt on successful refinement', async () => {
     seedPayload()
+    seedPaidEntitlement()
     enableFlags({ artistic_generative_enabled: true, artistic_refinement_enabled: true })
     seedCompleteBoard()
     render(<CandidateBoard />)
-
-    // Toggle refine section open
-    await act(async () => {
-      await userEvent.click(screen.getByText(/Refine from selected candidate/i))
-    })
 
     const textarea = screen.getByPlaceholderText(/Describe changes/i)
     await act(async () => {

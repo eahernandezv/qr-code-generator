@@ -319,7 +319,7 @@ test('refinement starts a new round and exhausted state remains disabled', async
   await routeCandidateFixture(page)
   await seed(page)
   await page.goto('/')
-  await page.getByText('Refine from selected candidate').click()
+  await expect(page.getByRole('button', { name: 'Refine from selected candidate' })).toHaveAttribute('aria-expanded', 'true')
   await page.getByPlaceholder(/Describe changes/).fill('Use a darker indigo palette')
   await page.getByRole('button', { name: 'Apply & Generate New Round' }).click()
   await expect(page.getByText('Round 2')).toBeVisible()
@@ -351,7 +351,7 @@ test('Core generation outage is visible and retry remains possible', async ({ pa
 test('exhausted refinement remains disabled in the browser', async ({ page }) => {
   await seed(page, projectState({ exhausted: true }))
   await page.goto('/')
-  await page.getByText('Refine from selected candidate').click()
+  await expect(page.getByRole('button', { name: 'Refine from selected candidate' })).toHaveAttribute('aria-expanded', 'true')
   await expect(page.getByRole('button', { name: 'Max rounds reached' })).toBeDisabled()
 })
 

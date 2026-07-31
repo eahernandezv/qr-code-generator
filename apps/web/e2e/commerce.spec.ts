@@ -101,7 +101,7 @@ test('free preview → $12 checkout → paid refinement → service-authorized e
   await expect(page.getByText('Paid access active')).toBeVisible()
   await expect(page.getByText(/Successful rounds/).locator('..')).toContainText('0 / 3')
 
-  await page.getByText('Refine from selected candidate').click()
+  await expect(page.getByRole('button', { name: 'Refine from selected candidate' })).toHaveAttribute('aria-expanded', 'true')
   await page.getByPlaceholder(/Describe changes/).fill('Use a darker indigo wash')
   await page.getByRole('button', { name: 'Apply & Generate New Round' }).click()
   await expect(page.getByText('Round 2')).toBeVisible()
