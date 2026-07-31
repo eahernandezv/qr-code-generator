@@ -5,7 +5,7 @@ import path from 'node:path'
 const evidenceRoot = path.resolve(process.cwd(), '../../.work-loop/evidence/stage2-commerce/browser')
 const exportDir = path.join(evidenceRoot, 'exports')
 const screenshotDir = path.join(evidenceRoot, 'screenshots')
-const b9EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b9-art-direction-layout-semantics')
+const b10EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b10-one-screen-compact-live-editor')
 
 const svgArtwork = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
@@ -197,10 +197,10 @@ async function sampledColorCount(page: Page, png: Buffer): Promise<number> {
 test.beforeAll(async () => {
   await fs.mkdir(exportDir, { recursive: true })
   await fs.mkdir(screenshotDir, { recursive: true })
-  await fs.mkdir(b9EvidenceDir, { recursive: true })
+  await fs.mkdir(b10EvidenceDir, { recursive: true })
 })
 
-test('compact palette controls, hidden QR Frame, canonical request, and export gate stay wired', async ({ page }) => {
+test('one-screen live editor keeps compact Core-backed controls and preview primary', async ({ page }) => {
   const errors = await assertNoConsoleErrors(page)
   let candidateRequest: Record<string, unknown> | undefined
   await page.route('**/api/artistic-qr/candidates', async (route) => {
@@ -210,99 +210,71 @@ test('compact palette controls, hidden QR Frame, canonical request, and export g
 
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/')
-  await page.getByPlaceholder('Enter url…').fill('https://example.com')
-  await expect(page.getByPlaceholder('Enter url…')).toHaveAttribute('rows', '2')
+  const editor = page.locator('section[aria-labelledby="live-editor-title"]')
+  const preview = page.getByRole('img', { name: 'QR Preview' })
+  await expect(editor).toBeVisible()
+  await expect(preview).toBeVisible()
+  await expect(page.getByText(/Demo destination/)).toBeVisible()
+  await expect(page.getByRole('combobox')).toHaveCount(0)
+  await expect(page.getByRole('slider', { name: /Artistic Strength|QR Prominence/ })).toHaveCount(0)
   await expect(page.getByText('QR Frame', { exact: true })).toHaveCount(0)
-  await expect(page.getByRole('combobox', { name: 'Solid Palette Presets' })).toHaveValue('Studio Blue')
-  await expect(page.getByRole('combobox', { name: 'Patterned Palette Presets' })).toHaveValue('')
-  await page.screenshot({
-    path: path.join(b9EvidenceDir, 'mobile-two-row-compact-dropdowns.png'),
-    fullPage: true,
-  })
+  await expect(page.getByText('Templates', { exact: true })).toHaveCount(0)
+  const editorBox = await editor.boundingBox()
+  expect(editorBox).not.toBeNull()
+  expect((editorBox?.y ?? 0) + (editorBox?.height ?? 9999)).toBeLessThanOrEqual(844)
+  await page.screenshot({ path: path.join(b10EvidenceDir, '01-one-screen-live-editor.png') })
 
-  const preview = page.getByRole('img', { name: 'QR Preview' })
-  await page.setViewportSize({ width: 1440, height: 1100 })
-  await page.getByRole('combobox', { name: 'Patterned Palette Presets' }).selectOption({ label: 'Rainbow diagonal' })
-  await expect(page.getByRole('combobox', { name: 'Patterned Palette Presets' })).toHaveValue('Rainbow diagonal')
-  const rainbowBalanced = await preview.getAttribute('src')
+  await page.getByRole('button', { name: 'Berry Pink' }).click()
+  await expect(page.getByRole('button', { name: 'Berry Pink selected' })).toHaveAttribute('aria-pressed', 'true')
+  const berryPreview = await preview.getAttribute('src')
+  expect(berryPreview).toContain('%23c9184a')
+  await editor.screenshot({ path: path.join(b10EvidenceDir, '02-selected-color-swatch.png') })
+
+  const palette = page.getByRole('option', { name: 'Trans safe diagonal' })
+  await palette.scrollIntoViewIfNeeded()
+  await palette.click()
+  await expect(page.getByRole('option', { name: 'Trans safe diagonal selected' })).toHaveAttribute('aria-selected', 'true')
+  await expect.poll(() => preview.getAttribute('src')).not.toBe(berryPreview)
+  const patternedPreview = await preview.getAttribute('src')
+  await editor.screenshot({ path: path.join(b10EvidenceDir, '03-palette-carousel-selected.png') })
+
+  const boldStyle = page.getByRole('option', { name: 'Bold QR style' })
+  await boldStyle.scrollIntoViewIfNeeded()
+  await boldStyle.click()
+  await expect(page.getByRole('option', { name: 'Bold QR style selected' })).toHaveAttribute('aria-selected', 'true')
+  await expect.poll(() => preview.getAttribute('src')).not.toBe(patternedPreview)
+  const boldPreview = await preview.getAttribute('src')
+  await editor.screenshot({ path: path.join(b10EvidenceDir, '04-style-carousel-bold-selected.png') })
+
   await page.getByRole('button', { name: 'Mellow' }).click()
-  await expect.poll(async () => preview.getAttribute('src')).not.toBe(rainbowBalanced)
-  const rainbowMellow = await preview.getAttribute('src')
+  await expect.poll(() => preview.getAttribute('src')).not.toBe(boldPreview)
+  const mellowPreview = await preview.getAttribute('src')
+  await editor.screenshot({ path: path.join(b10EvidenceDir, '05-intensity-mellow.png') })
   await page.getByRole('button', { name: 'Punchy' }).click()
-  await expect.poll(async () => preview.getAttribute('src')).not.toBe(rainbowMellow)
-  const rainbowPunchy = await preview.getAttribute('src')
-  expect(rainbowPunchy).not.toBe(rainbowBalanced)
-  await page.locator('main').screenshot({ path: path.join(b9EvidenceDir, 'patterned-rainbow-diagonal-selected.png') })
+  await expect.poll(() => preview.getAttribute('src')).not.toBe(mellowPreview)
+  const punchyPreview = await preview.getAttribute('src')
+  expect(punchyPreview).not.toBe(mellowPreview)
+  await editor.screenshot({ path: path.join(b10EvidenceDir, '06-intensity-punchy.png') })
 
-  await page.getByRole('combobox', { name: 'Patterned Palette Presets' }).selectOption({ label: 'Trans safe diagonal' })
-  await page.getByRole('button', { name: 'Balanced' }).click()
-  const transBalanced = await preview.getAttribute('src')
-  expect(transBalanced).not.toBe(rainbowPunchy)
-  await page.locator('main').screenshot({ path: path.join(b9EvidenceDir, 'patterned-trans-safe-diagonal-selected.png') })
-
-  await page.getByRole('button', { name: 'Generate 4' }).click()
-  await expect(page.getByText('Validated', { exact: true })).toHaveCount(4)
-  expect(candidateRequest).toMatchObject({
-    paletteFamily: 'trans',
-    palettePattern: 'diagonalGradient',
-    colorIntensity: 'balanced',
-  })
-  await page.getByRole('button', { name: /Candidate 100000/ }).first().click()
-  await expect(page.getByRole('button', { name: 'Purchase to export selected PNG' })).toBeDisabled()
-  await page.locator('section').filter({ has: page.getByRole('heading', { name: 'Export' }) }).screenshot({
-    path: path.join(b9EvidenceDir, 'export-paid-gating-patterned-candidate.png'),
-  })
-  expect(errors).toEqual([])
-})
-
-test('Core-backed preview controls and candidate request share the same fidelity mapping', async ({ page }) => {
-  const errors = await assertNoConsoleErrors(page)
-  let candidateRequest: Record<string, unknown> | undefined
-  await page.route('**/api/artistic-qr/candidates', async (route) => {
-    candidateRequest = route.request().postDataJSON() as Record<string, unknown>
-    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(coreCandidateFixture()) })
-  })
-  await page.setViewportSize({ width: 390, height: 844 })
-  await page.goto('/')
-  await page.getByPlaceholder('Enter url…').fill('https://example.com')
-  await page.getByRole('combobox', { name: 'Solid Palette Presets' }).selectOption({ label: 'Berry' })
-  await expect(page.getByRole('combobox', { name: 'Solid Palette Presets' })).toHaveValue('Berry')
-
-  const preview = page.getByRole('img', { name: 'QR Preview' })
-  const berry = await preview.getAttribute('src')
-  expect(berry).toContain('%23c9184a')
-  expect(berry).toContain('%23f9e8ef')
-  const evidencePath = path.join(b9EvidenceDir, 'solid-berry-selected-mobile.png')
-  await fs.mkdir(path.dirname(evidencePath), { recursive: true })
-  await page.screenshot({ path: evidencePath, fullPage: true })
-
-  await page.setViewportSize({ width: 1280, height: 900 })
-  await page.getByRole('button', { name: 'Geometric' }).click()
-  await expect.poll(() => preview.getAttribute('src')).not.toBe(berry)
-  const geometric = await preview.getAttribute('src')
-  const strength = page.getByRole('slider', { name: 'Artistic Strength' })
-  await expect(strength).toHaveAttribute('step', '0.5')
-  await strength.fill('0')
-  await expect.poll(() => preview.getAttribute('src')).not.toBe(geometric)
-  const subtle = await preview.getAttribute('src')
-  await page.locator('main').screenshot({ path: path.join(b9EvidenceDir, 'strength-geometric-low.png') })
-  await strength.fill('1')
-  await expect.poll(() => preview.getAttribute('src')).not.toBe(subtle)
-  const bold = await preview.getAttribute('src')
-  await page.locator('main').screenshot({ path: path.join(b9EvidenceDir, 'strength-geometric-high.png') })
-  expect(bold).not.toBe(subtle)
-  await page.getByRole('slider', { name: 'QR Prominence' }).fill('0.8')
-  await expect.poll(() => preview.getAttribute('src')).not.toBe(bold)
-
-  const desktopEvidencePath = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b2d-core-backed-preview-fidelity/preview-controls-desktop.png')
-  await page.screenshot({ path: desktopEvidencePath, fullPage: true })
+  await page.getByRole('button', { name: 'Use this design' }).click()
+  const destination = page.getByRole('textbox', { name: 'Final destination URL' })
+  await expect(destination).toBeFocused()
+  await destination.fill('https://example.com/final-destination')
+  await expect.poll(() => preview.getAttribute('src')).not.toBe(punchyPreview)
   await page.getByRole('button', { name: 'Generate 4' }).click()
   await expect(page.getByText('Validated', { exact: true })).toHaveCount(4)
   expect(candidateRequest).toMatchObject({
     artDirectionId: 'architectural-geometric',
     artisticStrength: 1,
-    palette: { primary: '#c9184a', background: '#f9e8ef' },
-    composition: { focalArea: 'center', qrProminence: 0.8 },
+    paletteFamily: 'trans',
+    palettePattern: 'diagonalGradient',
+    colorIntensity: 'punchy',
+    composition: { focalArea: 'center' },
+  })
+  await page.getByRole('button', { name: /Candidate 100000/ }).first().click()
+  await expect(page.getByRole('button', { name: 'Purchase to export selected PNG' })).toBeDisabled()
+  await page.getByRole('heading', { name: 'Export', exact: true }).locator('xpath=../..').screenshot({
+    path: path.join(b10EvidenceDir, '07-export-payment-gate.png'),
   })
   expect(errors).toEqual([])
 })
@@ -311,7 +283,7 @@ test('cancellation stops pending work and recovers Generate UI', async ({ page }
   const errors = await assertNoConsoleErrors(page)
   await routeCandidateFixture(page, 15_000)
   await page.goto('/')
-  await page.getByPlaceholder('Enter url…').fill('https://example.com')
+  await page.getByPlaceholder('Enter destination URL…').fill('https://example.com')
   await page.getByRole('button', { name: 'Generate 4' }).click()
   await expect(page.getByRole('button', { name: 'Cancel' })).toBeVisible()
   await page.getByRole('button', { name: 'Cancel' }).click()
@@ -343,7 +315,7 @@ test('refinement starts a new round and exhausted state remains disabled', async
 test('Core generation outage is visible and retry remains possible', async ({ page }) => {
   await page.route('**/api/artistic-qr/candidates', (route) => route.abort('connectionrefused'))
   await page.goto('/')
-  await page.getByPlaceholder('Enter url…').fill('https://example.com')
+  await page.getByPlaceholder('Enter destination URL…').fill('https://example.com')
   await page.getByRole('button', { name: 'Generate 4' }).click()
   await expect(page.getByRole('alert')).toContainText('Core generation service is unavailable')
   await expect(page.getByRole('button', { name: 'Generate 4' })).toBeEnabled()

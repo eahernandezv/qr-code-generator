@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import App from './App'
 import { useStudioStore } from './store'
@@ -25,42 +25,62 @@ describe('App integration', () => {
     resetStore()
   })
 
-  it('renders main studio sections', () => {
+  it('renders the live editor first and keeps validation/export secondary', async () => {
     render(<App />)
     expect(screen.getByRole('heading', { name: /Artistic QR Studio/i })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: /Payload/i })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: /Art Direction/i })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /Design your QR/i })).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: 'QR Preview' })).toBeInTheDocument()
+    expect(screen.getByText(/Demo destination/i)).toBeInTheDocument()
+    expect(useStudioStore.getState().project.payload.raw).toBe('')
+    expect(screen.getByRole('button', { name: /Generate 4|Generation offline/ })).toBeDisabled()
+    expect(screen.getByRole('heading', { name: /Destination/i })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: /Candidates/i })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: /Export/i })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: /Recover Project/i })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Export' })).toBeInTheDocument()
   })
 
-  it('uses compact palette dropdowns, preserves request fields, and hides QR Frame', async () => {
+  it('uses visual color and palette controls with obvious accessible selection', async () => {
     const user = userEvent.setup()
     render(<App />)
 
+    expect(screen.queryByRole('combobox')).not.toBeInTheDocument()
     expect(screen.queryByText('QR Frame')).not.toBeInTheDocument()
-    expect(screen.getByRole('combobox', { name: 'Solid Palette Presets' })).toHaveValue('Studio Blue')
-    expect(screen.getByRole('combobox', { name: 'Patterned Palette Presets' })).toHaveValue('')
+    expect(screen.queryByText('Template')).not.toBeInTheDocument()
+    expect(screen.queryByRole('slider', { name: 'Artistic Strength' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Studio Blue selected' })).toHaveAttribute('aria-pressed', 'true')
 
-    await user.selectOptions(screen.getByRole('combobox', { name: 'Patterned Palette Presets' }), 'Rainbow diagonal')
+    await user.click(screen.getByRole('option', { name: 'Rainbow diagonal' }))
     await user.click(screen.getByRole('button', { name: 'Punchy' }))
     expect(useStudioStore.getState().project.artDirection).toMatchObject({
       paletteFamily: 'rainbow',
       palettePattern: 'diagonalGradient',
       colorIntensity: 'punchy',
     })
-    expect(screen.getByRole('combobox', { name: 'Patterned Palette Presets' })).toHaveValue('Rainbow diagonal')
+    expect(screen.getByRole('option', { name: 'Rainbow diagonal selected' })).toHaveAttribute('aria-selected', 'true')
 
-    await user.selectOptions(screen.getByRole('combobox', { name: 'Solid Palette Presets' }), 'Berry')
+    await user.click(screen.getByRole('button', { name: 'Berry Pink' }))
     expect(useStudioStore.getState().project.artDirection).toMatchObject({ palettePattern: 'solid' })
     expect(useStudioStore.getState().project.artDirection.paletteFamily).toBeUndefined()
-    expect(screen.getByRole('combobox', { name: 'Solid Palette Presets' })).toHaveValue('Berry')
+    expect(screen.getByRole('button', { name: 'Berry Pink selected' })).toHaveAttribute('aria-pressed', 'true')
   })
 
-  it('truthfully constrains Artistic Strength to three meaningful render stages', () => {
+  it('maps compact Style choices into the canonical Core-backed art direction', async () => {
+    const user = userEvent.setup()
     render(<App />)
-    expect(screen.getByRole('slider', { name: 'Artistic Strength' })).toHaveAttribute('step', '0.5')
-    expect(screen.getByText(/Three scan-safe stages change module treatment and framing/i)).toBeInTheDocument()
+
+    expect(screen.getByRole('option', { name: 'Rounded QR style selected' })).toHaveAttribute('aria-selected', 'true')
+    await user.click(screen.getByRole('option', { name: 'Bold QR style' }))
+    expect(useStudioStore.getState().project.artDirection).toMatchObject({
+      templateId: 'geometric',
+      artisticStrength: 1,
+      composition: 'centered',
+    })
+    expect(screen.getByRole('option', { name: 'Bold QR style selected' })).toHaveAttribute('aria-selected', 'true')
+  })
+
+  it('moves from demo design to the real destination stage', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    await user.click(screen.getByRole('button', { name: 'Use this design' }))
+    await waitFor(() => expect(screen.getByRole('textbox', { name: 'Final destination URL' })).toHaveFocus())
   })
 })

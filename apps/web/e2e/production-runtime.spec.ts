@@ -29,7 +29,7 @@ test('normal Studio path uses real Core and commerce HTTP authorities', async ({
   await page.goto('/')
   await page.evaluate(() => localStorage.clear())
   await page.reload()
-  await page.getByPlaceholder('Enter url…').fill('https://example.com/production-runtime-proof')
+  await page.getByPlaceholder('Enter destination URL…').fill('https://example.com/production-runtime-proof')
 
   const initialCandidatesResponse = page.waitForResponse(sameOriginApi('/api/artistic-qr/candidates'))
   await page.getByRole('button', { name: 'Generate 4' }).click()
