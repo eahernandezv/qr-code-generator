@@ -38,6 +38,7 @@ export interface Palette {
   primary?: string
   secondary?: string
   accent?: string
+  background?: string
 }
 
 export interface ArtDirection {

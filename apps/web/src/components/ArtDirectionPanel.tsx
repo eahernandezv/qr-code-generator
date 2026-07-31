@@ -12,11 +12,11 @@ const COMPOSITIONS: { value: CompositionType; label: string }[] = [
 ]
 
 const PRESETS = [
-  { name: 'Studio Blue', primary: '#5b6ef5', secondary: '#323eaf', accent: '#a5bdff' },
-  { name: 'Warm Sunset', primary: '#ff7a5c', secondary: '#c44d3a', accent: '#ffd6a5' },
-  { name: 'Forest', primary: '#2d6a4f', secondary: '#1b4332', accent: '#95d5b2' },
-  { name: 'Monochrome', primary: '#2a336e', secondary: '#181b3a', accent: '#e0eaff' },
-  { name: 'Berry', primary: '#c9184a', secondary: '#800f2f', accent: '#ff8fa3' },
+  { name: 'Studio Blue', primary: '#5b6ef5', secondary: '#323eaf', accent: '#a5bdff', background: '#f0f4ff' },
+  { name: 'Warm Sunset', primary: '#ff7a5c', secondary: '#c44d3a', accent: '#ffd6a5', background: '#fff3e8' },
+  { name: 'Forest', primary: '#2d6a4f', secondary: '#1b4332', accent: '#95d5b2', background: '#edf7f0' },
+  { name: 'Monochrome', primary: '#2a336e', secondary: '#181b3a', accent: '#e0eaff', background: '#f4f5fa' },
+  { name: 'Berry', primary: '#c9184a', secondary: '#800f2f', accent: '#ff8fa3', background: '#f9e8ef' },
 ]
 
 const ArtDirectionPanel: React.FC = () => {
@@ -68,6 +68,7 @@ const ArtDirectionPanel: React.FC = () => {
                     primary: preset.primary,
                     secondary: preset.secondary,
                     accent: preset.accent,
+                    background: preset.background,
                   },
                 })
               }

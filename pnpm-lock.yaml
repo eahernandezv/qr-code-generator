@@ -17,6 +17,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@qr/artistic-qr':
+        specifier: workspace:*
+        version: link:../../packages/artistic-qr
       '@qr/qr-core':
         specifier: workspace:*
         version: link:../../packages/qr-core

@@ -1,0 +1,49 @@
+import { describe, expect, it } from 'vitest'
+import { buildStudioGenerationRequest, renderStudioPreview } from './studioGenerationRequest'
+import type { ArtDirection, Payload } from '../types'
+
+const payload: Payload = { raw: 'https://example.com', normalized: 'https://example.com/', mode: 'url' }
+const baseArt: ArtDirection = {
+  templateId: 'watercolor',
+  artisticStrength: 0.5,
+  composition: 'centered',
+  protectedQrProminence: 0.7,
+  palette: { primary: '#c9184a', secondary: '#800f2f', accent: '#ff8fa3', background: '#f9e8ef' },
+}
+
+function request(patch: Partial<ArtDirection> = {}) {
+  return buildStudioGenerationRequest({ payload, artDirection: { ...baseArt, ...patch } })
+}
+
+function rendered(patch: Partial<ArtDirection> = {}) {
+  return renderStudioPreview(request(patch)).data
+}
+
+describe('Studio canonical generation request and predictive preview', () => {
+  it('maps Berry and Studio controls into the shared Core request', () => {
+    const value = request()
+    expect(value.artDirectionId).toBe('organic-botanical')
+    expect(value.artisticStrength).toBe(0.5)
+    expect(value.palette).toMatchObject({ primary: '#c9184a', background: '#f9e8ef' })
+    expect(value.composition).toEqual({ focalArea: 'center', qrProminence: 0.7 })
+    expect(value.normalizedPayload.canonical).toBe('https://example.com/')
+  })
+
+  it('maps every template and composition contract value', () => {
+    expect(request({ templateId: 'geometric' }).artDirectionId).toBe('architectural-geometric')
+    expect(request({ templateId: 'minimalist' }).artDirectionId).toBe('premium-minimal')
+    expect(request({ composition: 'offset' }).composition?.focalArea).toBe('right')
+    expect(request({ composition: 'integrated' }).composition?.focalArea).toBe('balanced')
+    expect(request({ composition: 'surround' }).composition?.focalArea).toBe('top')
+  })
+
+  it('renders Berry colors and changes output for every visible fidelity control', () => {
+    const berry = rendered()
+    expect(berry).toContain('fill="#c9184a"')
+    expect(berry).toContain('fill="#f9e8ef"')
+    expect(rendered({ templateId: 'geometric' })).not.toBe(berry)
+    expect(rendered({ artisticStrength: 0.1 })).not.toBe(berry)
+    expect(rendered({ composition: 'offset' })).not.toBe(berry)
+    expect(rendered({ protectedQrProminence: 0.8 })).not.toBe(berry)
+  })
+})
