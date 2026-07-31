@@ -4,7 +4,7 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 
 const evidenceRoot = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-a4-production-runtime')
-const exportPath = path.join(evidenceRoot, 'artistic-qr-production-runtime.png')
+const exportPath = path.join(evidenceRoot, 'artistic-qr-production-runtime.svg')
 const metadataPath = path.join(evidenceRoot, 'browser-proof.json')
 
 function sameOriginApi(pathname: string) {
@@ -35,7 +35,7 @@ test('normal Studio path uses real Core and commerce HTTP authorities', async ({
   expect(initialCandidates.status()).toBe(200)
   const initialBody = await initialCandidates.json() as { board: { candidates: Array<{ candidateId: string; rendered: { data: string } }> } }
   expect(initialBody.board.candidates).toHaveLength(4)
-  await expect(page.getByText('Validated', { exact: true })).toHaveCount(4)
+  await expect(page.getByRole('img', { name: /^Candidate / })).toHaveCount(4)
 
   const firstCandidateId = initialBody.board.candidates[0].candidateId
   const firstPreview = page.getByRole('img', { name: `Candidate ${firstCandidateId.slice(0, 6)}` })
@@ -67,10 +67,10 @@ test('normal Studio path uses real Core and commerce HTTP authorities', async ({
   expect((await refinementCandidatesResponse).status()).toBe(200)
   expect((await refinementAllowanceResponse).status()).toBe(200)
   await expect(page.getByText('Round 2')).toBeVisible()
-  await expect(page.getByText('Validated', { exact: true })).toHaveCount(8)
+  await expect(page.getByRole('img', { name: /^Candidate / })).toHaveCount(8)
 
-  const roundTwoCards = page.getByText('Round 2').locator('..').locator('..').getByRole('button')
-  await roundTwoCards.first().click()
+  const roundTwo = page.getByText('Round 2').locator('../..')
+  await roundTwo.getByText('Validated', { exact: true }).first().click()
   const selectedCandidateId = await page.evaluate(() => {
     const stored = JSON.parse(localStorage.getItem('qr-studio-project') ?? '{}')
     return stored.state.project.selectedCandidateId as string
@@ -79,15 +79,17 @@ test('normal Studio path uses real Core and commerce HTTP authorities', async ({
   const commerceExportResponse = page.waitForResponse(sameOriginApi('/api/commerce/exports'))
   const coreExportResponse = page.waitForResponse(sameOriginApi('/api/artistic-qr/exports'))
   const downloadPromise = page.waitForEvent('download')
-  await page.getByRole('button', { name: 'Export PNG' }).click()
+  await page.getByRole('button', { name: /^SVG/ }).click()
+  await page.getByRole('button', { name: 'Export SVG' }).click()
   expect((await commerceExportResponse).status()).toBe(200)
   expect((await coreExportResponse).status()).toBe(200)
   const download = await downloadPromise
   await download.saveAs(exportPath)
   const bytes = await fs.readFile(exportPath)
-  expect(bytes.subarray(1, 4).toString()).toBe('PNG')
-  expect(bytes.readUInt32BE(16)).toBe(512)
-  expect(bytes.readUInt32BE(20)).toBe(512)
+  const svg = bytes.toString('utf8')
+  expect(svg).toContain('<svg')
+  expect(svg).toMatch(/width=["']512["']/)
+  expect(svg).toMatch(/height=["']512["']/)
   const sha256 = createHash('sha256').update(bytes).digest('hex')
   expect(pageErrors).toEqual([])
   expect(consoleErrors).toEqual([])
@@ -96,13 +98,13 @@ test('normal Studio path uses real Core and commerce HTTP authorities', async ({
   expect(restartResponse.status()).toBe(204)
   await expect.poll(async () => {
     const response = await request.post('http://127.0.0.1:4175/api/artistic-qr/exports', {
-      data: { candidateId: selectedCandidateId, formats: ['png'], sizes: [{ label: 'probe', widthPx: 512, heightPx: 512 }] },
+      data: { candidateId: selectedCandidateId, formats: ['svg'], sizes: [{ label: 'probe', widthPx: 512, heightPx: 512 }] },
     }).catch(() => undefined)
     return response?.status()
   }).toBe(404)
 
   const restartFailureResponse = page.waitForResponse(sameOriginApi('/api/artistic-qr/exports'))
-  await page.getByRole('button', { name: 'Export PNG' }).click()
+  await page.getByRole('button', { name: 'Export SVG' }).click()
   expect((await restartFailureResponse).status()).toBe(404)
   await expect(page.getByRole('alert')).toContainText('Authoritative candidate was not found')
   await expect(page.getByText('Core keeps candidate authority in process memory. If the Core service restarts, regenerate before export.')).toBeVisible()
@@ -116,7 +118,7 @@ test('normal Studio path uses real Core and commerce HTTP authorities', async ({
     candidateRequests: 2,
     commerceCheckoutStatus: checkoutResponse.status(),
     paidRefinement: true,
-    export: { path: exportPath, bytes: bytes.length, width: 512, height: 512, sha256 },
+    export: { path: exportPath, format: 'svg', bytes: bytes.length, width: 512, height: 512, sha256 },
     restartFailureStatus: 404,
     browserAuthorityBridgesUsed: false,
     playwrightCoreRoutesUsed: false,

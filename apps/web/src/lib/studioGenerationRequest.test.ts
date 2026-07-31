@@ -37,6 +37,18 @@ describe('Studio canonical generation request and predictive preview', () => {
     expect(request({ composition: 'surround' }).composition?.focalArea).toBe('top')
   })
 
+  it('maps patterned palette and color intensity into the canonical Core request', () => {
+    expect(request({
+      paletteFamily: 'rainbow',
+      palettePattern: 'diagonalGradient',
+      colorIntensity: 'punchy',
+    })).toMatchObject({
+      paletteFamily: 'rainbow',
+      palettePattern: 'diagonalGradient',
+      colorIntensity: 'punchy',
+    })
+  })
+
   it('renders Berry colors and changes output for every visible fidelity control', () => {
     const berry = rendered()
     expect(berry).toContain('fill="#c9184a"')
@@ -45,5 +57,24 @@ describe('Studio canonical generation request and predictive preview', () => {
     expect(rendered({ artisticStrength: 0.1 })).not.toBe(berry)
     expect(rendered({ composition: 'offset' })).not.toBe(berry)
     expect(rendered({ protectedQrProminence: 0.8 })).not.toBe(berry)
+  })
+
+  it('renders visible patterned palettes and distinct intensity levels', () => {
+    const balanced = rendered({
+      paletteFamily: 'trans',
+      palettePattern: 'diagonalGradient',
+      colorIntensity: 'balanced',
+    })
+    expect(balanced).toContain('#176b89')
+    expect(rendered({
+      paletteFamily: 'trans',
+      palettePattern: 'diagonalGradient',
+      colorIntensity: 'mellow',
+    })).not.toBe(balanced)
+    expect(rendered({
+      paletteFamily: 'trans',
+      palettePattern: 'diagonalGradient',
+      colorIntensity: 'punchy',
+    })).not.toBe(balanced)
   })
 })

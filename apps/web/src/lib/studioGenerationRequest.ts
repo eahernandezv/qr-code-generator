@@ -41,6 +41,9 @@ export function buildStudioGenerationRequest(input: {
       ? { artisticStrength: artDirection.artisticStrength }
       : {}),
     palette: { ...artDirection.palette },
+    ...(artDirection.paletteFamily ? { paletteFamily: artDirection.paletteFamily } : {}),
+    ...(artDirection.palettePattern ? { palettePattern: artDirection.palettePattern } : {}),
+    ...(artDirection.colorIntensity ? { colorIntensity: artDirection.colorIntensity } : {}),
     composition: {
       focalArea: FOCAL_AREAS[artDirection.composition ?? 'centered'],
       qrProminence: artDirection.protectedQrProminence,

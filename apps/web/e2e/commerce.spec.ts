@@ -107,23 +107,25 @@ test('free preview → $12 checkout → paid refinement → service-authorized e
   await expect(page.getByText('Round 2')).toBeVisible()
   await expect(page.getByText('complete', { exact: true }).last()).toBeVisible({ timeout: 12_000 })
   await expect(page.getByText(/Successful rounds/).locator('..')).toContainText('1 / 3')
-  await page.getByText('Validated', { exact: true }).last().click()
+  const roundTwo = page.getByText('Round 2').locator('../..')
+  await roundTwo.getByText('Validated', { exact: true }).first().click()
   const exportedCoreCandidateId = await page.evaluate(() => {
     const stored = JSON.parse(localStorage.getItem('qr-studio-project') || '{}')
     return stored.state.project.selectedCandidateId as string
   })
 
+  await page.getByRole('button', { name: /^SVG/ }).click()
   const [download] = await Promise.all([
     page.waitForEvent('download'),
-    page.getByRole('button', { name: 'Export PNG' }).click(),
+    page.getByRole('button', { name: 'Export SVG' }).click(),
   ])
-  expect(download.suggestedFilename()).toMatch(/\.png$/)
+  expect(download.suggestedFilename()).toMatch(/\.svg$/)
   expect(exportedCoreCandidateId).toMatch(/^[0-9a-f-]{36}$/)
   await expect(page.getByRole('status').filter({ hasText: 'Downloaded:' })).toBeVisible()
   await expect(page.getByText(/Purchase does not imply scan validation/)).toBeVisible()
   const evidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-a3-controlled-demo')
   await fs.mkdir(evidenceDir, { recursive: true })
-  await download.saveAs(path.join(evidenceDir, 'core-generated-export.png'))
+  await download.saveAs(path.join(evidenceDir, 'core-generated-export.svg'))
   await page.screenshot({ path: path.join(evidenceDir, 'generation-checkout-export.png'), fullPage: true })
   expect(errors).toEqual([])
 })

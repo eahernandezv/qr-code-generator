@@ -22,6 +22,8 @@ const defaultArtDirection = (): ArtDirection => ({
   artisticStrength: 0.5,
   composition: 'centered',
   protectedQrProminence: 0.7,
+  palettePattern: 'solid',
+  colorIntensity: 'balanced',
   palette: {
     primary: '#5b6ef5',
     secondary: '#323eaf',
