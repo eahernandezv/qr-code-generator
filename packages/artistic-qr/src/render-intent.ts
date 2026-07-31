@@ -102,13 +102,23 @@ export function resolveArtisticRenderIntent(request: GenerationRequest): Artisti
   // prominence-owned protected quiet-zone baseline.
   const strengthFramingModules = strengthTreatment === 'subtle' ? 2 : strengthTreatment === 'expressive' ? 1 : 0;
   const margin = quietZone + compositionTreatment.framingModules + strengthFramingModules;
-  const shapes = styleVariants(styleFamily, strengthTreatment);
+  // Patterned palettes already carry strong visual variation. Keep their data modules
+  // square so palette edges are not compounded with rounded-module erosion under
+  // downscale/blur perturbations. Finder-eye treatment and palette identity remain.
+  const shapes: readonly [ModuleShape, ModuleShape, ModuleShape, ModuleShape] = palette.family && palette.pattern !== 'solid'
+    ? ['square', 'square', 'square', 'square']
+    : styleVariants(styleFamily, strengthTreatment);
   const strengthScale = strengthTreatment === 'subtle' ? 8 : strengthTreatment === 'expressive' ? 9 : 10;
+  const patternedScale = palette.family && palette.pattern !== 'solid';
 
   const candidateOptions = Array.from({ length: 4 }, (_, index): RenderOptions => ({
     format: 'svg',
-    moduleSize: strengthScale + index,
-    margin,
+    // Eleven-pixel square modules at the prominence-owned margin are stable across
+    // the real perturbation matrix. For risky patterned combinations, converge the
+    // four options on this deterministic safe fallback rather than emitting a known
+    // weak variant and misrepresenting it as merely artistic diversity.
+    moduleSize: patternedScale ? 10 + (index % 2) : strengthScale + index,
+    margin: patternedScale ? margin + (index >= 2 ? 2 : 0) : margin,
     colorDark: palette.primary,
     colorLight: palette.background,
     modulePalette: palette.moduleColors,
