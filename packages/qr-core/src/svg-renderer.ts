@@ -1,10 +1,10 @@
 import type { QrMatrix, RenderOptions, RenderedArtifact } from './types.js';
+import { resolveModuleColor } from './patterned-palette.js';
 
 /** Node-free deterministic SVG renderer shared by server and browser exports. */
 export function renderSvg(matrix: QrMatrix, options: RenderOptions): RenderedArtifact {
   const moduleSize = options.moduleSize ?? 4;
   const margin = options.margin ?? 4;
-  const colorDark = options.colorDark ?? '#000000';
   const colorLight = options.colorLight ?? '#ffffff';
   const shape = options.shape ?? 'square';
   const eyeShape = options.eyeShape ?? 'square';
@@ -32,14 +32,15 @@ export function renderSvg(matrix: QrMatrix, options: RenderOptions): RenderedArt
         const s = moduleSize;
         const useEye = isFinder(x, y);
         const moduleShape = useEye ? eyeShape : shape;
+        const moduleColor = resolveModuleColor(matrix, x, y, options);
 
         if (moduleShape === 'circle') {
-          svg += `<circle cx="${cx}" cy="${cy}" r="${s / 2}" fill="${colorDark}"/>`;
+          svg += `<circle cx="${cx}" cy="${cy}" r="${s / 2}" fill="${moduleColor}"/>`;
         } else if (moduleShape === 'rounded') {
           const r = s / 4;
-          svg += `<rect x="${m + x * moduleSize}" y="${m + y * moduleSize}" width="${s}" height="${s}" rx="${r}" ry="${r}" fill="${colorDark}"/>`;
+          svg += `<rect x="${m + x * moduleSize}" y="${m + y * moduleSize}" width="${s}" height="${s}" rx="${r}" ry="${r}" fill="${moduleColor}"/>`;
         } else {
-          svg += `<rect x="${m + x * moduleSize}" y="${m + y * moduleSize}" width="${s}" height="${s}" fill="${colorDark}"/>`;
+          svg += `<rect x="${m + x * moduleSize}" y="${m + y * moduleSize}" width="${s}" height="${s}" fill="${moduleColor}"/>`;
         }
       }
     }

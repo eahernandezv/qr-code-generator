@@ -10,7 +10,7 @@ export {
   repairCandidate,
 } from './api/index.js';
 export { InMemoryCandidateAuthorityStore, setCandidateAuthorityStore } from './candidate-context.js';
-export { resolveArtisticRenderIntent } from './render-intent.js';
+export { PATTERNED_PALETTE_PRESETS, resolveArtisticRenderIntent } from './render-intent.js';
 
 export type {
   ArtDirection,
@@ -21,6 +21,9 @@ export type {
   ExportRequest,
   ExportArtifact,
   RepairStrategy,
+  PaletteFamily,
+  PalettePattern,
+  ColorIntensity,
 } from './types.js';
 export type { CandidateAuthorityRecord, CandidateAuthorityStore } from './candidate-context.js';
 export type {
@@ -30,5 +33,6 @@ export type {
   ArtisticStrengthTreatment,
   ArtisticStyleFamily,
   QrProminenceTreatment,
+  PatternedPaletteIntent,
 } from './render-intent.js';
 export type { SafetyEvaluator, SafetyVerdict } from './request-validation.js';

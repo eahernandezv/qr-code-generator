@@ -1,5 +1,5 @@
 import type { RenderOptions } from '@qr/qr-core';
-import type { GenerationRequest, Palette } from './types.js';
+import type { ColorIntensity, GenerationRequest, Palette, PaletteFamily, PalettePattern } from './types.js';
 
 type ModuleShape = NonNullable<RenderOptions['shape']>;
 
@@ -12,6 +12,16 @@ export interface ArtisticCompositionTreatment {
   id: ArtisticCompositionTreatmentId;
   eyeShape: ModuleShape;
   framingModules: number;
+}
+
+export interface PatternedPaletteIntent {
+  primary: string;
+  background: string;
+  family?: PaletteFamily;
+  pattern: PalettePattern;
+  intensity: ColorIntensity;
+  moduleColors: readonly string[];
+  functionalColor: string;
 }
 
 export interface ArtisticRenderIntent {
@@ -30,13 +40,47 @@ export interface ArtisticRenderIntent {
   qrProminence: number;
   /** Prominence independently controls the protected quiet-zone baseline. */
   prominenceTreatment: QrProminenceTreatment;
-  palette: { primary: string; background: string };
+  palette: PatternedPaletteIntent;
   candidateOptions: readonly [RenderOptions, RenderOptions, RenderOptions, RenderOptions];
   previewOptions: RenderOptions;
 }
 
 const DEFAULT_PRIMARY = '#1a1a2e';
 const DEFAULT_BACKGROUND = '#ffffff';
+
+export const PATTERNED_PALETTE_PRESETS = [
+  ['rainbow', 'horizontalGradient'], ['rainbow', 'verticalGradient'], ['rainbow', 'diagonalGradient'],
+  ['pride', 'flagRows'], ['pride', 'diagonalGradient'], ['bi', 'verticalGradient'],
+  ['berry', 'spiral'], ['forest', 'diagonalGradient'], ['rainbow', 'radialRings'],
+  ['trans', 'diagonalGradient'],
+] as const satisfies readonly (readonly [PaletteFamily, PalettePattern])[];
+
+const CURATED_PALETTES: Record<PaletteFamily, Record<ColorIntensity, readonly string[]>> = {
+  rainbow: {
+    mellow: ['#814653', '#875433', '#756521', '#38684b', '#3f5f82', '#67517b'],
+    balanced: ['#9b2948', '#9a4614', '#7a6200', '#087044', '#175ea8', '#6d35a5'],
+    punchy: ['#b00035', '#a83b00', '#806400', '#00733d', '#004fc4', '#7020a8'],
+  },
+  pride: {
+    mellow: ['#814653', '#875433', '#756521', '#38684b', '#3f5f82', '#67517b'],
+    balanced: ['#9b2948', '#9a4614', '#7a6200', '#087044', '#175ea8', '#6d35a5'],
+    punchy: ['#b00035', '#a83b00', '#806400', '#00733d', '#004fc4', '#7020a8'],
+  },
+  trans: {
+    mellow: ['#42677a', '#805567', '#665d78', '#805567', '#42677a'],
+    balanced: ['#176b89', '#984565', '#64538a', '#984565', '#176b89'],
+    punchy: ['#006c91', '#b00059', '#6546a8', '#b00059', '#006c91'],
+  },
+  bi: {
+    mellow: ['#82465f', '#67517b', '#3f5f82'], balanced: ['#9f2864', '#70358f', '#175ea8'], punchy: ['#b00069', '#7500a8', '#004fc4'],
+  },
+  berry: {
+    mellow: ['#75465c', '#825066', '#5e526f', '#445d78'], balanced: ['#922451', '#a23b69', '#653b82', '#285887'], punchy: ['#ad004c', '#bd1767', '#6c1b96', '#0055a8'],
+  },
+  forest: {
+    mellow: ['#355f4c', '#486a3e', '#676423', '#345e68'], balanced: ['#126b43', '#3a721d', '#756400', '#006477'], punchy: ['#00713d', '#277900', '#806400', '#00647f'],
+  },
+};
 
 /**
  * Authoritative deterministic mapping from Studio art direction to candidate rendering.
@@ -51,7 +95,7 @@ export function resolveArtisticRenderIntent(request: GenerationRequest): Artisti
   const strengthTreatment = resolveStrengthTreatment(artisticStrength);
   const compositionTreatment = resolveCompositionTreatment(focalArea);
   const prominenceTreatment = resolveProminenceTreatment(qrProminence);
-  const palette = resolvePalette(request.palette);
+  const palette = resolvePalette(request.palette, request.paletteFamily, request.palettePattern, request.colorIntensity);
 
   const quietZone = prominenceTreatment === 'dominant' ? 4 : prominenceTreatment === 'standard' ? 5 : 6;
   // Strength framing visibly changes QR-to-canvas ratio without reducing the
@@ -67,6 +111,9 @@ export function resolveArtisticRenderIntent(request: GenerationRequest): Artisti
     margin,
     colorDark: palette.primary,
     colorLight: palette.background,
+    modulePalette: palette.moduleColors,
+    palettePattern: palette.pattern,
+    functionalColor: palette.functionalColor,
     shape: shapes[index],
     eyeShape: compositionTreatment.eyeShape,
   })) as unknown as ArtisticRenderIntent['candidateOptions'];
@@ -97,10 +144,24 @@ function resolveStyleFamily(artDirectionId?: string, prompt?: string): ArtisticS
   return 'minimalist';
 }
 
-function resolvePalette(palette?: Palette): { primary: string; background: string } {
+function resolvePalette(
+  palette?: Palette,
+  family?: PaletteFamily,
+  pattern: PalettePattern = 'solid',
+  intensity: ColorIntensity = 'balanced',
+): PatternedPaletteIntent {
+  if (family) {
+    const moduleColors = CURATED_PALETTES[family][intensity];
+    return {
+      primary: moduleColors[0],
+      background: palette?.background ?? DEFAULT_BACKGROUND,
+      family, pattern, intensity, moduleColors, functionalColor: '#111827',
+    };
+  }
+  const primary = palette?.primary ?? palette?.secondary ?? palette?.accent ?? DEFAULT_PRIMARY;
   return {
-    primary: palette?.primary ?? palette?.secondary ?? palette?.accent ?? DEFAULT_PRIMARY,
-    background: palette?.background ?? DEFAULT_BACKGROUND,
+    primary, background: palette?.background ?? DEFAULT_BACKGROUND,
+    pattern: 'solid', intensity, moduleColors: [primary], functionalColor: primary,
   };
 }
 

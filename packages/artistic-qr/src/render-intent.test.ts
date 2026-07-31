@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { normalizePayload } from '@qr/qr-core';
-import { generateCandidates, resolveArtisticRenderIntent } from './index.js';
-import type { GenerationRequest } from './types.js';
+import { generateMatrix, normalizePayload, renderDeterministic, resolveModuleColor } from '@qr/qr-core';
+import { generateCandidates, PATTERNED_PALETTE_PRESETS, resolveArtisticRenderIntent } from './index.js';
+import type { ColorIntensity, GenerationRequest, PaletteFamily, PalettePattern } from './types.js';
 
 const normalizedPayload = normalizePayload({
   mode: 'url',
@@ -20,7 +20,66 @@ const berry: GenerationRequest = {
   seed: 42,
 };
 
+function contrastRatio(foreground: string, background: string): number {
+  const luminance = (hex: string): number => {
+    const channels = [1, 3, 5].map((offset) => Number.parseInt(hex.slice(offset, offset + 2), 16) / 255)
+      .map((channel) => channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4);
+    return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
+  };
+  const foregroundLuminance = luminance(foreground);
+  const backgroundLuminance = luminance(background);
+  return (Math.max(foregroundLuminance, backgroundLuminance) + 0.05)
+    / (Math.min(foregroundLuminance, backgroundLuminance) + 0.05);
+}
+
 describe('artistic render intent', () => {
+  it('maps every supported pattern deterministically to distinct shared Core SVG output', () => {
+    const matrix = generateMatrix(normalizedPayload);
+    const patterns: PalettePattern[] = ['solid', 'horizontalGradient', 'verticalGradient', 'diagonalGradient', 'flagRows', 'spiral', 'radialRings'];
+    const outputs = patterns.map((palettePattern) => {
+      const options = resolveArtisticRenderIntent({ ...berry, paletteFamily: 'rainbow', palettePattern }).previewOptions;
+      const first = renderDeterministic(matrix, options).data;
+      expect(renderDeterministic(matrix, options).data).toBe(first);
+      return first;
+    });
+    expect(new Set(outputs)).toHaveLength(patterns.length);
+    expect(PATTERNED_PALETTE_PRESETS).toHaveLength(10);
+  });
+
+  it('makes every intensity distinct and keeps functional modules high-contrast', () => {
+    const matrix = generateMatrix(normalizedPayload);
+    const intensities: ColorIntensity[] = ['mellow', 'balanced', 'punchy'];
+    for (const family of ['rainbow', 'pride', 'berry', 'trans'] as PaletteFamily[]) {
+      const outputs = intensities.map((colorIntensity) => {
+        const intent = resolveArtisticRenderIntent({ ...berry, palette: undefined, paletteFamily: family, palettePattern: 'diagonalGradient', colorIntensity });
+        expect(resolveModuleColor(matrix, 0, 0, intent.previewOptions)).toBe('#111827');
+        expect(contrastRatio(intent.palette.functionalColor, intent.palette.background)).toBeGreaterThanOrEqual(7);
+        expect(intent.palette.moduleColors.every((color) => contrastRatio(color, intent.palette.background) >= 4.5)).toBe(true);
+        return renderDeterministic(matrix, intent.previewOptions).data;
+      });
+      expect(new Set(outputs)).toHaveLength(3);
+    }
+  });
+
+  it('adapts Pride/Trans pale identity bands away from active modules without muting all color', () => {
+    for (const family of ['pride', 'trans'] as PaletteFamily[]) for (const colorIntensity of ['mellow', 'balanced', 'punchy'] as ColorIntensity[]) {
+      const intent = resolveArtisticRenderIntent({ ...berry, paletteFamily: family, palettePattern: 'flagRows', colorIntensity });
+      expect(intent.palette.moduleColors.every((color) => !/^#(?:f|e)[0-9a-f]{5}$/i.test(color))).toBe(true);
+      expect(new Set(intent.palette.moduleColors).size).toBeGreaterThan(2);
+      expect(intent.palette.functionalColor).toBe('#111827');
+    }
+  });
+
+  it('keeps patterned generation at four objectively validated candidates', async () => {
+    const request = { ...berry, paletteFamily: 'trans' as const, palettePattern: 'diagonalGradient' as const, colorIntensity: 'punchy' as const };
+    const firstIntent = resolveArtisticRenderIntent(request);
+    expect(resolveArtisticRenderIntent(request)).toEqual(firstIntent);
+    const board = await generateCandidates(request);
+    expect(board.candidates).toHaveLength(4);
+    expect(board.candidates.some((candidate) => candidate.exportAllowed)).toBe(true);
+    expect(board.candidates.every((candidate) => candidate.exportAllowed === candidate.scanResults[0].pass)).toBe(true);
+  }, 20_000);
+
   it('honors Berry palette in both preview intent and generated candidates', async () => {
     const intent = resolveArtisticRenderIntent(berry);
     expect(intent.styleFamily).toBe('watercolor');
