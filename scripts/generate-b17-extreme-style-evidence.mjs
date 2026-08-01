@@ -68,7 +68,7 @@ const allIconRecipes = [
   eyeFrameRecipe('diamond', 'Draw the Core diamond as a 24-unit outer frame, subtract the same 16-unit diamond, and retain a neutral square center ball.'),
   eyeFrameRecipe('hex', 'Draw the Core tall hex silhouette as a 24-unit outer frame, subtract the same 16-unit hex, and retain a neutral square center ball.'),
   ...['square', 'rounded', 'circle', 'squircle', 'chamfered'].map((primitive) => eyeBallRecipe(primitive, `Existing Core ${primitive} ball comparison recipe.`)),
-  eyeBallRecipe('hex', 'Use a neutral square finder frame and render the center 8-unit ball with the Core tall-hex predicate.'),
+  eyeBallRecipe('hex', 'Show the Core tall-hex pupil silhouette enlarged to 18 units inside a neutral control outline so its configured geometry remains legible.'),
   eyeBallRecipe('vertical-capsule', 'Use a neutral square finder frame and render the enlarged pupil as the Core vertical capsule: full height, narrower width, semicircular top and bottom caps.'),
   eyeBallRecipe('horizontal-capsule', 'Use a neutral square finder frame and render the enlarged pupil as the Core horizontal capsule: full width, shorter height, semicircular left and right caps.'),
 ];
@@ -317,7 +317,7 @@ function validationMarkdown(data, rejected, recipes) {
     '', 'All accepted evidence uses exact Core PNG pixels and the unchanged `scan-v1-real-75pct` eight-case gate.',
     '', '## Icon fidelity notes for Studio textless controls', '',
     ...recipes.map((item) => `- **${item.family} / ${item.primitive}** — ${item.recipe} Constraint: ${item.fidelityConstraint} Example: \`${item.iconFile}\` (SHA-256 \`${item.iconSvgSha256}\`).`),
-    '', 'Every accepted primitive has a family-unique compact icon hash at the recommended 28×28 viewBox and remains visibly distinct at 24px or larger. These are evidence/recipes only; no Studio UI was changed.',
+    '', 'Every accepted primitive has a unique exact 28×28 raster hash against both the other B17 additions and the existing options in its family, and remains visibly distinct at 24px or larger. See `icon-distinctness-vs-existing-contact-sheet.png`. These are evidence/recipes only; no Studio UI was changed.',
     '', '## Rejected candidates', '',
     ...rejected.map((item) => `- **${item.family} / ${item.candidate}** — ${item.reason}`),
     '',
