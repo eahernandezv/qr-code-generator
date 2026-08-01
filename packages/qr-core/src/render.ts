@@ -4,11 +4,13 @@ import { PNG } from 'pngjs';
 import { renderSvg } from './svg-renderer.js';
 import { resolveModuleColor } from './patterned-palette.js';
 import { pointInShape } from './finder-geometry.js';
+import { pointInModuleShape } from './module-geometry.js';
 
 export { renderSvg } from './svg-renderer.js';
 
-const MODULE_SHAPES = new Set(['square', 'circle', 'rounded', 'vertical-bars', 'horizontal-bars']);
-const EYE_SHAPES = new Set(['square', 'circle', 'rounded', 'squircle', 'chamfered']);
+const MODULE_SHAPES = new Set(['square', 'circle', 'rounded', 'vertical-bars', 'horizontal-bars', 'notched', 'shield']);
+const EYE_FRAME_SHAPES = new Set(['square', 'circle', 'rounded', 'squircle', 'chamfered', 'diamond', 'hex']);
+const EYE_BALL_SHAPES = new Set(['square', 'circle', 'rounded', 'squircle', 'chamfered', 'hex', 'vertical-capsule', 'horizontal-capsule']);
 
 type Color = [number, number, number, number];
 
@@ -21,8 +23,8 @@ export function renderPng(matrix: QrMatrix, options: RenderOptions): RenderedArt
   const eyeFrameShape = options.eyeFrameShape ?? legacyEyeShape;
   const eyeBallShape = options.eyeBallShape ?? legacyEyeShape;
   if (!MODULE_SHAPES.has(shape)) throw new Error(`Unsupported module shape: ${shape}`);
-  if (!EYE_SHAPES.has(eyeFrameShape)) throw new Error(`Unsupported eye frame shape: ${eyeFrameShape}`);
-  if (!EYE_SHAPES.has(eyeBallShape)) throw new Error(`Unsupported eye ball shape: ${eyeBallShape}`);
+  if (!EYE_FRAME_SHAPES.has(eyeFrameShape)) throw new Error(`Unsupported eye frame shape: ${eyeFrameShape}`);
+  if (!EYE_BALL_SHAPES.has(eyeBallShape)) throw new Error(`Unsupported eye ball shape: ${eyeBallShape}`);
   const totalSize = (matrix.size + margin * 2) * moduleSize;
   if (!Number.isInteger(totalSize) || totalSize < 1 || totalSize > 8192) {
     throw new Error(`PNG dimensions must be between 1 and 8192 pixels, got ${totalSize}`);
@@ -108,6 +110,7 @@ function drawModule(png: PNG, startX: number, startY: number, size: number, shap
     if (shape === 'rounded') draw = pointInShape('rounded', x, y, size);
     if (shape === 'vertical-bars') draw = Math.abs(x - center) <= size * 3 / 8;
     if (shape === 'horizontal-bars') draw = Math.abs(y - center) <= size * 3 / 8;
+    if (shape === 'notched' || shape === 'shield') draw = pointInModuleShape(shape, x, y, size);
     if (draw) setPixel(png, startX + x, startY + y, color);
   }
 }

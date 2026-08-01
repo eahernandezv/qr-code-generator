@@ -1,9 +1,11 @@
 import type { EyeShape, QrMatrix, RenderOptions, RenderedArtifact } from './types.js';
 import { resolveModuleColor } from './patterned-palette.js';
 import { svgShape } from './finder-geometry.js';
+import { svgModuleShape } from './module-geometry.js';
 
-const MODULE_SHAPES = new Set(['square', 'circle', 'rounded', 'vertical-bars', 'horizontal-bars']);
-const EYE_SHAPES = new Set(['square', 'circle', 'rounded', 'squircle', 'chamfered']);
+const MODULE_SHAPES = new Set(['square', 'circle', 'rounded', 'vertical-bars', 'horizontal-bars', 'notched', 'shield']);
+const EYE_FRAME_SHAPES = new Set(['square', 'circle', 'rounded', 'squircle', 'chamfered', 'diamond', 'hex']);
+const EYE_BALL_SHAPES = new Set(['square', 'circle', 'rounded', 'squircle', 'chamfered', 'hex', 'vertical-capsule', 'horizontal-capsule']);
 
 /** Node-free deterministic SVG renderer shared by server and browser exports. */
 export function renderSvg(matrix: QrMatrix, options: RenderOptions): RenderedArtifact {
@@ -15,8 +17,8 @@ export function renderSvg(matrix: QrMatrix, options: RenderOptions): RenderedArt
   const eyeFrameShape = options.eyeFrameShape ?? legacyEyeShape;
   const eyeBallShape = options.eyeBallShape ?? legacyEyeShape;
   if (!MODULE_SHAPES.has(shape)) throw new Error(`Unsupported module shape: ${shape}`);
-  if (!EYE_SHAPES.has(eyeFrameShape)) throw new Error(`Unsupported eye frame shape: ${eyeFrameShape}`);
-  if (!EYE_SHAPES.has(eyeBallShape)) throw new Error(`Unsupported eye ball shape: ${eyeBallShape}`);
+  if (!EYE_FRAME_SHAPES.has(eyeFrameShape)) throw new Error(`Unsupported eye frame shape: ${eyeFrameShape}`);
+  if (!EYE_BALL_SHAPES.has(eyeBallShape)) throw new Error(`Unsupported eye ball shape: ${eyeBallShape}`);
 
   const totalSize = (matrix.size + margin * 2) * moduleSize;
   const m = margin * moduleSize;
@@ -42,6 +44,8 @@ export function renderSvg(matrix: QrMatrix, options: RenderOptions): RenderedArt
         svg += `<rect data-module-shape="vertical-bars" x="${startX + moduleSize / 8}" y="${startY}" width="${moduleSize * 3 / 4}" height="${moduleSize}" fill="${color}"/>`;
       } else if (shape === 'horizontal-bars') {
         svg += `<rect data-module-shape="horizontal-bars" x="${startX}" y="${startY + moduleSize / 8}" width="${moduleSize}" height="${moduleSize * 3 / 4}" fill="${color}"/>`;
+      } else if (shape === 'notched' || shape === 'shield') {
+        svg += svgModuleShape(shape, startX, startY, moduleSize, color);
       } else {
         svg += `<rect x="${startX}" y="${startY}" width="${moduleSize}" height="${moduleSize}" fill="${color}"/>`;
       }

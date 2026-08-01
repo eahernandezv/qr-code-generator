@@ -14,6 +14,8 @@ export type {
   PalettePattern,
   ModuleShape,
   EyeShape,
+  EyeFrameShape,
+  EyeBallShape,
   FinderShape,
 } from './types.js';
 export { resolveModuleColor, isFunctionalModule } from './patterned-palette.js';
