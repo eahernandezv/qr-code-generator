@@ -14,8 +14,9 @@ const MIME_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp']);
 const PALETTE_FAMILIES = new Set(['rainbow', 'pride', 'trans', 'bi', 'berry', 'forest']);
 const PALETTE_PATTERNS = new Set(['solid', 'horizontalGradient', 'verticalGradient', 'diagonalGradient', 'flagRows', 'spiral', 'radialRings']);
 const COLOR_INTENSITIES = new Set(['mellow', 'balanced', 'punchy']);
-const EYE_SHAPES = new Set(['square', 'rounded', 'circle']);
-const REQUEST_KEYS = new Set(['normalizedPayload', 'mode', 'artDirectionId', 'prompt', 'referenceImage', 'artisticStrength', 'palette', 'paletteFamily', 'palettePattern', 'colorIntensity', 'moduleShape', 'eyeShape', 'composition', 'seed']);
+const MODULE_SHAPES = new Set(['square', 'rounded', 'circle', 'vertical-bars', 'horizontal-bars']);
+const EYE_SHAPES = new Set(['square', 'rounded', 'circle', 'squircle', 'chamfered']);
+const REQUEST_KEYS = new Set(['normalizedPayload', 'mode', 'artDirectionId', 'prompt', 'referenceImage', 'artisticStrength', 'palette', 'paletteFamily', 'palettePattern', 'colorIntensity', 'moduleShape', 'eyeShape', 'eyeFrameShape', 'eyeBallShape', 'composition', 'seed']);
 const PAYLOAD_KEYS = new Set(['canonical', 'mode', 'byteLength', 'version', 'errorCorrectionLevel', 'maskPattern']);
 const PALETTE_KEYS = new Set(['primary', 'secondary', 'accent', 'background']);
 const COMPOSITION_KEYS = new Set(['focalArea', 'qrProminence']);
@@ -54,8 +55,10 @@ export function validateGenerationRequest(value: unknown): GenerationRequest {
   optionalEnum(request, 'paletteFamily', PALETTE_FAMILIES);
   optionalEnum(request, 'palettePattern', PALETTE_PATTERNS);
   optionalEnum(request, 'colorIntensity', COLOR_INTENSITIES);
-  optionalEnum(request, 'moduleShape', EYE_SHAPES);
+  optionalEnum(request, 'moduleShape', MODULE_SHAPES);
   optionalEnum(request, 'eyeShape', EYE_SHAPES);
+  optionalEnum(request, 'eyeFrameShape', EYE_SHAPES);
+  optionalEnum(request, 'eyeBallShape', EYE_SHAPES);
   if (request.seed !== undefined && (!Number.isSafeInteger(request.seed) || Math.abs(request.seed as number) > 2_147_483_647)) {
     throw malformed('Seed is invalid');
   }

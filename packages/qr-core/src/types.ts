@@ -4,7 +4,10 @@
 
 export type ErrorCorrectionLevel = 'L' | 'M' | 'Q' | 'H';
 export type QrMode = 'url' | 'text' | 'email' | 'phone' | 'wifi';
-export type ModuleShape = 'square' | 'circle' | 'rounded';
+export type EyeShape = 'square' | 'circle' | 'rounded' | 'squircle' | 'chamfered';
+/** Backwards-compatible alias for the pre-split finder option. */
+export type FinderShape = EyeShape;
+export type ModuleShape = 'square' | 'circle' | 'rounded' | 'vertical-bars' | 'horizontal-bars';
 export type RenderFormat = 'svg' | 'png-dataurl' | 'canvas';
 export type PalettePattern =
   | 'solid'
@@ -69,7 +72,10 @@ export interface RenderOptions {
   colorDark?: string;
   colorLight?: string;
   shape?: ModuleShape;
-  eyeShape?: ModuleShape;
+  /** Legacy shorthand: applies the same shape to frame and ball unless either split option is set. */
+  eyeShape?: FinderShape;
+  eyeFrameShape?: EyeShape;
+  eyeBallShape?: EyeShape;
   /** Ordered, scan-safe active-module colors. The first color is used for functional modules. */
   modulePalette?: readonly string[];
   palettePattern?: PalettePattern;

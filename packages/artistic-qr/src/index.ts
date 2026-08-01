@@ -24,6 +24,8 @@ export type {
   PaletteFamily,
   PalettePattern,
   ColorIntensity,
+  ModuleStyle,
+  EyeStyle,
 } from './types.js';
 export type { CandidateAuthorityRecord, CandidateAuthorityStore } from './candidate-context.js';
 export type {

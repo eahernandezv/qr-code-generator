@@ -15,5 +15,8 @@ export type {
   FinderPattern,
   TimingPattern,
   PalettePattern,
+  ModuleShape,
+  EyeShape,
+  FinderShape,
 } from './types.js';
 export { resolveModuleColor, isFunctionalModule } from './patterned-palette.js';
