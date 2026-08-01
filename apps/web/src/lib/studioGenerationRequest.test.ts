@@ -100,6 +100,12 @@ describe('Studio canonical generation request and predictive preview', () => {
 
   it('uses legacy eyeShape only when split finder fields are absent', () => {
     expect(request({ eyeStyle: 'circle' })).toMatchObject({ eyeShape: 'circle' })
+    expect(request({ eyeStyle: 'circle', eyeFrameStyle: 'squircle' })).toMatchObject({
+      eyeFrameShape: 'squircle', eyeBallShape: 'circle',
+    })
+    expect(request({ eyeStyle: 'circle', eyeBallStyle: 'chamfered' })).toMatchObject({
+      eyeFrameShape: 'circle', eyeBallShape: 'chamfered',
+    })
     expect(request({ eyeStyle: 'circle', eyeFrameStyle: 'squircle' })).not.toHaveProperty('eyeShape')
   })
 
