@@ -1,10 +1,13 @@
 import { createHash } from 'node:crypto';
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import { resolve } from 'node:path';
-import { PNG } from 'pngjs';
 import { generateMatrix, normalizePayload, renderDeterministic } from '../packages/qr-core/dist/index.js';
 import { runValidation } from '../packages/artistic-qr/dist/validation.js';
 import { validateGenerationRequest } from '../packages/artistic-qr/dist/request-validation.js';
+
+const requireFromQrCore = createRequire(new URL('../packages/qr-core/package.json', import.meta.url));
+const { PNG } = requireFromQrCore('pngjs');
 
 const outputDirectory = resolve('.work-loop/evidence/creator-b12-expanded-style-primitives');
 rmSync(outputDirectory, { recursive: true, force: true });
