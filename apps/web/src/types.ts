@@ -7,11 +7,15 @@ export type QrMode = 'url' | 'text' | 'wifi' | 'email' | 'phone'
 
 export type ErrorCorrectionLevel = 'L' | 'M' | 'Q' | 'H'
 
-export type EyeStyle = 'square' | 'rounded' | 'circle' | 'squircle' | 'chamfered' | 'leaf'
+export type EyeStyle = 'square' | 'rounded' | 'circle' | 'squircle' | 'chamfered' | 'diamond' | 'hex' | 'vertical-capsule' | 'horizontal-capsule' | 'leaf'
 
-export type EyePrimitiveStyle = Extract<EyeStyle, 'square' | 'rounded' | 'circle' | 'squircle' | 'chamfered'>
+export type EyeFramePrimitiveStyle = Extract<EyeStyle, 'square' | 'rounded' | 'circle' | 'squircle' | 'chamfered' | 'diamond' | 'hex'>
 
-export type ModuleStyle = 'square' | 'rounded' | 'circle' | 'vertical-bars' | 'horizontal-bars' | 'dot' | 'diamond'
+export type EyeBallPrimitiveStyle = Extract<EyeStyle, 'square' | 'rounded' | 'circle' | 'squircle' | 'chamfered' | 'hex' | 'vertical-capsule' | 'horizontal-capsule'>
+
+export type EyePrimitiveStyle = EyeFramePrimitiveStyle | EyeBallPrimitiveStyle
+
+export type ModuleStyle = 'square' | 'rounded' | 'circle' | 'vertical-bars' | 'horizontal-bars' | 'notched' | 'shield' | 'dot' | 'diamond'
 
 export type CompositionType = 'centered' | 'offset' | 'integrated' | 'surround'
 
@@ -66,11 +70,11 @@ export interface ArtDirection {
   paletteFamily?: PaletteFamily
   palettePattern?: PalettePattern
   colorIntensity?: ColorIntensity
-  moduleStyle?: Extract<ModuleStyle, 'square' | 'rounded' | 'circle' | 'vertical-bars' | 'horizontal-bars' | 'dot'>
+  moduleStyle?: Extract<ModuleStyle, 'square' | 'rounded' | 'circle' | 'vertical-bars' | 'horizontal-bars' | 'notched' | 'shield' | 'dot'>
   /** Legacy combined finder style, read only as a fallback for persisted projects. */
   eyeStyle?: Extract<EyeStyle, 'square' | 'rounded' | 'circle'>
-  eyeFrameStyle?: EyePrimitiveStyle
-  eyeBallStyle?: EyePrimitiveStyle
+  eyeFrameStyle?: EyeFramePrimitiveStyle
+  eyeBallStyle?: EyeBallPrimitiveStyle
   protectedQrProminence?: number
 }
 
@@ -79,8 +83,8 @@ export interface StyleSpec {
   background?: string
   margin?: number
   eyeStyle?: EyeStyle
-  eyeFrameStyle?: EyePrimitiveStyle
-  eyeBallStyle?: EyePrimitiveStyle
+  eyeFrameStyle?: EyeFramePrimitiveStyle
+  eyeBallStyle?: EyeBallPrimitiveStyle
   moduleStyle?: ModuleStyle
   logo?: {
     dataUrl: string

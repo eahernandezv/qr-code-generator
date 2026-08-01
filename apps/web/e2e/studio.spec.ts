@@ -11,6 +11,7 @@ const b11EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/st
 const b13EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b13-label-cleanup-paid-payload-gate')
 const b14EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b14-expose-expanded-style-primitives')
 const b16EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b16-palette-sliders-destination-polish')
+const b18EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b18-expose-extreme-primitives')
 
 const svgArtwork = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
@@ -207,6 +208,72 @@ test.beforeAll(async () => {
   await fs.mkdir(b13EvidenceDir, { recursive: true })
   await fs.mkdir(b14EvidenceDir, { recursive: true })
   await fs.mkdir(b16EvidenceDir, { recursive: true })
+  await fs.mkdir(b18EvidenceDir, { recursive: true })
+})
+
+test('B18 exposes only accepted Core-backed extreme primitives and preserves the public paid gate', async ({ page }) => {
+  const errors = await assertNoConsoleErrors(page)
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/')
+
+  const preview = page.getByRole('img', { name: 'QR Preview' })
+  const previewBox = await preview.boundingBox()
+  expect(previewBox).not.toBeNull()
+  const families = [
+    { row: 'Style', count: 7, suffix: 'QR style', options: [['Notched', 'notched'], ['Shield', 'shield']] },
+    { row: 'Corners', count: 7, suffix: 'corner style', options: [['Diamond', 'diamond'], ['Hex', 'hex']] },
+    { row: 'Eyes', count: 8, suffix: 'eye style', options: [['Hex', 'hex'], ['Vertical capsule', 'vertical-capsule'], ['Horizontal capsule', 'horizontal-capsule']] },
+  ] as const
+  const hashes: Record<string, Record<string, string>> = {}
+
+  for (const family of families) {
+    const row = page.getByRole('listbox', { name: family.row })
+    const options = row.getByRole('option')
+    await expect(options).toHaveCount(family.count)
+    hashes[family.row.toLowerCase()] = {}
+    for (const [name, setting] of family.options) {
+      const option = page.getByRole('option', { name: `${name} ${family.suffix}` })
+      await option.scrollIntoViewIfNeeded()
+      await expect(option).toHaveAttribute('data-setting', setting)
+      await expect(option).toHaveAttribute('title', `${name} ${family.suffix}`)
+      expect((await option.innerText()).replace('✓', '').trim()).toBe('')
+      const recipeIcon = option.locator(`img[data-icon-recipe]`)
+      await expect(recipeIcon).toHaveCount(1)
+      await expect.poll(() => recipeIcon.evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth === 28 && image.naturalHeight === 28)).toBe(true)
+      const before = await preview.getAttribute('src')
+      await option.click()
+      await expect(page.getByRole('option', { name: `${name} ${family.suffix} selected` })).toHaveAttribute('aria-selected', 'true')
+      await expect.poll(() => preview.getAttribute('src')).not.toBe(before)
+      const source = await preview.getAttribute('src')
+      expect(source).toBeTruthy()
+      hashes[family.row.toLowerCase()][setting] = createHash('sha256').update(source!).digest('hex')
+      expect(await preview.boundingBox()).toEqual(previewBox)
+    }
+    expect(new Set(Object.values(hashes[family.row.toLowerCase()])).size).toBe(family.options.length)
+    await row.screenshot({ path: path.join(b18EvidenceDir, `${family.row.toLowerCase()}-row-expanded.png`) })
+  }
+
+  await page.screenshot({ path: path.join(b18EvidenceDir, 'mobile-public-editor-expanded-textless-rows.png'), fullPage: true })
+  const destination = page.getByRole('textbox', { name: 'Final destination URL' })
+  expect(await destination.evaluate((element) => element.tagName)).toBe('INPUT')
+  await expect(page.getByRole('button', { name: 'Text' })).toHaveCount(0)
+  const beforePayload = await preview.getAttribute('src')
+  await destination.fill('https://example.com/b18-public-draft')
+  await page.getByRole('button', { name: 'Continue with this QR' }).click()
+  await expect(page.getByRole('status')).toContainText('QR activates after payment')
+  expect(await preview.getAttribute('src')).toBe(beforePayload)
+  for (const heading of ['Candidates', 'Checkout', 'Export']) await expect(page.getByRole('heading', { name: heading })).toHaveCount(0)
+  await fs.writeFile(path.join(b18EvidenceDir, 'primitive-preview-hashes-and-public-gate.json'), JSON.stringify({
+    previewBox,
+    hashes,
+    publicBeforeSha256: createHash('sha256').update(beforePayload!).digest('hex'),
+    publicAfterContinueSha256: createHash('sha256').update((await preview.getAttribute('src'))!).digest('hex'),
+    publicTypingAndContinueDraftOnly: beforePayload === await preview.getAttribute('src'),
+    hiddenPublicPanels: ['Candidates', 'Checkout', 'Export'],
+    destinationElement: 'INPUT',
+    textDestinationAbsent: true,
+  }, null, 2))
+  expect(errors).toEqual([])
 })
 
 test('B16 delivers icon-only settings, one-line destination, palettes, side controls, and preserved payload gates', async ({ page }) => {
@@ -225,13 +292,14 @@ test('B16 delivers icon-only settings, one-line destination, palettes, side cont
   for (const type of ['URL', 'Email', 'Phone']) await expect(page.getByRole('button', { name: type })).toBeVisible()
 
   const iconRows = ['Style', 'Corners', 'Eyes'] as const
+  const optionCounts = { Style: 7, Corners: 7, Eyes: 8 } as const
   for (const row of iconRows) {
     const options = page.getByRole('listbox', { name: row }).getByRole('option')
-    await expect(options).toHaveCount(5)
-    for (let index = 0; index < 5; index += 1) {
+    await expect(options).toHaveCount(optionCounts[row])
+    for (let index = 0; index < optionCounts[row]; index += 1) {
       expect((await options.nth(index).innerText()).replace('✓', '').trim()).toBe('')
       await expect(options.nth(index)).toHaveAttribute('aria-label', /style/)
-      await expect(options.nth(index)).toHaveAttribute('data-setting', /square|rounded|circle|vertical-bars|horizontal-bars|squircle|chamfered/)
+      await expect(options.nth(index)).toHaveAttribute('data-setting', /square|rounded|circle|vertical-bars|horizontal-bars|squircle|chamfered|notched|shield|diamond|hex|vertical-capsule|horizontal-capsule/)
     }
   }
   for (const removed of ['Classic', 'Rounded', 'Dots', 'Soft', 'Circle', 'Squircle', 'Chamfered', 'Mellow', 'Balanced', 'Punchy']) {

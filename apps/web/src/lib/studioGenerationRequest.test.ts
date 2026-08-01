@@ -106,19 +106,20 @@ describe('Studio canonical generation request and predictive preview', () => {
   })
 
   it('maps all expanded body, frame, and ball treatments independently without changing the SVG viewport', () => {
-    const modules = ['square', 'rounded', 'circle', 'vertical-bars', 'horizontal-bars'] as const
-    const eyes = ['square', 'rounded', 'circle', 'squircle', 'chamfered'] as const
+    const modules = ['square', 'rounded', 'circle', 'vertical-bars', 'horizontal-bars', 'notched', 'shield'] as const
+    const frames = ['square', 'rounded', 'circle', 'squircle', 'chamfered', 'diamond', 'hex'] as const
+    const balls = ['square', 'rounded', 'circle', 'squircle', 'chamfered', 'hex', 'vertical-capsule', 'horizontal-capsule'] as const
     const previews = [
       ...modules.map((moduleStyle) => renderStudioPreview(request({ moduleStyle, eyeFrameStyle: 'square', eyeBallStyle: 'square' }))),
-      ...eyes.map((eyeFrameStyle) => renderStudioPreview(request({ moduleStyle: 'square', eyeFrameStyle, eyeBallStyle: 'square' }))),
-      ...eyes.map((eyeBallStyle) => renderStudioPreview(request({ moduleStyle: 'square', eyeFrameStyle: 'square', eyeBallStyle }))),
+      ...frames.map((eyeFrameStyle) => renderStudioPreview(request({ moduleStyle: 'square', eyeFrameStyle, eyeBallStyle: 'square' }))),
+      ...balls.map((eyeBallStyle) => renderStudioPreview(request({ moduleStyle: 'square', eyeFrameStyle: 'square', eyeBallStyle }))),
     ]
-    expect(request({ moduleStyle: 'vertical-bars', eyeFrameStyle: 'squircle', eyeBallStyle: 'chamfered' })).toMatchObject({
-      moduleShape: 'vertical-bars', eyeFrameShape: 'squircle', eyeBallShape: 'chamfered',
+    expect(request({ moduleStyle: 'shield', eyeFrameStyle: 'diamond', eyeBallStyle: 'vertical-capsule' })).toMatchObject({
+      moduleShape: 'shield', eyeFrameShape: 'diamond', eyeBallShape: 'vertical-capsule',
     })
-    expect(new Set(previews.slice(0, 5).map((artifact) => artifact.data))).toHaveLength(5)
-    expect(new Set(previews.slice(5, 10).map((artifact) => artifact.data))).toHaveLength(5)
-    expect(new Set(previews.slice(10).map((artifact) => artifact.data))).toHaveLength(5)
+    expect(new Set(previews.slice(0, 7).map((artifact) => artifact.data))).toHaveLength(7)
+    expect(new Set(previews.slice(7, 14).map((artifact) => artifact.data))).toHaveLength(7)
+    expect(new Set(previews.slice(14).map((artifact) => artifact.data))).toHaveLength(8)
     for (const preview of previews) {
       expect(preview.width).toBe(previews[0].width)
       expect(preview.height).toBe(previews[0].height)

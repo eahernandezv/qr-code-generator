@@ -20,7 +20,7 @@ function contrastRatio(foreground: string, background: string): number {
   return (lighter + 0.05) / (darker + 0.05)
 }
 
-describe('ArtDirectionPanel B16 controls', () => {
+describe('ArtDirectionPanel B18 controls', () => {
   beforeEach(resetStore)
 
   it('keeps all thirty-six solid foreground variants dark against their backgrounds', () => {
@@ -51,14 +51,44 @@ describe('ArtDirectionPanel B16 controls', () => {
     await user.click(screen.getByRole('option', { name: 'Circle corner style' }))
     expect(useStudioStore.getState().project.artDirection.eyeFrameStyle).toBe('circle')
 
-    for (const rowName of ['Style', 'Corners', 'Eyes']) {
+    const expectedSettings = {
+      Style: ['square', 'rounded', 'circle', 'vertical-bars', 'horizontal-bars', 'notched', 'shield'],
+      Corners: ['square', 'rounded', 'circle', 'squircle', 'chamfered', 'diamond', 'hex'],
+      Eyes: ['square', 'rounded', 'circle', 'squircle', 'chamfered', 'hex', 'vertical-capsule', 'horizontal-capsule'],
+    } as const
+    for (const rowName of ['Style', 'Corners', 'Eyes'] as const) {
       const options = screen.getByRole('listbox', { name: rowName }).querySelectorAll('[role="option"]')
-      expect(options).toHaveLength(5)
+      expect(options).toHaveLength(expectedSettings[rowName].length)
+      expect(Array.from(options, (option) => option.getAttribute('data-setting'))).toEqual(expectedSettings[rowName])
       for (const option of options) expect(option.textContent).toMatch(/^✓?$/)
     }
     expect(screen.getByRole('option', { name: /^Classic QR style/ })).toHaveAttribute('data-setting', 'square')
     expect(screen.getByRole('option', { name: /^Dots QR style/ })).toHaveAttribute('data-setting', 'circle')
     expect(screen.getByRole('option', { name: /^Chamfered eye style/ })).toHaveAttribute('data-setting', 'chamfered')
+
+    const newOptions = [
+      ['Notched QR style', 'notched', 'notched'],
+      ['Shield QR style', 'shield', 'shield'],
+      ['Diamond corner style', 'diamond', 'eye-frame-diamond'],
+      ['Hex corner style', 'hex', 'eye-frame-hex'],
+      ['Hex eye style', 'hex', 'eye-ball-hex'],
+      ['Vertical capsule eye style', 'vertical-capsule', 'eye-ball-vertical-capsule'],
+      ['Horizontal capsule eye style', 'horizontal-capsule', 'eye-ball-horizontal-capsule'],
+    ] as const
+    for (const [name, setting, recipe] of newOptions) {
+      const option = screen.getByRole('option', { name })
+      expect(option).toHaveAttribute('data-setting', setting)
+      expect(option).toHaveAttribute('title', name)
+      expect(option).toHaveTextContent('')
+      expect(option.querySelector('img')).toHaveAttribute('data-icon-recipe', recipe)
+      await user.click(option)
+      expect(screen.getByRole('option', { name: `${name} selected` })).toHaveAttribute('aria-selected', 'true')
+    }
+    expect(useStudioStore.getState().project.artDirection).toMatchObject({
+      moduleStyle: 'shield',
+      eyeFrameStyle: 'hex',
+      eyeBallStyle: 'horizontal-capsule',
+    })
   })
 
   it('uses QR-side accessible controls and maps solid intensity plus QR prominence into art direction', async () => {
