@@ -7,9 +7,11 @@ export type QrMode = 'url' | 'text' | 'wifi' | 'email' | 'phone'
 
 export type ErrorCorrectionLevel = 'L' | 'M' | 'Q' | 'H'
 
-export type EyeStyle = 'square' | 'rounded' | 'circle' | 'leaf'
+export type EyeStyle = 'square' | 'rounded' | 'circle' | 'squircle' | 'chamfered' | 'leaf'
 
-export type ModuleStyle = 'square' | 'rounded' | 'dot' | 'diamond'
+export type EyePrimitiveStyle = Extract<EyeStyle, 'square' | 'rounded' | 'circle' | 'squircle' | 'chamfered'>
+
+export type ModuleStyle = 'square' | 'rounded' | 'circle' | 'vertical-bars' | 'horizontal-bars' | 'dot' | 'diamond'
 
 export type CompositionType = 'centered' | 'offset' | 'integrated' | 'surround'
 
@@ -64,8 +66,11 @@ export interface ArtDirection {
   paletteFamily?: PaletteFamily
   palettePattern?: PalettePattern
   colorIntensity?: ColorIntensity
-  moduleStyle?: Extract<ModuleStyle, 'square' | 'rounded' | 'dot'>
+  moduleStyle?: Extract<ModuleStyle, 'square' | 'rounded' | 'circle' | 'vertical-bars' | 'horizontal-bars' | 'dot'>
+  /** Legacy combined finder style, read only as a fallback for persisted projects. */
   eyeStyle?: Extract<EyeStyle, 'square' | 'rounded' | 'circle'>
+  eyeFrameStyle?: EyePrimitiveStyle
+  eyeBallStyle?: EyePrimitiveStyle
   protectedQrProminence?: number
 }
 
@@ -74,6 +79,8 @@ export interface StyleSpec {
   background?: string
   margin?: number
   eyeStyle?: EyeStyle
+  eyeFrameStyle?: EyePrimitiveStyle
+  eyeBallStyle?: EyePrimitiveStyle
   moduleStyle?: ModuleStyle
   logo?: {
     dataUrl: string

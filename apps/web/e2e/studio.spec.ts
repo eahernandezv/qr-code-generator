@@ -9,6 +9,7 @@ const screenshotDir = path.join(evidenceRoot, 'screenshots')
 const b10EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b10-one-screen-compact-live-editor')
 const b11EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b11-corners-compact-editor-cleanup')
 const b13EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b13-label-cleanup-paid-payload-gate')
+const b14EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b14-expose-expanded-style-primitives')
 
 const svgArtwork = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
@@ -203,6 +204,85 @@ test.beforeAll(async () => {
   await fs.mkdir(b10EvidenceDir, { recursive: true })
   await fs.mkdir(b11EvidenceDir, { recursive: true })
   await fs.mkdir(b13EvidenceDir, { recursive: true })
+  await fs.mkdir(b14EvidenceDir, { recursive: true })
+})
+
+test('B14 exposes five Core-backed Style, Corners, and Eyes options with stable preview geometry', async ({ page }) => {
+  const errors = await assertNoConsoleErrors(page)
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/')
+  const preview = page.getByRole('img', { name: 'QR Preview' })
+  const previewBox = await preview.boundingBox()
+  expect(previewBox).not.toBeNull()
+
+  for (const removedLabel of ['Style', 'Corners', 'Eyes']) {
+    await expect(page.getByText(removedLabel, { exact: true })).toHaveCount(0)
+  }
+  await expect(page.getByRole('listbox', { name: 'Style' })).toBeVisible()
+  await expect(page.getByRole('listbox', { name: 'Corners' })).toBeVisible()
+  await expect(page.getByRole('listbox', { name: 'Eyes' })).toBeVisible()
+  await page.screenshot({ path: path.join(b14EvidenceDir, '01-mobile-public-editor-three-unlabelled-rows.png'), fullPage: true })
+
+  const families = [
+    { row: 'Style', suffix: 'QR style', names: ['Classic', 'Rounded', 'Dots', 'Vertical', 'Horizontal'], slug: 'style' },
+    { row: 'Corners', suffix: 'corner style', names: ['Classic', 'Soft', 'Circle', 'Squircle', 'Chamfered'], slug: 'corners' },
+    { row: 'Eyes', suffix: 'eye style', names: ['Classic', 'Soft', 'Circle', 'Squircle', 'Chamfered'], slug: 'eyes' },
+  ] as const
+  const hashes: Record<string, string[]> = {}
+  for (const family of families) {
+    const sources: string[] = []
+    for (const [index, name] of family.names.entries()) {
+      const option = page.getByRole('option', { name: new RegExp(`^${name} ${family.suffix}`) })
+      await option.scrollIntoViewIfNeeded()
+      const before = await preview.getAttribute('src')
+      await option.click()
+      await expect(page.getByRole('option', { name: `${name} ${family.suffix} selected` })).toHaveAttribute('aria-selected', 'true')
+      if (index > 0) await expect.poll(() => preview.getAttribute('src')).not.toBe(before)
+      const source = await preview.getAttribute('src')
+      expect(source).toBeTruthy()
+      await expect.poll(() => preview.evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth > 0)).toBe(true)
+      sources.push(source!)
+      expect(await preview.boundingBox()).toEqual(previewBox)
+      await preview.screenshot({ path: path.join(b14EvidenceDir, `${family.slug}-${index + 1}-${name.toLowerCase()}.png`) })
+    }
+    expect(new Set(sources).size).toBe(5)
+    hashes[family.slug] = sources.map((source) => createHash('sha256').update(source).digest('hex'))
+    const finalOption = page.getByRole('option', { name: new RegExp(`^${family.names[4]} ${family.suffix}`) })
+    await finalOption.scrollIntoViewIfNeeded()
+    await page.getByRole('listbox', { name: family.row }).screenshot({ path: path.join(b14EvidenceDir, `${family.slug}-row-all-five-reachable.png`) })
+  }
+  await fs.writeFile(path.join(b14EvidenceDir, 'primitive-preview-hashes.json'), JSON.stringify({ previewBox, hashes }, null, 2))
+  expect(errors).toEqual([])
+})
+
+test('B14 preserves public draft-only payload and internal live-preview gates', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/')
+  const publicPreview = page.getByRole('img', { name: 'QR Preview' })
+  const before = await publicPreview.getAttribute('src')
+  await page.getByRole('textbox', { name: 'Final destination URL' }).fill('https://example.com/b14-public-draft')
+  await page.getByRole('button', { name: 'Continue with this QR' }).click()
+  const after = await publicPreview.getAttribute('src')
+  expect(after).toBe(before)
+  await expect(page.getByRole('heading', { name: 'Candidates' })).toHaveCount(0)
+  await expect(page.getByRole('heading', { name: 'Export' })).toHaveCount(0)
+  await page.screenshot({ path: path.join(b14EvidenceDir, 'public-typed-continue-preview-unchanged.png'), fullPage: true })
+
+  await page.goto('/?workflow=internal')
+  const internalPreview = page.getByRole('img', { name: 'QR Preview' })
+  const internalBefore = await internalPreview.getAttribute('src')
+  await page.getByRole('textbox', { name: 'Final destination URL' }).fill('https://example.com/b14-internal-live')
+  await expect.poll(() => internalPreview.getAttribute('src')).not.toBe(internalBefore)
+  const internalAfter = await internalPreview.getAttribute('src')
+  await page.screenshot({ path: path.join(b14EvidenceDir, 'internal-live-preview-updated.png'), fullPage: true })
+  await fs.writeFile(path.join(b14EvidenceDir, 'payload-gate-hashes.json'), JSON.stringify({
+    publicBeforeSha256: createHash('sha256').update(before!).digest('hex'),
+    publicAfterSha256: createHash('sha256').update(after!).digest('hex'),
+    publicUnchanged: before === after,
+    internalBeforeSha256: createHash('sha256').update(internalBefore!).digest('hex'),
+    internalAfterSha256: createHash('sha256').update(internalAfter!).digest('hex'),
+    internalChanged: internalBefore !== internalAfter,
+  }, null, 2))
 })
 
 test('B13 public destination stays draft-only and compact controls keep accessible names', async ({ page }) => {

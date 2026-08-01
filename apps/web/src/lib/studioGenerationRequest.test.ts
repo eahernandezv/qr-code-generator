@@ -78,16 +78,35 @@ describe('Studio canonical generation request and predictive preview', () => {
     })).not.toBe(balanced)
   })
 
-  it('maps body and finder treatments independently without changing the SVG viewport', () => {
-    const classic = renderStudioPreview(request({ moduleStyle: 'square', eyeStyle: 'square' }))
-    const dots = renderStudioPreview(request({ moduleStyle: 'dot', eyeStyle: 'square' }))
-    const roundedEyes = renderStudioPreview(request({ moduleStyle: 'square', eyeStyle: 'rounded' }))
-    expect(request({ moduleStyle: 'dot', eyeStyle: 'circle' })).toMatchObject({ moduleShape: 'circle', eyeShape: 'circle' })
-    expect(dots.data).not.toBe(classic.data)
-    expect(roundedEyes.data).not.toBe(classic.data)
-    expect(dots.width).toBe(classic.width)
-    expect(dots.height).toBe(classic.height)
-    expect(roundedEyes.width).toBe(classic.width)
+  it('maps all expanded body, frame, and ball treatments independently without changing the SVG viewport', () => {
+    const modules = ['square', 'rounded', 'circle', 'vertical-bars', 'horizontal-bars'] as const
+    const eyes = ['square', 'rounded', 'circle', 'squircle', 'chamfered'] as const
+    const previews = [
+      ...modules.map((moduleStyle) => renderStudioPreview(request({ moduleStyle, eyeFrameStyle: 'square', eyeBallStyle: 'square' }))),
+      ...eyes.map((eyeFrameStyle) => renderStudioPreview(request({ moduleStyle: 'square', eyeFrameStyle, eyeBallStyle: 'square' }))),
+      ...eyes.map((eyeBallStyle) => renderStudioPreview(request({ moduleStyle: 'square', eyeFrameStyle: 'square', eyeBallStyle }))),
+    ]
+    expect(request({ moduleStyle: 'vertical-bars', eyeFrameStyle: 'squircle', eyeBallStyle: 'chamfered' })).toMatchObject({
+      moduleShape: 'vertical-bars', eyeFrameShape: 'squircle', eyeBallShape: 'chamfered',
+    })
+    expect(new Set(previews.slice(0, 5).map((artifact) => artifact.data))).toHaveLength(5)
+    expect(new Set(previews.slice(5, 10).map((artifact) => artifact.data))).toHaveLength(5)
+    expect(new Set(previews.slice(10).map((artifact) => artifact.data))).toHaveLength(5)
+    for (const preview of previews) {
+      expect(preview.width).toBe(previews[0].width)
+      expect(preview.height).toBe(previews[0].height)
+    }
+  })
+
+  it('uses legacy eyeShape only when split finder fields are absent', () => {
+    expect(request({ eyeStyle: 'circle' })).toMatchObject({ eyeShape: 'circle' })
+    expect(request({ eyeStyle: 'circle', eyeFrameStyle: 'squircle' })).toMatchObject({
+      eyeFrameShape: 'squircle', eyeBallShape: 'circle',
+    })
+    expect(request({ eyeStyle: 'circle', eyeBallStyle: 'chamfered' })).toMatchObject({
+      eyeFrameShape: 'circle', eyeBallShape: 'chamfered',
+    })
+    expect(request({ eyeStyle: 'circle', eyeFrameStyle: 'squircle' })).not.toHaveProperty('eyeShape')
   })
 
   it.each(['watercolor', 'geometric', 'minimalist'])(
