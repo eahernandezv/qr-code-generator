@@ -12,6 +12,7 @@ const b13EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/st
 const b14EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b14-expose-expanded-style-primitives')
 const b16EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b16-palette-sliders-destination-polish')
 const b18EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b18-expose-extreme-primitives')
+const b19EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b19-scan-confidence-labeling')
 
 const svgArtwork = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
@@ -209,6 +210,67 @@ test.beforeAll(async () => {
   await fs.mkdir(b14EvidenceDir, { recursive: true })
   await fs.mkdir(b16EvidenceDir, { recursive: true })
   await fs.mkdir(b18EvidenceDir, { recursive: true })
+  await fs.mkdir(b19EvidenceDir, { recursive: true })
+})
+
+test('B19 uses bounded scan-check wording and preserves B18/B16/B13 public behavior', async ({ page }) => {
+  const disclaimer = "Scan checks reflect this app's decoder and perturbation tests, not a universal scan guarantee."
+  await page.setViewportSize({ width: 1280, height: 900 })
+  await page.goto('/?workflow=internal')
+  await page.evaluate((state) => {
+    localStorage.setItem('qr-studio-project', JSON.stringify({
+      state: { project: state, activeBoardId: 'board-1' },
+      version: 0,
+    }))
+  }, projectState({ coreEvidence: true }))
+  await page.reload()
+
+  await expect(page.getByText('Decoder checks: 92%')).toBeVisible()
+  await expect(page.getByText('Decoder checks', { exact: true })).toBeVisible()
+  await expect(page.getByText(disclaimer)).toHaveCount(2)
+  await expect(page.getByText(/Confidence:/)).toHaveCount(0)
+  await expect(page.getByText('Confidence', { exact: true })).toHaveCount(0)
+  await page.getByText('Decoder checks: 92%').locator('xpath=ancestor::button[1]').screenshot({ path: path.join(b19EvidenceDir, 'candidate-cards-bounded-scan-checks.png') })
+  await page.getByText('Validation Summary').locator('..').locator('..').screenshot({ path: path.join(b19EvidenceDir, 'validation-summary-bounded-scan-checks.png') })
+
+  await page.evaluate(() => localStorage.clear())
+  await page.goto('/')
+  const preview = page.getByRole('img', { name: 'QR Preview' })
+  const before = await preview.getAttribute('src')
+  const destination = page.getByRole('textbox', { name: 'Final destination URL' })
+  expect(await destination.evaluate((element) => element.tagName)).toBe('INPUT')
+  await expect(page.getByRole('button', { name: 'Text' })).toHaveCount(0)
+  await expect(page.getByRole('listbox', { name: 'Style' }).getByRole('option')).toHaveCount(7)
+  await expect(page.getByRole('listbox', { name: 'Corners' }).getByRole('option')).toHaveCount(7)
+  await expect(page.getByRole('listbox', { name: 'Eyes' }).getByRole('option')).toHaveCount(8)
+  await expect(page.getByRole('option', { name: 'Notched QR style' })).toHaveAttribute('data-setting', 'notched')
+  await expect(page.getByRole('option', { name: 'Shield QR style' })).toHaveAttribute('data-setting', 'shield')
+  await expect(page.getByRole('option', { name: 'Diamond corner style' })).toHaveAttribute('data-setting', 'diamond')
+  await expect(page.getByRole('option', { name: 'Hex corner style' })).toHaveAttribute('data-setting', 'hex')
+  await expect(page.getByRole('option', { name: 'Hex eye style' })).toHaveAttribute('data-setting', 'hex')
+  await expect(page.getByRole('option', { name: 'Vertical capsule eye style' })).toHaveAttribute('data-setting', 'vertical-capsule')
+  await expect(page.getByRole('option', { name: 'Horizontal capsule eye style' })).toHaveAttribute('data-setting', 'horizontal-capsule')
+  await expect(page.getByTestId('qr-side-controls').getByRole('group', { name: 'QR size' })).toBeVisible()
+  await expect(page.getByTestId('qr-side-controls').getByRole('group', { name: 'Intensity' })).toBeVisible()
+  await destination.fill('https://example.com/b19-public-draft')
+  await page.getByRole('button', { name: 'Continue with this QR' }).click()
+  await expect(page.getByRole('status')).toContainText('QR activates after payment')
+  expect(await preview.getAttribute('src')).toBe(before)
+  for (const heading of ['Candidates', 'Checkout', 'Export']) await expect(page.getByRole('heading', { name: heading })).toHaveCount(0)
+  await page.screenshot({ path: path.join(b19EvidenceDir, 'public-gate-preserved.png'), fullPage: true })
+  await fs.writeFile(path.join(b19EvidenceDir, 'visible-copy-and-public-gate.json'), JSON.stringify({
+    candidateLabel: 'Decoder checks: 92%',
+    validationSummaryLabel: 'Decoder checks',
+    disclaimer,
+    exactVisibleConfidenceColonCount: 0,
+    exactVisibleConfidenceLabelCount: 0,
+    optionCounts: { style: 7, corners: 7, eyes: 8 },
+    destinationElement: 'INPUT',
+    textDestinationAbsent: true,
+    sideControls: ['QR size', 'Intensity'],
+    publicPreviewUnchangedAfterTypingAndContinue: before === await preview.getAttribute('src'),
+    hiddenPublicPanels: ['Candidates', 'Checkout', 'Export'],
+  }, null, 2))
 })
 
 test('B18 exposes only accepted Core-backed extreme primitives and preserves the public paid gate', async ({ page }) => {

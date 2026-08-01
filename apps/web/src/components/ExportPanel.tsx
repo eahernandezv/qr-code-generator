@@ -54,9 +54,12 @@ function ValidationSummary({
           : 'Evidence source not supplied — treat as fixture or unverified data'}
       </p>
       <div className="flex items-center justify-between text-xs text-slate-500">
-        <span>Confidence</span>
+        <span>Decoder checks</span>
         <span className="tabular-nums text-slate-300">{Math.round((result.confidence ?? 0) * 100)}%</span>
       </div>
+      <p className="text-[10px] leading-relaxed text-slate-600">
+        Scan checks reflect this app&apos;s decoder and perturbation tests, not a universal scan guarantee.
+      </p>
 
       {result.decoderResults && result.decoderResults.length > 0 && (
         <div className="space-y-1">

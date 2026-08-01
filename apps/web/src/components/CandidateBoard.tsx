@@ -72,9 +72,14 @@ function CandidateCard({
         </div>
 
         {candidate.validationResult && (
-          <p className="mt-1.5 text-[10px] text-slate-500">
-            Confidence: {Math.round((candidate.validationResult.confidence ?? 0) * 100)}%
-          </p>
+          <div className="mt-1.5 space-y-1 text-[10px] text-slate-500">
+            <p>
+              Decoder checks: {Math.round((candidate.validationResult.confidence ?? 0) * 100)}%
+            </p>
+            <p className="leading-snug text-slate-600">
+              Scan checks reflect this app&apos;s decoder and perturbation tests, not a universal scan guarantee.
+            </p>
+          </div>
         )}
 
         {candidate.error && (
