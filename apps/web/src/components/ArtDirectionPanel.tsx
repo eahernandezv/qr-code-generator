@@ -1,7 +1,14 @@
 import React from 'react'
 import { useStudioStore } from '../store'
-import type { ArtDirection, ColorIntensity, EyePrimitiveStyle, ModuleStyle, PaletteFamily, PalettePattern } from '../types'
+import type { ArtDirection, ColorIntensity, EyeBallPrimitiveStyle, EyeFramePrimitiveStyle, EyePrimitiveStyle, ModuleStyle, PaletteFamily, PalettePattern } from '../types'
 import QRPreview from './QRPreview'
+import notchedIcon from '../assets/b17-icons/icon-body-module-notched.svg'
+import shieldIcon from '../assets/b17-icons/icon-body-module-shield.svg'
+import diamondFrameIcon from '../assets/b17-icons/icon-eye-frame-diamond.svg'
+import hexFrameIcon from '../assets/b17-icons/icon-eye-frame-hex.svg'
+import hexBallIcon from '../assets/b17-icons/icon-eye-ball-hex.svg'
+import verticalCapsuleBallIcon from '../assets/b17-icons/icon-eye-ball-vertical-capsule.svg'
+import horizontalCapsuleBallIcon from '../assets/b17-icons/icon-eye-ball-horizontal-capsule.svg'
 
 type SolidPalette = { primary: string; secondary: string; accent: string; background: string }
 type SolidPreset = { name: string; variants: Record<ColorIntensity, SolidPalette> }
@@ -89,24 +96,45 @@ const PATTERNED_PRESETS: Array<{
 
 const STYLE_OPTIONS: Array<{
   name: string
-  moduleStyle: Extract<ModuleStyle, 'square' | 'rounded' | 'circle' | 'vertical-bars' | 'horizontal-bars'>
+  moduleStyle: Extract<ModuleStyle, 'square' | 'rounded' | 'circle' | 'vertical-bars' | 'horizontal-bars' | 'notched' | 'shield'>
+  icon?: string
 }> = [
   { name: 'Classic', moduleStyle: 'square' },
   { name: 'Rounded', moduleStyle: 'rounded' },
   { name: 'Dots', moduleStyle: 'circle' },
   { name: 'Vertical', moduleStyle: 'vertical-bars' },
   { name: 'Horizontal', moduleStyle: 'horizontal-bars' },
+  { name: 'Notched', moduleStyle: 'notched', icon: notchedIcon },
+  { name: 'Shield', moduleStyle: 'shield', icon: shieldIcon },
 ]
 
-const EYE_OPTIONS: Array<{
+const EYE_FRAME_OPTIONS: Array<{
   name: string
-  style: EyePrimitiveStyle
+  style: EyeFramePrimitiveStyle
+  icon?: string
 }> = [
   { name: 'Classic', style: 'square' },
   { name: 'Soft', style: 'rounded' },
   { name: 'Circle', style: 'circle' },
   { name: 'Squircle', style: 'squircle' },
   { name: 'Chamfered', style: 'chamfered' },
+  { name: 'Diamond', style: 'diamond', icon: diamondFrameIcon },
+  { name: 'Hex', style: 'hex', icon: hexFrameIcon },
+]
+
+const EYE_BALL_OPTIONS: Array<{
+  name: string
+  style: EyeBallPrimitiveStyle
+  icon?: string
+}> = [
+  { name: 'Classic', style: 'square' },
+  { name: 'Soft', style: 'rounded' },
+  { name: 'Circle', style: 'circle' },
+  { name: 'Squircle', style: 'squircle' },
+  { name: 'Chamfered', style: 'chamfered' },
+  { name: 'Hex', style: 'hex', icon: hexBallIcon },
+  { name: 'Vertical capsule', style: 'vertical-capsule', icon: verticalCapsuleBallIcon },
+  { name: 'Horizontal capsule', style: 'horizontal-capsule', icon: horizontalCapsuleBallIcon },
 ]
 
 const INTENSITIES: Array<{ value: ColorIntensity; label: string }> = [
@@ -189,8 +217,8 @@ const ArtDirectionPanel: React.FC = () => {
     && Object.values(preset.variants).some((variant) => variant.primary === art.palette?.primary))
   const selectedPatterned = PATTERNED_PRESETS.find((preset) => art.paletteFamily === preset.family && art.palettePattern === preset.pattern)
   const selectedStyle = STYLE_OPTIONS.find((style) => style.moduleStyle === (art.moduleStyle ?? 'rounded')) ?? STYLE_OPTIONS[1]
-  const selectedCorner = EYE_OPTIONS.find((option) => option.style === (art.eyeFrameStyle ?? art.eyeStyle ?? 'rounded')) ?? EYE_OPTIONS[1]
-  const selectedEye = EYE_OPTIONS.find((option) => option.style === (art.eyeBallStyle ?? art.eyeStyle ?? 'rounded')) ?? EYE_OPTIONS[1]
+  const selectedCorner = EYE_FRAME_OPTIONS.find((option) => option.style === (art.eyeFrameStyle ?? art.eyeStyle ?? 'rounded')) ?? EYE_FRAME_OPTIONS[1]
+  const selectedEye = EYE_BALL_OPTIONS.find((option) => option.style === (art.eyeBallStyle ?? art.eyeStyle ?? 'rounded')) ?? EYE_BALL_OPTIONS[1]
 
   return (
     <section aria-labelledby="live-editor-title" className="rounded-2xl border border-slate-800 bg-slate-900/70 p-3 shadow-2xl shadow-black/20 sm:p-4">
@@ -268,7 +296,9 @@ const ArtDirectionPanel: React.FC = () => {
                     data-setting={style.moduleStyle}
                     className={`flex h-14 w-14 shrink-0 snap-start items-center justify-center rounded-xl border-2 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white ${selected ? 'border-white bg-studio-950/70 ring-2 ring-studio-500' : 'border-slate-700 bg-slate-950/60 hover:border-slate-400'}`}
                   >
-                    <MiniQr shape={style.moduleStyle} />
+                    {style.icon
+                      ? <img aria-hidden="true" src={style.icon} alt="" className="h-9 w-9 rounded-md" data-icon-recipe={style.moduleStyle} />
+                      : <MiniQr shape={style.moduleStyle} />}
                   </button>
                 )
               })}
@@ -277,7 +307,7 @@ const ArtDirectionPanel: React.FC = () => {
 
           <div>
             <div className="flex snap-x gap-2 overflow-x-auto pb-1" role="listbox" aria-label="Corners">
-              {EYE_OPTIONS.map((corner) => {
+              {EYE_FRAME_OPTIONS.map((corner) => {
                 const selected = selectedCorner.name === corner.name
                 return (
                   <button
@@ -291,7 +321,9 @@ const ArtDirectionPanel: React.FC = () => {
                     data-setting={corner.style}
                     className={`relative flex h-14 w-14 shrink-0 snap-start items-center justify-center rounded-xl border-2 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white ${selected ? 'border-white bg-studio-950/70 ring-2 ring-studio-500' : 'border-slate-700 bg-slate-950/60 hover:border-slate-400'}`}
                   >
-                    <MiniCorner frame={corner.style} ball={art.eyeBallStyle ?? art.eyeStyle ?? 'rounded'} />
+                    {corner.icon
+                      ? <img aria-hidden="true" src={corner.icon} alt="" className="h-9 w-9" data-icon-recipe={`eye-frame-${corner.style}`} />
+                      : <MiniCorner frame={corner.style} ball={art.eyeBallStyle ?? art.eyeStyle ?? 'rounded'} />}
                     {selected && <span aria-hidden="true" className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-white text-[10px] font-black text-slate-950">✓</span>}
                   </button>
                 )
@@ -301,7 +333,7 @@ const ArtDirectionPanel: React.FC = () => {
 
           <div>
             <div className="flex snap-x gap-2 overflow-x-auto pb-1" role="listbox" aria-label="Eyes">
-              {EYE_OPTIONS.map((eye) => {
+              {EYE_BALL_OPTIONS.map((eye) => {
                 const selected = selectedEye.name === eye.name
                 return (
                   <button
@@ -315,7 +347,9 @@ const ArtDirectionPanel: React.FC = () => {
                     data-setting={eye.style}
                     className={`relative flex h-14 w-14 shrink-0 snap-start items-center justify-center rounded-xl border-2 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white ${selected ? 'border-white bg-studio-950/70 ring-2 ring-studio-500' : 'border-slate-700 bg-slate-950/60 hover:border-slate-400'}`}
                   >
-                    <MiniCorner frame={art.eyeFrameStyle ?? art.eyeStyle ?? 'rounded'} ball={eye.style} />
+                    {eye.icon
+                      ? <img aria-hidden="true" src={eye.icon} alt="" className="h-9 w-9" data-icon-recipe={`eye-ball-${eye.style}`} />
+                      : <MiniCorner frame={art.eyeFrameStyle ?? art.eyeStyle ?? 'rounded'} ball={eye.style} />}
                     {selected && <span aria-hidden="true" className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-white text-[10px] font-black text-slate-950">✓</span>}
                   </button>
                 )
