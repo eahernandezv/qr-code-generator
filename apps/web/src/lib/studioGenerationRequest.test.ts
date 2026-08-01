@@ -78,6 +78,33 @@ describe('Studio canonical generation request and predictive preview', () => {
     })).not.toBe(balanced)
   })
 
+  it('renders all three curated solid intensity variants through the canonical request', () => {
+    const variants = [
+      { intensity: 'mellow' as const, primary: '#405b91' },
+      { intensity: 'balanced' as const, primary: '#5b6ef5' },
+      { intensity: 'punchy' as const, primary: '#2344d9' },
+    ]
+    const requests = variants.map(({ intensity, primary }) => request({
+      colorIntensity: intensity,
+      palettePattern: 'solid',
+      palette: { primary, secondary: primary, accent: primary, background: '#f0f4ff' },
+    }))
+    expect(requests.map((value) => value.colorIntensity)).toEqual(['mellow', 'balanced', 'punchy'])
+    const previews = requests.map((value) => renderStudioPreview(value))
+    expect(new Set(previews.map((artifact) => artifact.data))).toHaveLength(3)
+    expect(new Set(previews.map((artifact) => `${artifact.width}x${artifact.height}`))).toHaveLength(1)
+  })
+
+  it('maps Smaller, Balanced, and Larger QR size to distinct Core prominence intent and render framing', () => {
+    const prominences = [0.25, 0.7, 0.85]
+    const requests = prominences.map((protectedQrProminence) => request({ protectedQrProminence }))
+    expect(requests.map((value) => value.composition?.qrProminence)).toEqual(prominences)
+    const previews = requests.map((value) => renderStudioPreview(value))
+    expect(new Set(previews.map((artifact) => artifact.data))).toHaveLength(3)
+    // Core changes protected framing dimensions; QRPreview keeps its customer-visible viewport stable.
+    expect(new Set(previews.map((artifact) => `${artifact.width}x${artifact.height}`))).toHaveLength(3)
+  })
+
   it('maps all expanded body, frame, and ball treatments independently without changing the SVG viewport', () => {
     const modules = ['square', 'rounded', 'circle', 'vertical-bars', 'horizontal-bars'] as const
     const eyes = ['square', 'rounded', 'circle', 'squircle', 'chamfered'] as const
