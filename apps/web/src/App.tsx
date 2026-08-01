@@ -11,7 +11,7 @@ const App: React.FC = () => {
   const { project, resetProject } = useStudioStore()
   const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams()
   const showSecondaryWorkflow = searchParams.get('workflow') === 'internal'
-  const noScrollVariant = !showSecondaryWorkflow && searchParams.get('uxVariant') === 'no-scroll'
+  const noScrollVariant = !showSecondaryWorkflow && searchParams.get('uxVariant') !== 'scroll'
   const hasLivePayloadPreviewEntitlement = showSecondaryWorkflow || project.entitlement.type !== 'preview'
 
   return (
