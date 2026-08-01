@@ -149,6 +149,11 @@ const QR_SIZES = [
   { value: 0.85, iconSize: 22, label: 'Larger QR size' },
 ] as const
 
+const SELECTOR_TILE_BASE = 'relative flex h-14 w-14 shrink-0 snap-start items-center justify-center overflow-hidden rounded-xl border-2 p-0 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white'
+const SELECTOR_TILE_SELECTED = 'border-white bg-studio-950/70 ring-2 ring-studio-500 ring-offset-2 ring-offset-slate-900'
+const SELECTOR_TILE_IDLE = 'border-slate-700 bg-slate-950/60 hover:border-slate-400'
+const SELECTOR_CHECK = 'absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-white text-[10px] font-black text-slate-950'
+
 function primitiveStyle(shape: ModuleStyle | EyePrimitiveStyle): React.CSSProperties {
   if (shape === 'circle') return { borderRadius: '9999px' }
   if (shape === 'rounded') return { borderRadius: '2px' }
@@ -269,11 +274,12 @@ const ArtDirectionPanel: React.FC = () => {
                     aria-label={`${preset.name}${selected ? ' selected' : ''}`}
                     aria-selected={selected}
                     onClick={() => update({ paletteFamily: preset.family, palettePattern: preset.pattern })}
-                    className={`relative h-12 w-14 shrink-0 snap-start overflow-hidden rounded-xl border-2 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white ${selected ? 'border-white ring-2 ring-studio-500' : 'border-slate-700 hover:border-slate-400'}`}
+                    data-selector-family="palette"
+                    className={`${SELECTOR_TILE_BASE} ${selected ? SELECTOR_TILE_SELECTED : SELECTOR_TILE_IDLE}`}
                     style={{ background: preset.swatch }}
                   >
                     <span aria-hidden="true" className="absolute inset-x-1 bottom-1 h-1 rounded-full bg-black/25" />
-                    {selected && <span aria-hidden="true" className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-white text-[10px] font-black text-slate-950">✓</span>}
+                    {selected && <span aria-hidden="true" className={SELECTOR_CHECK}>✓</span>}
                   </button>
                 )
               })}
@@ -294,11 +300,13 @@ const ArtDirectionPanel: React.FC = () => {
                     onClick={() => update({ moduleStyle: style.moduleStyle })}
                     title={`${style.name} QR style`}
                     data-setting={style.moduleStyle}
-                    className={`flex h-14 w-14 shrink-0 snap-start items-center justify-center rounded-xl border-2 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white ${selected ? 'border-white bg-studio-950/70 ring-2 ring-studio-500' : 'border-slate-700 bg-slate-950/60 hover:border-slate-400'}`}
+                    data-selector-family="style"
+                    className={`${SELECTOR_TILE_BASE} ${selected ? SELECTOR_TILE_SELECTED : SELECTOR_TILE_IDLE}`}
                   >
                     {style.icon
                       ? <img aria-hidden="true" src={style.icon} alt="" className="h-9 w-9 rounded-md" data-icon-recipe={style.moduleStyle} />
                       : <MiniQr shape={style.moduleStyle} />}
+                    {selected && <span aria-hidden="true" className={SELECTOR_CHECK}>✓</span>}
                   </button>
                 )
               })}
@@ -319,12 +327,13 @@ const ArtDirectionPanel: React.FC = () => {
                     onClick={() => update({ eyeFrameStyle: corner.style })}
                     title={`${corner.name} corner style`}
                     data-setting={corner.style}
-                    className={`relative flex h-14 w-14 shrink-0 snap-start items-center justify-center rounded-xl border-2 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white ${selected ? 'border-white bg-studio-950/70 ring-2 ring-studio-500' : 'border-slate-700 bg-slate-950/60 hover:border-slate-400'}`}
+                    data-selector-family="corners"
+                    className={`${SELECTOR_TILE_BASE} ${selected ? SELECTOR_TILE_SELECTED : SELECTOR_TILE_IDLE}`}
                   >
                     {corner.icon
                       ? <img aria-hidden="true" src={corner.icon} alt="" className="h-9 w-9" data-icon-recipe={`eye-frame-${corner.style}`} />
                       : <MiniCorner frame={corner.style} ball={art.eyeBallStyle ?? art.eyeStyle ?? 'rounded'} />}
-                    {selected && <span aria-hidden="true" className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-white text-[10px] font-black text-slate-950">✓</span>}
+                    {selected && <span aria-hidden="true" className={SELECTOR_CHECK}>✓</span>}
                   </button>
                 )
               })}
@@ -345,12 +354,13 @@ const ArtDirectionPanel: React.FC = () => {
                     onClick={() => update({ eyeBallStyle: eye.style })}
                     title={`${eye.name} eye style`}
                     data-setting={eye.style}
-                    className={`relative flex h-14 w-14 shrink-0 snap-start items-center justify-center rounded-xl border-2 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white ${selected ? 'border-white bg-studio-950/70 ring-2 ring-studio-500' : 'border-slate-700 bg-slate-950/60 hover:border-slate-400'}`}
+                    data-selector-family="eyes"
+                    className={`${SELECTOR_TILE_BASE} ${selected ? SELECTOR_TILE_SELECTED : SELECTOR_TILE_IDLE}`}
                   >
                     {eye.icon
                       ? <img aria-hidden="true" src={eye.icon} alt="" className="h-9 w-9" data-icon-recipe={`eye-ball-${eye.style}`} />
                       : <MiniCorner frame={art.eyeFrameStyle ?? art.eyeStyle ?? 'rounded'} ball={eye.style} />}
-                    {selected && <span aria-hidden="true" className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-white text-[10px] font-black text-slate-950">✓</span>}
+                    {selected && <span aria-hidden="true" className={SELECTOR_CHECK}>✓</span>}
                   </button>
                 )
               })}
@@ -370,7 +380,8 @@ const ArtDirectionPanel: React.FC = () => {
                 aria-pressed={selected}
                 title={size.label}
                 onClick={() => update({ protectedQrProminence: size.value })}
-                className={`h-9 w-8 rounded-lg text-[10px] font-bold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white ${selected ? 'bg-studio-600 text-white shadow' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
+                data-selector-family="qr-size"
+                className={`relative flex h-9 w-8 items-center justify-center rounded-lg p-0 text-[10px] font-bold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white ${selected ? 'bg-studio-600 text-white shadow' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
               ><SizeIcon size={size.iconSize} /></button>
             })}
           </div>

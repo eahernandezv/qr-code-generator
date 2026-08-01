@@ -13,6 +13,7 @@ const b14EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/st
 const b16EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b16-palette-sliders-destination-polish')
 const b18EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b18-expose-extreme-primitives')
 const b19EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b19-scan-confidence-labeling')
+const b20EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b20-selector-geometry-alignment')
 
 const svgArtwork = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
@@ -211,6 +212,78 @@ test.beforeAll(async () => {
   await fs.mkdir(b16EvidenceDir, { recursive: true })
   await fs.mkdir(b18EvidenceDir, { recursive: true })
   await fs.mkdir(b19EvidenceDir, { recursive: true })
+  await fs.mkdir(b20EvidenceDir, { recursive: true })
+})
+
+test('B20 aligns QR-size glyphs and gives selector families one perimeter grammar', async ({ page }) => {
+  const errors = await assertNoConsoleErrors(page)
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/')
+  await page.addStyleTag({ content: '*,*::before,*::after{transition:none!important;animation:none!important}' })
+
+  const selectorMeasurements = []
+  const representatives = [
+    ['palette', page.getByRole('option', { name: /^Rainbow horizontal/ })],
+    ['style', page.getByRole('option', { name: /^Classic QR style/ })],
+    ['corners', page.getByRole('option', { name: /^Classic corner style/ })],
+    ['eyes', page.getByRole('option', { name: /^Classic eye style/ })],
+  ] as const
+  for (const [family, option] of representatives) {
+    await option.click()
+    await expect(option).toHaveAttribute('aria-selected', 'true')
+    const measurement = await page.locator(`[data-selector-family="${family}"][aria-selected="true"]`).evaluate((element) => {
+      const style = getComputedStyle(element)
+      const box = element.getBoundingClientRect()
+      return {
+        width: box.width, height: box.height, borderWidth: style.borderWidth,
+        borderRadius: style.borderRadius, padding: style.padding, boxShadow: style.boxShadow,
+      }
+    })
+    expect(measurement).toMatchObject({ width: 56, height: 56, borderWidth: '2px', borderRadius: '12px', padding: '0px' })
+    expect(measurement.boxShadow).not.toBe('none')
+    selectorMeasurements.push({ family, ...measurement })
+  }
+  const perimeterSignatures = selectorMeasurements.map(({ width, height, borderWidth, borderRadius, padding }) => JSON.stringify({ width, height, borderWidth, borderRadius, padding }))
+  expect(new Set(perimeterSignatures).size).toBe(1)
+  expect(new Set(selectorMeasurements.map(({ boxShadow }) => boxShadow)).size).toBe(1)
+
+  const sizeMeasurements = []
+  for (const label of ['Smaller', 'Balanced', 'Larger']) {
+    const button = page.getByRole('button', { name: `${label} QR size` })
+    await button.click()
+    await expect(button).toHaveAttribute('aria-pressed', 'true')
+    const geometry = await button.evaluate((element) => {
+      const buttonBox = element.getBoundingClientRect()
+      const glyphBox = element.firstElementChild!.getBoundingClientRect()
+      return {
+        label: element.getAttribute('aria-label'),
+        button: { width: buttonBox.width, height: buttonBox.height },
+        glyph: { width: glyphBox.width, height: glyphBox.height },
+        centerDelta: {
+          x: (glyphBox.left + glyphBox.width / 2) - (buttonBox.left + buttonBox.width / 2),
+          y: (glyphBox.top + glyphBox.height / 2) - (buttonBox.top + buttonBox.height / 2),
+        },
+      }
+    })
+    expect(geometry.button).toEqual({ width: 32, height: 36 })
+    expect(Math.abs(geometry.centerDelta.x)).toBeLessThanOrEqual(0.1)
+    expect(Math.abs(geometry.centerDelta.y)).toBeLessThanOrEqual(0.1)
+    sizeMeasurements.push(geometry)
+    await page.getByRole('group', { name: 'QR size' }).screenshot({ path: path.join(b20EvidenceDir, `qr-size-${label.toLowerCase()}-selected.png`) })
+  }
+
+  const optionCounts = {
+    style: await page.getByRole('listbox', { name: 'Style' }).getByRole('option').count(),
+    corners: await page.getByRole('listbox', { name: 'Corners' }).getByRole('option').count(),
+    eyes: await page.getByRole('listbox', { name: 'Eyes' }).getByRole('option').count(),
+  }
+  expect(optionCounts).toEqual({ style: 7, corners: 7, eyes: 8 })
+  await page.locator('section[aria-labelledby="live-editor-title"]').screenshot({ path: path.join(b20EvidenceDir, 'selector-family-perimeter-comparison.png') })
+  await page.screenshot({ path: path.join(b20EvidenceDir, 'mobile-full-page.png'), fullPage: true })
+  await fs.writeFile(path.join(b20EvidenceDir, 'computed-style-dom-measurements.json'), JSON.stringify({
+    viewport: { width: 390, height: 844 }, selectorMeasurements, sizeMeasurements, optionCounts,
+  }, null, 2))
+  expect(errors).toEqual([])
 })
 
 test('B19 uses bounded scan-check wording and preserves B18/B16/B13 public behavior', async ({ page }) => {
