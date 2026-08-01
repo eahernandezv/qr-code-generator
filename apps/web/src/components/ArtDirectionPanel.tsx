@@ -300,10 +300,11 @@ const ArtDirectionPanel: React.FC<ArtDirectionPanelProps> = ({ noScrollVariant =
                       palettePattern: 'solid',
                       palette,
                     })}
-                    className={`relative h-11 w-11 shrink-0 snap-start rounded-full border-2 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white ${selected ? 'scale-105 border-white ring-2 ring-studio-500 ring-offset-2 ring-offset-slate-900' : 'border-slate-700 hover:scale-105 hover:border-slate-400'}`}
+                    data-selector-family="color"
+                    className={`${SELECTOR_TILE_BASE} ${selected ? SELECTOR_TILE_SELECTED : SELECTOR_TILE_IDLE}`}
                     style={{ background: `linear-gradient(135deg, ${palette.primary} 0 58%, ${palette.accent} 58%)` }}
                   >
-                    {selected && <span aria-hidden="true" className="absolute inset-0 flex items-center justify-center text-sm font-black text-white drop-shadow">✓</span>}
+                    {selected && <span aria-hidden="true" className={SELECTOR_CHECK}>✓</span>}
                   </button>
                 )
               })}
@@ -435,7 +436,7 @@ const ArtDirectionPanel: React.FC<ArtDirectionPanelProps> = ({ noScrollVariant =
             })}
           </div>
 
-          <QRPreview size={216} useDemoWhenEmpty />
+          <QRPreview size={232} useDemoWhenEmpty />
 
           <div role="group" aria-label="Intensity" className="grid gap-1 rounded-xl bg-slate-950 p-1">
             {INTENSITIES.map((option) => {
