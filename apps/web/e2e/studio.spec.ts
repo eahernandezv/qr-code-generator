@@ -217,7 +217,7 @@ test.beforeAll(async () => {
   await fs.mkdir(b21EvidenceDir, { recursive: true })
 })
 
-test('B21 makes the 216px no-scroll layout the default route while keeping scrollable Version A available for comparison', async ({ page }) => {
+test('B23 keeps the larger no-scroll QR preview as the default route while preserving scroll fallback', async ({ page }) => {
   const errors = await assertNoConsoleErrors(page)
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/')
@@ -258,8 +258,8 @@ test('B21 makes the 216px no-scroll layout the default route while keeping scrol
   const defaultNoScroll = await measure()
   expect(defaultNoScroll.document.verticalScrollRequired).toBe(false)
   expect(defaultNoScroll.document.scrollHeight).toBeLessThanOrEqual(defaultNoScroll.document.clientHeight)
-  expect(defaultNoScroll.preview.width).toBeGreaterThanOrEqual(216)
-  expect(defaultNoScroll.preview.height).toBeGreaterThanOrEqual(216)
+  expect(defaultNoScroll.preview.width).toBeGreaterThanOrEqual(232)
+  expect(defaultNoScroll.preview.height).toBeGreaterThanOrEqual(232)
   expect(defaultNoScroll.selectors).toEqual({ solid: 12, palette: 10, style: 7, corners: 7, eyes: 8 })
   expect(defaultNoScroll.destination.tagName).toBe('INPUT')
   expect(defaultNoScroll.destination.bottom).toBeLessThanOrEqual(844)
@@ -281,13 +281,13 @@ test('B21 makes the 216px no-scroll layout the default route while keeping scrol
   await page.goto('/?uxVariant=scroll')
   await expect(page.getByTestId('studio-app')).toHaveAttribute('data-ux-variant', 'default')
   const versionA = await measure()
-  expect(versionA.preview).toMatchObject({ width: 216, height: 216 })
+  expect(versionA.preview).toMatchObject({ width: 232, height: 232 })
   expect(versionA.document.verticalScrollRequired).toBe(true)
   await page.screenshot({ path: path.join(b21EvidenceDir, 'version-a-after-b20.png') })
 
   await fs.writeFile(path.join(b21EvidenceDir, 'layout-metrics.json'), JSON.stringify({
     versionA, versionB: { ...defaultNoScroll, reachableFamilies }, versionBAfterActivation: afterActivation,
-    target: { noScrollDefault: true, minimumPreview: { width: 216, height: 216 } },
+    target: { noScrollDefault: true, minimumPreview: { width: 232, height: 232 } },
   }, null, 2))
 
   const [a, b] = await Promise.all([
@@ -358,11 +358,20 @@ test('B20 aligns QR-size glyphs and gives selector families one perimeter gramma
   }
 
   const optionCounts = {
+    color: await page.locator('[data-selector-family="color"]').count(),
+    palette: await page.locator('[data-selector-family="palette"]').count(),
     style: await page.getByRole('listbox', { name: 'Style' }).getByRole('option').count(),
     corners: await page.getByRole('listbox', { name: 'Corners' }).getByRole('option').count(),
     eyes: await page.getByRole('listbox', { name: 'Eyes' }).getByRole('option').count(),
   }
-  expect(optionCounts).toEqual({ style: 7, corners: 7, eyes: 8 })
+  expect(optionCounts).toEqual({ color: 12, palette: 10, style: 7, corners: 7, eyes: 8 })
+  const allOptionGeometry = await page.locator('[data-selector-family="color"], [data-selector-family="palette"], [data-selector-family="style"], [data-selector-family="corners"], [data-selector-family="eyes"]').evaluateAll((elements) => elements.map((element) => {
+    const style = getComputedStyle(element)
+    const box = element.getBoundingClientRect()
+    return { family: element.getAttribute('data-selector-family'), width: box.width, height: box.height, borderWidth: style.borderWidth, borderRadius: style.borderRadius, padding: style.padding }
+  }))
+  expect(new Set(allOptionGeometry.map(({ width, height, borderWidth, borderRadius, padding }) => JSON.stringify({ width, height, borderWidth, borderRadius, padding }))).size).toBe(1)
+  expect(allOptionGeometry[0]).toMatchObject({ width: 56, height: 56, borderWidth: '2px', borderRadius: '12px', padding: '0px' })
   await page.locator('section[aria-labelledby="live-editor-title"]').screenshot({ path: path.join(b20EvidenceDir, 'selector-family-perimeter-comparison.png') })
   await page.screenshot({ path: path.join(b20EvidenceDir, 'mobile-full-page.png'), fullPage: true })
   await fs.writeFile(path.join(b20EvidenceDir, 'computed-style-dom-measurements.json'), JSON.stringify({
