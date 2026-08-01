@@ -51,8 +51,11 @@ export type PalettePattern =
   | 'spiral'
   | 'radialRings';
 export type ColorIntensity = 'mellow' | 'balanced' | 'punchy';
-export type ModuleStyle = 'square' | 'rounded' | 'circle' | 'vertical-bars' | 'horizontal-bars';
-export type EyeStyle = 'square' | 'rounded' | 'circle' | 'squircle' | 'chamfered';
+export type ModuleStyle = 'square' | 'rounded' | 'circle' | 'vertical-bars' | 'horizontal-bars' | 'notched' | 'shield';
+export type EyeStyle = 'square' | 'rounded' | 'circle' | 'squircle' | 'chamfered' | 'diamond' | 'hex' | 'vertical-capsule' | 'horizontal-capsule';
+export type EyeFrameStyle = Exclude<EyeStyle, 'vertical-capsule' | 'horizontal-capsule'>;
+export type EyeBallStyle = Exclude<EyeStyle, 'diamond'>;
+export type FinderStyle = 'square' | 'rounded' | 'circle' | 'squircle' | 'chamfered' | 'hex';
 
 export interface Composition {
   focalArea?: 'center' | 'top' | 'bottom' | 'left' | 'right' | 'balanced';
@@ -73,11 +76,11 @@ export interface GenerationRequest {
   /** Core-backed data-module treatment. */
   moduleShape?: ModuleStyle;
   /** Legacy shorthand applying one shape to both finder frame and ball. */
-  eyeShape?: EyeStyle;
+  eyeShape?: FinderStyle;
   /** Core-backed finder outer frame/corner ring treatment. */
-  eyeFrameShape?: EyeStyle;
+  eyeFrameShape?: EyeFrameStyle;
   /** Core-backed finder inner ball/pupil treatment. */
-  eyeBallShape?: EyeStyle;
+  eyeBallShape?: EyeBallStyle;
   composition?: Composition;
   seed?: number;
 }

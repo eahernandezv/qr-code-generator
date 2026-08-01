@@ -10,7 +10,7 @@ export function svgShape(shape: EyeShape, x: number, y: number, size: number, fi
     const radius = size * 0.18;
     return `<rect ${attrs} x="${x}" y="${y}" width="${size}" height="${size}" rx="${radius}" ry="${radius}"/>`;
   }
-  if (shape === 'squircle' || shape === 'chamfered') {
+  if (shape === 'squircle' || shape === 'chamfered' || shape === 'diamond' || shape === 'hex' || shape === 'vertical-capsule' || shape === 'horizontal-capsule') {
     const rows: string[] = [];
     const pixels = Math.round(size);
     for (let py = 0; py < pixels; py += 1) {
@@ -36,6 +36,11 @@ export function pointInShape(shape: EyeShape, px: number, py: number, size: numb
   if (shape === 'circle') return dx * dx + dy * dy <= 0.25;
   if (shape === 'squircle') return Math.pow(dx / 0.5, 4) + Math.pow(dy / 0.5, 4) <= 1;
   if (shape === 'chamfered') return dx + dy <= 0.82;
+  if (shape === 'diamond') return dx + dy <= 0.76;
+  if (shape === 'hex') return dx * 0.55 + dy <= 0.64;
+
+  if (shape === 'vertical-capsule') return capsuleContains(dx, dy, true);
+  if (shape === 'horizontal-capsule') return capsuleContains(dx, dy, false);
   if (shape === 'rounded') {
     const radius = 0.18;
     const cornerX = Math.max(dx - (0.5 - radius), 0);
@@ -43,4 +48,13 @@ export function pointInShape(shape: EyeShape, px: number, py: number, size: numb
     return cornerX * cornerX + cornerY * cornerY <= radius * radius;
   }
   return true;
+}
+
+function capsuleContains(dx: number, dy: number, vertical: boolean): boolean {
+  const cross = vertical ? dx : dy;
+  const along = vertical ? dy : dx;
+  const radius = 0.38;
+  const capCenter = 0.5 - radius;
+  if (along <= capCenter) return cross * cross + (along - capCenter) ** 2 <= radius ** 2;
+  return cross <= radius;
 }

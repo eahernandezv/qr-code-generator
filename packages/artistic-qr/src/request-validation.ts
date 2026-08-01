@@ -14,8 +14,10 @@ const MIME_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp']);
 const PALETTE_FAMILIES = new Set(['rainbow', 'pride', 'trans', 'bi', 'berry', 'forest']);
 const PALETTE_PATTERNS = new Set(['solid', 'horizontalGradient', 'verticalGradient', 'diagonalGradient', 'flagRows', 'spiral', 'radialRings']);
 const COLOR_INTENSITIES = new Set(['mellow', 'balanced', 'punchy']);
-const MODULE_SHAPES = new Set(['square', 'rounded', 'circle', 'vertical-bars', 'horizontal-bars']);
-const EYE_SHAPES = new Set(['square', 'rounded', 'circle', 'squircle', 'chamfered']);
+const MODULE_SHAPES = new Set(['square', 'rounded', 'circle', 'vertical-bars', 'horizontal-bars', 'notched', 'shield']);
+const LEGACY_EYE_SHAPES = new Set(['square', 'rounded', 'circle', 'squircle', 'chamfered', 'hex']);
+const EYE_FRAME_SHAPES = new Set(['square', 'rounded', 'circle', 'squircle', 'chamfered', 'diamond', 'hex']);
+const EYE_BALL_SHAPES = new Set(['square', 'rounded', 'circle', 'squircle', 'chamfered', 'hex', 'vertical-capsule', 'horizontal-capsule']);
 const REQUEST_KEYS = new Set(['normalizedPayload', 'mode', 'artDirectionId', 'prompt', 'referenceImage', 'artisticStrength', 'palette', 'paletteFamily', 'palettePattern', 'colorIntensity', 'moduleShape', 'eyeShape', 'eyeFrameShape', 'eyeBallShape', 'composition', 'seed']);
 const PAYLOAD_KEYS = new Set(['canonical', 'mode', 'byteLength', 'version', 'errorCorrectionLevel', 'maskPattern']);
 const PALETTE_KEYS = new Set(['primary', 'secondary', 'accent', 'background']);
@@ -56,9 +58,9 @@ export function validateGenerationRequest(value: unknown): GenerationRequest {
   optionalEnum(request, 'palettePattern', PALETTE_PATTERNS);
   optionalEnum(request, 'colorIntensity', COLOR_INTENSITIES);
   optionalEnum(request, 'moduleShape', MODULE_SHAPES);
-  optionalEnum(request, 'eyeShape', EYE_SHAPES);
-  optionalEnum(request, 'eyeFrameShape', EYE_SHAPES);
-  optionalEnum(request, 'eyeBallShape', EYE_SHAPES);
+  optionalEnum(request, 'eyeShape', LEGACY_EYE_SHAPES);
+  optionalEnum(request, 'eyeFrameShape', EYE_FRAME_SHAPES);
+  optionalEnum(request, 'eyeBallShape', EYE_BALL_SHAPES);
   if (request.seed !== undefined && (!Number.isSafeInteger(request.seed) || Math.abs(request.seed as number) > 2_147_483_647)) {
     throw malformed('Seed is invalid');
   }

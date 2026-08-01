@@ -2,10 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { createHash } from 'node:crypto';
 import * as jsQRModule from 'jsqr';
 import { PNG } from 'pngjs';
-import { generateMatrix, normalizePayload, renderDeterministic, type EyeShape, type ModuleShape } from './index.js';
+import { generateMatrix, normalizePayload, renderDeterministic, type EyeBallShape, type EyeFrameShape, type EyeShape, type ModuleShape } from './index.js';
 
-const modules: ModuleShape[] = ['square', 'rounded', 'circle', 'vertical-bars', 'horizontal-bars'];
-const eyes: EyeShape[] = ['square', 'rounded', 'circle', 'squircle', 'chamfered'];
+const modules: ModuleShape[] = ['square', 'rounded', 'circle', 'vertical-bars', 'horizontal-bars', 'notched', 'shield'];
+const eyeFrames: EyeFrameShape[] = ['square', 'rounded', 'circle', 'squircle', 'chamfered', 'diamond', 'hex'];
+const eyeBalls: EyeBallShape[] = ['square', 'rounded', 'circle', 'squircle', 'chamfered', 'hex', 'vertical-capsule', 'horizontal-capsule'];
 const payload = 'https://example.com/b12/style-primitives?stable=true';
 const matrix = generateMatrix(normalizePayload({ mode: 'url', content: payload, errorCorrectionLevel: 'H' }));
 type Decoder = (data: Uint8ClampedArray, width: number, height: number) => { data: string } | null;
@@ -57,8 +58,11 @@ function proveFamilyDistinct(values: readonly string[], option: (value: string) 
   expect(new Set(svgs.map((artifact) => `${artifact.width}x${artifact.height}:${artifact.metadata.margin}`)).size).toBe(1);
   for (const [index, value] of values.entries()) {
     expect(svg(option(value))).toEqual(svgs[index]);
-    expect(decode(pngs[index].data)).toBe(payload);
-    if (value === 'squircle' || value === 'chamfered') expect(svgs[index].data).toContain(`${marker}="${value}"`);
+    expect(png(option(value))).toEqual(pngs[index]);
+    expect(decode(pngs[index].data), `${value} PNG must decode`).toBe(payload);
+    if (['squircle', 'chamfered', 'diamond', 'hex', 'vertical-capsule', 'horizontal-capsule', 'notched', 'shield'].includes(value)) {
+      expect(svgs[index].data).toContain(`${marker}="${value}"`);
+    }
   }
 }
 
@@ -68,11 +72,11 @@ describe('expanded Core-backed style primitive families', () => {
   });
 
   it('renders eye frame/corner-ring primitives independently and scan-safely', () => {
-    proveFamilyDistinct(eyes, (value) => ({ shape: 'square', eyeFrameShape: value as EyeShape, eyeBallShape: 'square' }), 'data-eye-frame-shape');
+    proveFamilyDistinct(eyeFrames, (value) => ({ shape: 'square', eyeFrameShape: value as EyeFrameShape, eyeBallShape: 'square' }), 'data-eye-frame-shape');
   });
 
   it('renders eye ball/pupil primitives independently and scan-safely', () => {
-    proveFamilyDistinct(eyes, (value) => ({ shape: 'square', eyeFrameShape: 'square', eyeBallShape: value as EyeShape }), 'data-eye-ball-shape');
+    proveFamilyDistinct(eyeBalls, (value) => ({ shape: 'square', eyeFrameShape: 'square', eyeBallShape: value as EyeBallShape }), 'data-eye-ball-shape');
   });
 
   it('uses an XML-equivalent strict check that rejects duplicate attributes', () => {
@@ -102,7 +106,7 @@ describe('expanded Core-backed style primitive families', () => {
   });
 
   it('rejects unsupported values instead of silently rendering square', () => {
-    expect(() => svg({ shape: 'diamond' as ModuleShape })).toThrow(/Unsupported module shape/);
+    expect(() => svg({ shape: 'star' as ModuleShape })).toThrow(/Unsupported module shape/);
     expect(() => svg({ eyeFrameShape: 'beaded' as EyeShape })).toThrow(/Unsupported eye frame shape/);
     expect(() => png({ eyeBallShape: 'flower' as EyeShape })).toThrow(/Unsupported eye ball shape/);
   });

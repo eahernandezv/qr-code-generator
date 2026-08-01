@@ -26,6 +26,9 @@ export type {
   ColorIntensity,
   ModuleStyle,
   EyeStyle,
+  EyeFrameStyle,
+  EyeBallStyle,
+  FinderStyle,
 } from './types.js';
 export type { CandidateAuthorityRecord, CandidateAuthorityStore } from './candidate-context.js';
 export type {
