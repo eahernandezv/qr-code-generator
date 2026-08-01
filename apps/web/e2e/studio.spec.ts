@@ -15,6 +15,7 @@ const b18EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/st
 const b19EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b19-scan-confidence-labeling')
 const b20EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b20-selector-geometry-alignment')
 const b21EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b21-no-scroll-one-screen-variant')
+const b24EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b24-selector-scrollbar-clearance')
 
 const svgArtwork = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
@@ -215,6 +216,120 @@ test.beforeAll(async () => {
   await fs.mkdir(b19EvidenceDir, { recursive: true })
   await fs.mkdir(b20EvidenceDir, { recursive: true })
   await fs.mkdir(b21EvidenceDir, { recursive: true })
+  await fs.mkdir(b24EvidenceDir, { recursive: true })
+})
+
+test('B24 reserves visible scrollbar clearance for every selector family without regressing the default layout', async ({ page }) => {
+  const errors = await assertNoConsoleErrors(page)
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/')
+  await page.addStyleTag({ content: '*,*::before,*::after{transition:none!important;animation:none!important}' })
+
+  const families = [
+    ['color', 'Color'], ['palette', 'Palette'], ['style', 'Style'], ['corners', 'Corners'], ['eyes', 'Eyes'],
+  ] as const
+  const measurements: Record<string, unknown> = {}
+
+  for (const [family, label] of families) {
+    await page.getByRole('tab', { name: `Show ${family} controls` }).click()
+    const panel = page.getByRole('tabpanel', { name: `${label} controls` })
+    const row = panel.locator(`[data-selector-scroll-row="${family}"]`)
+    await expect(panel).toBeVisible()
+    await expect(row).toBeVisible()
+
+    const geometry = await row.evaluate((element, activeFamily) => {
+      const rowBox = element.getBoundingClientRect()
+      const tiles = Array.from(element.querySelectorAll<HTMLElement>(`[data-selector-family="${activeFamily}"]`)).map((tile) => {
+        const box = tile.getBoundingClientRect()
+        const style = getComputedStyle(tile)
+        return {
+          width: box.width, height: box.height, top: box.top, bottom: box.bottom,
+          borderWidth: style.borderWidth, borderRadius: style.borderRadius, padding: style.padding,
+          clipped: box.top < rowBox.top || box.bottom > rowBox.bottom,
+        }
+      })
+      const nativeScrollbarThickness = element.offsetHeight - element.clientHeight
+      const styledScrollbarThickness = 6
+      const effectiveScrollbarThickness = Math.max(nativeScrollbarThickness, styledScrollbarThickness)
+      const tileBottom = Math.max(...tiles.map((tile) => tile.bottom))
+      return {
+        family: activeFamily,
+        row: {
+          width: rowBox.width, height: rowBox.height,
+          scrollWidth: element.scrollWidth, clientWidth: element.clientWidth,
+          horizontallyScrollable: element.scrollWidth > element.clientWidth,
+          nativeScrollbarThickness,
+          effectiveScrollbarThickness,
+        },
+        tileCount: tiles.length,
+        tiles,
+        reservedBottomSpace: rowBox.bottom - tileBottom,
+        tileToScrollbarClearance: rowBox.bottom - effectiveScrollbarThickness - tileBottom,
+      }
+    }, family)
+
+    const typed = geometry as {
+      row: { horizontallyScrollable: boolean }
+      tiles: Array<{ width: number; height: number; borderWidth: string; borderRadius: string; padding: string; clipped: boolean }>
+      reservedBottomSpace: number
+      tileToScrollbarClearance: number
+    }
+    expect(typed.row.horizontallyScrollable).toBe(true)
+    expect(typed.tiles.length).toBeGreaterThan(0)
+    expect(typed.tiles.every(({ width, height, borderWidth, borderRadius, padding }) => width === 56 && height === 56 && borderWidth === '2px' && borderRadius === '12px' && padding === '0px')).toBe(true)
+    expect(typed.tiles.every(({ clipped }) => !clipped)).toBe(true)
+    expect(typed.reservedBottomSpace).toBeGreaterThan(6)
+    expect(typed.tileToScrollbarClearance).toBeGreaterThan(0)
+    measurements[family] = geometry
+
+    await panel.screenshot({ path: path.join(b24EvidenceDir, `${family}-scrollbar-clearance.png`) })
+  }
+
+  const layout = await page.evaluate(() => {
+    const scrolling = document.scrollingElement!
+    const preview = document.querySelector<HTMLElement>('img[alt="QR Preview"]')!.getBoundingClientRect()
+    const destination = document.querySelector<HTMLElement>('#destination-content')!.getBoundingClientRect()
+    const headings = Array.from(document.querySelectorAll('h1,h2,h3'), (heading) => heading.textContent?.trim())
+    return {
+      viewport: { width: innerWidth, height: innerHeight },
+      document: { scrollHeight: scrolling.scrollHeight, clientHeight: scrolling.clientHeight },
+      preview: { width: preview.width, height: preview.height },
+      destination: { bottom: destination.bottom, breathingRoom: innerHeight - destination.bottom },
+      hiddenPublicPanels: Object.fromEntries(['Candidates', 'Checkout', 'Export'].map((name) => [name, headings.filter((heading) => heading === name).length])),
+    }
+  })
+  expect(layout.document.scrollHeight).toBeLessThanOrEqual(layout.document.clientHeight)
+  expect(layout.preview).toEqual({ width: 232, height: 232 })
+  expect(layout.destination.bottom).toBeLessThanOrEqual(844)
+  expect(layout.destination.breathingRoom).toBeGreaterThan(0)
+  expect(layout.hiddenPublicPanels).toEqual({ Candidates: 0, Checkout: 0, Export: 0 })
+  await expect(page.getByRole('button', { name: 'Text' })).toHaveCount(0)
+
+  const preview = page.getByRole('img', { name: 'QR Preview' })
+  const previewBeforeDraft = await preview.getAttribute('src')
+  await page.getByRole('textbox', { name: 'Final destination URL' }).fill('https://example.com/b24-public-draft')
+  await page.getByRole('button', { name: 'Continue with this QR' }).click()
+  await expect(page.getByRole('status')).toContainText('QR activates after payment')
+  expect(await preview.getAttribute('src')).toBe(previewBeforeDraft)
+
+  await page.goto('/?uxVariant=scroll')
+  await expect(page.getByTestId('studio-app')).toHaveAttribute('data-ux-variant', 'default')
+  await expect(page.locator('[data-selector-scroll-row]')).toHaveCount(5)
+
+  await fs.writeFile(path.join(b24EvidenceDir, 'scrollbar-clearance-metrics.json'), JSON.stringify({
+    viewport: { width: 390, height: 844 },
+    strategy: { bottomPaddingPx: 12, styledScrollbarThicknessPx: 6 },
+    families: measurements,
+    layout,
+    publicGate: { textDestinationAbsent: true, draftPreviewUnchanged: previewBeforeDraft === await preview.getAttribute('src') },
+    scrollFallback: { route: '/?uxVariant=scroll', available: true },
+  }, null, 2))
+
+  const screenshots = await Promise.all(families.map(([family]) => fs.readFile(path.join(b24EvidenceDir, `${family}-scrollbar-clearance.png`))))
+  await page.setViewportSize({ width: 1180, height: 520 })
+  await page.setContent(`<main style="margin:0;padding:16px;background:#020617;color:white;font:600 15px system-ui;display:grid;grid-template-columns:repeat(3, 374px);gap:12px">${families.map(([, label], index) => `<figure style="margin:0"><figcaption style="margin-bottom:6px">${label} · tile/scrollbar clearance</figcaption><img style="display:block;width:374px" src="data:image/png;base64,${screenshots[index].toString('base64')}"></figure>`).join('')}</main>`)
+  await page.locator('main').screenshot({ path: path.join(b24EvidenceDir, 'selector-scrollbar-clearance-contact-sheet.png') })
+  expect(errors).toEqual([])
 })
 
 test('B23 keeps the larger no-scroll QR preview as the default route while preserving scroll fallback', async ({ page }) => {
