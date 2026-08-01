@@ -7,12 +7,11 @@ const PAYLOAD_TYPES: Array<{
   label: string
   inputLabel: string
   placeholder: string
-  help: string
 }> = [
-  { mode: 'url', label: 'URL', inputLabel: 'Final destination URL', placeholder: 'Enter destination URL…', help: 'Bind the real destination before generation.' },
-  { mode: 'email', label: 'Email', inputLabel: 'Email address', placeholder: 'name@example.com', help: 'Creates a mailto QR for this address.' },
-  { mode: 'text', label: 'Text', inputLabel: 'Text content', placeholder: 'Enter short text…', help: 'Encodes the text exactly as entered.' },
-  { mode: 'phone', label: 'Phone', inputLabel: 'Phone number', placeholder: '+1 555 123 4567', help: 'Creates a telephone QR for this number.' },
+  { mode: 'url', label: 'URL', inputLabel: 'Final destination URL', placeholder: 'Enter destination URL…' },
+  { mode: 'email', label: 'Email', inputLabel: 'Email address', placeholder: 'name@example.com' },
+  { mode: 'text', label: 'Text', inputLabel: 'Text content', placeholder: 'Enter short text…' },
+  { mode: 'phone', label: 'Phone', inputLabel: 'Phone number', placeholder: '+1 555 123 4567' },
 ]
 
 function normalizePayload(mode: QrMode, raw: string): string {
@@ -56,7 +55,12 @@ function validatePayload(mode: QrMode, raw: string): { valid: boolean; error?: s
   return { valid: true }
 }
 
-const PayloadInput: React.FC = () => {
+interface PayloadInputProps {
+  /** Paid, member, and explicit internal workflows may bind valid drafts to the live Core preview. */
+  livePreviewPayloadUpdates?: boolean
+}
+
+const PayloadInput: React.FC<PayloadInputProps> = ({ livePreviewPayloadUpdates = false }) => {
   const { project, setPayload } = useStudioStore()
   const { payload } = project
   const [draft, setDraft] = React.useState<Payload>(payload)
@@ -71,7 +75,10 @@ const PayloadInput: React.FC = () => {
     setDraft({ ...next, normalized: normalizePayload(next.mode, next.raw) })
     setError(next.raw.trim() && !nextValidation.valid ? nextValidation.error ?? null : null)
     setActivationMessage(null)
-  }, [])
+    if (livePreviewPayloadUpdates && nextValidation.valid) {
+      setPayload({ ...next, normalized: normalizePayload(next.mode, next.raw) })
+    }
+  }, [livePreviewPayloadUpdates, setPayload])
 
   const activate = useCallback(() => {
     const nextValidation = validatePayload(draft.mode, draft.raw)
@@ -105,7 +112,6 @@ const PayloadInput: React.FC = () => {
         </div>
       </div>
 
-      <p className="mb-2 text-[10px] text-slate-500">{selectedType.help}</p>
       <label htmlFor="destination-content" className="sr-only">{selectedType.inputLabel}</label>
       <textarea
         id="destination-content"

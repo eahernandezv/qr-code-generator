@@ -37,6 +37,18 @@ describe('PayloadInput', () => {
     expect(screen.getByRole('status')).toHaveTextContent('Content confirmed · Checkout coming next')
   })
 
+  it('preserves entitlement-gated live payload updates', async () => {
+    const user = userEvent.setup()
+    render(<PayloadInput livePreviewPayloadUpdates />)
+    await user.type(screen.getByRole('textbox'), 'member.example')
+    expect(screen.getByRole('button', { name: 'Continue with this QR' })).toBeEnabled()
+    expect(useStudioStore.getState().project.payload).toMatchObject({
+      raw: 'member.example',
+      normalized: 'https://member.example/',
+      mode: 'url',
+    })
+  })
+
   it('switches to Email and constructs a mailto payload', async () => {
     const user = userEvent.setup()
     render(<PayloadInput />)

@@ -1,12 +1,14 @@
 import { test, expect, type Page } from '@playwright/test'
 import fs from 'node:fs/promises'
 import path from 'node:path'
+import { createHash } from 'node:crypto'
 
 const evidenceRoot = path.resolve(process.cwd(), '../../.work-loop/evidence/stage2-commerce/browser')
 const exportDir = path.join(evidenceRoot, 'exports')
 const screenshotDir = path.join(evidenceRoot, 'screenshots')
 const b10EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b10-one-screen-compact-live-editor')
 const b11EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b11-corners-compact-editor-cleanup')
+const b13EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b13-label-cleanup-paid-payload-gate')
 
 const svgArtwork = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
@@ -200,6 +202,68 @@ test.beforeAll(async () => {
   await fs.mkdir(screenshotDir, { recursive: true })
   await fs.mkdir(b10EvidenceDir, { recursive: true })
   await fs.mkdir(b11EvidenceDir, { recursive: true })
+  await fs.mkdir(b13EvidenceDir, { recursive: true })
+})
+
+test('B13 public destination stays draft-only and compact controls keep accessible names', async ({ page }) => {
+  const errors = await assertNoConsoleErrors(page)
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/')
+
+  const preview = page.getByRole('img', { name: 'QR Preview' })
+  const destination = page.getByRole('textbox', { name: 'Final destination URL' })
+  const continueButton = page.getByRole('button', { name: 'Continue with this QR' })
+  await expect(preview).toBeVisible()
+  await expect(continueButton).toBeDisabled()
+  for (const removedLabel of ['Color', 'Palette', 'Style', 'Corners', 'Intensity']) {
+    await expect(page.getByText(removedLabel, { exact: true })).toHaveCount(0)
+  }
+  await expect(page.getByRole('group', { name: 'Color' })).toBeVisible()
+  await expect(page.getByRole('listbox', { name: 'Palette' })).toBeVisible()
+  await expect(page.getByRole('listbox', { name: 'Style' })).toBeVisible()
+  await expect(page.getByRole('listbox', { name: 'Corners' })).toBeVisible()
+  await expect(page.getByRole('group', { name: 'Intensity' })).toBeVisible()
+  await expect(page.getByText('Bind the real destination before generation.')).toHaveCount(0)
+  await expect(page.getByRole('heading', { name: 'Candidates' })).toHaveCount(0)
+  await expect(page.getByRole('heading', { name: 'Export' })).toHaveCount(0)
+  await page.screenshot({ path: path.join(b13EvidenceDir, '01-mobile-public-editor-before-typing.png'), fullPage: true })
+
+  const beforeSource = await preview.getAttribute('src')
+  expect(beforeSource).toBeTruthy()
+  await destination.fill('https://example.com/public-free-draft')
+  await expect(continueButton).toBeEnabled()
+  await expect(preview).toHaveAttribute('src', beforeSource!)
+  const afterSource = await preview.getAttribute('src')
+  const beforeHash = createHash('sha256').update(beforeSource!).digest('hex')
+  const afterHash = createHash('sha256').update(afterSource!).digest('hex')
+  expect(afterHash).toBe(beforeHash)
+  await page.screenshot({ path: path.join(b13EvidenceDir, '02-public-url-typed-preview-unchanged.png'), fullPage: true })
+  await fs.writeFile(path.join(b13EvidenceDir, 'public-preview-hashes.json'), JSON.stringify({
+    payloadMode: 'public-free-draft',
+    beforeSha256: beforeHash,
+    afterSha256: afterHash,
+    unchanged: beforeHash === afterHash,
+    continueEnabled: await continueButton.isEnabled(),
+  }, null, 2))
+  expect(errors).toEqual([])
+})
+
+test('B13 internal entitlement preserves live Core preview payload updates', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/?workflow=internal')
+  const preview = page.getByRole('img', { name: 'QR Preview' })
+  const beforeSource = await preview.getAttribute('src')
+  await page.getByRole('textbox', { name: 'Final destination URL' }).fill('https://example.com/member-live')
+  await expect.poll(() => preview.getAttribute('src')).not.toBe(beforeSource)
+  const afterSource = await preview.getAttribute('src')
+  expect(afterSource).toBeTruthy()
+  await page.screenshot({ path: path.join(b13EvidenceDir, '03-internal-live-preview-enabled.png'), fullPage: true })
+  await fs.writeFile(path.join(b13EvidenceDir, 'internal-live-preview-hashes.json'), JSON.stringify({
+    payloadMode: 'internal-entitled',
+    beforeSha256: createHash('sha256').update(beforeSource!).digest('hex'),
+    afterSha256: createHash('sha256').update(afterSource!).digest('hex'),
+    changed: beforeSource !== afterSource,
+  }, null, 2))
 })
 
 test('B11 public compact editor exposes truthful styles, corners, colors, and content types', async ({ page }) => {
@@ -210,7 +274,7 @@ test('B11 public compact editor exposes truthful styles, corners, colors, and co
   const editor = page.locator('section[aria-labelledby="live-editor-title"]')
   const preview = page.getByRole('img', { name: 'QR Preview' })
   await expect(editor).toBeVisible()
-  await expect(page.getByText('Corners', { exact: true })).toBeVisible()
+  await expect(page.getByText('Corners', { exact: true })).toHaveCount(0)
   await expect(page.getByRole('button', { name: 'URL' })).toHaveAttribute('aria-pressed', 'true')
   await expect(page.getByRole('button', { name: 'Email' })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Continue with this QR' })).toBeDisabled()
