@@ -16,6 +16,7 @@ const b19EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/st
 const b20EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b20-selector-geometry-alignment')
 const b21EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b21-no-scroll-one-screen-variant')
 const b24EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b24-selector-scrollbar-clearance')
+const b25bEvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b25b-body-corner-color-ui')
 
 const svgArtwork = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
@@ -217,6 +218,128 @@ test.beforeAll(async () => {
   await fs.mkdir(b20EvidenceDir, { recursive: true })
   await fs.mkdir(b21EvidenceDir, { recursive: true })
   await fs.mkdir(b24EvidenceDir, { recursive: true })
+  await fs.mkdir(b25bEvidenceDir, { recursive: true })
+})
+
+test('B25b consolidates Body Color and independently controls Corner Color with preserved public gates', async ({ page }) => {
+  const errors = await assertNoConsoleErrors(page)
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/')
+  await page.addStyleTag({ content: '*,*::before,*::after{transition:none!important;animation:none!important}' })
+
+  const families = [
+    ['body-color', 'Body Color', 22],
+    ['corner-color', 'Corner Color', 13],
+    ['style', 'Style', 7],
+    ['corners', 'Corners', 7],
+    ['eyes', 'Eyes', 8],
+  ] as const
+  const familyMetrics: Record<string, unknown> = {}
+  for (const [family, label, expectedCount] of families) {
+    await page.getByRole('tab', { name: `Show ${label} controls` }).click()
+    const panel = page.getByRole('tabpanel', { name: `${label} controls` })
+    const row = panel.locator(`[data-selector-scroll-row="${family}"]`)
+    await expect(row).toBeVisible()
+    const metrics = await row.evaluate((element, activeFamily) => {
+      const rowBox = element.getBoundingClientRect()
+      const tiles = Array.from(element.querySelectorAll<HTMLElement>(`[data-selector-family="${activeFamily}"]`)).map((tile) => {
+        const box = tile.getBoundingClientRect()
+        const style = getComputedStyle(tile)
+        return { width: box.width, height: box.height, borderWidth: style.borderWidth, borderRadius: style.borderRadius, padding: style.padding, bottom: box.bottom }
+      })
+      const scrollbarThickness = Math.max(element.offsetHeight - element.clientHeight, 6)
+      const tileBottom = Math.max(...tiles.map((tile) => tile.bottom))
+      return {
+        optionCount: tiles.length,
+        horizontallyScrollable: element.scrollWidth > element.clientWidth,
+        tiles: tiles.map(({ bottom: _bottom, ...tile }) => tile),
+        reservedBottomSpace: rowBox.bottom - tileBottom,
+        tileToScrollbarClearance: rowBox.bottom - scrollbarThickness - tileBottom,
+      }
+    }, family)
+    expect(metrics.optionCount).toBe(expectedCount)
+    expect(metrics.horizontallyScrollable).toBe(true)
+    expect(metrics.tiles.every((tile) => tile.width === 56 && tile.height === 56 && tile.borderWidth === '2px' && tile.borderRadius === '12px' && tile.padding === '0px')).toBe(true)
+    expect(metrics.tileToScrollbarClearance).toBeGreaterThan(0)
+    familyMetrics[family] = metrics
+  }
+
+  await page.getByRole('tab', { name: 'Show Body Color controls' }).click()
+  await expect(page.getByRole('option', { name: 'Studio Blue selected' })).toBeVisible()
+  const bodyPanel = page.getByRole('tabpanel', { name: 'Body Color controls' })
+  await bodyPanel.screenshot({ path: path.join(b25bEvidenceDir, 'body-color-solids.png') })
+  await bodyPanel.locator('[data-selector-scroll-row="body-color"]').evaluate((element) => { element.scrollLeft = element.scrollWidth })
+  await bodyPanel.screenshot({ path: path.join(b25bEvidenceDir, 'body-color-patterns.png') })
+  const preview = page.getByRole('img', { name: 'QR Preview' })
+  const initialPreview = await preview.getAttribute('src')
+  await page.getByRole('option', { name: 'Electric Purple' }).click()
+  await expect.poll(() => preview.getAttribute('src')).not.toBe(initialPreview)
+  const bodyPreview = await preview.getAttribute('src')
+  await page.screenshot({ path: path.join(b25bEvidenceDir, 'body-color-preview.png') })
+
+  await page.getByRole('tab', { name: 'Show Corner Color controls' }).click()
+  await expect(page.getByRole('option', { name: 'Match body selected' })).toBeVisible()
+  await page.getByRole('tabpanel', { name: 'Corner Color controls' }).screenshot({ path: path.join(b25bEvidenceDir, 'corner-color-family.png') })
+  await page.getByRole('option', { name: 'Crimson Red corner color' }).click()
+  await expect.poll(() => preview.getAttribute('src')).not.toBe(bodyPreview)
+  const cornerPreview = await preview.getAttribute('src')
+  await page.screenshot({ path: path.join(b25bEvidenceDir, 'corner-color-preview.png') })
+
+  const layout = await page.evaluate(() => {
+    const scrolling = document.scrollingElement!
+    const previewBox = document.querySelector<HTMLElement>('img[alt="QR Preview"]')!.getBoundingClientRect()
+    const destination = document.querySelector<HTMLElement>('#destination-content')!.getBoundingClientRect()
+    const headings = Array.from(document.querySelectorAll('h1,h2,h3'), (heading) => heading.textContent?.trim())
+    return {
+      viewport: { width: innerWidth, height: innerHeight },
+      document: { scrollHeight: scrolling.scrollHeight, clientHeight: scrolling.clientHeight, verticalScrollRequired: scrolling.scrollHeight > scrolling.clientHeight },
+      preview: { width: previewBox.width, height: previewBox.height },
+      destination: { bottom: destination.bottom, breathingRoom: innerHeight - destination.bottom },
+      familyLabels: Array.from(document.querySelectorAll('[role="tab"]'), (tab) => tab.getAttribute('title')),
+      publicTextDestinationCount: document.querySelectorAll('[aria-label="Text"]').length,
+      hiddenPaidPanels: Object.fromEntries(['Candidates', 'Checkout', 'Export'].map((name) => [name, headings.filter((heading) => heading === name).length])),
+    }
+  })
+  expect(layout.document.verticalScrollRequired).toBe(false)
+  expect(layout.preview).toEqual({ width: 232, height: 232 })
+  expect(layout.destination.breathingRoom).toBeGreaterThan(0)
+  expect(layout.familyLabels).toEqual(['Body Color', 'Corner Color', 'Style', 'Corners', 'Eyes'])
+  expect(layout.publicTextDestinationCount).toBe(0)
+  expect(layout.hiddenPaidPanels).toEqual({ Candidates: 0, Checkout: 0, Export: 0 })
+
+  const beforeDraft = await preview.getAttribute('src')
+  await page.getByRole('textbox', { name: 'Final destination URL' }).fill('https://example.com/b25b-public-draft')
+  await page.getByRole('button', { name: 'Continue with this QR' }).click()
+  await expect(page.getByRole('status')).toContainText('QR activates after payment')
+  const afterDraft = await preview.getAttribute('src')
+  expect(afterDraft).toBe(beforeDraft)
+
+  await fs.writeFile(path.join(b25bEvidenceDir, 'layout-and-scrollbar-metrics.json'), JSON.stringify({ layout, families: familyMetrics }, null, 2))
+  await fs.writeFile(path.join(b25bEvidenceDir, 'public-gate-proof.json'), JSON.stringify({
+    publicTextDestinationAbsent: layout.publicTextDestinationCount === 0,
+    hiddenPaidPanels: layout.hiddenPaidPanels,
+    typingAndContinueDraftOnly: beforeDraft === afterDraft,
+    status: await page.getByRole('status').textContent(),
+  }, null, 2))
+
+  const [bodyScreenshot, cornerScreenshot] = await Promise.all([
+    fs.readFile(path.join(b25bEvidenceDir, 'body-color-preview.png')),
+    fs.readFile(path.join(b25bEvidenceDir, 'corner-color-preview.png')),
+  ])
+  await page.setViewportSize({ width: 820, height: 900 })
+  await page.setContent(`<main style="margin:0;padding:12px;background:#020617;color:white;font:600 16px system-ui;display:flex;gap:12px"><figure style="margin:0"><figcaption style="margin-bottom:8px">Body · Electric Purple / corners match</figcaption><img width="390" height="844" src="data:image/png;base64,${bodyScreenshot.toString('base64')}"></figure><figure style="margin:0"><figcaption style="margin-bottom:8px">Same body · Crimson Red corners</figcaption><img width="390" height="844" src="data:image/png;base64,${cornerScreenshot.toString('base64')}"></figure></main>`)
+  await page.locator('main').screenshot({ path: path.join(b25bEvidenceDir, 'body-vs-corner-preview-contact-sheet.png') })
+
+  const [solidBodyOptions, patternedBodyOptions] = await Promise.all([
+    fs.readFile(path.join(b25bEvidenceDir, 'body-color-solids.png')),
+    fs.readFile(path.join(b25bEvidenceDir, 'body-color-patterns.png')),
+  ])
+  await page.setViewportSize({ width: 414, height: 210 })
+  await page.setContent(`<main style="margin:0;padding:12px;background:#020617;color:white;font:600 14px system-ui"><div style="margin-bottom:6px">Body Color · 12 solids + 10 patterns in one horizontal family</div><figure style="margin:0 0 10px"><figcaption style="margin-bottom:4px;color:#94a3b8">Solid options · start of rail</figcaption><img width="366" src="data:image/png;base64,${solidBodyOptions.toString('base64')}"></figure><figure style="margin:0"><figcaption style="margin-bottom:4px;color:#94a3b8">Patterned options · same rail, scrolled</figcaption><img width="366" src="data:image/png;base64,${patternedBodyOptions.toString('base64')}"></figure></main>`)
+  await page.locator('main').screenshot({ path: path.join(b25bEvidenceDir, 'body-color-family.png') })
+
+  expect(bodyPreview).not.toBe(cornerPreview)
+  expect(errors).toEqual([])
 })
 
 test('B24 reserves visible scrollbar clearance for every selector family without regressing the default layout', async ({ page }) => {
@@ -226,12 +349,12 @@ test('B24 reserves visible scrollbar clearance for every selector family without
   await page.addStyleTag({ content: '*,*::before,*::after{transition:none!important;animation:none!important}' })
 
   const families = [
-    ['color', 'Color'], ['palette', 'Palette'], ['style', 'Style'], ['corners', 'Corners'], ['eyes', 'Eyes'],
+    ['body-color', 'Body Color'], ['corner-color', 'Corner Color'], ['style', 'Style'], ['corners', 'Corners'], ['eyes', 'Eyes'],
   ] as const
   const measurements: Record<string, unknown> = {}
 
   for (const [family, label] of families) {
-    await page.getByRole('tab', { name: `Show ${family} controls` }).click()
+    await page.getByRole('tab', { name: `Show ${label} controls` }).click()
     const panel = page.getByRole('tabpanel', { name: `${label} controls` })
     const row = panel.locator(`[data-selector-scroll-row="${family}"]`)
     await expect(panel).toBeVisible()
@@ -350,8 +473,7 @@ test('B23 keeps the larger no-scroll QR preview as the default route while prese
       document: { scrollHeight: scrolling.scrollHeight, clientHeight: scrolling.clientHeight, verticalScrollRequired: scrolling.scrollHeight > scrolling.clientHeight },
       preview: { x: preview.x, y: preview.y, width: preview.width, height: preview.height, bottom: preview.bottom },
       selectors: {
-        solid: document.querySelectorAll('[aria-label="Color"] button').length,
-        palette: count('Palette'), style: count('Style'), corners: count('Corners'), eyes: count('Eyes'),
+        bodyColor: count('Body Color'), cornerColor: count('Corner Color'), style: count('Style'), corners: count('Corners'), eyes: count('Eyes'),
       },
       destination: { tagName: destination.tagName, x: destinationBox.x, y: destinationBox.y, width: destinationBox.width, height: destinationBox.height, bottom: destinationBox.bottom },
       hiddenPublicPanels: { Candidates: headingCount('Candidates'), Checkout: headingCount('Checkout'), Export: headingCount('Export') },
@@ -359,23 +481,23 @@ test('B23 keeps the larger no-scroll QR preview as the default route while prese
   })
 
   const familyTabs = [
-    ['color', 'Color'], ['palette', 'Palette'], ['style', 'Style'], ['corners', 'Corners'], ['eyes', 'Eyes'],
+    ['body-color', 'Body Color'], ['corner-color', 'Corner Color'], ['style', 'Style'], ['corners', 'Corners'], ['eyes', 'Eyes'],
   ] as const
   const reachableFamilies: string[] = []
   for (const [family, panel] of familyTabs) {
-    const tab = page.getByRole('tab', { name: `Show ${family} controls` })
+    const tab = page.getByRole('tab', { name: `Show ${panel} controls` })
     await tab.click()
     await expect(tab).toHaveAttribute('aria-selected', 'true')
     await expect(page.getByRole('tabpanel', { name: `${panel} controls` })).toBeVisible()
     reachableFamilies.push(family)
   }
-  expect(reachableFamilies).toEqual(['color', 'palette', 'style', 'corners', 'eyes'])
+  expect(reachableFamilies).toEqual(['body-color', 'corner-color', 'style', 'corners', 'eyes'])
   const defaultNoScroll = await measure()
   expect(defaultNoScroll.document.verticalScrollRequired).toBe(false)
   expect(defaultNoScroll.document.scrollHeight).toBeLessThanOrEqual(defaultNoScroll.document.clientHeight)
   expect(defaultNoScroll.preview.width).toBeGreaterThanOrEqual(232)
   expect(defaultNoScroll.preview.height).toBeGreaterThanOrEqual(232)
-  expect(defaultNoScroll.selectors).toEqual({ solid: 12, palette: 10, style: 7, corners: 7, eyes: 8 })
+  expect(defaultNoScroll.selectors).toEqual({ bodyColor: 22, cornerColor: 13, style: 7, corners: 7, eyes: 8 })
   expect(defaultNoScroll.destination.tagName).toBe('INPUT')
   expect(defaultNoScroll.destination.bottom).toBeLessThanOrEqual(844)
   expect(defaultNoScroll.hiddenPublicPanels).toEqual({ Candidates: 0, Checkout: 0, Export: 0 })
@@ -423,7 +545,8 @@ test('B20 aligns QR-size glyphs and gives selector families one perimeter gramma
 
   const selectorMeasurements = []
   const representatives = [
-    ['palette', page.getByRole('option', { name: /^Rainbow horizontal/ })],
+    ['body-color', page.getByRole('option', { name: /^Rainbow horizontal/ })],
+    ['corner-color', page.getByRole('option', { name: /^Classic Black corner color/ })],
     ['style', page.getByRole('option', { name: /^Classic QR style/ })],
     ['corners', page.getByRole('option', { name: /^Classic corner style/ })],
     ['eyes', page.getByRole('option', { name: /^Classic eye style/ })],
@@ -473,14 +596,14 @@ test('B20 aligns QR-size glyphs and gives selector families one perimeter gramma
   }
 
   const optionCounts = {
-    color: await page.locator('[data-selector-family="color"]').count(),
-    palette: await page.locator('[data-selector-family="palette"]').count(),
+    bodyColor: await page.locator('[data-selector-family="body-color"]').count(),
+    cornerColor: await page.locator('[data-selector-family="corner-color"]').count(),
     style: await page.getByRole('listbox', { name: 'Style' }).getByRole('option').count(),
     corners: await page.getByRole('listbox', { name: 'Corners' }).getByRole('option').count(),
     eyes: await page.getByRole('listbox', { name: 'Eyes' }).getByRole('option').count(),
   }
-  expect(optionCounts).toEqual({ color: 12, palette: 10, style: 7, corners: 7, eyes: 8 })
-  const allOptionGeometry = await page.locator('[data-selector-family="color"], [data-selector-family="palette"], [data-selector-family="style"], [data-selector-family="corners"], [data-selector-family="eyes"]').evaluateAll((elements) => elements.map((element) => {
+  expect(optionCounts).toEqual({ bodyColor: 22, cornerColor: 13, style: 7, corners: 7, eyes: 8 })
+  const allOptionGeometry = await page.locator('[data-selector-family="body-color"], [data-selector-family="corner-color"], [data-selector-family="style"], [data-selector-family="corners"], [data-selector-family="eyes"]').evaluateAll((elements) => elements.map((element) => {
     const style = getComputedStyle(element)
     const box = element.getBoundingClientRect()
     return { family: element.getAttribute('data-selector-family'), width: box.width, height: box.height, borderWidth: style.borderWidth, borderRadius: style.borderRadius, padding: style.padding }
@@ -654,7 +777,7 @@ test('B16 delivers icon-only settings, one-line destination, palettes, side cont
   await expect(sideControls.getByRole('group', { name: 'QR size' })).toBeVisible()
   await expect(sideControls.getByRole('group', { name: 'Intensity' })).toBeVisible()
   const solidHashes: Record<string, string> = {}
-  await page.getByRole('button', { name: /^Studio Blue/ }).click()
+  await page.getByRole('listbox', { name: 'Body Color' }).getByRole('option', { name: /^Studio Blue/ }).click()
   for (const level of ['Mellow', 'Balanced', 'Punchy']) {
     const button = page.getByRole('button', { name: `${level} color intensity` })
     const before = await preview.getAttribute('src')
@@ -690,7 +813,7 @@ test('B16 delivers icon-only settings, one-line destination, palettes, side cont
   }
   expect(new Set(Object.values(sizeHashes)).size).toBe(3)
 
-  await page.getByRole('group', { name: 'Color' }).screenshot({ path: path.join(b16EvidenceDir, 'expanded-solid-palette-row.png') })
+  await page.getByRole('listbox', { name: 'Body Color' }).screenshot({ path: path.join(b16EvidenceDir, 'expanded-solid-palette-row.png') })
   for (const row of iconRows) await page.getByRole('listbox', { name: row }).screenshot({ path: path.join(b16EvidenceDir, `icon-only-${row.toLowerCase()}.png`) })
   await page.screenshot({ path: path.join(b16EvidenceDir, 'mobile-public-editor.png'), fullPage: true })
 
@@ -804,8 +927,8 @@ test('B13 public destination stays draft-only and compact controls keep accessib
   for (const removedLabel of ['Color', 'Palette', 'Style', 'Corners', 'Intensity']) {
     await expect(page.getByText(removedLabel, { exact: true })).toHaveCount(0)
   }
-  await expect(page.getByRole('group', { name: 'Color' })).toBeVisible()
-  await expect(page.getByRole('listbox', { name: 'Palette' })).toBeVisible()
+  await expect(page.getByRole('listbox', { name: 'Body Color' })).toBeVisible()
+  await expect(page.getByRole('listbox', { name: 'Corner Color' })).toBeVisible()
   await expect(page.getByRole('listbox', { name: 'Style' })).toBeVisible()
   await expect(page.getByRole('listbox', { name: 'Corners' })).toBeVisible()
   await expect(page.getByRole('group', { name: 'Intensity' })).toBeVisible()
@@ -878,8 +1001,8 @@ test('B11 public compact editor exposes truthful styles, corners, colors, and co
   const previewBox = await preview.boundingBox()
   expect(previewBox).not.toBeNull()
   const initial = await preview.getAttribute('src')
-  await page.getByRole('button', { name: 'Classic Black' }).click()
-  await expect(page.getByRole('button', { name: 'Classic Black selected' })).toHaveAttribute('aria-pressed', 'true')
+  await page.getByRole('listbox', { name: 'Body Color' }).getByRole('option', { name: 'Classic Black', exact: true }).click()
+  await expect(page.getByRole('option', { name: 'Classic Black selected' })).toHaveAttribute('aria-selected', 'true')
   await expect.poll(() => preview.getAttribute('src')).not.toBe(initial)
   await editor.screenshot({ path: path.join(b11EvidenceDir, '02-classic-black-selected.png') })
 

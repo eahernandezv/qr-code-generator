@@ -44,6 +44,7 @@ export function buildStudioGenerationRequest(input: {
     ...(artDirection.paletteFamily ? { paletteFamily: artDirection.paletteFamily } : {}),
     ...(artDirection.palettePattern ? { palettePattern: artDirection.palettePattern } : {}),
     ...(artDirection.colorIntensity ? { colorIntensity: artDirection.colorIntensity } : {}),
+    ...(artDirection.cornerColor ? { cornerColor: artDirection.cornerColor } : {}),
     ...(artDirection.moduleStyle ? {
       moduleShape: artDirection.moduleStyle === 'dot' ? 'circle' : artDirection.moduleStyle,
     } : {}),

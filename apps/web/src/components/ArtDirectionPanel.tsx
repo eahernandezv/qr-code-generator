@@ -76,7 +76,7 @@ export const SOLID_PRESETS: readonly SolidPreset[] = [
   } },
 ]
 
-const PATTERNED_PRESETS: Array<{
+export const PATTERNED_PRESETS: Array<{
   name: string
   family: PaletteFamily
   pattern: PalettePattern
@@ -93,6 +93,11 @@ const PATTERNED_PRESETS: Array<{
   { name: 'Rainbow rings', family: 'rainbow', pattern: 'radialRings', swatch: 'radial-gradient(circle, #b00035 0 18%, #a83b00 18% 34%, #806400 34% 50%, #00733d 50% 66%, #004fc4 66% 82%, #7020a8 82%)' },
   { name: 'Trans safe diagonal', family: 'trans', pattern: 'diagonalGradient', swatch: 'linear-gradient(135deg, #006c91, #b00059, #6546a8, #b00059, #006c91)' },
 ]
+
+export const CORNER_COLOR_OPTIONS: ReadonlyArray<{ name: string; value: string }> = SOLID_PRESETS.map((preset) => ({
+  name: preset.name,
+  value: preset.variants.balanced.primary,
+}))
 
 const STYLE_OPTIONS: Array<{
   name: string
@@ -155,10 +160,10 @@ const SELECTOR_TILE_IDLE = 'border-slate-700 bg-slate-950/60 hover:border-slate-
 const SELECTOR_CHECK = 'absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-white text-[10px] font-black text-slate-950'
 const SELECTOR_SCROLL_ROW = 'selector-scroll-row flex snap-x gap-2 overflow-x-auto pb-3'
 
-type ControlFamily = 'color' | 'palette' | 'style' | 'corners' | 'eyes'
+type ControlFamily = 'body-color' | 'corner-color' | 'style' | 'corners' | 'eyes'
 const CONTROL_FAMILIES: ReadonlyArray<{ family: ControlFamily; label: string; glyph: string }> = [
-  { family: 'color', label: 'Color', glyph: '●' },
-  { family: 'palette', label: 'Palette', glyph: '▦' },
+  { family: 'body-color', label: 'Body Color', glyph: '●' },
+  { family: 'corner-color', label: 'Corner Color', glyph: '◉' },
   { family: 'style', label: 'Style', glyph: '⌗' },
   { family: 'corners', label: 'Corners', glyph: '◇' },
   { family: 'eyes', label: 'Eyes', glyph: '⊙' },
@@ -229,7 +234,7 @@ interface ArtDirectionPanelProps {
 
 const ArtDirectionPanel: React.FC<ArtDirectionPanelProps> = ({ noScrollVariant = false }) => {
   const { project, setArtDirection } = useStudioStore()
-  const [activeFamily, setActiveFamily] = React.useState<ControlFamily>('color')
+  const [activeFamily, setActiveFamily] = React.useState<ControlFamily>('body-color')
   const art = project.artDirection
   const update = (patch: Partial<ArtDirection>) => setArtDirection({ ...art, ...patch })
   const intensity = art.colorIntensity ?? 'balanced'
@@ -273,7 +278,7 @@ const ArtDirectionPanel: React.FC<ArtDirectionPanelProps> = ({ noScrollVariant =
                 id={`control-tab-${family}`}
                 type="button"
                 role="tab"
-                aria-label={`Show ${family} controls`}
+                aria-label={`Show ${label} controls`}
                 aria-selected={selected}
                 aria-controls={`control-panel-${family}`}
                 title={label}
@@ -284,9 +289,8 @@ const ArtDirectionPanel: React.FC<ArtDirectionPanelProps> = ({ noScrollVariant =
               ><span aria-hidden="true">{glyph}</span></button>
             })}
           </div>}
-          <div id="control-panel-color" role={noScrollVariant ? 'tabpanel' : undefined} aria-label={noScrollVariant ? 'Color controls' : undefined} className={noScrollVariant && activeFamily !== 'color' ? 'hidden' : undefined}>
-          <div role="group" aria-label="Color">
-            <div className={`${SELECTOR_SCROLL_ROW} items-center`} data-selector-scroll-row="color">
+          <div id="control-panel-body-color" role={noScrollVariant ? 'tabpanel' : undefined} aria-label={noScrollVariant ? 'Body Color controls' : undefined} className={noScrollVariant && activeFamily !== 'body-color' ? 'hidden' : undefined}>
+            <div className={`${SELECTOR_SCROLL_ROW} items-center`} data-selector-scroll-row="body-color" role="listbox" aria-label="Body Color">
               {SOLID_PRESETS.map((preset) => {
                 const selected = selectedSolid?.name === preset.name
                 const palette = preset.variants[intensity]
@@ -294,14 +298,16 @@ const ArtDirectionPanel: React.FC<ArtDirectionPanelProps> = ({ noScrollVariant =
                   <button
                     key={preset.name}
                     type="button"
+                    role="option"
                     aria-label={`${preset.name}${selected ? ' selected' : ''}`}
-                    aria-pressed={selected}
+                    aria-selected={selected}
                     onClick={() => update({
                       paletteFamily: undefined,
                       palettePattern: 'solid',
                       palette,
                     })}
-                    data-selector-family="color"
+                    data-setting={`solid:${preset.name}`}
+                    data-selector-family="body-color"
                     className={`${SELECTOR_TILE_BASE} ${selected ? SELECTOR_TILE_SELECTED : SELECTOR_TILE_IDLE}`}
                     style={{ background: `linear-gradient(135deg, ${palette.primary} 0 58%, ${palette.accent} 58%)` }}
                   >
@@ -309,12 +315,7 @@ const ArtDirectionPanel: React.FC<ArtDirectionPanelProps> = ({ noScrollVariant =
                   </button>
                 )
               })}
-            </div>
-          </div>
-          </div>
-
-          <div id="control-panel-palette" role={noScrollVariant ? 'tabpanel' : undefined} aria-label={noScrollVariant ? 'Palette controls' : undefined} className={noScrollVariant && activeFamily !== 'palette' ? 'hidden' : undefined}>
-            <div className={SELECTOR_SCROLL_ROW} data-selector-scroll-row="palette" role="listbox" aria-label="Palette">
+              <span aria-hidden="true" className="h-9 w-px shrink-0 bg-slate-600" data-body-color-separator="true" />
               {PATTERNED_PRESETS.map((preset) => {
                 const selected = selectedPatterned?.name === preset.name
                 return (
@@ -325,7 +326,8 @@ const ArtDirectionPanel: React.FC<ArtDirectionPanelProps> = ({ noScrollVariant =
                     aria-label={`${preset.name}${selected ? ' selected' : ''}`}
                     aria-selected={selected}
                     onClick={() => update({ paletteFamily: preset.family, palettePattern: preset.pattern })}
-                    data-selector-family="palette"
+                    data-setting={`pattern:${preset.family}:${preset.pattern}`}
+                    data-selector-family="body-color"
                     className={`${SELECTOR_TILE_BASE} ${selected ? SELECTOR_TILE_SELECTED : SELECTOR_TILE_IDLE}`}
                     style={{ background: preset.swatch }}
                   >
@@ -333,6 +335,44 @@ const ArtDirectionPanel: React.FC<ArtDirectionPanelProps> = ({ noScrollVariant =
                     {selected && <span aria-hidden="true" className={SELECTOR_CHECK}>✓</span>}
                   </button>
                 )
+              })}
+            </div>
+          </div>
+
+          <div id="control-panel-corner-color" role={noScrollVariant ? 'tabpanel' : undefined} aria-label={noScrollVariant ? 'Corner Color controls' : undefined} className={noScrollVariant && activeFamily !== 'corner-color' ? 'hidden' : undefined}>
+            <div className={SELECTOR_SCROLL_ROW} data-selector-scroll-row="corner-color" role="listbox" aria-label="Corner Color">
+              <button
+                type="button"
+                role="option"
+                aria-label={`Match body${art.cornerColor ? '' : ' selected'}`}
+                aria-selected={!art.cornerColor}
+                onClick={() => update({ cornerColor: undefined })}
+                title="Match body"
+                data-setting="match-body"
+                data-selector-family="corner-color"
+                className={`${SELECTOR_TILE_BASE} ${!art.cornerColor ? SELECTOR_TILE_SELECTED : SELECTOR_TILE_IDLE}`}
+                style={{ background: 'linear-gradient(135deg, #5162da 0 50%, #c9184a 50%)' }}
+              >
+                <span aria-hidden="true" className="rounded bg-slate-950/75 px-1 text-[9px] font-bold text-white">MATCH</span>
+                {!art.cornerColor && <span aria-hidden="true" className={SELECTOR_CHECK}>✓</span>}
+              </button>
+              {CORNER_COLOR_OPTIONS.map((option) => {
+                const selected = art.cornerColor === option.value
+                return <button
+                  key={option.value}
+                  type="button"
+                  role="option"
+                  aria-label={`${option.name} corner color${selected ? ' selected' : ''}`}
+                  aria-selected={selected}
+                  onClick={() => update({ cornerColor: option.value })}
+                  title={`${option.name} corner color`}
+                  data-setting={option.value}
+                  data-selector-family="corner-color"
+                  className={`${SELECTOR_TILE_BASE} ${selected ? SELECTOR_TILE_SELECTED : SELECTOR_TILE_IDLE}`}
+                  style={{ background: option.value }}
+                >
+                  {selected && <span aria-hidden="true" className={SELECTOR_CHECK}>✓</span>}
+                </button>
               })}
             </div>
           </div>
