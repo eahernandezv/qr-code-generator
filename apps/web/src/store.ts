@@ -25,7 +25,8 @@ const defaultArtDirection = (): ArtDirection => ({
   palettePattern: 'solid',
   colorIntensity: 'balanced',
   moduleStyle: 'square',
-  eyeStyle: 'rounded',
+  eyeFrameStyle: 'rounded',
+  eyeBallStyle: 'rounded',
   palette: {
     primary: '#5b6ef5',
     secondary: '#323eaf',
@@ -38,7 +39,8 @@ const defaultStyle = (): StyleSpec => ({
   foreground: '#181b3a',
   background: '#f0f4ff',
   margin: 4,
-  eyeStyle: 'rounded',
+  eyeFrameStyle: 'rounded',
+  eyeBallStyle: 'rounded',
   moduleStyle: 'rounded',
 })
 

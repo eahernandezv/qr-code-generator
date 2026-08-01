@@ -1,6 +1,6 @@
 import React from 'react'
 import { useStudioStore } from '../store'
-import type { ArtDirection, ColorIntensity, EyeStyle, ModuleStyle, PaletteFamily, PalettePattern } from '../types'
+import type { ArtDirection, ColorIntensity, EyePrimitiveStyle, ModuleStyle, PaletteFamily, PalettePattern } from '../types'
 import QRPreview from './QRPreview'
 
 const SOLID_PRESETS = [
@@ -32,22 +32,24 @@ const PATTERNED_PRESETS: Array<{
 
 const STYLE_OPTIONS: Array<{
   name: string
-  moduleStyle: Extract<ModuleStyle, 'square' | 'rounded' | 'dot'>
-  radius: string
+  moduleStyle: Extract<ModuleStyle, 'square' | 'rounded' | 'circle' | 'vertical-bars' | 'horizontal-bars'>
 }> = [
-  { name: 'Classic', moduleStyle: 'square', radius: 'rounded-none' },
-  { name: 'Rounded', moduleStyle: 'rounded', radius: 'rounded-[2px]' },
-  { name: 'Dots', moduleStyle: 'dot', radius: 'rounded-full' },
+  { name: 'Classic', moduleStyle: 'square' },
+  { name: 'Rounded', moduleStyle: 'rounded' },
+  { name: 'Dots', moduleStyle: 'circle' },
+  { name: 'Vertical', moduleStyle: 'vertical-bars' },
+  { name: 'Horizontal', moduleStyle: 'horizontal-bars' },
 ]
 
-const CORNER_OPTIONS: Array<{
+const EYE_OPTIONS: Array<{
   name: string
-  eyeStyle: Extract<EyeStyle, 'square' | 'rounded' | 'circle'>
-  radius: string
+  style: EyePrimitiveStyle
 }> = [
-  { name: 'Classic', eyeStyle: 'square', radius: 'rounded-none' },
-  { name: 'Soft', eyeStyle: 'rounded', radius: 'rounded-[5px]' },
-  { name: 'Circle', eyeStyle: 'circle', radius: 'rounded-full' },
+  { name: 'Classic', style: 'square' },
+  { name: 'Soft', style: 'rounded' },
+  { name: 'Circle', style: 'circle' },
+  { name: 'Squircle', style: 'squircle' },
+  { name: 'Chamfered', style: 'chamfered' },
 ]
 
 const INTENSITIES: Array<{ value: ColorIntensity; label: string }> = [
@@ -56,21 +58,38 @@ const INTENSITIES: Array<{ value: ColorIntensity; label: string }> = [
   { value: 'punchy', label: 'Punchy' },
 ]
 
-function MiniQr({ radius }: { radius: string }) {
+function primitiveStyle(shape: ModuleStyle | EyePrimitiveStyle): React.CSSProperties {
+  if (shape === 'circle') return { borderRadius: '9999px' }
+  if (shape === 'rounded') return { borderRadius: '2px' }
+  if (shape === 'squircle') return { borderRadius: '35%' }
+  if (shape === 'chamfered') return { clipPath: 'polygon(22% 0,78% 0,100% 22%,100% 78%,78% 100%,22% 100%,0 78%,0 22%)' }
+  return {}
+}
+
+function MiniQr({ shape }: { shape: ModuleStyle }) {
   const cells = [1, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1]
   return (
     <span aria-hidden="true" className="grid h-9 w-9 grid-cols-5 place-content-center gap-[1px] rounded-md bg-white p-1">
       {cells.map((filled, index) => (
-        <span key={index} className={`h-1 w-1 ${radius} bg-slate-950`} style={{ opacity: filled ? 1 : 0 }} />
+        <span
+          key={index}
+          className="bg-slate-950"
+          style={{
+            opacity: filled ? 1 : 0,
+            width: shape === 'vertical-bars' ? 3 : 4,
+            height: shape === 'horizontal-bars' ? 3 : 4,
+            ...primitiveStyle(shape),
+          }}
+        />
       ))}
     </span>
   )
 }
 
-function MiniCorner({ radius }: { radius: string }) {
+function MiniCorner({ frame, ball = frame }: { frame: EyePrimitiveStyle; ball?: EyePrimitiveStyle }) {
   return (
-    <span aria-hidden="true" className={`relative h-9 w-9 border-[5px] border-slate-950 bg-white ${radius}`}>
-      <span className={`absolute inset-[5px] bg-slate-950 ${radius}`} />
+    <span aria-hidden="true" className="relative h-9 w-9 border-[5px] border-slate-950 bg-white" style={primitiveStyle(frame)}>
+      <span className="absolute inset-[5px] bg-slate-950" style={primitiveStyle(ball)} />
     </span>
   )
 }
@@ -82,7 +101,8 @@ const ArtDirectionPanel: React.FC = () => {
   const selectedSolid = SOLID_PRESETS.find((preset) => !art.paletteFamily && art.palette?.primary === preset.primary)
   const selectedPatterned = PATTERNED_PRESETS.find((preset) => art.paletteFamily === preset.family && art.palettePattern === preset.pattern)
   const selectedStyle = STYLE_OPTIONS.find((style) => style.moduleStyle === (art.moduleStyle ?? 'rounded')) ?? STYLE_OPTIONS[1]
-  const selectedCorner = CORNER_OPTIONS.find((corner) => corner.eyeStyle === (art.eyeStyle ?? 'rounded')) ?? CORNER_OPTIONS[1]
+  const selectedCorner = EYE_OPTIONS.find((option) => option.style === (art.eyeFrameStyle ?? art.eyeStyle ?? 'rounded')) ?? EYE_OPTIONS[1]
+  const selectedEye = EYE_OPTIONS.find((option) => option.style === (art.eyeBallStyle ?? art.eyeStyle ?? 'rounded')) ?? EYE_OPTIONS[1]
 
   return (
     <section aria-labelledby="live-editor-title" className="rounded-2xl border border-slate-800 bg-slate-900/70 p-3 shadow-2xl shadow-black/20 sm:p-4">
@@ -157,7 +177,7 @@ const ArtDirectionPanel: React.FC = () => {
                     onClick={() => update({ moduleStyle: style.moduleStyle })}
                     className={`flex h-14 min-w-[76px] shrink-0 snap-start items-center gap-2 rounded-xl border-2 px-2 text-left transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white ${selected ? 'border-white bg-studio-950/70 ring-2 ring-studio-500' : 'border-slate-700 bg-slate-950/60 hover:border-slate-400'}`}
                   >
-                    <MiniQr radius={style.radius} />
+                    <MiniQr shape={style.moduleStyle} />
                     <span className="text-[10px] font-semibold text-slate-300">{style.name}</span>
                   </button>
                 )
@@ -167,7 +187,7 @@ const ArtDirectionPanel: React.FC = () => {
 
           <div>
             <div className="flex snap-x gap-2 overflow-x-auto pb-1" role="listbox" aria-label="Corners">
-              {CORNER_OPTIONS.map((corner) => {
+              {EYE_OPTIONS.map((corner) => {
                 const selected = selectedCorner.name === corner.name
                 return (
                   <button
@@ -176,11 +196,34 @@ const ArtDirectionPanel: React.FC = () => {
                     role="option"
                     aria-label={`${corner.name} corner style${selected ? ' selected' : ''}`}
                     aria-selected={selected}
-                    onClick={() => update({ eyeStyle: corner.eyeStyle })}
+                    onClick={() => update({ eyeFrameStyle: corner.style })}
                     className={`relative flex h-14 min-w-[76px] shrink-0 snap-start items-center gap-2 rounded-xl border-2 px-2 text-left transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white ${selected ? 'border-white bg-studio-950/70 ring-2 ring-studio-500' : 'border-slate-700 bg-slate-950/60 hover:border-slate-400'}`}
                   >
-                    <MiniCorner radius={corner.radius} />
+                    <MiniCorner frame={corner.style} ball={art.eyeBallStyle ?? art.eyeStyle ?? 'rounded'} />
                     <span className="text-[10px] font-semibold text-slate-300">{corner.name}</span>
+                    {selected && <span aria-hidden="true" className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-white text-[10px] font-black text-slate-950">✓</span>}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          <div>
+            <div className="flex snap-x gap-2 overflow-x-auto pb-1" role="listbox" aria-label="Eyes">
+              {EYE_OPTIONS.map((eye) => {
+                const selected = selectedEye.name === eye.name
+                return (
+                  <button
+                    key={eye.name}
+                    type="button"
+                    role="option"
+                    aria-label={`${eye.name} eye style${selected ? ' selected' : ''}`}
+                    aria-selected={selected}
+                    onClick={() => update({ eyeBallStyle: eye.style })}
+                    className={`relative flex h-14 min-w-[76px] shrink-0 snap-start items-center gap-2 rounded-xl border-2 px-2 text-left transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white ${selected ? 'border-white bg-studio-950/70 ring-2 ring-studio-500' : 'border-slate-700 bg-slate-950/60 hover:border-slate-400'}`}
+                  >
+                    <MiniCorner frame={art.eyeFrameStyle ?? art.eyeStyle ?? 'rounded'} ball={eye.style} />
+                    <span className="text-[10px] font-semibold text-slate-300">{eye.name}</span>
                     {selected && <span aria-hidden="true" className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-white text-[10px] font-black text-slate-950">✓</span>}
                   </button>
                 )

@@ -32,8 +32,15 @@ const QRPreview: React.FC<QRPreviewProps> = ({ size = 320, className = '', useDe
     try {
       const request = buildStudioGenerationRequest({ payload: previewPayload, artDirection })
       const artifact = renderStudioPreview(request)
+      // Core B12 squircle/chamfered SVG rows currently repeat an identical `fill`
+      // attribute. Browsers reject duplicate XML attributes, so remove only the
+      // byte-for-byte duplicate for preview transport without changing geometry,
+      // colors, validation, or the authoritative generation/export artifact.
+      const browserSvg = artifact.format === 'svg'
+        ? artifact.data.replace(/(fill="[^"]+")([^>]*?)\s\1/g, '$1$2')
+        : artifact.data
       const url = artifact.format === 'svg'
-        ? `data:image/svg+xml;charset=utf-8,${encodeURIComponent(artifact.data)}`
+        ? `data:image/svg+xml;charset=utf-8,${encodeURIComponent(browserSvg)}`
         : artifact.data
       setDataUrl(url)
       setError(null)

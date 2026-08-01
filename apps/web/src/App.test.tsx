@@ -26,13 +26,13 @@ describe('App integration', () => {
     expect(screen.getByRole('button', { name: 'Continue with this QR' })).toBeDisabled()
     expect(screen.getByText('After checkout: PNG + SVG downloads · Social and print sizes')).toBeInTheDocument()
     expect(screen.queryByText('Bind the real destination before generation.')).not.toBeInTheDocument()
-    for (const removedLabel of ['Color', 'Palette', 'Style', 'Corners', 'Intensity']) {
+    for (const removedLabel of ['Color', 'Palette', 'Style', 'Corners', 'Eyes', 'Intensity']) {
       expect(screen.queryByText(removedLabel, { exact: true })).not.toBeInTheDocument()
     }
     expect(screen.queryByText(/1200|2400|3600/)).not.toBeInTheDocument()
   })
 
-  it('uses accessible Core-backed Color, Style, and Corners choices', async () => {
+  it('uses accessible Core-backed Color, Style, Corners, and Eyes choices', async () => {
     const user = userEvent.setup()
     render(<App />)
     expect(screen.queryByRole('combobox')).not.toBeInTheDocument()
@@ -42,12 +42,26 @@ describe('App integration', () => {
     expect(useStudioStore.getState().project.artDirection.palette).toMatchObject({ primary: '#000000', background: '#ffffff' })
 
     await user.click(screen.getByRole('option', { name: 'Dots QR style' }))
-    expect(useStudioStore.getState().project.artDirection.moduleStyle).toBe('dot')
+    expect(useStudioStore.getState().project.artDirection.moduleStyle).toBe('circle')
     expect(screen.getByRole('option', { name: 'Dots QR style selected' })).toHaveAttribute('aria-selected', 'true')
 
+    for (const name of ['Classic', 'Rounded', 'Dots', 'Vertical', 'Horizontal']) {
+      expect(screen.getByRole('option', { name: new RegExp(`^${name} QR style`) })).toBeInTheDocument()
+    }
+
     await user.click(screen.getByRole('option', { name: 'Circle corner style' }))
-    expect(useStudioStore.getState().project.artDirection.eyeStyle).toBe('circle')
+    expect(useStudioStore.getState().project.artDirection.eyeFrameStyle).toBe('circle')
     expect(screen.getByRole('option', { name: 'Circle corner style selected' })).toHaveAttribute('aria-selected', 'true')
+
+    await user.click(screen.getByRole('option', { name: 'Chamfered eye style' }))
+    expect(useStudioStore.getState().project.artDirection.eyeBallStyle).toBe('chamfered')
+    expect(screen.getByRole('option', { name: 'Chamfered eye style selected' })).toHaveAttribute('aria-selected', 'true')
+
+    for (const suffix of ['corner style', 'eye style']) {
+      for (const name of ['Classic', 'Soft', 'Circle', 'Squircle', 'Chamfered']) {
+        expect(screen.getByRole('option', { name: new RegExp(`^${name} ${suffix}`) })).toBeInTheDocument()
+      }
+    }
   })
 
   it('keeps gated generation/export authority available only in the explicit internal workflow', () => {

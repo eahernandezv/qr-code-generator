@@ -47,7 +47,11 @@ export function buildStudioGenerationRequest(input: {
     ...(artDirection.moduleStyle ? {
       moduleShape: artDirection.moduleStyle === 'dot' ? 'circle' : artDirection.moduleStyle,
     } : {}),
-    ...(artDirection.eyeStyle ? { eyeShape: artDirection.eyeStyle } : {}),
+    ...(artDirection.eyeFrameStyle ? { eyeFrameShape: artDirection.eyeFrameStyle } : {}),
+    ...(artDirection.eyeBallStyle ? { eyeBallShape: artDirection.eyeBallStyle } : {}),
+    ...(!artDirection.eyeFrameStyle && !artDirection.eyeBallStyle && artDirection.eyeStyle
+      ? { eyeShape: artDirection.eyeStyle }
+      : {}),
     composition: {
       focalArea: FOCAL_AREAS[artDirection.composition ?? 'centered'],
       qrProminence: artDirection.protectedQrProminence,
