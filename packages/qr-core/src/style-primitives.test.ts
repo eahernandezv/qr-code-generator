@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { createHash } from 'node:crypto';
 import * as jsQRModule from 'jsqr';
 import { PNG } from 'pngjs';
-import { generateMatrix, normalizePayload, renderDeterministic, type EyeBallShape, type EyeFrameShape, type EyeShape, type ModuleShape } from './index.js';
+import { generateMatrix, normalizePayload, renderDeterministic, type EyeBallShape, type EyeFrameShape, type ModuleShape } from './index.js';
 
 const modules: ModuleShape[] = ['square', 'rounded', 'circle', 'vertical-bars', 'horizontal-bars', 'notched', 'shield'];
 const eyeFrames: EyeFrameShape[] = ['square', 'rounded', 'circle', 'squircle', 'chamfered', 'diamond', 'hex'];
@@ -107,7 +107,7 @@ describe('expanded Core-backed style primitive families', () => {
 
   it('rejects unsupported values instead of silently rendering square', () => {
     expect(() => svg({ shape: 'star' as ModuleShape })).toThrow(/Unsupported module shape/);
-    expect(() => svg({ eyeFrameShape: 'beaded' as EyeShape })).toThrow(/Unsupported eye frame shape/);
-    expect(() => png({ eyeBallShape: 'flower' as EyeShape })).toThrow(/Unsupported eye ball shape/);
+    expect(() => svg({ eyeFrameShape: 'beaded' as EyeFrameShape })).toThrow(/Unsupported eye frame shape/);
+    expect(() => png({ eyeBallShape: 'flower' as EyeBallShape })).toThrow(/Unsupported eye ball shape/);
   });
 });
