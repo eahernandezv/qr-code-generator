@@ -217,11 +217,11 @@ test.beforeAll(async () => {
   await fs.mkdir(b21EvidenceDir, { recursive: true })
 })
 
-test('B21 provides a real 216px no-scroll comparison variant without changing Version A', async ({ page }) => {
+test('B21 makes the 216px no-scroll layout the default route while keeping scrollable Version A available for comparison', async ({ page }) => {
   const errors = await assertNoConsoleErrors(page)
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/')
-  await expect(page.getByTestId('studio-app')).toHaveAttribute('data-ux-variant', 'default')
+  await expect(page.getByTestId('studio-app')).toHaveAttribute('data-ux-variant', 'no-scroll')
 
   const measure = async () => page.evaluate(() => {
     const scrolling = document.scrollingElement!
@@ -243,12 +243,6 @@ test('B21 provides a real 216px no-scroll comparison variant without changing Ve
     }
   })
 
-  const versionA = await measure()
-  expect(versionA.preview).toMatchObject({ width: 216, height: 216 })
-  await page.screenshot({ path: path.join(b21EvidenceDir, 'version-a-after-b20.png') })
-
-  await page.goto('/?uxVariant=no-scroll')
-  await expect(page.getByTestId('studio-app')).toHaveAttribute('data-ux-variant', 'no-scroll')
   const familyTabs = [
     ['color', 'Color'], ['palette', 'Palette'], ['style', 'Style'], ['corners', 'Corners'], ['eyes', 'Eyes'],
   ] as const
@@ -261,32 +255,39 @@ test('B21 provides a real 216px no-scroll comparison variant without changing Ve
     reachableFamilies.push(family)
   }
   expect(reachableFamilies).toEqual(['color', 'palette', 'style', 'corners', 'eyes'])
-  const versionB = await measure()
-  expect(versionB.document.verticalScrollRequired).toBe(false)
-  expect(versionB.document.scrollHeight).toBeLessThanOrEqual(versionB.document.clientHeight)
-  expect(versionB.preview.width).toBeGreaterThanOrEqual(216)
-  expect(versionB.preview.height).toBeGreaterThanOrEqual(216)
-  expect(versionB.selectors).toEqual({ solid: 12, palette: 10, style: 7, corners: 7, eyes: 8 })
-  expect(versionB.destination.tagName).toBe('INPUT')
-  expect(versionB.destination.bottom).toBeLessThanOrEqual(844)
-  expect(versionB.hiddenPublicPanels).toEqual({ Candidates: 0, Checkout: 0, Export: 0 })
+  const defaultNoScroll = await measure()
+  expect(defaultNoScroll.document.verticalScrollRequired).toBe(false)
+  expect(defaultNoScroll.document.scrollHeight).toBeLessThanOrEqual(defaultNoScroll.document.clientHeight)
+  expect(defaultNoScroll.preview.width).toBeGreaterThanOrEqual(216)
+  expect(defaultNoScroll.preview.height).toBeGreaterThanOrEqual(216)
+  expect(defaultNoScroll.selectors).toEqual({ solid: 12, palette: 10, style: 7, corners: 7, eyes: 8 })
+  expect(defaultNoScroll.destination.tagName).toBe('INPUT')
+  expect(defaultNoScroll.destination.bottom).toBeLessThanOrEqual(844)
+  expect(defaultNoScroll.hiddenPublicPanels).toEqual({ Candidates: 0, Checkout: 0, Export: 0 })
   await expect(page.getByRole('button', { name: 'Text' })).toHaveCount(0)
   await expect(page.getByTestId('qr-side-controls').getByRole('group', { name: 'QR size' })).toBeVisible()
   await expect(page.getByTestId('qr-side-controls').getByRole('group', { name: 'Intensity' })).toBeVisible()
 
   const preview = page.getByRole('img', { name: 'QR Preview' })
   const before = await preview.getAttribute('src')
-  await page.getByRole('textbox', { name: 'Final destination URL' }).fill('https://example.com/b21-public-draft')
+  await page.getByRole('textbox', { name: 'Final destination URL' }).fill('https://example.com/b22-public-draft')
   await page.getByRole('button', { name: 'Continue with this QR' }).click()
   await expect(page.getByRole('status')).toContainText('QR activates after payment')
   expect(await preview.getAttribute('src')).toBe(before)
   const afterActivation = await measure()
   expect(afterActivation.document.verticalScrollRequired).toBe(false)
-
   await page.screenshot({ path: path.join(b21EvidenceDir, 'version-b-no-scroll.png') })
+
+  await page.goto('/?uxVariant=scroll')
+  await expect(page.getByTestId('studio-app')).toHaveAttribute('data-ux-variant', 'default')
+  const versionA = await measure()
+  expect(versionA.preview).toMatchObject({ width: 216, height: 216 })
+  expect(versionA.document.verticalScrollRequired).toBe(true)
+  await page.screenshot({ path: path.join(b21EvidenceDir, 'version-a-after-b20.png') })
+
   await fs.writeFile(path.join(b21EvidenceDir, 'layout-metrics.json'), JSON.stringify({
-    versionA, versionB: { ...versionB, reachableFamilies }, versionBAfterActivation: afterActivation,
-    target: { noScroll: true, minimumPreview: { width: 216, height: 216 } },
+    versionA, versionB: { ...defaultNoScroll, reachableFamilies }, versionBAfterActivation: afterActivation,
+    target: { noScrollDefault: true, minimumPreview: { width: 216, height: 216 } },
   }, null, 2))
 
   const [a, b] = await Promise.all([
@@ -294,7 +295,7 @@ test('B21 provides a real 216px no-scroll comparison variant without changing Ve
     fs.readFile(path.join(b21EvidenceDir, 'version-b-no-scroll.png')),
   ])
   await page.setViewportSize({ width: 820, height: 900 })
-  await page.setContent(`<main style="margin:0;padding:12px;background:#020617;color:white;font:600 18px system-ui;display:flex;gap:12px"><figure style="margin:0"><figcaption style="margin-bottom:8px">Version A · Default after B20</figcaption><img width="390" height="844" src="data:image/png;base64,${a.toString('base64')}"></figure><figure style="margin:0"><figcaption style="margin-bottom:8px">Version B · No-scroll</figcaption><img width="390" height="844" src="data:image/png;base64,${b.toString('base64')}"></figure></main>`)
+  await page.setContent(`<main style="margin:0;padding:12px;background:#020617;color:white;font:600 18px system-ui;display:flex;gap:12px"><figure style="margin:0"><figcaption style="margin-bottom:8px">Version A · Scroll fallback</figcaption><img width="390" height="844" src="data:image/png;base64,${a.toString('base64')}"></figure><figure style="margin:0"><figcaption style="margin-bottom:8px">Version B · Default no-scroll</figcaption><img width="390" height="844" src="data:image/png;base64,${b.toString('base64')}"></figure></main>`)
   await page.screenshot({ path: path.join(b21EvidenceDir, 'comparison-contact-sheet.png') })
   expect(errors).toEqual([])
 })
@@ -302,7 +303,7 @@ test('B21 provides a real 216px no-scroll comparison variant without changing Ve
 test('B20 aligns QR-size glyphs and gives selector families one perimeter grammar', async ({ page }) => {
   const errors = await assertNoConsoleErrors(page)
   await page.setViewportSize({ width: 390, height: 844 })
-  await page.goto('/')
+  await page.goto('/?uxVariant=scroll')
   await page.addStyleTag({ content: '*,*::before,*::after{transition:none!important;animation:none!important}' })
 
   const selectorMeasurements = []
@@ -391,7 +392,7 @@ test('B19 uses bounded scan-check wording and preserves B18/B16/B13 public behav
   await page.getByText('Validation Summary').locator('..').locator('..').screenshot({ path: path.join(b19EvidenceDir, 'validation-summary-bounded-scan-checks.png') })
 
   await page.evaluate(() => localStorage.clear())
-  await page.goto('/')
+  await page.goto('/?uxVariant=scroll')
   const preview = page.getByRole('img', { name: 'QR Preview' })
   const before = await preview.getAttribute('src')
   const destination = page.getByRole('textbox', { name: 'Final destination URL' })
@@ -433,7 +434,7 @@ test('B19 uses bounded scan-check wording and preserves B18/B16/B13 public behav
 test('B18 exposes only accepted Core-backed extreme primitives and preserves the public paid gate', async ({ page }) => {
   const errors = await assertNoConsoleErrors(page)
   await page.setViewportSize({ width: 390, height: 844 })
-  await page.goto('/')
+  await page.goto('/?uxVariant=scroll')
 
   const preview = page.getByRole('img', { name: 'QR Preview' })
   const previewBox = await preview.boundingBox()
@@ -498,7 +499,7 @@ test('B18 exposes only accepted Core-backed extreme primitives and preserves the
 test('B16 delivers icon-only settings, one-line destination, palettes, side controls, and preserved payload gates', async ({ page }) => {
   const errors = await assertNoConsoleErrors(page)
   await page.setViewportSize({ width: 390, height: 844 })
-  await page.goto('/')
+  await page.goto('/?uxVariant=scroll')
 
   const preview = page.getByRole('img', { name: 'QR Preview' })
   const previewBox = await preview.boundingBox()
@@ -591,7 +592,7 @@ test('B16 delivers icon-only settings, one-line destination, palettes, side cont
 test('B14 exposes five Core-backed Style, Corners, and Eyes options with stable preview geometry', async ({ page }) => {
   const errors = await assertNoConsoleErrors(page)
   await page.setViewportSize({ width: 390, height: 844 })
-  await page.goto('/')
+  await page.goto('/?uxVariant=scroll')
   const preview = page.getByRole('img', { name: 'QR Preview' })
   const previewBox = await preview.boundingBox()
   expect(previewBox).not.toBeNull()
@@ -638,7 +639,7 @@ test('B14 exposes five Core-backed Style, Corners, and Eyes options with stable 
 
 test('B14 preserves public draft-only payload and internal live-preview gates', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
-  await page.goto('/')
+  await page.goto('/?uxVariant=scroll')
   const publicPreview = page.getByRole('img', { name: 'QR Preview' })
   const before = await publicPreview.getAttribute('src')
   await page.getByRole('textbox', { name: 'Final destination URL' }).fill('https://example.com/b14-public-draft')
@@ -669,7 +670,7 @@ test('B14 preserves public draft-only payload and internal live-preview gates', 
 test('B13 public destination stays draft-only and compact controls keep accessible names', async ({ page }) => {
   const errors = await assertNoConsoleErrors(page)
   await page.setViewportSize({ width: 390, height: 844 })
-  await page.goto('/')
+  await page.goto('/?uxVariant=scroll')
 
   const preview = page.getByRole('img', { name: 'QR Preview' })
   const destination = page.getByRole('textbox', { name: 'Final destination URL' })
@@ -734,7 +735,7 @@ test('B13 internal entitlement preserves live Core preview payload updates', asy
 test('B11 public compact editor exposes truthful styles, corners, colors, and content types', async ({ page }) => {
   const errors = await assertNoConsoleErrors(page)
   await page.setViewportSize({ width: 390, height: 844 })
-  await page.goto('/')
+  await page.goto('/?uxVariant=scroll')
 
   const editor = page.locator('section[aria-labelledby="live-editor-title"]')
   const preview = page.getByRole('img', { name: 'QR Preview' })
