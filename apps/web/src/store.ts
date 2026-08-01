@@ -28,7 +28,7 @@ const defaultArtDirection = (): ArtDirection => ({
   eyeFrameStyle: 'rounded',
   eyeBallStyle: 'rounded',
   palette: {
-    primary: '#5b6ef5',
+    primary: '#5162da',
     secondary: '#323eaf',
     accent: '#a5bdff',
     background: '#f0f4ff',

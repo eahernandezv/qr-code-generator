@@ -81,7 +81,7 @@ describe('Studio canonical generation request and predictive preview', () => {
   it('renders all three curated solid intensity variants through the canonical request', () => {
     const variants = [
       { intensity: 'mellow' as const, primary: '#405b91' },
-      { intensity: 'balanced' as const, primary: '#5b6ef5' },
+      { intensity: 'balanced' as const, primary: '#5162da' },
       { intensity: 'punchy' as const, primary: '#2344d9' },
     ]
     const requests = variants.map(({ intensity, primary }) => request({

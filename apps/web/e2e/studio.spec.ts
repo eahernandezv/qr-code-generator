@@ -85,7 +85,7 @@ function projectState(options: { selected?: boolean; exhausted?: boolean; coreEv
     artDirection: {
       templateId: 'watercolor', artisticStrength: 0.5, composition: 'centered',
       protectedQrProminence: 0.7,
-      palette: { primary: '#5b6ef5', secondary: '#323eaf', accent: '#a5bdff' },
+      palette: { primary: '#5162da', secondary: '#323eaf', accent: '#a5bdff' },
     },
     style: { foreground: '#181b3a', background: '#f0f4ff', margin: 4, eyeStyle: 'rounded', moduleStyle: 'rounded' },
     boards: [{

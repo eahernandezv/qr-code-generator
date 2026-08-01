@@ -6,7 +6,7 @@ import QRPreview from './QRPreview'
 type SolidPalette = { primary: string; secondary: string; accent: string; background: string }
 type SolidPreset = { name: string; variants: Record<ColorIntensity, SolidPalette> }
 
-const SOLID_PRESETS: readonly SolidPreset[] = [
+export const SOLID_PRESETS: readonly SolidPreset[] = [
   { name: 'Classic Black', variants: {
     mellow: { primary: '#374151', secondary: '#1f2937', accent: '#9ca3af', background: '#ffffff' },
     balanced: { primary: '#000000', secondary: '#000000', accent: '#6b7280', background: '#ffffff' },
@@ -14,7 +14,7 @@ const SOLID_PRESETS: readonly SolidPreset[] = [
   } },
   { name: 'Studio Blue', variants: {
     mellow: { primary: '#405b91', secondary: '#293f70', accent: '#9fb4d8', background: '#f0f4ff' },
-    balanced: { primary: '#5b6ef5', secondary: '#323eaf', accent: '#a5bdff', background: '#f0f4ff' },
+    balanced: { primary: '#5162da', secondary: '#323eaf', accent: '#a5bdff', background: '#f0f4ff' },
     punchy: { primary: '#2344d9', secondary: '#172c91', accent: '#7897ff', background: '#f0f4ff' },
   } },
   { name: 'Sunset Coral', variants: {
@@ -35,7 +35,7 @@ const SOLID_PRESETS: readonly SolidPreset[] = [
   { name: 'Berry Pink', variants: {
     mellow: { primary: '#7f4659', secondary: '#603241', accent: '#cf9baa', background: '#f9e8ef' },
     balanced: { primary: '#c9184a', secondary: '#800f2f', accent: '#ff8fa3', background: '#f9e8ef' },
-    punchy: { primary: '#e00046', secondary: '#96002d', accent: '#ff5f82', background: '#f9e8ef' },
+    punchy: { primary: '#d30042', secondary: '#96002d', accent: '#ff5f82', background: '#f9e8ef' },
   } },
   { name: 'Electric Purple', variants: {
     mellow: { primary: '#684b82', secondary: '#49345d', accent: '#bca0d2', background: '#f8f1ff' },
@@ -45,7 +45,7 @@ const SOLID_PRESETS: readonly SolidPreset[] = [
   { name: 'Teal Mint', variants: {
     mellow: { primary: '#376d6b', secondary: '#24504e', accent: '#94c8c2', background: '#effbf8' },
     balanced: { primary: '#087a74', secondary: '#075955', accent: '#74d4c8', background: '#effbf8' },
-    punchy: { primary: '#00867d', secondary: '#005e57', accent: '#35dbc9', background: '#effbf8' },
+    punchy: { primary: '#007f77', secondary: '#005e57', accent: '#35dbc9', background: '#effbf8' },
   } },
   { name: 'Amber Gold', variants: {
     mellow: { primary: '#725d32', secondary: '#514221', accent: '#cdb77f', background: '#fff9e8' },
