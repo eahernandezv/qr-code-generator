@@ -237,12 +237,16 @@ test('B13 public destination stays draft-only and compact controls keep accessib
   const beforeHash = createHash('sha256').update(beforeSource!).digest('hex')
   const afterHash = createHash('sha256').update(afterSource!).digest('hex')
   expect(afterHash).toBe(beforeHash)
+  await continueButton.click()
+  await expect(page.getByRole('status')).toContainText('QR activates after payment')
+  await expect(preview).toHaveAttribute('src', beforeSource!)
   await page.screenshot({ path: path.join(b13EvidenceDir, '02-public-url-typed-preview-unchanged.png'), fullPage: true })
   await fs.writeFile(path.join(b13EvidenceDir, 'public-preview-hashes.json'), JSON.stringify({
     payloadMode: 'public-free-draft',
     beforeSha256: beforeHash,
     afterSha256: afterHash,
-    unchanged: beforeHash === afterHash,
+    unchangedAfterTyping: beforeHash === afterHash,
+    unchangedAfterContinue: await preview.getAttribute('src') === beforeSource,
     continueEnabled: await continueButton.isEnabled(),
   }, null, 2))
   expect(errors).toEqual([])
@@ -325,8 +329,8 @@ test('B11 public compact editor exposes truthful styles, corners, colors, and co
   await expect(preview).toHaveAttribute('src', demoSource!)
   await page.screenshot({ path: path.join(b11EvidenceDir, '05-activation-cta-export-note.png'), fullPage: true })
   await page.getByRole('button', { name: 'Continue with this QR' }).click()
-  await expect(page.getByRole('status')).toContainText('Checkout coming next')
-  await expect.poll(() => preview.getAttribute('src')).not.toBe(demoSource)
+  await expect(page.getByRole('status')).toContainText('QR activates after payment')
+  await expect(preview).toHaveAttribute('src', demoSource!)
   await page.screenshot({ path: path.join(b11EvidenceDir, '06-email-content-confirmed.png'), fullPage: true })
   expect(errors).toEqual([])
 })

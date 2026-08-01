@@ -86,9 +86,13 @@ const PayloadInput: React.FC<PayloadInputProps> = ({ livePreviewPayloadUpdates =
       setError(nextValidation.error ?? 'Valid content is required')
       return
     }
-    setPayload({ ...draft, normalized: normalizePayload(draft.mode, draft.raw) })
-    setActivationMessage('Content confirmed · Checkout coming next')
-  }, [draft, setPayload])
+    if (livePreviewPayloadUpdates) {
+      setPayload({ ...draft, normalized: normalizePayload(draft.mode, draft.raw) })
+      setActivationMessage('Content confirmed · Checkout coming next')
+      return
+    }
+    setActivationMessage('Ready for checkout · QR activates after payment')
+  }, [draft, livePreviewPayloadUpdates, setPayload])
 
   return (
     <section aria-labelledby="destination-title" className="rounded-2xl border border-slate-800 bg-slate-900/60 p-3 sm:p-4">
