@@ -39,7 +39,7 @@ const App: React.FC = () => {
         <ArtDirectionPanel />
 
         <div id="destination" className="scroll-mt-16">
-          <PayloadInput />
+          <PayloadInput key={project.projectId} />
         </div>
 
         {showSecondaryWorkflow && <section aria-labelledby="finish-title" className="space-y-3 border-t border-slate-900 pt-4">

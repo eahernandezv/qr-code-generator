@@ -20,12 +20,21 @@ describe('PayloadInput', () => {
     expect(screen.getByRole('button', { name: 'Email' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Text' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Phone' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Continue with this QR' })).toBeDisabled()
+    expect(screen.getByText('After checkout: PNG + SVG downloads · Social and print sizes')).toBeInTheDocument()
   })
 
-  it('normalizes a URL with https prefix', async () => {
+  it('keeps typed content as a draft until explicit activation', async () => {
+    const user = userEvent.setup()
     render(<PayloadInput />)
-    await act(async () => userEvent.type(screen.getByRole('textbox'), 'example.com'))
+    await act(async () => user.type(screen.getByRole('textbox'), 'example.com'))
     expect(screen.getByText(/Encoded:/i)).toHaveTextContent('https://example.com')
+    expect(useStudioStore.getState().project.payload.normalized).toBe('')
+    const activation = screen.getByRole('button', { name: 'Continue with this QR' })
+    expect(activation).toBeEnabled()
+    await user.click(activation)
+    expect(useStudioStore.getState().project.payload.normalized).toBe('https://example.com/')
+    expect(screen.getByRole('status')).toHaveTextContent('Content confirmed · Checkout coming next')
   })
 
   it('switches to Email and constructs a mailto payload', async () => {
@@ -35,6 +44,8 @@ describe('PayloadInput', () => {
     const input = screen.getByRole('textbox', { name: 'Email address' })
     expect(input).toHaveAttribute('placeholder', 'name@example.com')
     await user.type(input, 'studio@example.com')
+    expect(useStudioStore.getState().project.payload.normalized).toBe('')
+    await user.click(screen.getByRole('button', { name: 'Continue with this QR' }))
     expect(useStudioStore.getState().project.payload).toMatchObject({
       mode: 'email',
       normalized: 'mailto:studio@example.com',

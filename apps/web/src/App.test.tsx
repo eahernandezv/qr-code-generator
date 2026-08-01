@@ -23,6 +23,9 @@ describe('App integration', () => {
     expect(screen.queryByRole('heading', { name: /Candidates/i })).not.toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: 'Export' })).not.toBeInTheDocument()
     expect(screen.queryByText('Live Core-backed preview')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Continue with this QR' })).toBeDisabled()
+    expect(screen.getByText('After checkout: PNG + SVG downloads · Social and print sizes')).toBeInTheDocument()
+    expect(screen.queryByText(/1200|2400|3600/)).not.toBeInTheDocument()
   })
 
   it('uses accessible Core-backed Color, Style, and Corners choices', async () => {
