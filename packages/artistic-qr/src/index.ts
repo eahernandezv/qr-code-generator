@@ -39,5 +39,6 @@ export type {
   ArtisticStyleFamily,
   QrProminenceTreatment,
   PatternedPaletteIntent,
+  CornerColorResolution,
 } from './render-intent.js';
 export type { SafetyEvaluator, SafetyVerdict } from './request-validation.js';

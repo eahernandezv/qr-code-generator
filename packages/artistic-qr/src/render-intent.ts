@@ -25,6 +25,15 @@ export interface PatternedPaletteIntent {
   functionalColor: string;
 }
 
+export interface CornerColorResolution {
+  requested?: string;
+  effective: string;
+  behavior: 'match-body' | 'accepted' | 'adapted';
+  contrastRatio: number;
+  minimumContrastRatio: 4.5;
+  reason?: 'insufficient-background-contrast';
+}
+
 export interface ArtisticRenderIntent {
   styleFamily: ArtisticStyleFamily;
   /** Template is the module-shape visual language. */
@@ -42,6 +51,8 @@ export interface ArtisticRenderIntent {
   /** Prominence independently controls the protected quiet-zone baseline. */
   prominenceTreatment: QrProminenceTreatment;
   palette: PatternedPaletteIntent;
+  /** Public `cornerColor` resolved to Core `functionalColor`, with adaptation evidence. */
+  cornerColor: CornerColorResolution;
   candidateOptions: readonly [RenderOptions, RenderOptions, RenderOptions, RenderOptions];
   previewOptions: RenderOptions;
 }
@@ -97,6 +108,7 @@ export function resolveArtisticRenderIntent(request: GenerationRequest): Artisti
   const compositionTreatment = resolveCompositionTreatment(focalArea);
   const prominenceTreatment = resolveProminenceTreatment(qrProminence);
   const palette = resolvePalette(request.palette, request.paletteFamily, request.palettePattern, request.colorIntensity);
+  const cornerColor = resolveCornerColor(request.cornerColor, palette.functionalColor, palette.background);
 
   const quietZone = prominenceTreatment === 'dominant' ? 4 : prominenceTreatment === 'standard' ? 5 : 6;
   // Strength framing visibly changes QR-to-canvas ratio without reducing the
@@ -124,7 +136,7 @@ export function resolveArtisticRenderIntent(request: GenerationRequest): Artisti
     colorLight: palette.background,
     modulePalette: palette.moduleColors,
     palettePattern: palette.pattern,
-    functionalColor: palette.functionalColor,
+    functionalColor: cornerColor.effective,
     shape: request.moduleShape ?? shapes[index],
     eyeShape: request.eyeShape ?? compositionTreatment.eyeShape,
     eyeFrameShape: request.eyeFrameShape ?? request.eyeShape ?? compositionTreatment.eyeShape,
@@ -141,6 +153,7 @@ export function resolveArtisticRenderIntent(request: GenerationRequest): Artisti
     qrProminence,
     prominenceTreatment,
     palette,
+    cornerColor,
     candidateOptions,
     previewOptions: candidateOptions[0],
   };
@@ -176,6 +189,56 @@ function resolvePalette(
     primary, background: palette?.background ?? DEFAULT_BACKGROUND,
     pattern: 'solid', intensity, moduleColors: [primary], functionalColor: primary,
   };
+}
+
+const MINIMUM_CORNER_CONTRAST = 4.5 as const;
+
+function resolveCornerColor(requested: string | undefined, matchBody: string, background: string): CornerColorResolution {
+  if (requested === undefined) {
+    return {
+      effective: matchBody,
+      behavior: 'match-body',
+      contrastRatio: contrastRatio(matchBody, background),
+      minimumContrastRatio: MINIMUM_CORNER_CONTRAST,
+    };
+  }
+  const requestedContrast = contrastRatio(requested, background);
+  if (requestedContrast >= MINIMUM_CORNER_CONTRAST) {
+    return {
+      requested,
+      effective: requested,
+      behavior: 'accepted',
+      contrastRatio: requestedContrast,
+      minimumContrastRatio: MINIMUM_CORNER_CONTRAST,
+    };
+  }
+  const fallbackCandidates = [matchBody, '#111827', '#000000', '#ffffff'];
+  const effective = fallbackCandidates.reduce((best, candidate) => (
+    contrastRatio(candidate, background) > contrastRatio(best, background) ? candidate : best
+  ));
+  return {
+    requested,
+    effective,
+    behavior: 'adapted',
+    contrastRatio: contrastRatio(effective, background),
+    minimumContrastRatio: MINIMUM_CORNER_CONTRAST,
+    reason: 'insufficient-background-contrast',
+  };
+}
+
+function contrastRatio(foreground: string, background: string): number {
+  const foregroundLuminance = relativeLuminance(foreground);
+  const backgroundLuminance = relativeLuminance(background);
+  return (Math.max(foregroundLuminance, backgroundLuminance) + 0.05)
+    / (Math.min(foregroundLuminance, backgroundLuminance) + 0.05);
+}
+
+function relativeLuminance(hex: string): number {
+  const raw = hex.slice(1);
+  const expanded = raw.length === 3 ? [...raw].map((channel) => channel + channel).join('') : raw.slice(0, 6);
+  const channels = [0, 2, 4].map((offset) => Number.parseInt(expanded.slice(offset, offset + 2), 16) / 255)
+    .map((channel) => channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4);
+  return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
 }
 
 function resolveStrengthTreatment(strength: number): ArtisticStrengthTreatment {

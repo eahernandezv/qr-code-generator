@@ -78,9 +78,15 @@ export interface RenderOptions {
   eyeShape?: FinderShape;
   eyeFrameShape?: EyeFrameShape;
   eyeBallShape?: EyeBallShape;
-  /** Ordered, scan-safe active-module colors. The first color is used for functional modules. */
+  /** Ordered, scan-safe active-module colors. The first color is the default for functional modules. */
   modulePalette?: readonly string[];
   palettePattern?: PalettePattern;
+  /**
+   * Effective scan-safe color for QR functional modules, including both the finder eye frame
+   * and finder eye ball. Artistic callers expose this as `cornerColor`; Core retains the
+   * standards-oriented `functionalColor` vocabulary because timing/format/version modules
+   * receive the same protected color.
+   */
   functionalColor?: string;
 }
 

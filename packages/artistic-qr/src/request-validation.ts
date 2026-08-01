@@ -18,12 +18,13 @@ const MODULE_SHAPES = new Set(['square', 'rounded', 'circle', 'vertical-bars', '
 const LEGACY_EYE_SHAPES = new Set(['square', 'rounded', 'circle', 'squircle', 'chamfered', 'hex']);
 const EYE_FRAME_SHAPES = new Set(['square', 'rounded', 'circle', 'squircle', 'chamfered', 'diamond', 'hex']);
 const EYE_BALL_SHAPES = new Set(['square', 'rounded', 'circle', 'squircle', 'chamfered', 'hex', 'vertical-capsule', 'horizontal-capsule']);
-const REQUEST_KEYS = new Set(['normalizedPayload', 'mode', 'artDirectionId', 'prompt', 'referenceImage', 'artisticStrength', 'palette', 'paletteFamily', 'palettePattern', 'colorIntensity', 'moduleShape', 'eyeShape', 'eyeFrameShape', 'eyeBallShape', 'composition', 'seed']);
+const REQUEST_KEYS = new Set(['normalizedPayload', 'mode', 'artDirectionId', 'prompt', 'referenceImage', 'artisticStrength', 'palette', 'paletteFamily', 'palettePattern', 'colorIntensity', 'cornerColor', 'moduleShape', 'eyeShape', 'eyeFrameShape', 'eyeBallShape', 'composition', 'seed']);
 const PAYLOAD_KEYS = new Set(['canonical', 'mode', 'byteLength', 'version', 'errorCorrectionLevel', 'maskPattern']);
 const PALETTE_KEYS = new Set(['primary', 'secondary', 'accent', 'background']);
 const COMPOSITION_KEYS = new Set(['focalArea', 'qrProminence']);
 const REFERENCE_KEYS = new Set(['mimeType', 'width', 'height', 'hash']);
 const HEX_COLOR = /^#(?:[0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i;
+const OPAQUE_HEX_COLOR = /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i;
 const SHA256 = /^[0-9a-f]{64}$/i;
 
 export class GenerationRequestError extends Error {
@@ -57,6 +58,9 @@ export function validateGenerationRequest(value: unknown): GenerationRequest {
   optionalEnum(request, 'paletteFamily', PALETTE_FAMILIES);
   optionalEnum(request, 'palettePattern', PALETTE_PATTERNS);
   optionalEnum(request, 'colorIntensity', COLOR_INTENSITIES);
+  if (request.cornerColor !== undefined && (typeof request.cornerColor !== 'string' || !OPAQUE_HEX_COLOR.test(request.cornerColor))) {
+    throw malformed('cornerColor must be an opaque hex color');
+  }
   optionalEnum(request, 'moduleShape', MODULE_SHAPES);
   optionalEnum(request, 'eyeShape', LEGACY_EYE_SHAPES);
   optionalEnum(request, 'eyeFrameShape', EYE_FRAME_SHAPES);

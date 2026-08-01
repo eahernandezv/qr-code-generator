@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { generateMatrix, normalizePayload, renderDeterministic, resolveModuleColor } from '@qr/qr-core';
 import { generateCandidates, PATTERNED_PALETTE_PRESETS, resolveArtisticRenderIntent } from './index.js';
+import { validateGenerationRequest } from './request-validation.js';
 import type { ColorIntensity, GenerationRequest, PaletteFamily, PalettePattern } from './types.js';
 
 const normalizedPayload = normalizePayload({
@@ -167,4 +168,48 @@ describe('artistic render intent', () => {
       }
     }
   }, 20_000);
+
+  it('keeps omitted cornerColor on exact existing Match body functional behavior', () => {
+    const intent = resolveArtisticRenderIntent(berry);
+    expect(intent.cornerColor).toMatchObject({
+      effective: intent.palette.functionalColor,
+      behavior: 'match-body',
+      minimumContrastRatio: 4.5,
+    });
+    expect(intent.cornerColor.requested).toBeUndefined();
+    expect(intent.previewOptions.functionalColor).toBe(intent.palette.functionalColor);
+  });
+
+  it('accepts a safe cornerColor and maps it to Core functionalColor for frame and ball', () => {
+    const cornerColor = '#7020a8';
+    const request = validateGenerationRequest({ ...berry, cornerColor });
+    const intent = resolveArtisticRenderIntent(request);
+    const svg = renderDeterministic(generateMatrix(normalizedPayload), intent.previewOptions).data;
+    expect(intent.cornerColor).toMatchObject({ requested: cornerColor, effective: cornerColor, behavior: 'accepted' });
+    expect(intent.previewOptions.functionalColor).toBe(cornerColor);
+    expect(svg).toMatch(new RegExp(`data-eye-part="frame"[^>]+fill="${cornerColor}"`));
+    expect(svg).toMatch(new RegExp(`data-eye-part="ball"[^>]+fill="${cornerColor}"`));
+    expect(svg).toContain('fill="#c9184a"');
+  });
+
+  it('adapts a low-contrast cornerColor deterministically without weakening scan thresholds', async () => {
+    const request = { ...berry, cornerColor: '#f8e7ee' };
+    const intent = resolveArtisticRenderIntent(request);
+    expect(intent.cornerColor).toMatchObject({
+      requested: '#f8e7ee',
+      behavior: 'adapted',
+      reason: 'insufficient-background-contrast',
+      minimumContrastRatio: 4.5,
+    });
+    expect(intent.cornerColor.effective).not.toBe('#f8e7ee');
+    expect(intent.cornerColor.contrastRatio).toBeGreaterThanOrEqual(4.5);
+    const board = await generateCandidates(request);
+    expect(board.candidates).toHaveLength(4);
+    expect(board.candidates.every((candidate) => candidate.exportAllowed)).toBe(true);
+    expect(board.candidates.every((candidate) => candidate.scanResults[0].thresholdVersion === 'scan-v1-real-75pct')).toBe(true);
+  }, 20_000);
+
+  it.each(['red', '#12', '#11223344', 17, null])('rejects malformed/transparent cornerColor %j', (cornerColor) => {
+    expect(() => validateGenerationRequest({ ...berry, cornerColor })).toThrow(/cornerColor must be an opaque hex color/);
+  });
 });
