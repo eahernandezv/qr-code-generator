@@ -25,6 +25,10 @@ describe('App integration', () => {
     expect(screen.queryByText('Live Core-backed preview')).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Continue with this QR' })).toBeDisabled()
     expect(screen.getByText('After checkout: PNG + SVG downloads · Social and print sizes')).toBeInTheDocument()
+    expect(screen.queryByText('Bind the real destination before generation.')).not.toBeInTheDocument()
+    for (const removedLabel of ['Color', 'Palette', 'Style', 'Corners', 'Intensity']) {
+      expect(screen.queryByText(removedLabel, { exact: true })).not.toBeInTheDocument()
+    }
     expect(screen.queryByText(/1200|2400|3600/)).not.toBeInTheDocument()
   })
 
@@ -52,5 +56,19 @@ describe('App integration', () => {
     expect(screen.getByRole('heading', { name: /Candidates/i })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Export' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Generate 4|Generation offline/ })).toBeDisabled()
+  })
+
+  it('keeps public typing draft-only while internal entitlement can live-update', async () => {
+    const user = userEvent.setup()
+    const publicView = render(<App />)
+    await user.type(screen.getByRole('textbox', { name: 'Final destination URL' }), 'public.example')
+    expect(useStudioStore.getState().project.payload.raw).toBe('')
+    publicView.unmount()
+
+    resetStore()
+    window.history.replaceState({}, '', '/?workflow=internal')
+    render(<App />)
+    await user.type(screen.getByRole('textbox', { name: 'Final destination URL' }), 'member.example')
+    expect(useStudioStore.getState().project.payload.normalized).toBe('https://member.example/')
   })
 })

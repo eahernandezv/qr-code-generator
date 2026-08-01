@@ -95,8 +95,7 @@ const ArtDirectionPanel: React.FC = () => {
 
       <div className="grid items-start gap-3 lg:grid-cols-[minmax(0,1fr)_292px]">
         <div className="order-2 min-w-0 space-y-2.5 lg:order-1">
-          <div className="grid grid-cols-[58px_minmax(0,1fr)] items-center gap-2" role="group" aria-label="Color">
-            <span className="text-[11px] font-semibold text-slate-400">Color</span>
+          <div role="group" aria-label="Color">
             <div className="flex items-center gap-2">
               {SOLID_PRESETS.map((preset) => {
                 const selected = selectedSolid?.name === preset.name
@@ -121,9 +120,8 @@ const ArtDirectionPanel: React.FC = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-[58px_minmax(0,1fr)] items-center gap-2">
-            <span id="palette-row-label" className="text-[11px] font-semibold text-slate-400">Palette</span>
-            <div className="flex snap-x gap-2 overflow-x-auto pb-1" role="listbox" aria-labelledby="palette-row-label">
+          <div>
+            <div className="flex snap-x gap-2 overflow-x-auto pb-1" role="listbox" aria-label="Palette">
               {PATTERNED_PRESETS.map((preset) => {
                 const selected = selectedPatterned?.name === preset.name
                 return (
@@ -145,9 +143,8 @@ const ArtDirectionPanel: React.FC = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-[58px_minmax(0,1fr)] items-center gap-2">
-            <span id="style-row-label" className="text-[11px] font-semibold text-slate-400">Style</span>
-            <div className="flex snap-x gap-2 overflow-x-auto pb-1" role="listbox" aria-labelledby="style-row-label">
+          <div>
+            <div className="flex snap-x gap-2 overflow-x-auto pb-1" role="listbox" aria-label="Style">
               {STYLE_OPTIONS.map((style) => {
                 const selected = selectedStyle.name === style.name
                 return (
@@ -168,9 +165,8 @@ const ArtDirectionPanel: React.FC = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-[58px_minmax(0,1fr)] items-center gap-2">
-            <span id="corners-row-label" className="text-[11px] font-semibold text-slate-400">Corners</span>
-            <div className="flex snap-x gap-2 overflow-x-auto pb-1" role="listbox" aria-labelledby="corners-row-label">
+          <div>
+            <div className="flex snap-x gap-2 overflow-x-auto pb-1" role="listbox" aria-label="Corners">
               {CORNER_OPTIONS.map((corner) => {
                 const selected = selectedCorner.name === corner.name
                 return (
@@ -192,8 +188,7 @@ const ArtDirectionPanel: React.FC = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-[58px_minmax(0,1fr)] items-center gap-2" role="group" aria-label="Intensity">
-            <span className="text-[11px] font-semibold text-slate-400">Intensity</span>
+          <div role="group" aria-label="Intensity">
             <div className="grid grid-cols-3 rounded-xl bg-slate-950 p-1">
               {INTENSITIES.map((intensity) => {
                 const selected = (art.colorIntensity ?? 'balanced') === intensity.value

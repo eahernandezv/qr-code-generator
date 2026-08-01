@@ -11,6 +11,7 @@ const App: React.FC = () => {
   const { project, resetProject } = useStudioStore()
   const showSecondaryWorkflow = typeof window !== 'undefined'
     && new URLSearchParams(window.location.search).get('workflow') === 'internal'
+  const hasLivePayloadPreviewEntitlement = showSecondaryWorkflow || project.entitlement.type !== 'preview'
 
   return (
     <div className="min-h-screen bg-slate-950">
@@ -39,7 +40,7 @@ const App: React.FC = () => {
         <ArtDirectionPanel />
 
         <div id="destination" className="scroll-mt-16">
-          <PayloadInput key={project.projectId} />
+          <PayloadInput key={project.projectId} livePreviewPayloadUpdates={hasLivePayloadPreviewEntitlement} />
         </div>
 
         {showSecondaryWorkflow && <section aria-labelledby="finish-title" className="space-y-3 border-t border-slate-900 pt-4">
