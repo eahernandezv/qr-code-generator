@@ -184,6 +184,20 @@ describe('CandidateBoard', () => {
     expect(candidates.every((candidate) => candidate.renderResult?.provenance?.engine === 'artistic-qr-v1')).toBe(true)
   })
 
+  it('labels candidate evidence as bounded decoder checks without universal confidence wording', async () => {
+    seedPayload()
+    enableFlags({ artistic_generative_enabled: true })
+    render(<CandidateBoard />)
+
+    await userEvent.click(screen.getByRole('button', { name: /Generate 4/i }))
+
+    expect(await screen.findAllByText('Decoder checks: 100%')).toHaveLength(4)
+    expect(screen.queryByText(/Confidence:/)).not.toBeInTheDocument()
+    expect(screen.getAllByText(
+      "Scan checks reflect this app's decoder and perturbation tests, not a universal scan guarantee.",
+    )).toHaveLength(4)
+  })
+
   it('shows Core generation failure without creating mock candidates and permits retry', async () => {
     seedPayload()
     enableFlags({ artistic_generative_enabled: true })

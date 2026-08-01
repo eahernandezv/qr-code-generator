@@ -32,6 +32,27 @@ describe('App integration', () => {
     expect(screen.queryByText(/1200|2400|3600/)).not.toBeInTheDocument()
   })
 
+  it('selects the no-scroll comparison variant only from the deterministic review query', async () => {
+    const user = userEvent.setup()
+    window.history.replaceState({}, '', '/?uxVariant=no-scroll')
+    const view = render(<App />)
+    expect(screen.getByTestId('studio-app')).toHaveAttribute('data-ux-variant', 'no-scroll')
+    expect(screen.getByRole('tablist', { name: 'Design control families' })).toBeInTheDocument()
+    const colorTab = screen.getByRole('tab', { name: 'Show color controls' })
+    const paletteTab = screen.getByRole('tab', { name: 'Show palette controls' })
+    expect(colorTab).toHaveAttribute('aria-selected', 'true')
+    colorTab.focus()
+    await user.keyboard('{ArrowRight}')
+    expect(paletteTab).toHaveAttribute('aria-selected', 'true')
+    expect(paletteTab).toHaveFocus()
+    view.unmount()
+
+    window.history.replaceState({}, '', '/')
+    render(<App />)
+    expect(screen.getByTestId('studio-app')).toHaveAttribute('data-ux-variant', 'default')
+    expect(screen.queryByRole('tablist', { name: 'Design control families' })).not.toBeInTheDocument()
+  })
+
   it('uses accessible Core-backed Color, Style, Corners, and Eyes choices', async () => {
     const user = userEvent.setup()
     render(<App />)

@@ -149,6 +149,20 @@ const QR_SIZES = [
   { value: 0.85, iconSize: 22, label: 'Larger QR size' },
 ] as const
 
+const SELECTOR_TILE_BASE = 'relative flex h-14 w-14 shrink-0 snap-start items-center justify-center overflow-hidden rounded-xl border-2 p-0 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white'
+const SELECTOR_TILE_SELECTED = 'border-white bg-studio-950/70 ring-2 ring-studio-500 ring-offset-2 ring-offset-slate-900'
+const SELECTOR_TILE_IDLE = 'border-slate-700 bg-slate-950/60 hover:border-slate-400'
+const SELECTOR_CHECK = 'absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-white text-[10px] font-black text-slate-950'
+
+type ControlFamily = 'color' | 'palette' | 'style' | 'corners' | 'eyes'
+const CONTROL_FAMILIES: ReadonlyArray<{ family: ControlFamily; label: string; glyph: string }> = [
+  { family: 'color', label: 'Color', glyph: '●' },
+  { family: 'palette', label: 'Palette', glyph: '▦' },
+  { family: 'style', label: 'Style', glyph: '⌗' },
+  { family: 'corners', label: 'Corners', glyph: '◇' },
+  { family: 'eyes', label: 'Eyes', glyph: '⊙' },
+]
+
 function primitiveStyle(shape: ModuleStyle | EyePrimitiveStyle): React.CSSProperties {
   if (shape === 'circle') return { borderRadius: '9999px' }
   if (shape === 'rounded') return { borderRadius: '2px' }
@@ -208,8 +222,13 @@ function IntensityIcon({ intensity }: { intensity: ColorIntensity }) {
   )
 }
 
-const ArtDirectionPanel: React.FC = () => {
+interface ArtDirectionPanelProps {
+  noScrollVariant?: boolean
+}
+
+const ArtDirectionPanel: React.FC<ArtDirectionPanelProps> = ({ noScrollVariant = false }) => {
   const { project, setArtDirection } = useStudioStore()
+  const [activeFamily, setActiveFamily] = React.useState<ControlFamily>('color')
   const art = project.artDirection
   const update = (patch: Partial<ArtDirection>) => setArtDirection({ ...art, ...patch })
   const intensity = art.colorIntensity ?? 'balanced'
@@ -220,17 +239,51 @@ const ArtDirectionPanel: React.FC = () => {
   const selectedCorner = EYE_FRAME_OPTIONS.find((option) => option.style === (art.eyeFrameStyle ?? art.eyeStyle ?? 'rounded')) ?? EYE_FRAME_OPTIONS[1]
   const selectedEye = EYE_BALL_OPTIONS.find((option) => option.style === (art.eyeBallStyle ?? art.eyeStyle ?? 'rounded')) ?? EYE_BALL_OPTIONS[1]
 
+  const moveFamilyFocus = (event: React.KeyboardEvent<HTMLButtonElement>, current: ControlFamily) => {
+    const currentIndex = CONTROL_FAMILIES.findIndex(({ family }) => family === current)
+    let nextIndex = currentIndex
+    if (event.key === 'ArrowRight') nextIndex = (currentIndex + 1) % CONTROL_FAMILIES.length
+    else if (event.key === 'ArrowLeft') nextIndex = (currentIndex - 1 + CONTROL_FAMILIES.length) % CONTROL_FAMILIES.length
+    else if (event.key === 'Home') nextIndex = 0
+    else if (event.key === 'End') nextIndex = CONTROL_FAMILIES.length - 1
+    else return
+    event.preventDefault()
+    const next = CONTROL_FAMILIES[nextIndex].family
+    setActiveFamily(next)
+    document.getElementById(`control-tab-${next}`)?.focus()
+  }
+
   return (
-    <section aria-labelledby="live-editor-title" className="rounded-2xl border border-slate-800 bg-slate-900/70 p-3 shadow-2xl shadow-black/20 sm:p-4">
-      <div className="mb-2 flex items-center justify-between">
+    <section aria-labelledby="live-editor-title" className={`rounded-2xl border border-slate-800 bg-slate-900/70 shadow-2xl shadow-black/20 ${noScrollVariant ? 'p-2' : 'p-3 sm:p-4'}`}>
+      <div className={`${noScrollVariant ? 'mb-1' : 'mb-2'} flex items-center justify-between`}>
         <h2 id="live-editor-title" className="text-sm font-semibold text-slate-100">Design your QR</h2>
         <span className="inline-flex items-center gap-1 rounded-full bg-emerald-950/50 px-2 py-1 text-[10px] font-medium text-emerald-300">
           <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" /> Live
         </span>
       </div>
 
-      <div className="grid items-start gap-3 lg:grid-cols-[minmax(0,1fr)_344px]">
-        <div className="order-2 min-w-0 space-y-2.5 lg:order-1">
+      <div className={`grid items-start lg:grid-cols-[minmax(0,1fr)_344px] ${noScrollVariant ? 'gap-1' : 'gap-3'}`}>
+        <div className={`order-2 min-w-0 lg:order-1 ${noScrollVariant ? 'space-y-1' : 'space-y-2.5'}`}>
+          {noScrollVariant && <div role="tablist" aria-label="Design control families" className="grid grid-cols-5 gap-1 rounded-xl bg-slate-950 p-1">
+            {CONTROL_FAMILIES.map(({ family, label, glyph }) => {
+              const selected = activeFamily === family
+              return <button
+                key={family}
+                id={`control-tab-${family}`}
+                type="button"
+                role="tab"
+                aria-label={`Show ${family} controls`}
+                aria-selected={selected}
+                aria-controls={`control-panel-${family}`}
+                title={label}
+                tabIndex={selected ? 0 : -1}
+                onClick={() => setActiveFamily(family)}
+                onKeyDown={(event) => moveFamilyFocus(event, family)}
+                className={`flex h-8 items-center justify-center rounded-lg text-base transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white ${selected ? 'bg-studio-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
+              ><span aria-hidden="true">{glyph}</span></button>
+            })}
+          </div>}
+          <div id="control-panel-color" role={noScrollVariant ? 'tabpanel' : undefined} aria-label={noScrollVariant ? 'Color controls' : undefined} className={noScrollVariant && activeFamily !== 'color' ? 'hidden' : undefined}>
           <div role="group" aria-label="Color">
             <div className="flex snap-x items-center gap-2 overflow-x-auto pb-1">
               {SOLID_PRESETS.map((preset) => {
@@ -256,8 +309,9 @@ const ArtDirectionPanel: React.FC = () => {
               })}
             </div>
           </div>
+          </div>
 
-          <div>
+          <div id="control-panel-palette" role={noScrollVariant ? 'tabpanel' : undefined} aria-label={noScrollVariant ? 'Palette controls' : undefined} className={noScrollVariant && activeFamily !== 'palette' ? 'hidden' : undefined}>
             <div className="flex snap-x gap-2 overflow-x-auto pb-1" role="listbox" aria-label="Palette">
               {PATTERNED_PRESETS.map((preset) => {
                 const selected = selectedPatterned?.name === preset.name
@@ -269,18 +323,19 @@ const ArtDirectionPanel: React.FC = () => {
                     aria-label={`${preset.name}${selected ? ' selected' : ''}`}
                     aria-selected={selected}
                     onClick={() => update({ paletteFamily: preset.family, palettePattern: preset.pattern })}
-                    className={`relative h-12 w-14 shrink-0 snap-start overflow-hidden rounded-xl border-2 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white ${selected ? 'border-white ring-2 ring-studio-500' : 'border-slate-700 hover:border-slate-400'}`}
+                    data-selector-family="palette"
+                    className={`${SELECTOR_TILE_BASE} ${selected ? SELECTOR_TILE_SELECTED : SELECTOR_TILE_IDLE}`}
                     style={{ background: preset.swatch }}
                   >
                     <span aria-hidden="true" className="absolute inset-x-1 bottom-1 h-1 rounded-full bg-black/25" />
-                    {selected && <span aria-hidden="true" className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-white text-[10px] font-black text-slate-950">✓</span>}
+                    {selected && <span aria-hidden="true" className={SELECTOR_CHECK}>✓</span>}
                   </button>
                 )
               })}
             </div>
           </div>
 
-          <div>
+          <div id="control-panel-style" role={noScrollVariant ? 'tabpanel' : undefined} aria-label={noScrollVariant ? 'Style controls' : undefined} className={noScrollVariant && activeFamily !== 'style' ? 'hidden' : undefined}>
             <div className="flex snap-x gap-2 overflow-x-auto pb-1" role="listbox" aria-label="Style">
               {STYLE_OPTIONS.map((style) => {
                 const selected = selectedStyle.name === style.name
@@ -294,18 +349,20 @@ const ArtDirectionPanel: React.FC = () => {
                     onClick={() => update({ moduleStyle: style.moduleStyle })}
                     title={`${style.name} QR style`}
                     data-setting={style.moduleStyle}
-                    className={`flex h-14 w-14 shrink-0 snap-start items-center justify-center rounded-xl border-2 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white ${selected ? 'border-white bg-studio-950/70 ring-2 ring-studio-500' : 'border-slate-700 bg-slate-950/60 hover:border-slate-400'}`}
+                    data-selector-family="style"
+                    className={`${SELECTOR_TILE_BASE} ${selected ? SELECTOR_TILE_SELECTED : SELECTOR_TILE_IDLE}`}
                   >
                     {style.icon
                       ? <img aria-hidden="true" src={style.icon} alt="" className="h-9 w-9 rounded-md" data-icon-recipe={style.moduleStyle} />
                       : <MiniQr shape={style.moduleStyle} />}
+                    {selected && <span aria-hidden="true" className={SELECTOR_CHECK}>✓</span>}
                   </button>
                 )
               })}
             </div>
           </div>
 
-          <div>
+          <div id="control-panel-corners" role={noScrollVariant ? 'tabpanel' : undefined} aria-label={noScrollVariant ? 'Corners controls' : undefined} className={noScrollVariant && activeFamily !== 'corners' ? 'hidden' : undefined}>
             <div className="flex snap-x gap-2 overflow-x-auto pb-1" role="listbox" aria-label="Corners">
               {EYE_FRAME_OPTIONS.map((corner) => {
                 const selected = selectedCorner.name === corner.name
@@ -319,19 +376,20 @@ const ArtDirectionPanel: React.FC = () => {
                     onClick={() => update({ eyeFrameStyle: corner.style })}
                     title={`${corner.name} corner style`}
                     data-setting={corner.style}
-                    className={`relative flex h-14 w-14 shrink-0 snap-start items-center justify-center rounded-xl border-2 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white ${selected ? 'border-white bg-studio-950/70 ring-2 ring-studio-500' : 'border-slate-700 bg-slate-950/60 hover:border-slate-400'}`}
+                    data-selector-family="corners"
+                    className={`${SELECTOR_TILE_BASE} ${selected ? SELECTOR_TILE_SELECTED : SELECTOR_TILE_IDLE}`}
                   >
                     {corner.icon
                       ? <img aria-hidden="true" src={corner.icon} alt="" className="h-9 w-9" data-icon-recipe={`eye-frame-${corner.style}`} />
                       : <MiniCorner frame={corner.style} ball={art.eyeBallStyle ?? art.eyeStyle ?? 'rounded'} />}
-                    {selected && <span aria-hidden="true" className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-white text-[10px] font-black text-slate-950">✓</span>}
+                    {selected && <span aria-hidden="true" className={SELECTOR_CHECK}>✓</span>}
                   </button>
                 )
               })}
             </div>
           </div>
 
-          <div>
+          <div id="control-panel-eyes" role={noScrollVariant ? 'tabpanel' : undefined} aria-label={noScrollVariant ? 'Eyes controls' : undefined} className={noScrollVariant && activeFamily !== 'eyes' ? 'hidden' : undefined}>
             <div className="flex snap-x gap-2 overflow-x-auto pb-1" role="listbox" aria-label="Eyes">
               {EYE_BALL_OPTIONS.map((eye) => {
                 const selected = selectedEye.name === eye.name
@@ -345,12 +403,13 @@ const ArtDirectionPanel: React.FC = () => {
                     onClick={() => update({ eyeBallStyle: eye.style })}
                     title={`${eye.name} eye style`}
                     data-setting={eye.style}
-                    className={`relative flex h-14 w-14 shrink-0 snap-start items-center justify-center rounded-xl border-2 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white ${selected ? 'border-white bg-studio-950/70 ring-2 ring-studio-500' : 'border-slate-700 bg-slate-950/60 hover:border-slate-400'}`}
+                    data-selector-family="eyes"
+                    className={`${SELECTOR_TILE_BASE} ${selected ? SELECTOR_TILE_SELECTED : SELECTOR_TILE_IDLE}`}
                   >
                     {eye.icon
                       ? <img aria-hidden="true" src={eye.icon} alt="" className="h-9 w-9" data-icon-recipe={`eye-ball-${eye.style}`} />
                       : <MiniCorner frame={art.eyeFrameStyle ?? art.eyeStyle ?? 'rounded'} ball={eye.style} />}
-                    {selected && <span aria-hidden="true" className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-white text-[10px] font-black text-slate-950">✓</span>}
+                    {selected && <span aria-hidden="true" className={SELECTOR_CHECK}>✓</span>}
                   </button>
                 )
               })}
@@ -370,7 +429,8 @@ const ArtDirectionPanel: React.FC = () => {
                 aria-pressed={selected}
                 title={size.label}
                 onClick={() => update({ protectedQrProminence: size.value })}
-                className={`h-9 w-8 rounded-lg text-[10px] font-bold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white ${selected ? 'bg-studio-600 text-white shadow' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
+                data-selector-family="qr-size"
+                className={`relative flex h-9 w-8 items-center justify-center rounded-lg p-0 text-[10px] font-bold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white ${selected ? 'bg-studio-600 text-white shadow' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
               ><SizeIcon size={size.iconSize} /></button>
             })}
           </div>

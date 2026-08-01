@@ -57,9 +57,11 @@ function validatePayload(mode: QrMode, raw: string): { valid: boolean; error?: s
 interface PayloadInputProps {
   /** Paid, member, and explicit internal workflows may bind valid drafts to the live Core preview. */
   livePreviewPayloadUpdates?: boolean
+  /** Review-only public layout density; payload and authority behavior remain identical. */
+  compact?: boolean
 }
 
-const PayloadInput: React.FC<PayloadInputProps> = ({ livePreviewPayloadUpdates = false }) => {
+const PayloadInput: React.FC<PayloadInputProps> = ({ livePreviewPayloadUpdates = false, compact = false }) => {
   const { project, setPayload } = useStudioStore()
   const { payload } = project
   const [draft, setDraft] = React.useState<Payload>(payload)
@@ -94,8 +96,8 @@ const PayloadInput: React.FC<PayloadInputProps> = ({ livePreviewPayloadUpdates =
   }, [draft, livePreviewPayloadUpdates, setPayload])
 
   return (
-    <section aria-labelledby="destination-title" className="rounded-2xl border border-slate-800 bg-slate-900/60 p-3 sm:p-4">
-      <div className="mb-2 flex items-center justify-between gap-3">
+    <section aria-labelledby="destination-title" className={`rounded-2xl border border-slate-800 bg-slate-900/60 ${compact ? 'p-2' : 'p-3 sm:p-4'}`}>
+      <div className={`${compact ? 'mb-1' : 'mb-2'} flex items-center justify-between gap-3`}>
         <h2 id="destination-title" className="text-sm font-semibold text-slate-200">Destination</h2>
         <div className="flex gap-1 rounded-xl bg-slate-950 p-1" role="group" aria-label="QR content type">
           {PAYLOAD_TYPES.map((type) => {
@@ -122,10 +124,10 @@ const PayloadInput: React.FC<PayloadInputProps> = ({ livePreviewPayloadUpdates =
         value={draft.raw}
         onChange={(event) => updateDraft({ ...draft, raw: event.target.value })}
         placeholder={selectedType.placeholder}
-        className="h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-slate-100 outline-none transition-colors placeholder:text-slate-600 focus:border-studio-500 focus:ring-1 focus:ring-studio-500/50"
+        className={`${compact ? 'h-10' : 'h-11'} w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-slate-100 outline-none transition-colors placeholder:text-slate-600 focus:border-studio-500 focus:ring-1 focus:ring-studio-500/50`}
       />
 
-      <div className="mt-1.5 flex items-center justify-between gap-3">
+      <div className={`${compact ? 'sr-only' : 'mt-1.5 flex'} items-center justify-between gap-3`}>
         {normalizedDraft ? (
           <p className="min-w-0 truncate text-[10px] text-slate-500" title={normalizedDraft}>Encoded: {normalizedDraft}</p>
         ) : <span />}
@@ -137,11 +139,11 @@ const PayloadInput: React.FC<PayloadInputProps> = ({ livePreviewPayloadUpdates =
         type="button"
         disabled={!validation.valid}
         onClick={activate}
-        className="mt-2 min-h-10 w-full rounded-xl bg-studio-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-studio-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-white disabled:cursor-not-allowed disabled:bg-slate-800 disabled:text-slate-500"
+        className={`${compact ? 'mt-1 min-h-9 py-1.5' : 'mt-2 min-h-10 py-2'} w-full rounded-xl bg-studio-600 px-3 text-xs font-semibold text-white transition hover:bg-studio-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-white disabled:cursor-not-allowed disabled:bg-slate-800 disabled:text-slate-500`}
       >
         Continue with this QR
       </button>
-      <p className="mt-1.5 text-center text-[10px] font-medium text-slate-300">
+      <p className={`${compact ? 'mt-1' : 'mt-1.5'} text-center text-[10px] font-medium text-slate-300`}>
         After checkout: PNG + SVG downloads · Social and print sizes
       </p>
       {activationMessage && <p role="status" className="mt-1 text-center text-[10px] font-medium text-emerald-300">{activationMessage}</p>}

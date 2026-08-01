@@ -9,14 +9,19 @@ import CheckoutPanel from './components/CheckoutPanel'
 
 const App: React.FC = () => {
   const { project, resetProject } = useStudioStore()
-  const showSecondaryWorkflow = typeof window !== 'undefined'
-    && new URLSearchParams(window.location.search).get('workflow') === 'internal'
+  const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams()
+  const showSecondaryWorkflow = searchParams.get('workflow') === 'internal'
+  const noScrollVariant = !showSecondaryWorkflow && searchParams.get('uxVariant') === 'no-scroll'
   const hasLivePayloadPreviewEntitlement = showSecondaryWorkflow || project.entitlement.type !== 'preview'
 
   return (
-    <div className="min-h-screen bg-slate-950">
-      <header className="sticky top-0 z-50 border-b border-slate-800 bg-slate-950/90 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-3 py-2.5 sm:px-4">
+    <div
+      data-testid="studio-app"
+      data-ux-variant={noScrollVariant ? 'no-scroll' : 'default'}
+      className={`${noScrollVariant ? 'h-[100dvh] overflow-hidden' : 'min-h-screen'} bg-slate-950`}
+    >
+      <header className={`${noScrollVariant ? 'relative' : 'sticky top-0'} z-50 border-b border-slate-800 bg-slate-950/90 backdrop-blur`}>
+        <div className={`mx-auto flex max-w-6xl items-center justify-between px-3 ${noScrollVariant ? 'py-1.5' : 'py-2.5'} sm:px-4`}>
           <div className="flex items-center gap-2">
             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-studio-600 text-xs font-bold text-white">QR</div>
             <h1 className="text-sm font-semibold tracking-tight text-slate-100">Artistic QR Studio</h1>
@@ -36,11 +41,11 @@ const App: React.FC = () => {
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl space-y-4 px-3 py-3 sm:px-4 sm:py-5">
-        <ArtDirectionPanel />
+      <main className={`mx-auto max-w-6xl px-3 sm:px-4 ${noScrollVariant ? 'flex h-[calc(100dvh-41px)] flex-col gap-1.5 overflow-hidden py-1.5' : 'space-y-4 py-3 sm:py-5'}`}>
+        <ArtDirectionPanel noScrollVariant={noScrollVariant} />
 
         <div id="destination" className="scroll-mt-16">
-          <PayloadInput key={project.projectId} livePreviewPayloadUpdates={hasLivePayloadPreviewEntitlement} />
+          <PayloadInput key={project.projectId} livePreviewPayloadUpdates={hasLivePayloadPreviewEntitlement} compact={noScrollVariant} />
         </div>
 
         {showSecondaryWorkflow && <section aria-labelledby="finish-title" className="space-y-3 border-t border-slate-900 pt-4">
@@ -59,7 +64,7 @@ const App: React.FC = () => {
         </section>}
       </main>
 
-      <footer className="mt-8 border-t border-slate-900 py-5">
+      <footer className={`${noScrollVariant ? 'hidden' : 'mt-8 border-t border-slate-900 py-5'}`}>
         <div className="mx-auto max-w-6xl px-4 text-center">
           <p className="text-xs text-slate-600">Artistic QR Studio · Live Core-backed design preview</p>
         </div>

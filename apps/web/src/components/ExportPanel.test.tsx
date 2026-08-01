@@ -97,6 +97,11 @@ describe('ExportPanel', () => {
     expect(screen.getByText(/blur/i)).toBeInTheDocument()
     expect(screen.getByText(/Increase quiet zone/i)).toBeInTheDocument()
     expect(screen.getByText(/Evidence source not supplied/i)).toBeInTheDocument()
+    expect(screen.getByText('Decoder checks')).toBeVisible()
+    expect(screen.queryByText('Confidence')).not.toBeInTheDocument()
+    expect(screen.getByText(
+      "Scan checks reflect this app's decoder and perturbation tests, not a universal scan guarantee.",
+    )).toBeVisible()
   })
 
   it('does not show validation summary when candidate lacks validation data', () => {
@@ -208,8 +213,8 @@ describe('ExportPanel', () => {
     })
     render(<ExportPanel />)
     expect(screen.getByText(/Validation Summary/i)).toBeInTheDocument()
-    expect(screen.queryByText(/Decoders/i)).not.toBeInTheDocument()
-    expect(screen.queryByText(/Perturbation Tests/i)).not.toBeInTheDocument()
+    expect(screen.queryByText('Decoders', { exact: true })).not.toBeInTheDocument()
+    expect(screen.queryByText('Perturbation Tests', { exact: true })).not.toBeInTheDocument()
   })
 
   it('denies export when only local browser entitlement is tampered', async () => {
