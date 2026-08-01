@@ -153,6 +153,7 @@ const SELECTOR_TILE_BASE = 'relative flex h-14 w-14 shrink-0 snap-start items-ce
 const SELECTOR_TILE_SELECTED = 'border-white bg-studio-950/70 ring-2 ring-studio-500 ring-offset-2 ring-offset-slate-900'
 const SELECTOR_TILE_IDLE = 'border-slate-700 bg-slate-950/60 hover:border-slate-400'
 const SELECTOR_CHECK = 'absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-white text-[10px] font-black text-slate-950'
+const SELECTOR_SCROLL_ROW = 'selector-scroll-row flex snap-x gap-2 overflow-x-auto pb-3'
 
 type ControlFamily = 'color' | 'palette' | 'style' | 'corners' | 'eyes'
 const CONTROL_FAMILIES: ReadonlyArray<{ family: ControlFamily; label: string; glyph: string }> = [
@@ -285,7 +286,7 @@ const ArtDirectionPanel: React.FC<ArtDirectionPanelProps> = ({ noScrollVariant =
           </div>}
           <div id="control-panel-color" role={noScrollVariant ? 'tabpanel' : undefined} aria-label={noScrollVariant ? 'Color controls' : undefined} className={noScrollVariant && activeFamily !== 'color' ? 'hidden' : undefined}>
           <div role="group" aria-label="Color">
-            <div className="flex snap-x items-center gap-2 overflow-x-auto pb-1">
+            <div className={`${SELECTOR_SCROLL_ROW} items-center`} data-selector-scroll-row="color">
               {SOLID_PRESETS.map((preset) => {
                 const selected = selectedSolid?.name === preset.name
                 const palette = preset.variants[intensity]
@@ -313,7 +314,7 @@ const ArtDirectionPanel: React.FC<ArtDirectionPanelProps> = ({ noScrollVariant =
           </div>
 
           <div id="control-panel-palette" role={noScrollVariant ? 'tabpanel' : undefined} aria-label={noScrollVariant ? 'Palette controls' : undefined} className={noScrollVariant && activeFamily !== 'palette' ? 'hidden' : undefined}>
-            <div className="flex snap-x gap-2 overflow-x-auto pb-1" role="listbox" aria-label="Palette">
+            <div className={SELECTOR_SCROLL_ROW} data-selector-scroll-row="palette" role="listbox" aria-label="Palette">
               {PATTERNED_PRESETS.map((preset) => {
                 const selected = selectedPatterned?.name === preset.name
                 return (
@@ -337,7 +338,7 @@ const ArtDirectionPanel: React.FC<ArtDirectionPanelProps> = ({ noScrollVariant =
           </div>
 
           <div id="control-panel-style" role={noScrollVariant ? 'tabpanel' : undefined} aria-label={noScrollVariant ? 'Style controls' : undefined} className={noScrollVariant && activeFamily !== 'style' ? 'hidden' : undefined}>
-            <div className="flex snap-x gap-2 overflow-x-auto pb-1" role="listbox" aria-label="Style">
+            <div className={SELECTOR_SCROLL_ROW} data-selector-scroll-row="style" role="listbox" aria-label="Style">
               {STYLE_OPTIONS.map((style) => {
                 const selected = selectedStyle.name === style.name
                 return (
@@ -364,7 +365,7 @@ const ArtDirectionPanel: React.FC<ArtDirectionPanelProps> = ({ noScrollVariant =
           </div>
 
           <div id="control-panel-corners" role={noScrollVariant ? 'tabpanel' : undefined} aria-label={noScrollVariant ? 'Corners controls' : undefined} className={noScrollVariant && activeFamily !== 'corners' ? 'hidden' : undefined}>
-            <div className="flex snap-x gap-2 overflow-x-auto pb-1" role="listbox" aria-label="Corners">
+            <div className={SELECTOR_SCROLL_ROW} data-selector-scroll-row="corners" role="listbox" aria-label="Corners">
               {EYE_FRAME_OPTIONS.map((corner) => {
                 const selected = selectedCorner.name === corner.name
                 return (
@@ -391,7 +392,7 @@ const ArtDirectionPanel: React.FC<ArtDirectionPanelProps> = ({ noScrollVariant =
           </div>
 
           <div id="control-panel-eyes" role={noScrollVariant ? 'tabpanel' : undefined} aria-label={noScrollVariant ? 'Eyes controls' : undefined} className={noScrollVariant && activeFamily !== 'eyes' ? 'hidden' : undefined}>
-            <div className="flex snap-x gap-2 overflow-x-auto pb-1" role="listbox" aria-label="Eyes">
+            <div className={SELECTOR_SCROLL_ROW} data-selector-scroll-row="eyes" role="listbox" aria-label="Eyes">
               {EYE_BALL_OPTIONS.map((eye) => {
                 const selected = selectedEye.name === eye.name
                 return (

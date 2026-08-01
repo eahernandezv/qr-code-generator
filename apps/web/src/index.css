@@ -6,3 +6,23 @@
   html { font-family: 'Inter', system-ui, sans-serif; }
   body { @apply bg-slate-950 text-slate-100; }
 }
+
+@layer components {
+  .selector-scroll-row {
+    scrollbar-color: rgb(71 85 105) transparent;
+    scrollbar-width: thin;
+  }
+
+  .selector-scroll-row::-webkit-scrollbar {
+    height: 6px;
+  }
+
+  .selector-scroll-row::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .selector-scroll-row::-webkit-scrollbar-thumb {
+    border-radius: 9999px;
+    background: rgb(71 85 105);
+  }
+}
