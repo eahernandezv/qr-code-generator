@@ -3,14 +3,71 @@ import { useStudioStore } from '../store'
 import type { ArtDirection, ColorIntensity, EyePrimitiveStyle, ModuleStyle, PaletteFamily, PalettePattern } from '../types'
 import QRPreview from './QRPreview'
 
-const SOLID_PRESETS = [
-  { name: 'Classic Black', label: 'Classic Black', primary: '#000000', secondary: '#000000', accent: '#ffffff', background: '#ffffff' },
-  { name: 'Studio Blue', label: 'Studio Blue', primary: '#5b6ef5', secondary: '#323eaf', accent: '#a5bdff', background: '#f0f4ff' },
-  { name: 'Warm Sunset', label: 'Warm Sunset', primary: '#ff7a5c', secondary: '#c44d3a', accent: '#ffd6a5', background: '#fff3e8' },
-  { name: 'Forest', label: 'Forest Green', primary: '#2d6a4f', secondary: '#1b4332', accent: '#95d5b2', background: '#edf7f0' },
-  { name: 'Monochrome', label: 'Midnight Monochrome', primary: '#2a336e', secondary: '#181b3a', accent: '#e0eaff', background: '#f4f5fa' },
-  { name: 'Berry', label: 'Berry Pink', primary: '#c9184a', secondary: '#800f2f', accent: '#ff8fa3', background: '#f9e8ef' },
-] as const
+type SolidPalette = { primary: string; secondary: string; accent: string; background: string }
+type SolidPreset = { name: string; variants: Record<ColorIntensity, SolidPalette> }
+
+export const SOLID_PRESETS: readonly SolidPreset[] = [
+  { name: 'Classic Black', variants: {
+    mellow: { primary: '#374151', secondary: '#1f2937', accent: '#9ca3af', background: '#ffffff' },
+    balanced: { primary: '#000000', secondary: '#000000', accent: '#6b7280', background: '#ffffff' },
+    punchy: { primary: '#030712', secondary: '#000000', accent: '#374151', background: '#ffffff' },
+  } },
+  { name: 'Studio Blue', variants: {
+    mellow: { primary: '#405b91', secondary: '#293f70', accent: '#9fb4d8', background: '#f0f4ff' },
+    balanced: { primary: '#5162da', secondary: '#323eaf', accent: '#a5bdff', background: '#f0f4ff' },
+    punchy: { primary: '#2344d9', secondary: '#172c91', accent: '#7897ff', background: '#f0f4ff' },
+  } },
+  { name: 'Sunset Coral', variants: {
+    mellow: { primary: '#8b4b42', secondary: '#67362f', accent: '#d9a39a', background: '#fff3e8' },
+    balanced: { primary: '#b54432', secondary: '#7f2f25', accent: '#ef9a86', background: '#fff3e8' },
+    punchy: { primary: '#d42f1a', secondary: '#8f1f12', accent: '#ff765b', background: '#fff3e8' },
+  } },
+  { name: 'Forest Green', variants: {
+    mellow: { primary: '#3f6654', secondary: '#294638', accent: '#9bbbab', background: '#edf7f0' },
+    balanced: { primary: '#2d6a4f', secondary: '#1b4332', accent: '#95d5b2', background: '#edf7f0' },
+    punchy: { primary: '#087443', secondary: '#07502f', accent: '#52c788', background: '#edf7f0' },
+  } },
+  { name: 'Midnight Indigo', variants: {
+    mellow: { primary: '#4b5278', secondary: '#303653', accent: '#aeb5d4', background: '#f4f5fa' },
+    balanced: { primary: '#2a336e', secondary: '#181b3a', accent: '#aab7ee', background: '#f4f5fa' },
+    punchy: { primary: '#182181', secondary: '#0d124d', accent: '#7185ff', background: '#f4f5fa' },
+  } },
+  { name: 'Berry Pink', variants: {
+    mellow: { primary: '#7f4659', secondary: '#603241', accent: '#cf9baa', background: '#f9e8ef' },
+    balanced: { primary: '#c9184a', secondary: '#800f2f', accent: '#ff8fa3', background: '#f9e8ef' },
+    punchy: { primary: '#d30042', secondary: '#96002d', accent: '#ff5f82', background: '#f9e8ef' },
+  } },
+  { name: 'Electric Purple', variants: {
+    mellow: { primary: '#684b82', secondary: '#49345d', accent: '#bca0d2', background: '#f8f1ff' },
+    balanced: { primary: '#7134a8', secondary: '#4b1f78', accent: '#c78df0', background: '#f8f1ff' },
+    punchy: { primary: '#7d00cc', secondary: '#4d0080', accent: '#c75cff', background: '#f8f1ff' },
+  } },
+  { name: 'Teal Mint', variants: {
+    mellow: { primary: '#376d6b', secondary: '#24504e', accent: '#94c8c2', background: '#effbf8' },
+    balanced: { primary: '#087a74', secondary: '#075955', accent: '#74d4c8', background: '#effbf8' },
+    punchy: { primary: '#007f77', secondary: '#005e57', accent: '#35dbc9', background: '#effbf8' },
+  } },
+  { name: 'Amber Gold', variants: {
+    mellow: { primary: '#725d32', secondary: '#514221', accent: '#cdb77f', background: '#fff9e8' },
+    balanced: { primary: '#846000', secondary: '#5f4500', accent: '#d9ae39', background: '#fff9e8' },
+    punchy: { primary: '#936300', secondary: '#694600', accent: '#f0ae00', background: '#fff9e8' },
+  } },
+  { name: 'Crimson Red', variants: {
+    mellow: { primary: '#80464d', secondary: '#5d3036', accent: '#d3a0a5', background: '#fff1f2' },
+    balanced: { primary: '#a51d31', secondary: '#721322', accent: '#e3818e', background: '#fff1f2' },
+    punchy: { primary: '#c40025', secondary: '#820018', accent: '#ff5c73', background: '#fff1f2' },
+  } },
+  { name: 'Slate Navy', variants: {
+    mellow: { primary: '#46586d', secondary: '#304052', accent: '#a2b1c2', background: '#f3f6f9' },
+    balanced: { primary: '#263e5b', secondary: '#172a40', accent: '#88a8c8', background: '#f3f6f9' },
+    punchy: { primary: '#0d365f', secondary: '#062542', accent: '#5e9bd2', background: '#f3f6f9' },
+  } },
+  { name: 'Espresso Brown', variants: {
+    mellow: { primary: '#685348', secondary: '#493930', accent: '#bba79c', background: '#faf5f0' },
+    balanced: { primary: '#55372a', secondary: '#392319', accent: '#b58b75', background: '#faf5f0' },
+    punchy: { primary: '#492718', secondary: '#2e160d', accent: '#c27a57', background: '#faf5f0' },
+  } },
+]
 
 const PATTERNED_PRESETS: Array<{
   name: string
@@ -58,6 +115,12 @@ const INTENSITIES: Array<{ value: ColorIntensity; label: string }> = [
   { value: 'punchy', label: 'Punchy' },
 ]
 
+const QR_SIZES = [
+  { value: 0.25, iconSize: 10, label: 'Smaller QR size' },
+  { value: 0.7, iconSize: 16, label: 'Balanced QR size' },
+  { value: 0.85, iconSize: 22, label: 'Larger QR size' },
+] as const
+
 function primitiveStyle(shape: ModuleStyle | EyePrimitiveStyle): React.CSSProperties {
   if (shape === 'circle') return { borderRadius: '9999px' }
   if (shape === 'rounded') return { borderRadius: '2px' }
@@ -94,11 +157,36 @@ function MiniCorner({ frame, ball = frame }: { frame: EyePrimitiveStyle; ball?: 
   )
 }
 
+function SizeIcon({ size }: { size: number }) {
+  return (
+    <span aria-hidden="true" className="flex h-6 w-6 items-center justify-center rounded-sm border border-slate-500/80">
+      <span className="border-2 border-current bg-current/20" style={{ width: size, height: size }} />
+    </span>
+  )
+}
+
+function IntensityIcon({ intensity }: { intensity: ColorIntensity }) {
+  const bars = intensity === 'mellow' ? 1 : intensity === 'balanced' ? 2 : 3
+  return (
+    <span aria-hidden="true" className="flex h-6 w-6 items-end justify-center gap-[2px]">
+      {[0, 1, 2].map((index) => (
+        <span
+          key={index}
+          className={`w-1 rounded-full ${index < bars ? 'bg-current' : 'bg-slate-700'}`}
+          style={{ height: 7 + index * 5 }}
+        />
+      ))}
+    </span>
+  )
+}
+
 const ArtDirectionPanel: React.FC = () => {
   const { project, setArtDirection } = useStudioStore()
   const art = project.artDirection
   const update = (patch: Partial<ArtDirection>) => setArtDirection({ ...art, ...patch })
-  const selectedSolid = SOLID_PRESETS.find((preset) => !art.paletteFamily && art.palette?.primary === preset.primary)
+  const intensity = art.colorIntensity ?? 'balanced'
+  const selectedSolid = SOLID_PRESETS.find((preset) => !art.paletteFamily
+    && Object.values(preset.variants).some((variant) => variant.primary === art.palette?.primary))
   const selectedPatterned = PATTERNED_PRESETS.find((preset) => art.paletteFamily === preset.family && art.palettePattern === preset.pattern)
   const selectedStyle = STYLE_OPTIONS.find((style) => style.moduleStyle === (art.moduleStyle ?? 'rounded')) ?? STYLE_OPTIONS[1]
   const selectedCorner = EYE_OPTIONS.find((option) => option.style === (art.eyeFrameStyle ?? art.eyeStyle ?? 'rounded')) ?? EYE_OPTIONS[1]
@@ -113,25 +201,26 @@ const ArtDirectionPanel: React.FC = () => {
         </span>
       </div>
 
-      <div className="grid items-start gap-3 lg:grid-cols-[minmax(0,1fr)_292px]">
+      <div className="grid items-start gap-3 lg:grid-cols-[minmax(0,1fr)_344px]">
         <div className="order-2 min-w-0 space-y-2.5 lg:order-1">
           <div role="group" aria-label="Color">
-            <div className="flex items-center gap-2">
+            <div className="flex snap-x items-center gap-2 overflow-x-auto pb-1">
               {SOLID_PRESETS.map((preset) => {
                 const selected = selectedSolid?.name === preset.name
+                const palette = preset.variants[intensity]
                 return (
                   <button
                     key={preset.name}
                     type="button"
-                    aria-label={`${preset.label}${selected ? ' selected' : ''}`}
+                    aria-label={`${preset.name}${selected ? ' selected' : ''}`}
                     aria-pressed={selected}
                     onClick={() => update({
                       paletteFamily: undefined,
                       palettePattern: 'solid',
-                      palette: { primary: preset.primary, secondary: preset.secondary, accent: preset.accent, background: preset.background },
+                      palette,
                     })}
-                    className={`relative h-11 w-11 shrink-0 rounded-full border-2 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white ${selected ? 'scale-105 border-white ring-2 ring-studio-500 ring-offset-2 ring-offset-slate-900' : 'border-slate-700 hover:scale-105 hover:border-slate-400'}`}
-                    style={{ background: `linear-gradient(135deg, ${preset.primary} 0 58%, ${preset.accent} 58%)` }}
+                    className={`relative h-11 w-11 shrink-0 snap-start rounded-full border-2 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white ${selected ? 'scale-105 border-white ring-2 ring-studio-500 ring-offset-2 ring-offset-slate-900' : 'border-slate-700 hover:scale-105 hover:border-slate-400'}`}
+                    style={{ background: `linear-gradient(135deg, ${palette.primary} 0 58%, ${palette.accent} 58%)` }}
                   >
                     {selected && <span aria-hidden="true" className="absolute inset-0 flex items-center justify-center text-sm font-black text-white drop-shadow">✓</span>}
                   </button>
@@ -175,10 +264,11 @@ const ArtDirectionPanel: React.FC = () => {
                     aria-label={`${style.name} QR style${selected ? ' selected' : ''}`}
                     aria-selected={selected}
                     onClick={() => update({ moduleStyle: style.moduleStyle })}
-                    className={`flex h-14 min-w-[76px] shrink-0 snap-start items-center gap-2 rounded-xl border-2 px-2 text-left transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white ${selected ? 'border-white bg-studio-950/70 ring-2 ring-studio-500' : 'border-slate-700 bg-slate-950/60 hover:border-slate-400'}`}
+                    title={`${style.name} QR style`}
+                    data-setting={style.moduleStyle}
+                    className={`flex h-14 w-14 shrink-0 snap-start items-center justify-center rounded-xl border-2 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white ${selected ? 'border-white bg-studio-950/70 ring-2 ring-studio-500' : 'border-slate-700 bg-slate-950/60 hover:border-slate-400'}`}
                   >
                     <MiniQr shape={style.moduleStyle} />
-                    <span className="text-[10px] font-semibold text-slate-300">{style.name}</span>
                   </button>
                 )
               })}
@@ -197,10 +287,11 @@ const ArtDirectionPanel: React.FC = () => {
                     aria-label={`${corner.name} corner style${selected ? ' selected' : ''}`}
                     aria-selected={selected}
                     onClick={() => update({ eyeFrameStyle: corner.style })}
-                    className={`relative flex h-14 min-w-[76px] shrink-0 snap-start items-center gap-2 rounded-xl border-2 px-2 text-left transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white ${selected ? 'border-white bg-studio-950/70 ring-2 ring-studio-500' : 'border-slate-700 bg-slate-950/60 hover:border-slate-400'}`}
+                    title={`${corner.name} corner style`}
+                    data-setting={corner.style}
+                    className={`relative flex h-14 w-14 shrink-0 snap-start items-center justify-center rounded-xl border-2 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white ${selected ? 'border-white bg-studio-950/70 ring-2 ring-studio-500' : 'border-slate-700 bg-slate-950/60 hover:border-slate-400'}`}
                   >
                     <MiniCorner frame={corner.style} ball={art.eyeBallStyle ?? art.eyeStyle ?? 'rounded'} />
-                    <span className="text-[10px] font-semibold text-slate-300">{corner.name}</span>
                     {selected && <span aria-hidden="true" className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-white text-[10px] font-black text-slate-950">✓</span>}
                   </button>
                 )
@@ -220,10 +311,11 @@ const ArtDirectionPanel: React.FC = () => {
                     aria-label={`${eye.name} eye style${selected ? ' selected' : ''}`}
                     aria-selected={selected}
                     onClick={() => update({ eyeBallStyle: eye.style })}
-                    className={`relative flex h-14 min-w-[76px] shrink-0 snap-start items-center gap-2 rounded-xl border-2 px-2 text-left transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white ${selected ? 'border-white bg-studio-950/70 ring-2 ring-studio-500' : 'border-slate-700 bg-slate-950/60 hover:border-slate-400'}`}
+                    title={`${eye.name} eye style`}
+                    data-setting={eye.style}
+                    className={`relative flex h-14 w-14 shrink-0 snap-start items-center justify-center rounded-xl border-2 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white ${selected ? 'border-white bg-studio-950/70 ring-2 ring-studio-500' : 'border-slate-700 bg-slate-950/60 hover:border-slate-400'}`}
                   >
                     <MiniCorner frame={art.eyeFrameStyle ?? art.eyeStyle ?? 'rounded'} ball={eye.style} />
-                    <span className="text-[10px] font-semibold text-slate-300">{eye.name}</span>
                     {selected && <span aria-hidden="true" className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-white text-[10px] font-black text-slate-950">✓</span>}
                   </button>
                 )
@@ -231,28 +323,43 @@ const ArtDirectionPanel: React.FC = () => {
             </div>
           </div>
 
-          <div role="group" aria-label="Intensity">
-            <div className="grid grid-cols-3 rounded-xl bg-slate-950 p-1">
-              {INTENSITIES.map((intensity) => {
-                const selected = (art.colorIntensity ?? 'balanced') === intensity.value
-                return (
-                  <button
-                    key={intensity.value}
-                    type="button"
-                    aria-pressed={selected}
-                    onClick={() => update({ colorIntensity: intensity.value })}
-                    className={`rounded-lg px-2 py-2 text-[10px] font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white ${selected ? 'bg-studio-600 text-white shadow' : 'text-slate-500 hover:text-slate-300'}`}
-                  >
-                    {intensity.label}
-                  </button>
-                )
-              })}
-            </div>
-          </div>
         </div>
 
-        <div className="order-1 flex justify-center lg:order-2">
+        <div className="order-1 flex items-center justify-center gap-1.5 lg:order-2" data-testid="qr-side-controls">
+          <div role="group" aria-label="QR size" className="grid gap-1 rounded-xl bg-slate-950 p-1">
+            {QR_SIZES.map((size) => {
+              const selected = (art.protectedQrProminence ?? 0.7) === size.value
+              return <button
+                key={size.value}
+                type="button"
+                aria-label={size.label}
+                aria-pressed={selected}
+                title={size.label}
+                onClick={() => update({ protectedQrProminence: size.value })}
+                className={`h-9 w-8 rounded-lg text-[10px] font-bold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white ${selected ? 'bg-studio-600 text-white shadow' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
+              ><SizeIcon size={size.iconSize} /></button>
+            })}
+          </div>
+
           <QRPreview size={216} useDemoWhenEmpty />
+
+          <div role="group" aria-label="Intensity" className="grid gap-1 rounded-xl bg-slate-950 p-1">
+            {INTENSITIES.map((option) => {
+              const selected = intensity === option.value
+              return <button
+                key={option.value}
+                type="button"
+                aria-label={`${option.label} color intensity`}
+                aria-pressed={selected}
+                title={`${option.label} color intensity`}
+                onClick={() => update({
+                  colorIntensity: option.value,
+                  ...(selectedSolid ? { palette: selectedSolid.variants[option.value] } : {}),
+                })}
+                className={`h-9 w-8 rounded-lg text-[10px] font-bold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white ${selected ? 'bg-studio-600 text-white shadow' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
+              ><IntensityIcon intensity={option.value} /></button>
+            })}
+          </div>
         </div>
       </div>
     </section>

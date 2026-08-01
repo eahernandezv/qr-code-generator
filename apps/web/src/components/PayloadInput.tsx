@@ -3,14 +3,13 @@ import { useStudioStore } from '../store'
 import type { Payload, QrMode } from '../types'
 
 const PAYLOAD_TYPES: Array<{
-  mode: Extract<QrMode, 'url' | 'email' | 'text' | 'phone'>
+  mode: Extract<QrMode, 'url' | 'email' | 'phone'>
   label: string
   inputLabel: string
   placeholder: string
 }> = [
   { mode: 'url', label: 'URL', inputLabel: 'Final destination URL', placeholder: 'Enter destination URL…' },
   { mode: 'email', label: 'Email', inputLabel: 'Email address', placeholder: 'name@example.com' },
-  { mode: 'text', label: 'Text', inputLabel: 'Text content', placeholder: 'Enter short text…' },
   { mode: 'phone', label: 'Phone', inputLabel: 'Phone number', placeholder: '+1 555 123 4567' },
 ]
 
@@ -117,13 +116,13 @@ const PayloadInput: React.FC<PayloadInputProps> = ({ livePreviewPayloadUpdates =
       </div>
 
       <label htmlFor="destination-content" className="sr-only">{selectedType.inputLabel}</label>
-      <textarea
+      <input
         id="destination-content"
+        type={draft.mode === 'email' ? 'email' : draft.mode === 'phone' ? 'tel' : 'url'}
         value={draft.raw}
         onChange={(event) => updateDraft({ ...draft, raw: event.target.value })}
         placeholder={selectedType.placeholder}
-        rows={2}
-        className="w-full resize-y rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-slate-100 outline-none transition-colors placeholder:text-slate-600 focus:border-studio-500 focus:ring-1 focus:ring-studio-500/50"
+        className="h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-slate-100 outline-none transition-colors placeholder:text-slate-600 focus:border-studio-500 focus:ring-1 focus:ring-studio-500/50"
       />
 
       <div className="mt-1.5 flex items-center justify-between gap-3">
@@ -142,7 +141,7 @@ const PayloadInput: React.FC<PayloadInputProps> = ({ livePreviewPayloadUpdates =
       >
         Continue with this QR
       </button>
-      <p className="mt-1.5 text-center text-[10px] text-slate-500">
+      <p className="mt-1.5 text-center text-[10px] font-medium text-slate-300">
         After checkout: PNG + SVG downloads · Social and print sizes
       </p>
       {activationMessage && <p role="status" className="mt-1 text-center text-[10px] font-medium text-emerald-300">{activationMessage}</p>}

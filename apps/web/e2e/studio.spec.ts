@@ -10,6 +10,7 @@ const b10EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/st
 const b11EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b11-corners-compact-editor-cleanup')
 const b13EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b13-label-cleanup-paid-payload-gate')
 const b14EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b14-expose-expanded-style-primitives')
+const b16EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b16-palette-sliders-destination-polish')
 
 const svgArtwork = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
@@ -84,7 +85,7 @@ function projectState(options: { selected?: boolean; exhausted?: boolean; coreEv
     artDirection: {
       templateId: 'watercolor', artisticStrength: 0.5, composition: 'centered',
       protectedQrProminence: 0.7,
-      palette: { primary: '#5b6ef5', secondary: '#323eaf', accent: '#a5bdff' },
+      palette: { primary: '#5162da', secondary: '#323eaf', accent: '#a5bdff' },
     },
     style: { foreground: '#181b3a', background: '#f0f4ff', margin: 4, eyeStyle: 'rounded', moduleStyle: 'rounded' },
     boards: [{
@@ -205,6 +206,99 @@ test.beforeAll(async () => {
   await fs.mkdir(b11EvidenceDir, { recursive: true })
   await fs.mkdir(b13EvidenceDir, { recursive: true })
   await fs.mkdir(b14EvidenceDir, { recursive: true })
+  await fs.mkdir(b16EvidenceDir, { recursive: true })
+})
+
+test('B16 delivers icon-only settings, one-line destination, palettes, side controls, and preserved payload gates', async ({ page }) => {
+  const errors = await assertNoConsoleErrors(page)
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/')
+
+  const preview = page.getByRole('img', { name: 'QR Preview' })
+  const previewBox = await preview.boundingBox()
+  expect(previewBox).not.toBeNull()
+  const destination = page.getByRole('textbox', { name: 'Final destination URL' })
+  const destinationBox = await destination.boundingBox()
+  expect(await destination.evaluate((element) => element.tagName)).toBe('INPUT')
+  expect(destinationBox?.height).toBeLessThanOrEqual(44)
+  await expect(page.getByRole('button', { name: 'Text' })).toHaveCount(0)
+  for (const type of ['URL', 'Email', 'Phone']) await expect(page.getByRole('button', { name: type })).toBeVisible()
+
+  const iconRows = ['Style', 'Corners', 'Eyes'] as const
+  for (const row of iconRows) {
+    const options = page.getByRole('listbox', { name: row }).getByRole('option')
+    await expect(options).toHaveCount(5)
+    for (let index = 0; index < 5; index += 1) {
+      expect((await options.nth(index).innerText()).replace('✓', '').trim()).toBe('')
+      await expect(options.nth(index)).toHaveAttribute('aria-label', /style/)
+      await expect(options.nth(index)).toHaveAttribute('data-setting', /square|rounded|circle|vertical-bars|horizontal-bars|squircle|chamfered/)
+    }
+  }
+  for (const removed of ['Classic', 'Rounded', 'Dots', 'Soft', 'Circle', 'Squircle', 'Chamfered', 'Mellow', 'Balanced', 'Punchy']) {
+    await expect(page.getByText(removed, { exact: true })).toHaveCount(0)
+  }
+
+  const sideControls = page.getByTestId('qr-side-controls')
+  await expect(sideControls.getByRole('group', { name: 'QR size' })).toBeVisible()
+  await expect(sideControls.getByRole('group', { name: 'Intensity' })).toBeVisible()
+  const solidHashes: Record<string, string> = {}
+  await page.getByRole('button', { name: /^Studio Blue/ }).click()
+  for (const level of ['Mellow', 'Balanced', 'Punchy']) {
+    const button = page.getByRole('button', { name: `${level} color intensity` })
+    const before = await preview.getAttribute('src')
+    await button.click()
+    await expect.poll(() => preview.getAttribute('src')).not.toBe(before)
+    const source = await preview.getAttribute('src')
+    solidHashes[level.toLowerCase()] = createHash('sha256').update(source!).digest('hex')
+    expect(await preview.boundingBox()).toEqual(previewBox)
+    await page.screenshot({ path: path.join(b16EvidenceDir, `solid-${level.toLowerCase()}.png`), fullPage: true })
+  }
+  expect(new Set(Object.values(solidHashes)).size).toBe(3)
+
+  await page.getByRole('option', { name: /^Rainbow horizontal/ }).click()
+  const patternedHashes: Record<string, string> = {}
+  for (const level of ['Mellow', 'Balanced', 'Punchy']) {
+    const button = page.getByRole('button', { name: `${level} color intensity` })
+    await button.click()
+    await expect(button).toHaveAttribute('aria-pressed', 'true')
+    const source = await preview.getAttribute('src')
+    patternedHashes[level.toLowerCase()] = createHash('sha256').update(source!).digest('hex')
+  }
+  expect(new Set(Object.values(patternedHashes)).size).toBe(3)
+
+  const sizeHashes: Record<string, string> = {}
+  for (const level of ['Smaller', 'Balanced', 'Larger']) {
+    const button = page.getByRole('button', { name: `${level} QR size` })
+    const before = await preview.getAttribute('src')
+    await button.click()
+    await expect.poll(() => preview.getAttribute('src')).not.toBe(before)
+    const source = await preview.getAttribute('src')
+    sizeHashes[level.toLowerCase()] = createHash('sha256').update(source!).digest('hex')
+    expect(await preview.boundingBox()).toEqual(previewBox)
+  }
+  expect(new Set(Object.values(sizeHashes)).size).toBe(3)
+
+  await page.getByRole('group', { name: 'Color' }).screenshot({ path: path.join(b16EvidenceDir, 'expanded-solid-palette-row.png') })
+  for (const row of iconRows) await page.getByRole('listbox', { name: row }).screenshot({ path: path.join(b16EvidenceDir, `icon-only-${row.toLowerCase()}.png`) })
+  await page.screenshot({ path: path.join(b16EvidenceDir, 'mobile-public-editor.png'), fullPage: true })
+
+  const beforePayload = await preview.getAttribute('src')
+  await destination.fill('https://example.com/b16-public-draft')
+  await page.getByRole('button', { name: 'Continue with this QR' }).click()
+  expect(await preview.getAttribute('src')).toBe(beforePayload)
+  await expect(page.getByRole('heading', { name: 'Candidates' })).toHaveCount(0)
+  await expect(page.getByRole('heading', { name: 'Export' })).toHaveCount(0)
+  const note = page.getByText('After checkout: PNG + SVG downloads · Social and print sizes')
+  await expect(note).toHaveCSS('color', 'rgb(203, 213, 225)')
+  await fs.writeFile(path.join(b16EvidenceDir, 'preview-hashes.json'), JSON.stringify({
+    previewBox,
+    destinationBox,
+    solidHashes,
+    patternedHashes,
+    sizeHashes,
+    publicPayloadPreviewUnchanged: beforePayload === await preview.getAttribute('src'),
+  }, null, 2))
+  expect(errors).toEqual([])
 })
 
 test('B14 exposes five Core-backed Style, Corners, and Eyes options with stable preview geometry', async ({ page }) => {

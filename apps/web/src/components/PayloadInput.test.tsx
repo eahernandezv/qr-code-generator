@@ -13,12 +13,15 @@ function resetStore() {
 describe('PayloadInput', () => {
   beforeEach(resetStore)
 
-  it('shows a compact content selector and two-row input', () => {
+  it('shows a compact content selector and single-line destination input', () => {
     render(<PayloadInput />)
-    expect(screen.getByRole('textbox', { name: 'Final destination URL' })).toHaveAttribute('rows', '2')
+    const destination = screen.getByRole('textbox', { name: 'Final destination URL' })
+    expect(destination.tagName).toBe('INPUT')
+    expect(destination).toHaveAttribute('type', 'url')
+    expect(destination).toHaveClass('h-11')
     expect(screen.getByRole('button', { name: 'URL' })).toHaveAttribute('aria-pressed', 'true')
     expect(screen.getByRole('button', { name: 'Email' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Text' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Text' })).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Phone' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Continue with this QR' })).toBeDisabled()
     expect(screen.getByText('After checkout: PNG + SVG downloads · Social and print sizes')).toBeInTheDocument()
