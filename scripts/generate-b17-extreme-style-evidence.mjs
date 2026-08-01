@@ -1,7 +1,9 @@
 import { createHash } from 'node:crypto';
+import { createRequire } from 'node:module';
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { PNG } from 'pngjs';
+const requireFromQrCore = createRequire(new URL('../packages/qr-core/package.json', import.meta.url));
+const { PNG } = requireFromQrCore('pngjs');
 import { generateMatrix, normalizePayload, renderDeterministic } from '../packages/qr-core/dist/index.js';
 import { pointInShape, svgShape } from '../packages/qr-core/dist/finder-geometry.js';
 import { pointInModuleShape } from '../packages/qr-core/dist/module-geometry.js';
