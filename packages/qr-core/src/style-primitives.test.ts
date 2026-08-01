@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { createHash } from 'node:crypto';
 import * as jsQRModule from 'jsqr';
 import { PNG } from 'pngjs';
 import { generateMatrix, normalizePayload, renderDeterministic, type EyeShape, type ModuleShape } from './index.js';
@@ -19,6 +20,33 @@ function svg(options: Parameters<typeof renderDeterministic>[1]) {
 }
 function png(options: Parameters<typeof renderDeterministic>[1]) {
   return renderDeterministic(matrix, { format: 'png-dataurl', moduleSize: 10, margin: 4, ...options });
+}
+
+function assertStrictSvg(svgData: string): void {
+  const stack: string[] = [];
+  const tags = svgData.matchAll(/<\/?([A-Za-z][\w:-]*)([^<>]*?)>/g);
+  let tagCount = 0;
+  for (const match of tags) {
+    tagCount += 1;
+    const [tag, name, rawAttributes] = match;
+    if (tag.startsWith('</')) {
+      expect(rawAttributes.trim(), `closing tag ${tag} must not have attributes`).toBe('');
+      expect(stack.pop(), `closing tag ${tag} must match its opening tag`).toBe(name);
+      continue;
+    }
+
+    const attributes = [...rawAttributes.matchAll(/([A-Za-z_:][\w:.-]*)\s*=\s*(?:"[^"]*"|'[^']*')/g)];
+    const attributeNames = attributes.map((attribute) => attribute[1]);
+    expect(new Set(attributeNames).size, `duplicate attribute in ${tag}`).toBe(attributeNames.length);
+    const unparsed = rawAttributes
+      .replace(/([A-Za-z_:][\w:.-]*)\s*=\s*(?:"[^"]*"|'[^']*')/g, '')
+      .replace(/\/$/, '')
+      .trim();
+    expect(unparsed, `malformed attribute syntax in ${tag}`).toBe('');
+    if (!tag.endsWith('/>')) stack.push(name);
+  }
+  expect(tagCount).toBeGreaterThan(0);
+  expect(stack, 'all SVG tags must be balanced').toEqual([]);
 }
 
 function proveFamilyDistinct(values: readonly string[], option: (value: string) => Parameters<typeof svg>[0], marker: string): void {
@@ -45,6 +73,26 @@ describe('expanded Core-backed style primitive families', () => {
 
   it('renders eye ball/pupil primitives independently and scan-safely', () => {
     proveFamilyDistinct(eyes, (value) => ({ shape: 'square', eyeFrameShape: 'square', eyeBallShape: value as EyeShape }), 'data-eye-ball-shape');
+  });
+
+  it('uses an XML-equivalent strict check that rejects duplicate attributes', () => {
+    expect(() => assertStrictSvg('<svg xmlns="http://www.w3.org/2000/svg"><rect fill="#123" fill="#123"/></svg>'))
+      .toThrow(/duplicate attribute/);
+  });
+
+  it.each([
+    ['squircle frame', { eyeFrameShape: 'squircle', eyeBallShape: 'square' }],
+    ['chamfered frame', { eyeFrameShape: 'chamfered', eyeBallShape: 'square' }],
+    ['squircle ball', { eyeFrameShape: 'square', eyeBallShape: 'squircle' }],
+    ['chamfered ball', { eyeFrameShape: 'square', eyeBallShape: 'chamfered' }],
+  ] as const)('serializes %s as strict deterministic SVG without duplicate attributes', (_name, options) => {
+    const first = svg(options);
+    const second = svg(options);
+    assertStrictSvg(first.data);
+    expect(createHash('sha256').update(first.data).digest('hex'))
+      .toBe(createHash('sha256').update(second.data).digest('hex'));
+    expect(first).toEqual(second);
+    expect(decode(png(options).data)).toBe(payload);
   });
 
   it('keeps the legacy eyeShape shorthand compatible while split options override it independently', () => {

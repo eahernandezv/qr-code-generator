@@ -21,7 +21,7 @@ export function svgShape(shape: EyeShape, x: number, y: number, size: number, fi
         if (first < 0) first = px;
         last = px;
       }
-      if (first >= 0) rows.push(`<rect ${attrs} x="${x + first}" y="${y + py}" width="${last - first + 1}" height="1" fill="${fill}"/>`);
+      if (first >= 0) rows.push(`<rect ${attrs} x="${x + first}" y="${y + py}" width="${last - first + 1}" height="1"/>`);
     }
     return `<g ${attrs}>${rows.join('')}</g>`;
   }
