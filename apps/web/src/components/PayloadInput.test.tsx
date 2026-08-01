@@ -24,7 +24,7 @@ describe('PayloadInput', () => {
     expect(screen.getByText('After checkout: PNG + SVG downloads · Social and print sizes')).toBeInTheDocument()
   })
 
-  it('keeps typed content as a draft until explicit activation', async () => {
+  it('keeps typed content as a draft through public checkout handoff', async () => {
     const user = userEvent.setup()
     render(<PayloadInput />)
     await act(async () => user.type(screen.getByRole('textbox'), 'example.com'))
@@ -33,11 +33,23 @@ describe('PayloadInput', () => {
     const activation = screen.getByRole('button', { name: 'Continue with this QR' })
     expect(activation).toBeEnabled()
     await user.click(activation)
-    expect(useStudioStore.getState().project.payload.normalized).toBe('https://example.com/')
-    expect(screen.getByRole('status')).toHaveTextContent('Content confirmed · Checkout coming next')
+    expect(useStudioStore.getState().project.payload.normalized).toBe('')
+    expect(screen.getByRole('status')).toHaveTextContent('Ready for checkout · QR activates after payment')
   })
 
-  it('switches to Email and constructs a mailto payload', async () => {
+  it('preserves entitlement-gated live payload updates', async () => {
+    const user = userEvent.setup()
+    render(<PayloadInput livePreviewPayloadUpdates />)
+    await user.type(screen.getByRole('textbox'), 'member.example')
+    expect(screen.getByRole('button', { name: 'Continue with this QR' })).toBeEnabled()
+    expect(useStudioStore.getState().project.payload).toMatchObject({
+      raw: 'member.example',
+      normalized: 'https://member.example/',
+      mode: 'url',
+    })
+  })
+
+  it('switches to Email and constructs a draft mailto payload without binding public preview', async () => {
     const user = userEvent.setup()
     render(<PayloadInput />)
     await user.click(screen.getByRole('button', { name: 'Email' }))
@@ -46,10 +58,8 @@ describe('PayloadInput', () => {
     await user.type(input, 'studio@example.com')
     expect(useStudioStore.getState().project.payload.normalized).toBe('')
     await user.click(screen.getByRole('button', { name: 'Continue with this QR' }))
-    expect(useStudioStore.getState().project.payload).toMatchObject({
-      mode: 'email',
-      normalized: 'mailto:studio@example.com',
-    })
+    expect(useStudioStore.getState().project.payload.normalized).toBe('')
+    expect(screen.getByRole('status')).toHaveTextContent('QR activates after payment')
   })
 
   it('validates URL and Email input truthfully', async () => {
