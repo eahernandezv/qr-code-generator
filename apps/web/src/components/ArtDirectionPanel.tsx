@@ -239,6 +239,20 @@ const ArtDirectionPanel: React.FC<ArtDirectionPanelProps> = ({ noScrollVariant =
   const selectedCorner = EYE_FRAME_OPTIONS.find((option) => option.style === (art.eyeFrameStyle ?? art.eyeStyle ?? 'rounded')) ?? EYE_FRAME_OPTIONS[1]
   const selectedEye = EYE_BALL_OPTIONS.find((option) => option.style === (art.eyeBallStyle ?? art.eyeStyle ?? 'rounded')) ?? EYE_BALL_OPTIONS[1]
 
+  const moveFamilyFocus = (event: React.KeyboardEvent<HTMLButtonElement>, current: ControlFamily) => {
+    const currentIndex = CONTROL_FAMILIES.findIndex(({ family }) => family === current)
+    let nextIndex = currentIndex
+    if (event.key === 'ArrowRight') nextIndex = (currentIndex + 1) % CONTROL_FAMILIES.length
+    else if (event.key === 'ArrowLeft') nextIndex = (currentIndex - 1 + CONTROL_FAMILIES.length) % CONTROL_FAMILIES.length
+    else if (event.key === 'Home') nextIndex = 0
+    else if (event.key === 'End') nextIndex = CONTROL_FAMILIES.length - 1
+    else return
+    event.preventDefault()
+    const next = CONTROL_FAMILIES[nextIndex].family
+    setActiveFamily(next)
+    requestAnimationFrame(() => document.getElementById(`control-tab-${next}`)?.focus())
+  }
+
   return (
     <section aria-labelledby="live-editor-title" className={`rounded-2xl border border-slate-800 bg-slate-900/70 shadow-2xl shadow-black/20 ${noScrollVariant ? 'p-2' : 'p-3 sm:p-4'}`}>
       <div className={`${noScrollVariant ? 'mb-1' : 'mb-2'} flex items-center justify-between`}>
@@ -255,13 +269,16 @@ const ArtDirectionPanel: React.FC<ArtDirectionPanelProps> = ({ noScrollVariant =
               const selected = activeFamily === family
               return <button
                 key={family}
+                id={`control-tab-${family}`}
                 type="button"
                 role="tab"
                 aria-label={`Show ${family} controls`}
                 aria-selected={selected}
                 aria-controls={`control-panel-${family}`}
                 title={label}
+                tabIndex={selected ? 0 : -1}
                 onClick={() => setActiveFamily(family)}
+                onKeyDown={(event) => moveFamilyFocus(event, family)}
                 className={`flex h-8 items-center justify-center rounded-lg text-base transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white ${selected ? 'bg-studio-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
               ><span aria-hidden="true">{glyph}</span></button>
             })}
