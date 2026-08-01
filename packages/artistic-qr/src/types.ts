@@ -51,6 +51,8 @@ export type PalettePattern =
   | 'spiral'
   | 'radialRings';
 export type ColorIntensity = 'mellow' | 'balanced' | 'punchy';
+export type ModuleStyle = 'square' | 'rounded' | 'circle' | 'vertical-bars' | 'horizontal-bars';
+export type EyeStyle = 'square' | 'rounded' | 'circle' | 'squircle' | 'chamfered';
 
 export interface Composition {
   focalArea?: 'center' | 'top' | 'bottom' | 'left' | 'right' | 'balanced';
@@ -69,9 +71,13 @@ export interface GenerationRequest {
   palettePattern?: PalettePattern;
   colorIntensity?: ColorIntensity;
   /** Core-backed data-module treatment. */
-  moduleShape?: 'square' | 'rounded' | 'circle';
-  /** Core-backed finder module treatment. Independent inner/outer finder geometry is not supported. */
-  eyeShape?: 'square' | 'rounded' | 'circle';
+  moduleShape?: ModuleStyle;
+  /** Legacy shorthand applying one shape to both finder frame and ball. */
+  eyeShape?: EyeStyle;
+  /** Core-backed finder outer frame/corner ring treatment. */
+  eyeFrameShape?: EyeStyle;
+  /** Core-backed finder inner ball/pupil treatment. */
+  eyeBallShape?: EyeStyle;
   composition?: Composition;
   seed?: number;
 }

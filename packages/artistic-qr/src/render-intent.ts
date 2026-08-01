@@ -2,6 +2,7 @@ import type { RenderOptions } from '@qr/qr-core';
 import type { ColorIntensity, GenerationRequest, Palette, PaletteFamily, PalettePattern } from './types.js';
 
 type ModuleShape = NonNullable<RenderOptions['shape']>;
+type FinderShape = NonNullable<RenderOptions['eyeShape']>;
 
 export type ArtisticStyleFamily = 'watercolor' | 'geometric' | 'minimalist';
 export type ArtisticStrengthTreatment = 'subtle' | 'expressive' | 'bold';
@@ -10,7 +11,7 @@ export type QrProminenceTreatment = 'spacious' | 'standard' | 'dominant';
 
 export interface ArtisticCompositionTreatment {
   id: ArtisticCompositionTreatmentId;
-  eyeShape: ModuleShape;
+  eyeShape: FinderShape;
   framingModules: number;
 }
 
@@ -126,6 +127,8 @@ export function resolveArtisticRenderIntent(request: GenerationRequest): Artisti
     functionalColor: palette.functionalColor,
     shape: request.moduleShape ?? shapes[index],
     eyeShape: request.eyeShape ?? compositionTreatment.eyeShape,
+    eyeFrameShape: request.eyeFrameShape ?? request.eyeShape ?? compositionTreatment.eyeShape,
+    eyeBallShape: request.eyeBallShape ?? request.eyeShape ?? compositionTreatment.eyeShape,
   })) as unknown as ArtisticRenderIntent['candidateOptions'];
 
   return {

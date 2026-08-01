@@ -114,8 +114,10 @@ function applyRepair(rendered: Candidate['rendered'], strategy: RepairStrategy):
   let height = rendered.height;
   if (strategy === 'contrast_boost' || strategy === 'composite_rerender') {
     let drawableIndex = 0;
-    data = data.replace(/<(rect|circle)\b[^>]*>/gi, (element) => {
-      const fill = drawableIndex++ === 0 ? '#ffffff' : '#000000';
+    data = data.replace(/<(rect|circle|path)\b[^>]*>/gi, (element) => {
+      const isBackground = drawableIndex++ === 0;
+      const isFinderCutout = /\sdata-eye-part=["']frame-cutout["']/i.test(element);
+      const fill = isBackground || isFinderCutout ? '#ffffff' : '#000000';
       return /\sfill=["'][^"']*["']/i.test(element)
         ? element.replace(/\sfill=["'][^"']*["']/i, ` fill="${fill}"`)
         : element.replace(/>$/, ` fill="${fill}">`);
