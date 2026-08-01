@@ -14,6 +14,7 @@ const b16EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/st
 const b18EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b18-expose-extreme-primitives')
 const b19EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b19-scan-confidence-labeling')
 const b20EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b20-selector-geometry-alignment')
+const b21EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b21-no-scroll-one-screen-variant')
 
 const svgArtwork = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
@@ -213,6 +214,89 @@ test.beforeAll(async () => {
   await fs.mkdir(b18EvidenceDir, { recursive: true })
   await fs.mkdir(b19EvidenceDir, { recursive: true })
   await fs.mkdir(b20EvidenceDir, { recursive: true })
+  await fs.mkdir(b21EvidenceDir, { recursive: true })
+})
+
+test('B21 provides a real 216px no-scroll comparison variant without changing Version A', async ({ page }) => {
+  const errors = await assertNoConsoleErrors(page)
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/')
+  await expect(page.getByTestId('studio-app')).toHaveAttribute('data-ux-variant', 'default')
+
+  const measure = async () => page.evaluate(() => {
+    const scrolling = document.scrollingElement!
+    const preview = document.querySelector<HTMLElement>('img[alt="QR Preview"]')!.getBoundingClientRect()
+    const destination = document.querySelector<HTMLElement>('#destination-content')!
+    const destinationBox = destination.getBoundingClientRect()
+    const count = (name: string) => document.querySelectorAll(`[aria-label="${name}"] [role="option"]`).length
+    const headingCount = (name: string) => Array.from(document.querySelectorAll('h1,h2,h3')).filter((heading) => heading.textContent?.trim() === name).length
+    return {
+      viewport: { width: innerWidth, height: innerHeight },
+      document: { scrollHeight: scrolling.scrollHeight, clientHeight: scrolling.clientHeight, verticalScrollRequired: scrolling.scrollHeight > scrolling.clientHeight },
+      preview: { x: preview.x, y: preview.y, width: preview.width, height: preview.height, bottom: preview.bottom },
+      selectors: {
+        solid: document.querySelectorAll('[aria-label="Color"] button').length,
+        palette: count('Palette'), style: count('Style'), corners: count('Corners'), eyes: count('Eyes'),
+      },
+      destination: { tagName: destination.tagName, x: destinationBox.x, y: destinationBox.y, width: destinationBox.width, height: destinationBox.height, bottom: destinationBox.bottom },
+      hiddenPublicPanels: { Candidates: headingCount('Candidates'), Checkout: headingCount('Checkout'), Export: headingCount('Export') },
+    }
+  })
+
+  const versionA = await measure()
+  expect(versionA.preview).toMatchObject({ width: 216, height: 216 })
+  await page.screenshot({ path: path.join(b21EvidenceDir, 'version-a-after-b20.png') })
+
+  await page.goto('/?uxVariant=no-scroll')
+  await expect(page.getByTestId('studio-app')).toHaveAttribute('data-ux-variant', 'no-scroll')
+  const familyTabs = [
+    ['color', 'Color'], ['palette', 'Palette'], ['style', 'Style'], ['corners', 'Corners'], ['eyes', 'Eyes'],
+  ] as const
+  const reachableFamilies: string[] = []
+  for (const [family, panel] of familyTabs) {
+    const tab = page.getByRole('tab', { name: `Show ${family} controls` })
+    await tab.click()
+    await expect(tab).toHaveAttribute('aria-selected', 'true')
+    await expect(page.getByRole('tabpanel', { name: `${panel} controls` })).toBeVisible()
+    reachableFamilies.push(family)
+  }
+  expect(reachableFamilies).toEqual(['color', 'palette', 'style', 'corners', 'eyes'])
+  const versionB = await measure()
+  expect(versionB.document.verticalScrollRequired).toBe(false)
+  expect(versionB.document.scrollHeight).toBeLessThanOrEqual(versionB.document.clientHeight)
+  expect(versionB.preview.width).toBeGreaterThanOrEqual(216)
+  expect(versionB.preview.height).toBeGreaterThanOrEqual(216)
+  expect(versionB.selectors).toEqual({ solid: 12, palette: 10, style: 7, corners: 7, eyes: 8 })
+  expect(versionB.destination.tagName).toBe('INPUT')
+  expect(versionB.destination.bottom).toBeLessThanOrEqual(844)
+  expect(versionB.hiddenPublicPanels).toEqual({ Candidates: 0, Checkout: 0, Export: 0 })
+  await expect(page.getByRole('button', { name: 'Text' })).toHaveCount(0)
+  await expect(page.getByTestId('qr-side-controls').getByRole('group', { name: 'QR size' })).toBeVisible()
+  await expect(page.getByTestId('qr-side-controls').getByRole('group', { name: 'Intensity' })).toBeVisible()
+
+  const preview = page.getByRole('img', { name: 'QR Preview' })
+  const before = await preview.getAttribute('src')
+  await page.getByRole('textbox', { name: 'Final destination URL' }).fill('https://example.com/b21-public-draft')
+  await page.getByRole('button', { name: 'Continue with this QR' }).click()
+  await expect(page.getByRole('status')).toContainText('QR activates after payment')
+  expect(await preview.getAttribute('src')).toBe(before)
+  const afterActivation = await measure()
+  expect(afterActivation.document.verticalScrollRequired).toBe(false)
+
+  await page.screenshot({ path: path.join(b21EvidenceDir, 'version-b-no-scroll.png') })
+  await fs.writeFile(path.join(b21EvidenceDir, 'layout-metrics.json'), JSON.stringify({
+    versionA, versionB: { ...versionB, reachableFamilies }, versionBAfterActivation: afterActivation,
+    target: { noScroll: true, minimumPreview: { width: 216, height: 216 } },
+  }, null, 2))
+
+  const [a, b] = await Promise.all([
+    fs.readFile(path.join(b21EvidenceDir, 'version-a-after-b20.png')),
+    fs.readFile(path.join(b21EvidenceDir, 'version-b-no-scroll.png')),
+  ])
+  await page.setViewportSize({ width: 820, height: 900 })
+  await page.setContent(`<main style="margin:0;padding:12px;background:#020617;color:white;font:600 18px system-ui;display:flex;gap:12px"><figure style="margin:0"><figcaption style="margin-bottom:8px">Version A · Default after B20</figcaption><img width="390" height="844" src="data:image/png;base64,${a.toString('base64')}"></figure><figure style="margin:0"><figcaption style="margin-bottom:8px">Version B · No-scroll</figcaption><img width="390" height="844" src="data:image/png;base64,${b.toString('base64')}"></figure></main>`)
+  await page.screenshot({ path: path.join(b21EvidenceDir, 'comparison-contact-sheet.png') })
+  expect(errors).toEqual([])
 })
 
 test('B20 aligns QR-size glyphs and gives selector families one perimeter grammar', async ({ page }) => {
