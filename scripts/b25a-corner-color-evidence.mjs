@@ -1,17 +1,22 @@
 import { createHash } from 'node:crypto';
+import { createRequire } from 'node:module';
 import { mkdirSync, writeFileSync } from 'node:fs';
-import jsQR from 'jsqr';
-import { PNG } from 'pngjs';
-import {
+
+const requireFromQrCore = createRequire(new URL('../packages/qr-core/package.json', import.meta.url));
+const requireFromArtisticQr = createRequire(new URL('../packages/artistic-qr/package.json', import.meta.url));
+const jsQR = requireFromArtisticQr('jsqr');
+const { PNG } = requireFromQrCore('pngjs');
+
+const {
   generateMatrix,
   isFunctionalModule,
   normalizePayload,
   renderDeterministic,
-} from '../packages/qr-core/dist/index.js';
-import {
+} = await import('../packages/qr-core/dist/index.js');
+const {
   generateCandidates,
   resolveArtisticRenderIntent,
-} from '../packages/artistic-qr/dist/index.js';
+} = await import('../packages/artistic-qr/dist/index.js');
 
 const outputDir = new URL('../.work-loop/evidence/creator-b25a-corner-color-contract/', import.meta.url);
 mkdirSync(outputDir, { recursive: true });
