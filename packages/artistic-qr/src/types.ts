@@ -73,6 +73,11 @@ export interface GenerationRequest {
   paletteFamily?: PaletteFamily;
   palettePattern?: PalettePattern;
   colorIntensity?: ColorIntensity;
+  /**
+   * Requested solid finder/corner color. Omit to match the existing body/functional behavior.
+   * The render-intent resolver may adapt a low-contrast request to a scan-safe effective color.
+   */
+  cornerColor?: string;
   /** Core-backed data-module treatment. */
   moduleShape?: ModuleStyle;
   /** Legacy shorthand applying one shape to both finder frame and ball. */
