@@ -1,9 +1,10 @@
 import React from 'react'
 import { useStudioStore } from '../store'
-import type { ArtDirection, ColorIntensity, CompositionType, PaletteFamily, PalettePattern } from '../types'
+import type { ArtDirection, ColorIntensity, EyeStyle, ModuleStyle, PaletteFamily, PalettePattern } from '../types'
 import QRPreview from './QRPreview'
 
 const SOLID_PRESETS = [
+  { name: 'Classic Black', label: 'Classic Black', primary: '#000000', secondary: '#000000', accent: '#ffffff', background: '#ffffff' },
   { name: 'Studio Blue', label: 'Studio Blue', primary: '#5b6ef5', secondary: '#323eaf', accent: '#a5bdff', background: '#f0f4ff' },
   { name: 'Warm Sunset', label: 'Warm Sunset', primary: '#ff7a5c', secondary: '#c44d3a', accent: '#ffd6a5', background: '#fff3e8' },
   { name: 'Forest', label: 'Forest Green', primary: '#2d6a4f', secondary: '#1b4332', accent: '#95d5b2', background: '#edf7f0' },
@@ -31,16 +32,22 @@ const PATTERNED_PRESETS: Array<{
 
 const STYLE_OPTIONS: Array<{
   name: string
-  templateId: string
-  artisticStrength: number
-  composition: CompositionType
+  moduleStyle: Extract<ModuleStyle, 'square' | 'rounded' | 'dot'>
   radius: string
-  moduleSize: string
 }> = [
-  { name: 'Classic', templateId: 'minimalist', artisticStrength: 0, composition: 'integrated', radius: 'rounded-none', moduleSize: '3px' },
-  { name: 'Rounded', templateId: 'watercolor', artisticStrength: 0.5, composition: 'centered', radius: 'rounded-[3px]', moduleSize: '4px' },
-  { name: 'Structured', templateId: 'geometric', artisticStrength: 0.5, composition: 'offset', radius: 'rounded-[1px]', moduleSize: '4px' },
-  { name: 'Bold', templateId: 'geometric', artisticStrength: 1, composition: 'centered', radius: 'rounded-none', moduleSize: '5px' },
+  { name: 'Classic', moduleStyle: 'square', radius: 'rounded-none' },
+  { name: 'Rounded', moduleStyle: 'rounded', radius: 'rounded-[2px]' },
+  { name: 'Dots', moduleStyle: 'dot', radius: 'rounded-full' },
+]
+
+const CORNER_OPTIONS: Array<{
+  name: string
+  eyeStyle: Extract<EyeStyle, 'square' | 'rounded' | 'circle'>
+  radius: string
+}> = [
+  { name: 'Classic', eyeStyle: 'square', radius: 'rounded-none' },
+  { name: 'Soft', eyeStyle: 'rounded', radius: 'rounded-[5px]' },
+  { name: 'Circle', eyeStyle: 'circle', radius: 'rounded-full' },
 ]
 
 const INTENSITIES: Array<{ value: ColorIntensity; label: string }> = [
@@ -49,13 +56,21 @@ const INTENSITIES: Array<{ value: ColorIntensity; label: string }> = [
   { value: 'punchy', label: 'Punchy' },
 ]
 
-function MiniQr({ radius, moduleSize }: { radius: string; moduleSize: string }) {
+function MiniQr({ radius }: { radius: string }) {
   const cells = [1, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1]
   return (
     <span aria-hidden="true" className="grid h-9 w-9 grid-cols-5 place-content-center gap-[1px] rounded-md bg-white p-1">
       {cells.map((filled, index) => (
-        <span key={index} className={`${radius} bg-slate-950`} style={{ width: moduleSize, height: moduleSize, opacity: filled ? 1 : 0 }} />
+        <span key={index} className={`h-1 w-1 ${radius} bg-slate-950`} style={{ opacity: filled ? 1 : 0 }} />
       ))}
+    </span>
+  )
+}
+
+function MiniCorner({ radius }: { radius: string }) {
+  return (
+    <span aria-hidden="true" className={`relative h-9 w-9 border-[5px] border-slate-950 bg-white ${radius}`}>
+      <span className={`absolute inset-[5px] bg-slate-950 ${radius}`} />
     </span>
   )
 }
@@ -66,19 +81,13 @@ const ArtDirectionPanel: React.FC = () => {
   const update = (patch: Partial<ArtDirection>) => setArtDirection({ ...art, ...patch })
   const selectedSolid = SOLID_PRESETS.find((preset) => !art.paletteFamily && art.palette?.primary === preset.primary)
   const selectedPatterned = PATTERNED_PRESETS.find((preset) => art.paletteFamily === preset.family && art.palettePattern === preset.pattern)
-  const selectedStyle = STYLE_OPTIONS.find((style) => (
-    style.templateId === art.templateId
-    && style.artisticStrength === (art.artisticStrength ?? 0.5)
-    && style.composition === (art.composition ?? 'centered')
-  )) ?? STYLE_OPTIONS[1]
+  const selectedStyle = STYLE_OPTIONS.find((style) => style.moduleStyle === (art.moduleStyle ?? 'rounded')) ?? STYLE_OPTIONS[1]
+  const selectedCorner = CORNER_OPTIONS.find((corner) => corner.eyeStyle === (art.eyeStyle ?? 'rounded')) ?? CORNER_OPTIONS[1]
 
   return (
     <section aria-labelledby="live-editor-title" className="rounded-2xl border border-slate-800 bg-slate-900/70 p-3 shadow-2xl shadow-black/20 sm:p-4">
       <div className="mb-2 flex items-center justify-between">
-        <div>
-          <h2 id="live-editor-title" className="text-sm font-semibold text-slate-100">Design your QR</h2>
-          <p className="text-[10px] text-slate-500">Live Core-backed preview</p>
-        </div>
+        <h2 id="live-editor-title" className="text-sm font-semibold text-slate-100">Design your QR</h2>
         <span className="inline-flex items-center gap-1 rounded-full bg-emerald-950/50 px-2 py-1 text-[10px] font-medium text-emerald-300">
           <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" /> Live
         </span>
@@ -148,15 +157,35 @@ const ArtDirectionPanel: React.FC = () => {
                     role="option"
                     aria-label={`${style.name} QR style${selected ? ' selected' : ''}`}
                     aria-selected={selected}
-                    onClick={() => update({
-                      templateId: style.templateId,
-                      artisticStrength: style.artisticStrength,
-                      composition: style.composition,
-                    })}
+                    onClick={() => update({ moduleStyle: style.moduleStyle })}
                     className={`flex h-14 min-w-[76px] shrink-0 snap-start items-center gap-2 rounded-xl border-2 px-2 text-left transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white ${selected ? 'border-white bg-studio-950/70 ring-2 ring-studio-500' : 'border-slate-700 bg-slate-950/60 hover:border-slate-400'}`}
                   >
-                    <MiniQr radius={style.radius} moduleSize={style.moduleSize} />
+                    <MiniQr radius={style.radius} />
                     <span className="text-[10px] font-semibold text-slate-300">{style.name}</span>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-[58px_minmax(0,1fr)] items-center gap-2">
+            <span id="corners-row-label" className="text-[11px] font-semibold text-slate-400">Corners</span>
+            <div className="flex snap-x gap-2 overflow-x-auto pb-1" role="listbox" aria-labelledby="corners-row-label">
+              {CORNER_OPTIONS.map((corner) => {
+                const selected = selectedCorner.name === corner.name
+                return (
+                  <button
+                    key={corner.name}
+                    type="button"
+                    role="option"
+                    aria-label={`${corner.name} corner style${selected ? ' selected' : ''}`}
+                    aria-selected={selected}
+                    onClick={() => update({ eyeStyle: corner.eyeStyle })}
+                    className={`relative flex h-14 min-w-[76px] shrink-0 snap-start items-center gap-2 rounded-xl border-2 px-2 text-left transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white ${selected ? 'border-white bg-studio-950/70 ring-2 ring-studio-500' : 'border-slate-700 bg-slate-950/60 hover:border-slate-400'}`}
+                  >
+                    <MiniCorner radius={corner.radius} />
+                    <span className="text-[10px] font-semibold text-slate-300">{corner.name}</span>
+                    {selected && <span aria-hidden="true" className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-white text-[10px] font-black text-slate-950">✓</span>}
                   </button>
                 )
               })}

@@ -2,85 +2,140 @@ import React, { useCallback } from 'react'
 import { useStudioStore } from '../store'
 import type { Payload, QrMode } from '../types'
 
-function normalizeUrl(raw: string): string {
-  let url = raw.trim()
-  if (!url) return ''
-  if (!/^https?:\/\//i.test(url) && !/^mailto:/i.test(url) && !/^tel:/i.test(url)) {
-    url = 'https://' + url
+const PAYLOAD_TYPES: Array<{
+  mode: Extract<QrMode, 'url' | 'email' | 'text' | 'phone'>
+  label: string
+  inputLabel: string
+  placeholder: string
+  help: string
+}> = [
+  { mode: 'url', label: 'URL', inputLabel: 'Final destination URL', placeholder: 'Enter destination URL…', help: 'Bind the real destination before generation.' },
+  { mode: 'email', label: 'Email', inputLabel: 'Email address', placeholder: 'name@example.com', help: 'Creates a mailto QR for this address.' },
+  { mode: 'text', label: 'Text', inputLabel: 'Text content', placeholder: 'Enter short text…', help: 'Encodes the text exactly as entered.' },
+  { mode: 'phone', label: 'Phone', inputLabel: 'Phone number', placeholder: '+1 555 123 4567', help: 'Creates a telephone QR for this number.' },
+]
+
+function normalizePayload(mode: QrMode, raw: string): string {
+  const value = raw.trim()
+  if (!value) return ''
+  if (mode === 'url') {
+    const withScheme = /^https?:\/\//i.test(value) ? value : `https://${value}`
+    try {
+      return new URL(withScheme).toString()
+    } catch {
+      return withScheme
+    }
   }
-  try {
-    const u = new URL(url)
-    return u.toString()
-  } catch {
-    return url
-  }
+  if (mode === 'email') return `mailto:${value.replace(/^mailto:/i, '')}`
+  if (mode === 'phone') return `tel:${value.replace(/^tel:/i, '')}`
+  return value
 }
 
 function validatePayload(mode: QrMode, raw: string): { valid: boolean; error?: string } {
-  if (!raw.trim()) return { valid: false, error: 'Payload is required' }
+  const value = raw.trim()
+  if (!value) return { valid: false, error: 'Payload is required' }
+  if (new TextEncoder().encode(normalizePayload(mode, raw)).length > 2953) {
+    return { valid: false, error: 'Payload too long (max 2953 bytes)' }
+  }
   if (mode === 'url') {
     try {
-      new URL(normalizeUrl(raw))
-      return { valid: true }
+      const parsed = new URL(normalizePayload(mode, raw))
+      return parsed.protocol === 'http:' || parsed.protocol === 'https:'
+        ? { valid: true }
+        : { valid: false, error: 'Invalid URL' }
     } catch {
       return { valid: false, error: 'Invalid URL' }
     }
   }
-  if (raw.length > 4096) return { valid: false, error: 'Payload too long (max 4096 chars)' }
+  if (mode === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.replace(/^mailto:/i, ''))) {
+    return { valid: false, error: 'Invalid email address' }
+  }
+  if (mode === 'phone' && !/^\+?[0-9()\-\s.]{5,}$/.test(value.replace(/^tel:/i, ''))) {
+    return { valid: false, error: 'Invalid phone number' }
+  }
   return { valid: true }
 }
 
 const PayloadInput: React.FC = () => {
   const { project, setPayload } = useStudioStore()
   const { payload } = project
-
+  const [draft, setDraft] = React.useState<Payload>(payload)
   const [error, setError] = React.useState<string | null>(null)
+  const [activationMessage, setActivationMessage] = React.useState<string | null>(null)
+  const selectedType = PAYLOAD_TYPES.find((type) => type.mode === draft.mode) ?? PAYLOAD_TYPES[0]
+  const validation = validatePayload(draft.mode, draft.raw)
+  const normalizedDraft = normalizePayload(draft.mode, draft.raw)
 
-  const handleChange = useCallback(
-    (field: keyof Payload, value: string) => {
-      const next: Payload = { ...payload, [field]: value }
-      if (field === 'raw') {
-        next.normalized = next.mode === 'url' ? normalizeUrl(value) : value.trim()
-      }
-      if (field === 'mode') {
-        next.normalized = value === 'url' ? normalizeUrl(next.raw) : next.raw.trim()
-      }
-      const validation = validatePayload(next.mode, next.raw)
-      setError(validation.valid ? null : validation.error ?? null)
-      setPayload(next)
-    },
-    [payload, setPayload]
-  )
+  const updateDraft = useCallback((next: Payload) => {
+    const nextValidation = validatePayload(next.mode, next.raw)
+    setDraft({ ...next, normalized: normalizePayload(next.mode, next.raw) })
+    setError(next.raw.trim() && !nextValidation.valid ? nextValidation.error ?? null : null)
+    setActivationMessage(null)
+  }, [])
+
+  const activate = useCallback(() => {
+    const nextValidation = validatePayload(draft.mode, draft.raw)
+    if (!nextValidation.valid) {
+      setError(nextValidation.error ?? 'Valid content is required')
+      return
+    }
+    setPayload({ ...draft, normalized: normalizePayload(draft.mode, draft.raw) })
+    setActivationMessage('Content confirmed · Checkout coming next')
+  }, [draft, setPayload])
 
   return (
-    <section className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4 md:p-6">
-      <div className="mb-3 flex items-start justify-between">
-        <div>
-          <h2 className="text-sm font-semibold text-slate-200">Destination</h2>
-          <p className="mt-0.5 text-[10px] text-slate-500">Bind the real URL before generation and checkout.</p>
+    <section aria-labelledby="destination-title" className="rounded-2xl border border-slate-800 bg-slate-900/60 p-3 sm:p-4">
+      <div className="mb-2 flex items-center justify-between gap-3">
+        <h2 id="destination-title" className="text-sm font-semibold text-slate-200">Destination</h2>
+        <div className="flex gap-1 rounded-xl bg-slate-950 p-1" role="group" aria-label="QR content type">
+          {PAYLOAD_TYPES.map((type) => {
+            const selected = type.mode === draft.mode
+            return (
+              <button
+                key={type.mode}
+                type="button"
+                aria-pressed={selected}
+                onClick={() => updateDraft({ ...draft, mode: type.mode })}
+                className={`min-h-9 rounded-lg px-2.5 text-[10px] font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white ${selected ? 'bg-studio-600 text-white shadow' : 'text-slate-400 hover:text-white'}`}
+              >
+                {type.label}
+              </button>
+            )
+          })}
         </div>
-        <span className="text-xs text-slate-500">{payload.raw.length}/4096</span>
       </div>
 
-      <label htmlFor="destination-url" className="sr-only">Final destination URL</label>
+      <p className="mb-2 text-[10px] text-slate-500">{selectedType.help}</p>
+      <label htmlFor="destination-content" className="sr-only">{selectedType.inputLabel}</label>
       <textarea
-        id="destination-url"
-        value={payload.raw}
-        onChange={(e) => handleChange('raw', e.target.value)}
-        placeholder="Enter destination URL…"
+        id="destination-content"
+        value={draft.raw}
+        onChange={(event) => updateDraft({ ...draft, raw: event.target.value })}
+        placeholder={selectedType.placeholder}
         rows={2}
-        className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-slate-100 placeholder-slate-600 outline-none transition-colors focus:border-studio-500 focus:ring-1 focus:ring-studio-500/50 resize-y"
+        className="w-full resize-y rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-slate-100 outline-none transition-colors placeholder:text-slate-600 focus:border-studio-500 focus:ring-1 focus:ring-studio-500/50"
       />
 
-      {payload.normalized && (
-        <p className="mt-2 truncate text-xs text-slate-500" title={payload.normalized}>
-          Normalized: {payload.normalized}
-        </p>
-      )}
+      <div className="mt-1.5 flex items-center justify-between gap-3">
+        {normalizedDraft ? (
+          <p className="min-w-0 truncate text-[10px] text-slate-500" title={normalizedDraft}>Encoded: {normalizedDraft}</p>
+        ) : <span />}
+        <span className="shrink-0 text-[10px] text-slate-600">{new TextEncoder().encode(normalizedDraft).length}/2953 bytes</span>
+      </div>
+      {error && <p role="alert" className="mt-1.5 text-xs text-red-400">{error}</p>}
 
-      {error && (
-        <p className="mt-2 text-xs text-red-400">{error}</p>
-      )}
+      <button
+        type="button"
+        disabled={!validation.valid}
+        onClick={activate}
+        className="mt-2 min-h-10 w-full rounded-xl bg-studio-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-studio-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-white disabled:cursor-not-allowed disabled:bg-slate-800 disabled:text-slate-500"
+      >
+        Continue with this QR
+      </button>
+      <p className="mt-1.5 text-center text-[10px] text-slate-500">
+        After checkout: PNG + SVG downloads · Social and print sizes
+      </p>
+      {activationMessage && <p role="status" className="mt-1 text-center text-[10px] font-medium text-emerald-300">{activationMessage}</p>}
     </section>
   )
 }

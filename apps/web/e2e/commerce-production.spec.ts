@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test'
 const api = 'http://127.0.0.1:4174'
 
 test.beforeEach(async ({ page }) => {
-  await page.goto('/')
+  await page.goto('/?workflow=internal')
   await page.evaluate(() => localStorage.clear())
   await page.reload()
 })
@@ -11,6 +11,7 @@ test.beforeEach(async ({ page }) => {
 test('production checkout uses HTTP authority and exposes no mock payment controls', async ({ page, request }) => {
   const projectPayload = 'https://example.com/customer-project'
   await page.getByPlaceholder('Enter destination URL…').fill(projectPayload)
+  await page.getByRole('button', { name: 'Continue with this QR' }).click()
   const responsePromise = page.waitForResponse((response) => response.url() === `${api}/api/commerce/checkouts` && response.request().method() === 'POST')
   await page.getByRole('button', { name: /Start guest checkout — \$12/ }).click()
   const checkoutResponse = await responsePromise

@@ -68,6 +68,10 @@ export interface GenerationRequest {
   paletteFamily?: PaletteFamily;
   palettePattern?: PalettePattern;
   colorIntensity?: ColorIntensity;
+  /** Core-backed data-module treatment. */
+  moduleShape?: 'square' | 'rounded' | 'circle';
+  /** Core-backed finder module treatment. Independent inner/outer finder geometry is not supported. */
+  eyeShape?: 'square' | 'rounded' | 'circle';
   composition?: Composition;
   seed?: number;
 }

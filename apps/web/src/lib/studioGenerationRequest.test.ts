@@ -78,6 +78,18 @@ describe('Studio canonical generation request and predictive preview', () => {
     })).not.toBe(balanced)
   })
 
+  it('maps body and finder treatments independently without changing the SVG viewport', () => {
+    const classic = renderStudioPreview(request({ moduleStyle: 'square', eyeStyle: 'square' }))
+    const dots = renderStudioPreview(request({ moduleStyle: 'dot', eyeStyle: 'square' }))
+    const roundedEyes = renderStudioPreview(request({ moduleStyle: 'square', eyeStyle: 'rounded' }))
+    expect(request({ moduleStyle: 'dot', eyeStyle: 'circle' })).toMatchObject({ moduleShape: 'circle', eyeShape: 'circle' })
+    expect(dots.data).not.toBe(classic.data)
+    expect(roundedEyes.data).not.toBe(classic.data)
+    expect(dots.width).toBe(classic.width)
+    expect(dots.height).toBe(classic.height)
+    expect(roundedEyes.width).toBe(classic.width)
+  })
+
   it.each(['watercolor', 'geometric', 'minimalist'])(
     'gives %s distinct scan-safe low, expressive, and high strength previews and requests',
     (templateId) => {

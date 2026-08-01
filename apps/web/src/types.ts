@@ -64,6 +64,8 @@ export interface ArtDirection {
   paletteFamily?: PaletteFamily
   palettePattern?: PalettePattern
   colorIntensity?: ColorIntensity
+  moduleStyle?: Extract<ModuleStyle, 'square' | 'rounded' | 'dot'>
+  eyeStyle?: Extract<EyeStyle, 'square' | 'rounded' | 'circle'>
   protectedQrProminence?: number
 }
 

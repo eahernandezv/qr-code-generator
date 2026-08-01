@@ -124,8 +124,8 @@ export function resolveArtisticRenderIntent(request: GenerationRequest): Artisti
     modulePalette: palette.moduleColors,
     palettePattern: palette.pattern,
     functionalColor: palette.functionalColor,
-    shape: shapes[index],
-    eyeShape: compositionTreatment.eyeShape,
+    shape: request.moduleShape ?? shapes[index],
+    eyeShape: request.eyeShape ?? compositionTreatment.eyeShape,
   })) as unknown as ArtisticRenderIntent['candidateOptions'];
 
   return {
