@@ -250,7 +250,7 @@ const ArtDirectionPanel: React.FC<ArtDirectionPanelProps> = ({ noScrollVariant =
     event.preventDefault()
     const next = CONTROL_FAMILIES[nextIndex].family
     setActiveFamily(next)
-    requestAnimationFrame(() => document.getElementById(`control-tab-${next}`)?.focus())
+    document.getElementById(`control-tab-${next}`)?.focus()
   }
 
   return (
