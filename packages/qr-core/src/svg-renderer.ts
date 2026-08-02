@@ -4,8 +4,8 @@ import { svgShape } from './finder-geometry.js';
 import { svgModuleShape } from './module-geometry.js';
 
 const MODULE_SHAPES = new Set(['square', 'circle', 'rounded', 'vertical-bars', 'horizontal-bars', 'notched', 'shield']);
-const EYE_FRAME_SHAPES = new Set(['square', 'circle', 'rounded', 'squircle', 'chamfered', 'diamond', 'hex']);
-const EYE_BALL_SHAPES = new Set(['square', 'circle', 'rounded', 'squircle', 'chamfered', 'hex', 'vertical-capsule', 'horizontal-capsule']);
+const EYE_FRAME_SHAPES = new Set(['square', 'circle', 'rounded', 'squircle', 'chamfered', 'diamond', 'hex', 'leaf-frame', 'opposing-leaf-frame', 'd-frame', 'inset-leaf-frame']);
+const EYE_BALL_SHAPES = new Set(['square', 'circle', 'rounded', 'squircle', 'chamfered', 'hex', 'vertical-capsule', 'horizontal-capsule', 'star', 'diamond']);
 
 /** Node-free deterministic SVG renderer shared by server and browser exports. */
 export function renderSvg(matrix: QrMatrix, options: RenderOptions): RenderedArtifact {

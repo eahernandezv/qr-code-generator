@@ -52,9 +52,13 @@ export type PalettePattern =
   | 'radialRings';
 export type ColorIntensity = 'mellow' | 'balanced' | 'punchy';
 export type ModuleStyle = 'square' | 'rounded' | 'circle' | 'vertical-bars' | 'horizontal-bars' | 'notched' | 'shield';
-export type EyeStyle = 'square' | 'rounded' | 'circle' | 'squircle' | 'chamfered' | 'diamond' | 'hex' | 'vertical-capsule' | 'horizontal-capsule';
-export type EyeFrameStyle = Exclude<EyeStyle, 'vertical-capsule' | 'horizontal-capsule'>;
-export type EyeBallStyle = Exclude<EyeStyle, 'diamond'>;
+export type EyeStyle =
+  | 'square' | 'rounded' | 'circle' | 'squircle' | 'chamfered' | 'diamond' | 'hex'
+  | 'vertical-capsule' | 'horizontal-capsule'
+  | 'leaf-frame' | 'opposing-leaf-frame' | 'd-frame' | 'inset-leaf-frame'
+  | 'star';
+export type EyeFrameStyle = Exclude<EyeStyle, 'vertical-capsule' | 'horizontal-capsule' | 'star'>;
+export type EyeBallStyle = Exclude<EyeStyle, 'leaf-frame' | 'opposing-leaf-frame' | 'd-frame' | 'inset-leaf-frame'>;
 export type FinderStyle = 'square' | 'rounded' | 'circle' | 'squircle' | 'chamfered' | 'hex';
 
 export interface Composition {

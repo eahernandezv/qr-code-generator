@@ -5,8 +5,8 @@ import { PNG } from 'pngjs';
 import { generateMatrix, normalizePayload, renderDeterministic, type EyeBallShape, type EyeFrameShape, type ModuleShape } from './index.js';
 
 const modules: ModuleShape[] = ['square', 'rounded', 'circle', 'vertical-bars', 'horizontal-bars', 'notched', 'shield'];
-const eyeFrames: EyeFrameShape[] = ['square', 'rounded', 'circle', 'squircle', 'chamfered', 'diamond', 'hex'];
-const eyeBalls: EyeBallShape[] = ['square', 'rounded', 'circle', 'squircle', 'chamfered', 'hex', 'vertical-capsule', 'horizontal-capsule'];
+const eyeFrames: EyeFrameShape[] = ['square', 'rounded', 'circle', 'squircle', 'chamfered', 'diamond', 'hex', 'leaf-frame', 'opposing-leaf-frame', 'd-frame', 'inset-leaf-frame'];
+const eyeBalls: EyeBallShape[] = ['square', 'rounded', 'circle', 'squircle', 'chamfered', 'hex', 'vertical-capsule', 'horizontal-capsule', 'star', 'diamond'];
 const payload = 'https://example.com/b12/style-primitives?stable=true';
 const matrix = generateMatrix(normalizePayload({ mode: 'url', content: payload, errorCorrectionLevel: 'H' }));
 type Decoder = (data: Uint8ClampedArray, width: number, height: number) => { data: string } | null;
@@ -60,7 +60,7 @@ function proveFamilyDistinct(values: readonly string[], option: (value: string) 
     expect(svg(option(value))).toEqual(svgs[index]);
     expect(png(option(value))).toEqual(pngs[index]);
     expect(decode(pngs[index].data), `${value} PNG must decode`).toBe(payload);
-    if (['squircle', 'chamfered', 'diamond', 'hex', 'vertical-capsule', 'horizontal-capsule', 'notched', 'shield'].includes(value)) {
+    if (['squircle', 'chamfered', 'diamond', 'hex', 'vertical-capsule', 'horizontal-capsule', 'leaf-frame', 'opposing-leaf-frame', 'd-frame', 'inset-leaf-frame', 'star', 'notched', 'shield'].includes(value)) {
       expect(svgs[index].data).toContain(`${marker}="${value}"`);
     }
   }

@@ -4,9 +4,13 @@
 
 export type ErrorCorrectionLevel = 'L' | 'M' | 'Q' | 'H';
 export type QrMode = 'url' | 'text' | 'email' | 'phone' | 'wifi';
-export type EyeShape = 'square' | 'circle' | 'rounded' | 'squircle' | 'chamfered' | 'diamond' | 'hex' | 'vertical-capsule' | 'horizontal-capsule';
-export type EyeFrameShape = Exclude<EyeShape, 'vertical-capsule' | 'horizontal-capsule'>;
-export type EyeBallShape = Exclude<EyeShape, 'diamond'>;
+export type EyeShape =
+  | 'square' | 'circle' | 'rounded' | 'squircle' | 'chamfered' | 'diamond' | 'hex'
+  | 'vertical-capsule' | 'horizontal-capsule'
+  | 'leaf-frame' | 'opposing-leaf-frame' | 'd-frame' | 'inset-leaf-frame'
+  | 'star';
+export type EyeFrameShape = Exclude<EyeShape, 'vertical-capsule' | 'horizontal-capsule' | 'star'>;
+export type EyeBallShape = Exclude<EyeShape, 'leaf-frame' | 'opposing-leaf-frame' | 'd-frame' | 'inset-leaf-frame'>;
 /** Backwards-compatible combined finder option; limited to shapes valid for both parts. */
 export type FinderShape = 'square' | 'circle' | 'rounded' | 'squircle' | 'chamfered' | 'hex';
 export type ModuleShape = 'square' | 'circle' | 'rounded' | 'vertical-bars' | 'horizontal-bars' | 'notched' | 'shield';
