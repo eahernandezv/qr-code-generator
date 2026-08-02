@@ -1,4 +1,7 @@
 import { describe, expect, it } from 'vitest'
+import fs from 'node:fs'
+import path from 'node:path'
+import { resolveArtisticRenderIntent } from '@qr/artistic-qr/render-intent'
 import { buildStudioGenerationRequest, renderStudioPreview } from './studioGenerationRequest'
 import type { ArtDirection, Payload } from '../types'
 
@@ -47,6 +50,45 @@ describe('Studio canonical generation request and predictive preview', () => {
       palettePattern: 'diagonalGradient',
       colorIntensity: 'punchy',
     })
+  })
+
+  it('omits Match body and maps an explicit corner color separately from body color intent', () => {
+    const matchBody = request()
+    expect(matchBody).not.toHaveProperty('cornerColor')
+
+    const explicit = request({ cornerColor: '#a51d31' })
+    expect(explicit.cornerColor).toBe('#a51d31')
+    expect(explicit.palette?.primary).toBe(baseArt.palette?.primary)
+
+    const explicitIntent = resolveArtisticRenderIntent(explicit)
+    expect(explicitIntent.cornerColor.requested).toBe('#a51d31')
+    expect(explicitIntent.cornerColor.effective).toBe(explicitIntent.previewOptions.functionalColor)
+
+    const bodyChanged = request({ palette: { ...baseArt.palette, primary: '#2d6a4f' } })
+    expect(resolveArtisticRenderIntent(bodyChanged).palette.primary).toBe('#2d6a4f')
+    expect(bodyChanged).not.toHaveProperty('cornerColor')
+    expect(renderStudioPreview(explicit).data).not.toBe(renderStudioPreview(matchBody).data)
+
+    const evidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b25b-body-corner-color-ui')
+    fs.mkdirSync(evidenceDir, { recursive: true })
+    fs.writeFileSync(path.join(evidenceDir, 'body-corner-intent-mapping.json'), JSON.stringify({
+      matchBody: {
+        studioArtDirectionCornerColor: 'omitted',
+        generationRequestHasCornerColor: Object.prototype.hasOwnProperty.call(matchBody, 'cornerColor'),
+        resolvedCornerColor: resolveArtisticRenderIntent(matchBody).cornerColor,
+      },
+      selectedCornerColor: {
+        studioArtDirection: { cornerColor: '#a51d31' },
+        generationRequest: { cornerColor: explicit.cornerColor, palette: explicit.palette },
+        resolvedCornerColor: explicitIntent.cornerColor,
+        coreRenderFunctionalColor: explicitIntent.previewOptions.functionalColor,
+      },
+      bodyColorOnly: {
+        generationRequest: { palette: bodyChanged.palette, cornerColorOmitted: !Object.prototype.hasOwnProperty.call(bodyChanged, 'cornerColor') },
+        resolvedBodyPrimary: resolveArtisticRenderIntent(bodyChanged).palette.primary,
+      },
+      distinctPreviewArtifacts: renderStudioPreview(explicit).data !== renderStudioPreview(matchBody).data,
+    }, null, 2))
   })
 
   it('renders Berry colors and changes output for every visible fidelity control', () => {

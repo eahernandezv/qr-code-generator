@@ -70,6 +70,7 @@ export interface ArtDirection {
   paletteFamily?: PaletteFamily
   palettePattern?: PalettePattern
   colorIntensity?: ColorIntensity
+  cornerColor?: string
   moduleStyle?: Extract<ModuleStyle, 'square' | 'rounded' | 'circle' | 'vertical-bars' | 'horizontal-bars' | 'notched' | 'shield' | 'dot'>
   /** Legacy combined finder style, read only as a fallback for persisted projects. */
   eyeStyle?: Extract<EyeStyle, 'square' | 'rounded' | 'circle'>

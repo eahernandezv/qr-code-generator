@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { act, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import ArtDirectionPanel, { SOLID_PRESETS } from './ArtDirectionPanel'
+import ArtDirectionPanel, { CORNER_COLOR_OPTIONS, PATTERNED_PRESETS, SOLID_PRESETS } from './ArtDirectionPanel'
 import { useStudioStore } from '../store'
 
 function resetStore() {
@@ -35,15 +35,34 @@ describe('ArtDirectionPanel B18 controls', () => {
     }
   })
 
-  it('offers twelve accessible solid swatches and keeps Style, Corners, and Eyes functional', async () => {
+  it('combines twelve solids and ten patterns in Body Color and offers Match body plus twelve corner colors', async () => {
     const user = userEvent.setup()
     render(<ArtDirectionPanel />)
 
-    const colors = screen.getByRole('group', { name: 'Color' })
-    expect(colors.querySelectorAll('button')).toHaveLength(12)
-    const purple = screen.getByRole('button', { name: 'Electric Purple' })
+    const bodyColors = screen.getByRole('listbox', { name: 'Body Color' })
+    expect(bodyColors.querySelectorAll('[role="option"]')).toHaveLength(22)
+    expect(SOLID_PRESETS).toHaveLength(12)
+    expect(PATTERNED_PRESETS).toHaveLength(10)
+    expect(bodyColors.querySelector('[data-body-color-separator="true"]')).toBeInTheDocument()
+
+    const purple = screen.getByRole('option', { name: 'Electric Purple' })
     await user.click(purple)
-    expect(screen.getByRole('button', { name: 'Electric Purple selected' })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('option', { name: 'Electric Purple selected' })).toHaveAttribute('aria-selected', 'true')
+    await user.click(screen.getByRole('option', { name: 'Rainbow horizontal' }))
+    expect(useStudioStore.getState().project.artDirection).toMatchObject({
+      paletteFamily: 'rainbow',
+      palettePattern: 'horizontalGradient',
+    })
+
+    const cornerColors = screen.getByRole('listbox', { name: 'Corner Color' })
+    expect(CORNER_COLOR_OPTIONS).toHaveLength(12)
+    expect(cornerColors.querySelectorAll('[role="option"]')).toHaveLength(13)
+    expect(screen.getByRole('option', { name: 'Match body selected' })).toHaveAttribute('data-setting', 'match-body')
+    await user.click(screen.getByRole('option', { name: 'Crimson Red corner color' }))
+    expect(useStudioStore.getState().project.artDirection.cornerColor).toBe('#a51d31')
+    await user.click(screen.getByRole('option', { name: 'Match body' }))
+    expect(useStudioStore.getState().project.artDirection.cornerColor).toBeUndefined()
+    expect(JSON.stringify(useStudioStore.getState().project.artDirection)).not.toContain('cornerColor')
 
     for (const row of ['Style', 'Corners', 'Eyes']) {
       expect(screen.getByRole('listbox', { name: row })).toBeInTheDocument()

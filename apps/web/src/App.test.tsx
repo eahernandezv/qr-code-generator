@@ -37,13 +37,13 @@ describe('App integration', () => {
     render(<App />)
     expect(screen.getByTestId('studio-app')).toHaveAttribute('data-ux-variant', 'no-scroll')
     expect(screen.getByRole('tablist', { name: 'Design control families' })).toBeInTheDocument()
-    const colorTab = screen.getByRole('tab', { name: 'Show color controls' })
-    const paletteTab = screen.getByRole('tab', { name: 'Show palette controls' })
-    expect(colorTab).toHaveAttribute('aria-selected', 'true')
-    colorTab.focus()
+    const bodyColorTab = screen.getByRole('tab', { name: 'Show Body Color controls' })
+    const cornerColorTab = screen.getByRole('tab', { name: 'Show Corner Color controls' })
+    expect(bodyColorTab).toHaveAttribute('aria-selected', 'true')
+    bodyColorTab.focus()
     await user.keyboard('{ArrowRight}')
-    expect(paletteTab).toHaveAttribute('aria-selected', 'true')
-    expect(paletteTab).toHaveFocus()
+    expect(cornerColorTab).toHaveAttribute('aria-selected', 'true')
+    expect(cornerColorTab).toHaveFocus()
 
     window.history.replaceState({}, '', '/?uxVariant=scroll')
     render(<App />)
@@ -52,13 +52,14 @@ describe('App integration', () => {
     expect(screen.getAllByRole('tablist', { name: 'Design control families' })).toHaveLength(1)
   })
 
-  it('uses accessible Core-backed Color, Style, Corners, and Eyes choices', async () => {
+  it('uses accessible Core-backed Body Color, Corner Color, Style, Corners, and Eyes choices', async () => {
     const user = userEvent.setup()
     render(<App />)
     expect(screen.queryByRole('combobox')).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Studio Blue selected' })).toHaveAttribute('aria-pressed', 'true')
+    const bodyColors = screen.getByRole('listbox', { name: 'Body Color' })
+    expect(bodyColors).toContainElement(screen.getByRole('option', { name: 'Studio Blue selected' }))
 
-    await user.click(screen.getByRole('button', { name: 'Classic Black' }))
+    await user.click(bodyColors.getElementsByTagName('button')[0])
     expect(useStudioStore.getState().project.artDirection.palette).toMatchObject({ primary: '#000000', background: '#ffffff' })
 
     await user.click(screen.getByRole('option', { name: 'Dots QR style' }))
