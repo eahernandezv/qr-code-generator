@@ -5,6 +5,7 @@ import { guestCommerce } from '../lib/commerceClient'
 
 import type { CoreExportArtifact, CoreExportRequest } from '../lib/coreExportClient'
 import { coreExportClient } from '../lib/coreExportClient'
+import { composeCreatorSignaturePng, composeCreatorSignatureSvg, DEFAULT_CREATOR_SIGNATURE, svgDataUrl } from '../lib/creatorSignature'
 
 const FORMATS: { value: CoreExportRequest['formats'][number]; label: string; ext: string; desc: string }[] = [
   { value: 'png', label: 'PNG', ext: '.png', desc: 'Core-validated raster' },
@@ -107,11 +108,13 @@ function PrintPreview({
   onClose,
   size,
   candidate,
+  templateArt,
 }: {
   open: boolean
   onClose: () => void
   size: typeof SIZES[number]
   candidate: import('../types').Candidate
+  templateArt?: import('../types').TemplateArtSpec
 }) {
   const closeBtnRef = React.useRef<HTMLButtonElement>(null)
   const previousFocusRef = React.useRef<HTMLElement | null>(null)
@@ -141,6 +144,9 @@ function PrintPreview({
 
   const mm = (px: number) => ((px / (size.dpi || 300)) * 25.4).toFixed(1)
   const physicalSize = `${mm(size.width)}×${mm(size.height)} mm`
+  const previewSource = candidate.previewUrl && templateArt
+    ? svgDataUrl(composeCreatorSignatureSvg(candidate.previewUrl, templateArt.fields))
+    : candidate.previewUrl || ''
 
   return (
     <div
@@ -162,7 +168,7 @@ function PrintPreview({
         </div>
         <div className="flex items-center justify-center rounded-xl border border-slate-800 bg-slate-950 p-4">
           <img
-            src={candidate.previewUrl || ''}
+            src={previewSource}
             alt="Print preview"
             className="rounded-lg"
             style={{ maxWidth: 'min(60vw, 800px)', maxHeight: '70vh' }}
@@ -204,11 +210,24 @@ const ExportPanel: React.FC = () => {
     return artifact.files.map((file) => {
       const size = requestedSizes.find((item) => item.width === file.width && item.height === file.height)
       if (!size) throw new Error('Core export returned an unexpected artifact size.')
-      const baseName = `artistic-qr-${project.projectId.slice(0, 6)}-${size.label.toLowerCase().replace(/\s/g, '-')}`
+      const prefix = project.templateArtLevel === 'template-art' ? 'creator-signature' : 'artistic-qr'
+      const baseName = `${prefix}-${project.projectId.slice(0, 6)}-${size.label.toLowerCase().replace(/\s/g, '-')}`
       const filename = `${baseName}.${file.format}`
       triggerDownload(artifactDownloadHref(file), filename)
       return filename
     })
+  }
+
+  async function composeTemplateArtifact(artifact: CoreExportArtifact): Promise<CoreExportArtifact> {
+    if (project.templateArtLevel !== 'template-art') return artifact
+    const fields = (project.templateArt ?? DEFAULT_CREATOR_SIGNATURE).fields
+    const files = await Promise.all(artifact.files.map(async (file) => {
+      const qrSource = file.format === 'svg' ? svgDataUrl(file.data) : file.data
+      return file.format === 'svg'
+        ? { ...file, data: composeCreatorSignatureSvg(qrSource, fields, { width: file.width, height: file.height }) }
+        : { ...file, data: await composeCreatorSignaturePng(qrSource, fields, file.width, file.height) }
+    }))
+    return { ...artifact, files }
   }
 
   const handleExport = async () => {
@@ -229,7 +248,7 @@ const ExportPanel: React.FC = () => {
       syncCommerceEntitlement(authorized)
 
       const requestedSizes = exportType === 'bundle' ? SIZES : [currentSize]
-      const artifact = await coreExportClient.exportArtifact({
+      const coreArtifact = await coreExportClient.exportArtifact({
         candidateId: selectedCandidate.candidateId,
         formats: [format],
         sizes: requestedSizes.map((size) => ({
@@ -239,6 +258,7 @@ const ExportPanel: React.FC = () => {
           dpi: size.dpi,
         })),
       })
+      const artifact = await composeTemplateArtifact(coreArtifact)
       const names = downloadArtifact(artifact, requestedSizes)
       setLastExport(exportType === 'bundle' ? `Bundle: ${names.length} files` : names[0])
       pendingAuthorization.current = null
@@ -252,8 +272,9 @@ const ExportPanel: React.FC = () => {
 
   return (
     <section className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4 md:p-6">
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-4 flex items-center justify-between gap-2">
         <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-400">Export</h2>
+        {project.templateArtLevel === 'template-art' && <span className="rounded-full bg-sky-950 px-2 py-0.5 text-[10px] font-bold text-sky-300">COMPOSED TEMPLATE ART</span>}
         {!checkoutEnabled ? (
           <span className="rounded-full bg-slate-800 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-400">
             Checkout offline
@@ -424,6 +445,7 @@ const ExportPanel: React.FC = () => {
         onClose={() => setPreviewOpen(false)}
         size={currentSize}
         candidate={selectedCandidate!}
+        templateArt={project.templateArtLevel === 'template-art' ? (project.templateArt ?? DEFAULT_CREATOR_SIGNATURE) : undefined}
       />
     </section>
   )
