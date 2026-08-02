@@ -75,7 +75,7 @@ describe('B17 extreme artistic primitive parity', () => {
     for (const eyeFrameShape of ['plus', 'beaded', 'bracket', 'heavy-rounded']) {
       expect(() => validateGenerationRequest({ ...request(extremes[2]), eyeFrameShape })).toThrow(/eyeFrameShape is invalid/);
     }
-    for (const eyeBallShape of ['diamond', 'plus', 'flower', 'slash', 'capsule', 'star']) {
+    for (const eyeBallShape of ['plus', 'flower', 'slash', 'capsule', 'burst']) {
       expect(() => validateGenerationRequest({ ...request(extremes[5]), eyeBallShape })).toThrow(/eyeBallShape is invalid/);
     }
   });
