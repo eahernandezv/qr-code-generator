@@ -17,6 +17,7 @@ const b20EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/st
 const b21EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b21-no-scroll-one-screen-variant')
 const b24EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b24-selector-scrollbar-clearance')
 const b25bEvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b25b-body-corner-color-ui')
+const b26bEvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b26b-expose-qrio-shapes')
 
 const svgArtwork = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
@@ -219,6 +220,113 @@ test.beforeAll(async () => {
   await fs.mkdir(b21EvidenceDir, { recursive: true })
   await fs.mkdir(b24EvidenceDir, { recursive: true })
   await fs.mkdir(b25bEvidenceDir, { recursive: true })
+  await fs.mkdir(b26bEvidenceDir, { recursive: true })
+})
+
+test('B26b exposes only accepted QR.io-inspired Core-backed Corners and Eyes shapes', async ({ page }) => {
+  const errors = await assertNoConsoleErrors(page)
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/')
+  await page.addStyleTag({ content: '*,*::before,*::after{transition:none!important;animation:none!important}' })
+
+  const acceptedFrames = ['leaf-frame', 'opposing-leaf-frame', 'd-frame', 'inset-leaf-frame'] as const
+  const acceptedBalls = ['star', 'diamond'] as const
+  const forbidden = ['plus', 'cross', 'burst'] as const
+  const expectedFamilies = [
+    ['body-color', 'Body Color', 22], ['corner-color', 'Corner Color', 13], ['style', 'Style', 7],
+    ['corners', 'Corners', 11], ['eyes', 'Eyes', 10],
+  ] as const
+  const familyMetrics: Record<string, unknown> = {}
+
+  for (const [family, label, expectedCount] of expectedFamilies) {
+    await page.getByRole('tab', { name: `Show ${label} controls` }).click()
+    const row = page.locator(`[data-selector-scroll-row="${family}"]`)
+    const metrics = await row.evaluate((element, activeFamily) => {
+      const rowBox = element.getBoundingClientRect()
+      const tiles = Array.from(element.querySelectorAll<HTMLElement>(`[data-selector-family="${activeFamily}"]`)).map((tile) => {
+        const box = tile.getBoundingClientRect()
+        const style = getComputedStyle(tile)
+        return { width: box.width, height: box.height, borderWidth: style.borderWidth, borderRadius: style.borderRadius, padding: style.padding, bottom: box.bottom }
+      })
+      const scrollbarThickness = Math.max(element.offsetHeight - element.clientHeight, 6)
+      const tileBottom = Math.max(...tiles.map((tile) => tile.bottom))
+      return { optionCount: tiles.length, horizontallyScrollable: element.scrollWidth > element.clientWidth,
+        tiles: tiles.map(({ bottom: _bottom, ...tile }) => tile),
+        reservedBottomSpace: rowBox.bottom - tileBottom,
+        tileToScrollbarClearance: rowBox.bottom - scrollbarThickness - tileBottom }
+    }, family)
+    expect(metrics.optionCount).toBe(expectedCount)
+    expect(metrics.horizontallyScrollable).toBe(true)
+    expect(metrics.tiles.every((tile) => tile.width === 56 && tile.height === 56 && tile.borderWidth === '2px' && tile.borderRadius === '12px' && tile.padding === '0px')).toBe(true)
+    expect(metrics.tileToScrollbarClearance).toBeGreaterThan(0)
+    familyMetrics[family] = metrics
+  }
+
+  const mapping: Array<Record<string, unknown>> = []
+  const preview = page.getByRole('img', { name: 'QR Preview' })
+  const previews: Array<{ label: string; src: string; hash: string }> = []
+  for (const [family, values, requestField] of [
+    ['Corners', acceptedFrames, 'eyeFrameShape'],
+    ['Eyes', acceptedBalls, 'eyeBallShape'],
+  ] as const) {
+    await page.getByRole('tab', { name: `Show ${family} controls` }).click()
+    for (const value of values) {
+      const option = page.locator(`[data-selector-family="${family.toLowerCase()}"][data-setting="${value}"]`)
+      await expect(option).toHaveCount(1)
+      const before = await preview.getAttribute('src')
+      await option.click()
+      await expect.poll(() => preview.getAttribute('src')).not.toBe(before)
+      const src = (await preview.getAttribute('src'))!
+      const decoded = decodeURIComponent(src.split(',')[1] ?? '')
+      expect(decoded).toContain(`${requestField === 'eyeFrameShape' ? 'data-eye-frame-shape' : 'data-eye-ball-shape'}="${value}"`)
+      const hash = createHash('sha256').update(src).digest('hex')
+      previews.push({ label: `${family} · ${value}`, src, hash })
+      mapping.push({ family: family.toLowerCase(), studioDataSetting: value, requestField, requestValue: value, corePreviewMarkerPresent: true, previewSha256: hash })
+    }
+  }
+  expect(new Set(previews.map(({ hash }) => hash)).size).toBe(acceptedFrames.length + acceptedBalls.length)
+
+  const exposedSettings = await page.locator('[data-selector-family="corners"], [data-selector-family="eyes"]').evaluateAll((elements) => elements.map((element) => element.getAttribute('data-setting')))
+  for (const value of forbidden) expect(exposedSettings).not.toContain(value)
+
+  await page.setViewportSize({ width: 820, height: 844 })
+  await page.getByRole('tab', { name: 'Show Corners controls' }).click()
+  await page.getByRole('tabpanel', { name: 'Corners controls' }).screenshot({ path: path.join(b26bEvidenceDir, 'corners-qrio-family.png') })
+  await page.getByRole('tab', { name: 'Show Eyes controls' }).click()
+  await page.getByRole('tabpanel', { name: 'Eyes controls' }).screenshot({ path: path.join(b26bEvidenceDir, 'eyes-qrio-family.png') })
+
+  await page.setViewportSize({ width: 780, height: 570 })
+  await page.setContent(`<main style="margin:0;padding:16px;background:#020617;color:white;font:600 14px system-ui;display:grid;grid-template-columns:repeat(3,232px);gap:18px">${previews.map(({ label, src }) => `<figure style="margin:0"><figcaption style="height:34px">${label}</figcaption><img width="232" height="232" src="${src}"></figure>`).join('')}</main>`)
+  await page.locator('main').screenshot({ path: path.join(b26bEvidenceDir, 'qrio-shape-preview-contact-sheet.png') })
+
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/')
+  const layout = await page.evaluate(() => {
+    const scrolling = document.scrollingElement!
+    const previewBox = document.querySelector<HTMLElement>('img[alt="QR Preview"]')!.getBoundingClientRect()
+    const destination = document.querySelector<HTMLElement>('#destination-content')!.getBoundingClientRect()
+    const headings = Array.from(document.querySelectorAll('h1,h2,h3'), (heading) => heading.textContent?.trim())
+    return { viewport: { width: innerWidth, height: innerHeight }, document: { scrollHeight: scrolling.scrollHeight, clientHeight: scrolling.clientHeight, verticalScrollRequired: scrolling.scrollHeight > scrolling.clientHeight },
+      preview: { width: previewBox.width, height: previewBox.height }, destination: { bottom: destination.bottom, breathingRoom: innerHeight - destination.bottom },
+      familyLabels: Array.from(document.querySelectorAll('[role="tab"]'), (tab) => tab.getAttribute('title')),
+      hiddenPaidPanels: Object.fromEntries(['Candidates', 'Checkout', 'Export'].map((name) => [name, headings.filter((heading) => heading === name).length])) }
+  })
+  expect(layout.document.verticalScrollRequired).toBe(false)
+  expect(layout.preview).toEqual({ width: 232, height: 232 })
+  expect(layout.destination.breathingRoom).toBeGreaterThan(0)
+  expect(layout.familyLabels).toEqual(['Body Color', 'Corner Color', 'Style', 'Corners', 'Eyes'])
+  expect(layout.hiddenPaidPanels).toEqual({ Candidates: 0, Checkout: 0, Export: 0 })
+  const beforeDraft = await preview.getAttribute('src')
+  await page.getByRole('textbox', { name: 'Final destination URL' }).fill('https://example.com/b26b-public-draft')
+  await page.getByRole('button', { name: 'Continue with this QR' }).click()
+  await expect(page.getByRole('status')).toContainText('QR activates after payment')
+  const afterDraft = await preview.getAttribute('src')
+  expect(afterDraft).toBe(beforeDraft)
+
+  await fs.writeFile(path.join(b26bEvidenceDir, 'qrio-shape-request-mapping.json'), JSON.stringify({ accepted: mapping, forbidden: Object.fromEntries(forbidden.map((value) => [value, { exposed: exposedSettings.includes(value), accepted: false }])) }, null, 2))
+  await fs.writeFile(path.join(b26bEvidenceDir, 'layout-and-scrollbar-metrics.json'), JSON.stringify({ layout, families: familyMetrics }, null, 2))
+  await fs.writeFile(path.join(b26bEvidenceDir, 'public-gate-proof.json'), JSON.stringify({ typingAndContinueDraftOnly: beforeDraft === afterDraft, status: await page.getByRole('status').textContent(), hiddenPaidPanels: layout.hiddenPaidPanels }, null, 2))
+  expect(errors).toEqual([])
 })
 
 test('B25b consolidates Body Color and independently controls Corner Color with preserved public gates', async ({ page }) => {
@@ -231,8 +339,8 @@ test('B25b consolidates Body Color and independently controls Corner Color with 
     ['body-color', 'Body Color', 22],
     ['corner-color', 'Corner Color', 13],
     ['style', 'Style', 7],
-    ['corners', 'Corners', 7],
-    ['eyes', 'Eyes', 8],
+    ['corners', 'Corners', 11],
+    ['eyes', 'Eyes', 10],
   ] as const
   const familyMetrics: Record<string, unknown> = {}
   for (const [family, label, expectedCount] of families) {
@@ -497,7 +605,7 @@ test('B23 keeps the larger no-scroll QR preview as the default route while prese
   expect(defaultNoScroll.document.scrollHeight).toBeLessThanOrEqual(defaultNoScroll.document.clientHeight)
   expect(defaultNoScroll.preview.width).toBeGreaterThanOrEqual(232)
   expect(defaultNoScroll.preview.height).toBeGreaterThanOrEqual(232)
-  expect(defaultNoScroll.selectors).toEqual({ bodyColor: 22, cornerColor: 13, style: 7, corners: 7, eyes: 8 })
+  expect(defaultNoScroll.selectors).toEqual({ bodyColor: 22, cornerColor: 13, style: 7, corners: 11, eyes: 10 })
   expect(defaultNoScroll.destination.tagName).toBe('INPUT')
   expect(defaultNoScroll.destination.bottom).toBeLessThanOrEqual(844)
   expect(defaultNoScroll.hiddenPublicPanels).toEqual({ Candidates: 0, Checkout: 0, Export: 0 })
@@ -602,7 +710,7 @@ test('B20 aligns QR-size glyphs and gives selector families one perimeter gramma
     corners: await page.getByRole('listbox', { name: 'Corners' }).getByRole('option').count(),
     eyes: await page.getByRole('listbox', { name: 'Eyes' }).getByRole('option').count(),
   }
-  expect(optionCounts).toEqual({ bodyColor: 22, cornerColor: 13, style: 7, corners: 7, eyes: 8 })
+  expect(optionCounts).toEqual({ bodyColor: 22, cornerColor: 13, style: 7, corners: 11, eyes: 10 })
   const allOptionGeometry = await page.locator('[data-selector-family="body-color"], [data-selector-family="corner-color"], [data-selector-family="style"], [data-selector-family="corners"], [data-selector-family="eyes"]').evaluateAll((elements) => elements.map((element) => {
     const style = getComputedStyle(element)
     const box = element.getBoundingClientRect()
@@ -646,8 +754,8 @@ test('B19 uses bounded scan-check wording and preserves B18/B16/B13 public behav
   expect(await destination.evaluate((element) => element.tagName)).toBe('INPUT')
   await expect(page.getByRole('button', { name: 'Text' })).toHaveCount(0)
   await expect(page.getByRole('listbox', { name: 'Style' }).getByRole('option')).toHaveCount(7)
-  await expect(page.getByRole('listbox', { name: 'Corners' }).getByRole('option')).toHaveCount(7)
-  await expect(page.getByRole('listbox', { name: 'Eyes' }).getByRole('option')).toHaveCount(8)
+  await expect(page.getByRole('listbox', { name: 'Corners' }).getByRole('option')).toHaveCount(11)
+  await expect(page.getByRole('listbox', { name: 'Eyes' }).getByRole('option')).toHaveCount(10)
   await expect(page.getByRole('option', { name: 'Notched QR style' })).toHaveAttribute('data-setting', 'notched')
   await expect(page.getByRole('option', { name: 'Shield QR style' })).toHaveAttribute('data-setting', 'shield')
   await expect(page.getByRole('option', { name: 'Diamond corner style' })).toHaveAttribute('data-setting', 'diamond')
@@ -669,7 +777,7 @@ test('B19 uses bounded scan-check wording and preserves B18/B16/B13 public behav
     disclaimer,
     exactVisibleConfidenceColonCount: 0,
     exactVisibleConfidenceLabelCount: 0,
-    optionCounts: { style: 7, corners: 7, eyes: 8 },
+    optionCounts: { style: 7, corners: 11, eyes: 10 },
     destinationElement: 'INPUT',
     textDestinationAbsent: true,
     sideControls: ['QR size', 'Intensity'],
@@ -688,8 +796,8 @@ test('B18 exposes only accepted Core-backed extreme primitives and preserves the
   expect(previewBox).not.toBeNull()
   const families = [
     { row: 'Style', count: 7, suffix: 'QR style', options: [['Notched', 'notched'], ['Shield', 'shield']] },
-    { row: 'Corners', count: 7, suffix: 'corner style', options: [['Diamond', 'diamond'], ['Hex', 'hex']] },
-    { row: 'Eyes', count: 8, suffix: 'eye style', options: [['Hex', 'hex'], ['Vertical capsule', 'vertical-capsule'], ['Horizontal capsule', 'horizontal-capsule']] },
+    { row: 'Corners', count: 11, suffix: 'corner style', options: [['Diamond', 'diamond'], ['Hex', 'hex']] },
+    { row: 'Eyes', count: 10, suffix: 'eye style', options: [['Hex', 'hex'], ['Vertical capsule', 'vertical-capsule'], ['Horizontal capsule', 'horizontal-capsule']] },
   ] as const
   const hashes: Record<string, Record<string, string>> = {}
 
@@ -759,14 +867,14 @@ test('B16 delivers icon-only settings, one-line destination, palettes, side cont
   for (const type of ['URL', 'Email', 'Phone']) await expect(page.getByRole('button', { name: type })).toBeVisible()
 
   const iconRows = ['Style', 'Corners', 'Eyes'] as const
-  const optionCounts = { Style: 7, Corners: 7, Eyes: 8 } as const
+  const optionCounts = { Style: 7, Corners: 11, Eyes: 10 } as const
   for (const row of iconRows) {
     const options = page.getByRole('listbox', { name: row }).getByRole('option')
     await expect(options).toHaveCount(optionCounts[row])
     for (let index = 0; index < optionCounts[row]; index += 1) {
       expect((await options.nth(index).innerText()).replace('✓', '').trim()).toBe('')
       await expect(options.nth(index)).toHaveAttribute('aria-label', /style/)
-      await expect(options.nth(index)).toHaveAttribute('data-setting', /square|rounded|circle|vertical-bars|horizontal-bars|squircle|chamfered|notched|shield|diamond|hex|vertical-capsule|horizontal-capsule/)
+      await expect(options.nth(index)).toHaveAttribute('data-setting', /square|rounded|circle|vertical-bars|horizontal-bars|squircle|chamfered|notched|shield|diamond|hex|vertical-capsule|horizontal-capsule|leaf-frame|opposing-leaf-frame|d-frame|inset-leaf-frame|star/)
     }
   }
   for (const removed of ['Classic', 'Rounded', 'Dots', 'Soft', 'Circle', 'Squircle', 'Chamfered', 'Mellow', 'Balanced', 'Punchy']) {

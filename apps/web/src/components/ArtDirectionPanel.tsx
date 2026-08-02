@@ -9,6 +9,12 @@ import hexFrameIcon from '../assets/b17-icons/icon-eye-frame-hex.svg'
 import hexBallIcon from '../assets/b17-icons/icon-eye-ball-hex.svg'
 import verticalCapsuleBallIcon from '../assets/b17-icons/icon-eye-ball-vertical-capsule.svg'
 import horizontalCapsuleBallIcon from '../assets/b17-icons/icon-eye-ball-horizontal-capsule.svg'
+import leafFrameIcon from '../assets/b26b-icons/icon-eye-frame-leaf-frame.svg'
+import opposingLeafFrameIcon from '../assets/b26b-icons/icon-eye-frame-opposing-leaf-frame.svg'
+import dFrameIcon from '../assets/b26b-icons/icon-eye-frame-d-frame.svg'
+import insetLeafFrameIcon from '../assets/b26b-icons/icon-eye-frame-inset-leaf-frame.svg'
+import starBallIcon from '../assets/b26b-icons/icon-eye-ball-star.svg'
+import diamondBallIcon from '../assets/b26b-icons/icon-eye-ball-diamond.svg'
 
 type SolidPalette = { primary: string; secondary: string; accent: string; background: string }
 type SolidPreset = { name: string; variants: Record<ColorIntensity, SolidPalette> }
@@ -125,6 +131,10 @@ const EYE_FRAME_OPTIONS: Array<{
   { name: 'Chamfered', style: 'chamfered' },
   { name: 'Diamond', style: 'diamond', icon: diamondFrameIcon },
   { name: 'Hex', style: 'hex', icon: hexFrameIcon },
+  { name: 'Leaf frame', style: 'leaf-frame', icon: leafFrameIcon },
+  { name: 'Opposing leaf frame', style: 'opposing-leaf-frame', icon: opposingLeafFrameIcon },
+  { name: 'D frame', style: 'd-frame', icon: dFrameIcon },
+  { name: 'Inset leaf frame', style: 'inset-leaf-frame', icon: insetLeafFrameIcon },
 ]
 
 const EYE_BALL_OPTIONS: Array<{
@@ -140,6 +150,8 @@ const EYE_BALL_OPTIONS: Array<{
   { name: 'Hex', style: 'hex', icon: hexBallIcon },
   { name: 'Vertical capsule', style: 'vertical-capsule', icon: verticalCapsuleBallIcon },
   { name: 'Horizontal capsule', style: 'horizontal-capsule', icon: horizontalCapsuleBallIcon },
+  { name: 'Star', style: 'star', icon: starBallIcon },
+  { name: 'Diamond', style: 'diamond', icon: diamondBallIcon },
 ]
 
 const INTENSITIES: Array<{ value: ColorIntensity; label: string }> = [

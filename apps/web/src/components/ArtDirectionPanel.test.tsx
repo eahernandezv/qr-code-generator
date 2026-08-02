@@ -72,8 +72,8 @@ describe('ArtDirectionPanel B18 controls', () => {
 
     const expectedSettings = {
       Style: ['square', 'rounded', 'circle', 'vertical-bars', 'horizontal-bars', 'notched', 'shield'],
-      Corners: ['square', 'rounded', 'circle', 'squircle', 'chamfered', 'diamond', 'hex'],
-      Eyes: ['square', 'rounded', 'circle', 'squircle', 'chamfered', 'hex', 'vertical-capsule', 'horizontal-capsule'],
+      Corners: ['square', 'rounded', 'circle', 'squircle', 'chamfered', 'diamond', 'hex', 'leaf-frame', 'opposing-leaf-frame', 'd-frame', 'inset-leaf-frame'],
+      Eyes: ['square', 'rounded', 'circle', 'squircle', 'chamfered', 'hex', 'vertical-capsule', 'horizontal-capsule', 'star', 'diamond'],
     } as const
     for (const rowName of ['Style', 'Corners', 'Eyes'] as const) {
       const options = screen.getByRole('listbox', { name: rowName }).querySelectorAll('[role="option"]')
@@ -93,6 +93,12 @@ describe('ArtDirectionPanel B18 controls', () => {
       ['Hex eye style', 'hex', 'eye-ball-hex'],
       ['Vertical capsule eye style', 'vertical-capsule', 'eye-ball-vertical-capsule'],
       ['Horizontal capsule eye style', 'horizontal-capsule', 'eye-ball-horizontal-capsule'],
+      ['Leaf frame corner style', 'leaf-frame', 'eye-frame-leaf-frame'],
+      ['Opposing leaf frame corner style', 'opposing-leaf-frame', 'eye-frame-opposing-leaf-frame'],
+      ['D frame corner style', 'd-frame', 'eye-frame-d-frame'],
+      ['Inset leaf frame corner style', 'inset-leaf-frame', 'eye-frame-inset-leaf-frame'],
+      ['Star eye style', 'star', 'eye-ball-star'],
+      ['Diamond eye style', 'diamond', 'eye-ball-diamond'],
     ] as const
     for (const [name, setting, recipe] of newOptions) {
       const option = screen.getByRole('option', { name })
@@ -105,8 +111,8 @@ describe('ArtDirectionPanel B18 controls', () => {
     }
     expect(useStudioStore.getState().project.artDirection).toMatchObject({
       moduleStyle: 'shield',
-      eyeFrameStyle: 'hex',
-      eyeBallStyle: 'horizontal-capsule',
+      eyeFrameStyle: 'inset-leaf-frame',
+      eyeBallStyle: 'diamond',
     })
   })
 
