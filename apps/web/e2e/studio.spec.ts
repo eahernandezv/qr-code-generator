@@ -20,13 +20,20 @@ const b25bEvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/s
 const b26bEvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b26b-expose-qrio-shapes')
 const b27EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b27-creator-signature-template')
 
-const svgArtwork = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`
-<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+const fixtureModules = Array.from({ length: 21 }, (_, y) => Array.from({ length: 21 }, (_, x) => {
+  const finder = (fx: number, fy: number) => x >= fx && x < fx + 7 && y >= fy && y < fy + 7
+    && (x === fx || x === fx + 6 || y === fy || y === fy + 6 || (x >= fx + 2 && x <= fx + 4 && y >= fy + 2 && y <= fy + 4))
+  if (finder(0, 0) || finder(14, 0) || finder(0, 14)) return true
+  if (x === 6 || y === 6) return (x + y) % 2 === 0
+  return ((x * 7 + y * 11 + x * y) % 5) < 2
+}))
+
+const fixtureQrSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" data-qr-fixture="module-matrix">
   <rect width="512" height="512" fill="#f0f4ff"/>
-  <rect x="32" y="32" width="448" height="448" fill="#181b3a"/>
-  <rect x="64" y="64" width="384" height="384" fill="#f0f4ff"/>
-  <rect x="96" y="96" width="320" height="320" fill="#181b3a"/>
-</svg>`)}`
+  ${fixtureModules.flatMap((row, y) => row.map((filled, x) => filled ? `<rect x="${32 + x * 21}" y="${32 + y * 21}" width="18" height="18" rx="3" fill="#181b3a"/>` : '')).join('')}
+</svg>`
+
+const svgArtwork = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(fixtureQrSvg)}`
 
 function coreCandidateFixture() {
   const ids = [
@@ -328,6 +335,7 @@ test('B27 paid export downloads composed Creator Signature SVG after Core export
       expect(exported).toContain('data-signature-position="top-right-badge"')
       expect(exported).toContain('Exported Signature')
       expect(exported).toContain('<image')
+      expect(exported).toContain('data-qr-fixture%3D%22module-matrix%22')
     } else {
       expect(bytes.subarray(1, 4).toString()).toBe('PNG')
       expect(bytes.readUInt32BE(16)).toBe(512)
@@ -336,9 +344,11 @@ test('B27 paid export downloads composed Creator Signature SVG after Core export
     }
     artifacts[format.toLowerCase()] = { filename: download.suggestedFilename(), artifactPath: target, width: 512, height: 512, sha256: createHash('sha256').update(bytes).digest('hex') }
   }
+  const exportedSvg = await fs.readFile((artifacts.svg as { artifactPath: string }).artifactPath, 'utf8')
+  const embeddedCoreQrMatrix = exportedSvg.includes('data-qr-fixture%3D%22module-matrix%22')
   const coreCalls = await page.evaluate(() => (window as typeof window & { __QR_CORE_EXPORT_CALLS__: unknown[] }).__QR_CORE_EXPORT_CALLS__)
   expect(coreCalls).toHaveLength(2)
-  await fs.writeFile(path.join(b27EvidenceDir, 'creator-signature-export-proof.json'), JSON.stringify({ artifacts, composedTemplateLayer: true, embeddedCoreQr: true, signatureTextPresentInSvg: true, pngCompositionColorCountGreaterThanFour: true, position: 'top-right-badge', coreExportAuthorityCalls: coreCalls.length }, null, 2))
+  await fs.writeFile(path.join(b27EvidenceDir, 'creator-signature-export-proof.json'), JSON.stringify({ artifacts, composedTemplateLayer: true, embeddedCoreQr: embeddedCoreQrMatrix, embeddedCoreQrMatrix, signatureTextPresentInSvg: true, pngCompositionColorCountGreaterThanFour: true, position: 'top-right-badge', coreExportAuthorityCalls: coreCalls.length }, null, 2))
 })
 
 test('B26b exposes only accepted QR.io-inspired Core-backed Corners and Eyes shapes', async ({ page }) => {
