@@ -9,9 +9,13 @@ export type ErrorCorrectionLevel = 'L' | 'M' | 'Q' | 'H'
 
 export type EyeStyle = 'square' | 'rounded' | 'circle' | 'squircle' | 'chamfered' | 'leaf'
 
-export type EyeFramePrimitiveStyle = 'square' | 'rounded' | 'circle' | 'squircle' | 'chamfered' | 'diamond' | 'hex'
+export type EyeFramePrimitiveStyle =
+  | 'square' | 'rounded' | 'circle' | 'squircle' | 'chamfered' | 'diamond' | 'hex'
+  | 'leaf-frame' | 'opposing-leaf-frame' | 'd-frame' | 'inset-leaf-frame'
 
-export type EyeBallPrimitiveStyle = 'square' | 'rounded' | 'circle' | 'squircle' | 'chamfered' | 'hex' | 'vertical-capsule' | 'horizontal-capsule'
+export type EyeBallPrimitiveStyle =
+  | 'square' | 'rounded' | 'circle' | 'squircle' | 'chamfered' | 'hex'
+  | 'vertical-capsule' | 'horizontal-capsule' | 'star' | 'diamond'
 
 export type EyePrimitiveStyle = EyeFramePrimitiveStyle | EyeBallPrimitiveStyle
 

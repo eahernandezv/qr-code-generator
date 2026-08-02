@@ -149,8 +149,8 @@ describe('Studio canonical generation request and predictive preview', () => {
 
   it('maps all expanded body, frame, and ball treatments independently without changing the SVG viewport', () => {
     const modules = ['square', 'rounded', 'circle', 'vertical-bars', 'horizontal-bars', 'notched', 'shield'] as const
-    const frames = ['square', 'rounded', 'circle', 'squircle', 'chamfered', 'diamond', 'hex'] as const
-    const balls = ['square', 'rounded', 'circle', 'squircle', 'chamfered', 'hex', 'vertical-capsule', 'horizontal-capsule'] as const
+    const frames = ['square', 'rounded', 'circle', 'squircle', 'chamfered', 'diamond', 'hex', 'leaf-frame', 'opposing-leaf-frame', 'd-frame', 'inset-leaf-frame'] as const
+    const balls = ['square', 'rounded', 'circle', 'squircle', 'chamfered', 'hex', 'vertical-capsule', 'horizontal-capsule', 'star', 'diamond'] as const
     const previews = [
       ...modules.map((moduleStyle) => renderStudioPreview(request({ moduleStyle, eyeFrameStyle: 'square', eyeBallStyle: 'square' }))),
       ...frames.map((eyeFrameStyle) => renderStudioPreview(request({ moduleStyle: 'square', eyeFrameStyle, eyeBallStyle: 'square' }))),
@@ -160,8 +160,8 @@ describe('Studio canonical generation request and predictive preview', () => {
       moduleShape: 'shield', eyeFrameShape: 'diamond', eyeBallShape: 'vertical-capsule',
     })
     expect(new Set(previews.slice(0, 7).map((artifact) => artifact.data))).toHaveLength(7)
-    expect(new Set(previews.slice(7, 14).map((artifact) => artifact.data))).toHaveLength(7)
-    expect(new Set(previews.slice(14).map((artifact) => artifact.data))).toHaveLength(8)
+    expect(new Set(previews.slice(7, 18).map((artifact) => artifact.data))).toHaveLength(11)
+    expect(new Set(previews.slice(18).map((artifact) => artifact.data))).toHaveLength(10)
     for (const preview of previews) {
       expect(preview.width).toBe(previews[0].width)
       expect(preview.height).toBe(previews[0].height)
