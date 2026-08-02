@@ -1,8 +1,9 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { ProjectState, Payload, ArtDirection, StyleSpec, Entitlement, GenerationBoard } from './types'
+import type { ProjectState, Payload, ArtDirection, StyleSpec, Entitlement, GenerationBoard, TemplateArtLevel, TemplateArtSpec } from './types'
 import { FEATURE_FLAGS, type FeatureFlags } from './config/flags'
 import { guestCommerce, type CheckoutStatus, type CommerceEntitlementSnapshot } from './lib/commerceClient'
+import { DEFAULT_CREATOR_SIGNATURE } from './lib/creatorSignature'
 
 const generateId = (): string => {
   const hex = () => Math.floor(Math.random() * 16).toString(16)
@@ -63,6 +64,8 @@ const createProject = (): ProjectState => ({
   payload: emptyPayload(),
   artDirection: defaultArtDirection(),
   style: defaultStyle(),
+  templateArtLevel: 'basic',
+  templateArt: DEFAULT_CREATOR_SIGNATURE,
   boards: [],
   entitlement: defaultEntitlement(),
   createdAt: nowIso(),
@@ -77,6 +80,8 @@ interface StudioStore {
   setPayload: (payload: Payload) => void
   setArtDirection: (art: ArtDirection) => void
   setStyle: (style: StyleSpec) => void
+  setTemplateArtLevel: (level: TemplateArtLevel) => void
+  setTemplateArt: (spec: TemplateArtSpec) => void
   addBoard: (board: GenerationBoard) => void
   updateBoard: (boardId: string, patch: Partial<GenerationBoard>) => void
   updateCandidate: (boardId: string, candidateId: string, patch: Partial<import('./types').Candidate>) => void
@@ -114,6 +119,16 @@ export const useStudioStore = create<StudioStore>()(
       setStyle: (style) =>
         set((s) => ({
           project: { ...s.project, style, updatedAt: nowIso() },
+        })),
+
+      setTemplateArtLevel: (templateArtLevel) =>
+        set((s) => ({
+          project: { ...s.project, templateArtLevel, updatedAt: nowIso() },
+        })),
+
+      setTemplateArt: (templateArt) =>
+        set((s) => ({
+          project: { ...s.project, templateArt, updatedAt: nowIso() },
         })),
 
       addBoard: (board) =>

@@ -51,6 +51,28 @@ export type BoardStatus = 'pending' | 'generating' | 'complete' | 'partial' | 'f
 
 export type EntitlementType = 'preview' | 'project' | 'exploration'
 
+export type TemplateArtLevel = 'basic' | 'template-art'
+export type TemplateArtId = 'creator-signature'
+export type CreatorSignaturePosition =
+  | 'bottom-right-outside'
+  | 'bottom-left-outside'
+  | 'below-centered'
+  | 'right-side-vertical'
+  | 'top-right-badge'
+
+export interface CreatorSignatureTemplateFields {
+  signatureText?: string
+  handleText?: string
+  ctaText?: string
+  signaturePosition?: CreatorSignaturePosition
+}
+
+export interface TemplateArtSpec {
+  templateId: TemplateArtId
+  fields: CreatorSignatureTemplateFields
+  outputIntent?: 'square-card' | 'vertical-card'
+}
+
 export interface Payload {
   raw: string
   normalized: string
@@ -191,6 +213,8 @@ export interface ProjectState {
   payload: Payload
   artDirection: ArtDirection
   style?: StyleSpec
+  templateArtLevel?: TemplateArtLevel
+  templateArt?: TemplateArtSpec
   boards: GenerationBoard[]
   selectedCandidateId?: string
   entitlement: Entitlement

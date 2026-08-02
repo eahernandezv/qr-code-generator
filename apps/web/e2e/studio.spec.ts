@@ -18,6 +18,7 @@ const b21EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/st
 const b24EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b24-selector-scrollbar-clearance')
 const b25bEvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b25b-body-corner-color-ui')
 const b26bEvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b26b-expose-qrio-shapes')
+const b27EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b27-creator-signature-template')
 
 const svgArtwork = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
@@ -221,6 +222,123 @@ test.beforeAll(async () => {
   await fs.mkdir(b24EvidenceDir, { recursive: true })
   await fs.mkdir(b25bEvidenceDir, { recursive: true })
   await fs.mkdir(b26bEvidenceDir, { recursive: true })
+  await fs.mkdir(b27EvidenceDir, { recursive: true })
+})
+
+test('B27 Creator Signature composes five fixed positions, reuses Level 1 controls, and preserves the public gate', async ({ page }) => {
+  const errors = await assertNoConsoleErrors(page)
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/')
+  await page.getByRole('button', { name: 'Template Art' }).click()
+  await expect(page.getByTestId('studio-app')).toHaveAttribute('data-ux-variant', 'default')
+  await expect(page.locator('[data-template-id="creator-signature"]')).toHaveCount(2)
+  await expect(page.getByText('Creator Signature', { exact: true })).toBeVisible()
+  await expect(page.getByText('ONLY TEMPLATE')).toBeVisible()
+  await page.screenshot({ path: path.join(b27EvidenceDir, 'creator-signature-default-mobile.png'), fullPage: true })
+
+  const preview = page.getByRole('img', { name: 'QR Preview' })
+  await expect(preview).toHaveAttribute('data-art-level', 'template-art')
+  const positions = ['bottom-right-outside', 'bottom-left-outside', 'below-centered', 'right-side-vertical', 'top-right-badge'] as const
+  const positionPanels: Array<{ label: string; bytes: Buffer; hash: string }> = []
+  for (const value of positions) {
+    const option = page.locator(`[data-signature-position="${value}"]`)
+    const before = await preview.getAttribute('src')
+    await option.click()
+    await expect(option).toHaveAttribute('aria-checked', 'true')
+    if (value !== 'bottom-right-outside') await expect.poll(() => preview.getAttribute('src')).not.toBe(before)
+    const source = (await preview.getAttribute('src'))!
+    const decoded = decodeURIComponent(source.split(',')[1] ?? '')
+    expect(decoded).toContain(`data-signature-position="${value}"`)
+    positionPanels.push({ label: value, bytes: await preview.screenshot(), hash: createHash('sha256').update(source).digest('hex') })
+  }
+  expect(new Set(positionPanels.map(({ hash }) => hash)).size).toBe(5)
+
+  const controls: Array<[string, () => Promise<void>]> = [
+    ['Body Color · Electric Purple', async () => { await page.getByRole('option', { name: 'Electric Purple', exact: true }).click() }],
+    ['Corner Color · Crimson Red', async () => { await page.getByRole('option', { name: /^Crimson Red corner color/ }).click() }],
+    ['Style · Notched', async () => { await page.getByRole('option', { name: /^Notched QR style/ }).click() }],
+    ['Corners · Diamond', async () => { await page.getByRole('option', { name: /^Diamond corner style/ }).click() }],
+    ['Eyes · Star', async () => { await page.getByRole('option', { name: /^Star eye style/ }).click() }],
+    ['Intensity · Punchy', async () => { await page.getByRole('button', { name: 'Punchy color intensity' }).click() }],
+    ['QR size · Larger', async () => { await page.getByRole('button', { name: 'Larger QR size' }).click() }],
+  ]
+  const controlPanels: Array<{ label: string; bytes: Buffer; hash: string }> = []
+  for (const [label, act] of controls) {
+    const before = await preview.getAttribute('src')
+    await act()
+    await expect.poll(() => preview.getAttribute('src')).not.toBe(before)
+    const source = (await preview.getAttribute('src'))!
+    controlPanels.push({ label, bytes: await preview.screenshot(), hash: createHash('sha256').update(source).digest('hex') })
+  }
+  expect(new Set(controlPanels.map(({ hash }) => hash)).size).toBe(7)
+
+  const makeContactSheet = async (items: Array<{ label: string; bytes: Buffer }>, columns: number, target: string) => {
+    await page.setViewportSize({ width: columns * 270 + 32, height: Math.ceil(items.length / columns) * 300 + 32 })
+    await page.setContent(`<main style="margin:0;padding:16px;background:#020617;color:white;font:600 13px system-ui;display:grid;grid-template-columns:repeat(${columns},250px);gap:16px">${items.map(({ label, bytes }) => `<figure style="margin:0"><figcaption style="height:28px">${label}</figcaption><img width="232" height="232" src="data:image/png;base64,${bytes.toString('base64')}"></figure>`).join('')}</main>`)
+    await page.locator('main').screenshot({ path: target })
+  }
+  await makeContactSheet(positionPanels, 3, path.join(b27EvidenceDir, 'creator-signature-positions-contact-sheet.png'))
+  await makeContactSheet(controlPanels, 4, path.join(b27EvidenceDir, 'creator-signature-level1-controls-contact-sheet.png'))
+
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/')
+  await page.getByRole('button', { name: 'Template Art' }).click()
+  const layout = await page.evaluate(() => {
+    const previewBox = document.querySelector<HTMLElement>('img[alt="QR Preview"]')!.getBoundingClientRect()
+    const template = document.querySelector<HTMLElement>('[data-template-id="creator-signature"]')!.getBoundingClientRect()
+    const headings = Array.from(document.querySelectorAll('h1,h2,h3'), (heading) => heading.textContent?.trim())
+    return { viewport: { width: innerWidth, height: innerHeight }, document: { scrollHeight: document.scrollingElement!.scrollHeight, clientHeight: document.scrollingElement!.clientHeight }, preview: { width: previewBox.width, height: previewBox.height }, template: { left: template.left, right: template.right, width: template.width }, hiddenPaidPanels: Object.fromEntries(['Candidates', 'Checkout', 'Export'].map((name) => [name, headings.filter((heading) => heading === name).length])) }
+  })
+  expect(layout.template.left).toBeGreaterThanOrEqual(0)
+  expect(layout.template.right).toBeLessThanOrEqual(390)
+  expect(layout.hiddenPaidPanels).toEqual({ Candidates: 0, Checkout: 0, Export: 0 })
+  const beforeDraft = await preview.getAttribute('src')
+  await page.getByRole('textbox', { name: 'Final destination URL' }).fill('https://example.com/b27-public-draft')
+  await page.getByRole('button', { name: 'Continue with this QR' }).click()
+  await expect(page.getByRole('status')).toContainText('QR activates after payment')
+  expect(await preview.getAttribute('src')).toBe(beforeDraft)
+
+  await fs.writeFile(path.join(b27EvidenceDir, 'creator-signature-template-contract.json'), JSON.stringify({ level: ['basic', 'template-art'], enabledTemplates: ['creator-signature'], fields: ['signatureText', 'handleText', 'ctaText', 'signaturePosition'], positions, outputIntent: 'square-card', forbidden: { dragDrop: false, insideQrText: false, logoUpload: false, customArtPrompt: false } }, null, 2))
+  await fs.writeFile(path.join(b27EvidenceDir, 'layout-metrics.json'), JSON.stringify(layout, null, 2))
+  await fs.writeFile(path.join(b27EvidenceDir, 'public-gate-proof.json'), JSON.stringify({ unpaidPublicPath: 'draft-only', previewUnchangedAfterTypingAndContinue: beforeDraft === await preview.getAttribute('src'), hiddenPaidPanels: layout.hiddenPaidPanels, status: await page.getByRole('status').textContent() }, null, 2))
+  expect(errors).toEqual([])
+})
+
+test('B27 paid export downloads composed Creator Signature SVG after Core export authority', async ({ page }) => {
+  const state = projectState({ coreEvidence: true })
+  state.templateArtLevel = 'template-art'
+  state.templateArt = { templateId: 'creator-signature', outputIntent: 'square-card', fields: { signatureText: 'Exported Signature', handleText: '@export-proof', ctaText: 'Scan the work', signaturePosition: 'top-right-badge' } }
+  await seed(page, state)
+  await page.goto('/?workflow=internal')
+  await page.getByRole('button', { name: 'Preview at size' }).click()
+  const printPreview = page.getByRole('img', { name: 'Print preview' })
+  await expect(printPreview).toHaveAttribute('src', /data:image\/svg\+xml/)
+  expect(decodeURIComponent((await printPreview.getAttribute('src'))!.split(',')[1] ?? '')).toContain('data-template-layer="creator-signature"')
+  await page.getByRole('button', { name: 'Close' }).click()
+  const artifacts: Record<string, unknown> = {}
+  for (const format of ['PNG', 'SVG'] as const) {
+    await page.getByRole('button', { name: new RegExp(`^${format}`) }).click()
+    const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: `Export ${format}` }).click()])
+    const target = path.join(b27EvidenceDir, download.suggestedFilename())
+    await download.saveAs(target)
+    const bytes = await fs.readFile(target)
+    if (format === 'SVG') {
+      const exported = bytes.toString('utf8')
+      expect(exported).toContain('data-template-layer="creator-signature"')
+      expect(exported).toContain('data-signature-position="top-right-badge"')
+      expect(exported).toContain('Exported Signature')
+      expect(exported).toContain('<image')
+    } else {
+      expect(bytes.subarray(1, 4).toString()).toBe('PNG')
+      expect(bytes.readUInt32BE(16)).toBe(512)
+      expect(bytes.readUInt32BE(20)).toBe(512)
+      expect(await sampledColorCount(page, bytes)).toBeGreaterThan(4)
+    }
+    artifacts[format.toLowerCase()] = { filename: download.suggestedFilename(), artifactPath: target, width: 512, height: 512, sha256: createHash('sha256').update(bytes).digest('hex') }
+  }
+  const coreCalls = await page.evaluate(() => (window as typeof window & { __QR_CORE_EXPORT_CALLS__: unknown[] }).__QR_CORE_EXPORT_CALLS__)
+  expect(coreCalls).toHaveLength(2)
+  await fs.writeFile(path.join(b27EvidenceDir, 'creator-signature-export-proof.json'), JSON.stringify({ artifacts, composedTemplateLayer: true, embeddedCoreQr: true, signatureTextPresentInSvg: true, pngCompositionColorCountGreaterThanFour: true, position: 'top-right-badge', coreExportAuthorityCalls: coreCalls.length }, null, 2))
 })
 
 test('B26b exposes only accepted QR.io-inspired Core-backed Corners and Eyes shapes', async ({ page }) => {

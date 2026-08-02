@@ -1,6 +1,7 @@
 import React from 'react'
 import { useStudioStore } from '../store'
 import { buildStudioGenerationRequest, renderStudioPreview } from '../lib/studioGenerationRequest'
+import { composeCreatorSignatureSvg, DEFAULT_CREATOR_SIGNATURE, svgDataUrl } from '../lib/creatorSignature'
 
 interface QRPreviewProps {
   size?: number
@@ -43,16 +44,19 @@ const QRPreview: React.FC<QRPreviewProps> = ({ size = 320, className = '', useDe
       const browserSvg = artifact.format === 'svg'
         ? normalizeBrowserSvg(artifact.data)
         : artifact.data
-      const url = artifact.format === 'svg'
+      const coreUrl = artifact.format === 'svg'
         ? `data:image/svg+xml;charset=utf-8,${encodeURIComponent(browserSvg)}`
         : artifact.data
+      const url = project.templateArtLevel === 'template-art'
+        ? svgDataUrl(composeCreatorSignatureSvg(coreUrl, (project.templateArt ?? DEFAULT_CREATOR_SIGNATURE).fields))
+        : coreUrl
       setDataUrl(url)
       setError(null)
     } catch (caught) {
       setDataUrl('')
       setError(caught instanceof Error ? caught.message : 'Render failed')
     }
-  }, [previewPayload, artDirection])
+  }, [previewPayload, artDirection, project.templateArtLevel, project.templateArt])
 
   return (
     <div className={`relative flex flex-col items-center ${className}`}>
@@ -68,8 +72,10 @@ const QRPreview: React.FC<QRPreviewProps> = ({ size = 320, className = '', useDe
           <img
             src={dataUrl}
             alt="QR Preview"
+            data-art-level={project.templateArtLevel ?? 'basic'}
+            data-template-id={project.templateArtLevel === 'template-art' ? 'creator-signature' : undefined}
             className="rounded-xl"
-            style={{ width: size, height: size, imageRendering: 'pixelated' }}
+            style={{ width: size, height: size, imageRendering: project.templateArtLevel === 'template-art' ? 'auto' : 'pixelated' }}
           />
         ) : null}
 
@@ -81,7 +87,7 @@ const QRPreview: React.FC<QRPreviewProps> = ({ size = 320, className = '', useDe
       </div>
 
       <p className="mt-2 text-xs text-slate-500">
-        {previewPayload.raw.trim() ? `${isDemo ? 'Demo destination' : 'Predictive Core preview'} · ${size}×${size} px` : ''}
+        {previewPayload.raw.trim() ? `${project.templateArtLevel === 'template-art' ? 'Composed Creator Signature' : isDemo ? 'Demo destination' : 'Predictive Core preview'} · ${size}×${size} px` : ''}
       </p>
     </div>
   )

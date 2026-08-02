@@ -2,6 +2,7 @@ import React from 'react'
 import { useStudioStore } from '../store'
 import type { ArtDirection, ColorIntensity, EyeBallPrimitiveStyle, EyeFramePrimitiveStyle, EyePrimitiveStyle, ModuleStyle, PaletteFamily, PalettePattern } from '../types'
 import QRPreview from './QRPreview'
+import TemplateArtControls from './TemplateArtControls'
 import notchedIcon from '../assets/b17-icons/icon-body-module-notched.svg'
 import shieldIcon from '../assets/b17-icons/icon-body-module-shield.svg'
 import diamondFrameIcon from '../assets/b17-icons/icon-eye-frame-diamond.svg'
@@ -245,9 +246,10 @@ interface ArtDirectionPanelProps {
 }
 
 const ArtDirectionPanel: React.FC<ArtDirectionPanelProps> = ({ noScrollVariant = false }) => {
-  const { project, setArtDirection } = useStudioStore()
+  const { project, setArtDirection, setTemplateArtLevel } = useStudioStore()
   const [activeFamily, setActiveFamily] = React.useState<ControlFamily>('body-color')
   const art = project.artDirection
+  const templateArtSelected = project.templateArtLevel === 'template-art'
   const update = (patch: Partial<ArtDirection>) => setArtDirection({ ...art, ...patch })
   const intensity = art.colorIntensity ?? 'balanced'
   const selectedSolid = SOLID_PRESETS.find((preset) => !art.paletteFamily
@@ -273,12 +275,20 @@ const ArtDirectionPanel: React.FC<ArtDirectionPanelProps> = ({ noScrollVariant =
 
   return (
     <section aria-labelledby="live-editor-title" className={`rounded-2xl border border-slate-800 bg-slate-900/70 shadow-2xl shadow-black/20 ${noScrollVariant ? 'p-2' : 'p-3 sm:p-4'}`}>
-      <div className={`${noScrollVariant ? 'mb-1' : 'mb-2'} flex items-center justify-between`}>
+      <div className={`${noScrollVariant ? 'mb-1' : 'mb-2'} flex items-center justify-between gap-2`}>
         <h2 id="live-editor-title" className="text-sm font-semibold text-slate-100">Design your QR</h2>
+        <div role="group" aria-label="Art level" className="grid grid-cols-2 rounded-lg bg-slate-950 p-1">
+          <button type="button" aria-pressed={!templateArtSelected} onClick={() => setTemplateArtLevel('basic')}
+            className={`rounded-md px-2 py-1 text-[10px] font-bold ${!templateArtSelected ? 'bg-slate-700 text-white' : 'text-slate-500'}`}>Basic QR</button>
+          <button type="button" aria-pressed={templateArtSelected} onClick={() => setTemplateArtLevel('template-art')}
+            className={`rounded-md px-2 py-1 text-[10px] font-bold ${templateArtSelected ? 'bg-sky-600 text-white' : 'text-slate-400'}`}>Template Art</button>
+        </div>
         <span className="inline-flex items-center gap-1 rounded-full bg-emerald-950/50 px-2 py-1 text-[10px] font-medium text-emerald-300">
           <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" /> Live
         </span>
       </div>
+
+      {templateArtSelected && <div className="mb-3"><TemplateArtControls /></div>}
 
       <div className={`grid items-start lg:grid-cols-[minmax(0,1fr)_344px] ${noScrollVariant ? 'gap-1' : 'gap-3'}`}>
         <div className={`order-2 min-w-0 lg:order-1 ${noScrollVariant ? 'space-y-1' : 'space-y-2.5'}`}>
