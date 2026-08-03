@@ -52,6 +52,29 @@ describe('App integration', () => {
     expect(screen.getAllByRole('tablist', { name: 'Design control families' })).toHaveLength(1)
   })
 
+  it('keeps the QR preview zone stable and swaps the lower Basic controls to Creator Signature controls in Template Art', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    expect(screen.getByTestId('studio-app')).toHaveAttribute('data-ux-variant', 'no-scroll')
+    const previewZone = screen.getByTestId('qr-side-controls')
+    expect(previewZone).toContainElement(screen.getByRole('img', { name: 'QR Preview' }))
+    expect(previewZone).toContainElement(screen.getByRole('group', { name: 'QR size' }))
+    expect(previewZone).toContainElement(screen.getByRole('group', { name: 'Intensity' }))
+    expect(screen.getByRole('tablist', { name: 'Design control families' })).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Template Art' }))
+
+    expect(screen.getByTestId('studio-app')).toHaveAttribute('data-ux-variant', 'no-scroll')
+    expect(screen.getByTestId('qr-side-controls')).toContainElement(screen.getByRole('img', { name: 'QR Preview' }))
+    expect(screen.getByTestId('qr-side-controls')).toContainElement(screen.getByRole('group', { name: 'QR size' }))
+    expect(screen.getByTestId('qr-side-controls')).toContainElement(screen.getByRole('group', { name: 'Intensity' }))
+    const lowerControls = screen.getByTestId('lower-design-controls')
+    expect(lowerControls).toContainElement(screen.getByRole('heading', { name: 'Creator Signature' }))
+    expect(lowerControls).toContainElement(screen.getByRole('textbox', { name: 'Signature text' }))
+    expect(screen.queryByRole('tablist', { name: 'Design control families' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('listbox', { name: 'Body Color' })).not.toBeInTheDocument()
+  })
+
   it('uses accessible Core-backed Body Color, Corner Color, Style, Corners, and Eyes choices', async () => {
     const user = userEvent.setup()
     render(<App />)
