@@ -49,10 +49,21 @@ describe('Creator Signature template contract', () => {
     expect(bounded).toContain('lengthAdjust="spacingAndGlyphs"')
     const empty = composeCreatorSignatureSvg(qr, { signatureText: 'Creator', handleText: 'Handle', ctaText: '' })
     expect(empty).not.toContain('SCAN TO CONNECT')
+    expect(empty).not.toContain('Scan to connect')
     expect(empty).toContain('data-signature-position="bottom-right-outside"')
   })
 
-  it.each(CREATOR_SIGNATURE_POSITIONS)('$value keeps its label slot attached to the QR card and outside the active QR', ({ value }) => {
+  it('uses the Basic QR render as the full canvas instead of an independent template card', () => {
+    const svg = composeCreatorSignatureSvg(qr, { signatureText: 'Creator', handleText: 'Handle', ctaText: '', signaturePosition: 'bottom-right-outside' })
+    expect(svg).toContain('data-template-layer="creator-signature"')
+    expect(svg).toContain('data-qr-active-zone="0,0,720,720"')
+    expect(svg).toContain('data-qr-card-zone="0,0,720,720"')
+    expect(svg).not.toContain('id="cs-bg"')
+    expect(svg).not.toContain('stroke="#38bdf8"')
+    expect(svg).not.toContain('data-qr-card-zone="96,41,528,620"')
+  })
+
+  it.each(CREATOR_SIGNATURE_POSITIONS)('keeps %s label slots outside active QR modules and near the QR card', ({ value }) => {
     const { qrImage, qrContent, qrCard, labelSlot } = creatorSignatureGeometry(value)
     const overlaps = (a: typeof qrImage, b: typeof qrImage) =>
       a.x < b.x + b.width && a.x + a.width > b.x && a.y < b.y + b.height && a.y + a.height > b.y
