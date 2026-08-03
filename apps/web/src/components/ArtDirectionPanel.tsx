@@ -174,6 +174,7 @@ const SELECTOR_CHECK = 'absolute right-1 top-1 flex h-4 w-4 items-center justify
 const SELECTOR_SCROLL_ROW = 'selector-scroll-row flex snap-x gap-2 overflow-x-auto pb-3'
 
 type ControlFamily = 'body-color' | 'corner-color' | 'style' | 'corners' | 'eyes'
+type SettingsPanel = 'basic' | 'creator-signature'
 const CONTROL_FAMILIES: ReadonlyArray<{ family: ControlFamily; label: string; glyph: string }> = [
   { family: 'body-color', label: 'Body Color', glyph: '●' },
   { family: 'corner-color', label: 'Corner Color', glyph: '◉' },
@@ -248,8 +249,8 @@ interface ArtDirectionPanelProps {
 const ArtDirectionPanel: React.FC<ArtDirectionPanelProps> = ({ noScrollVariant = false }) => {
   const { project, setArtDirection, setTemplateArtLevel } = useStudioStore()
   const [activeFamily, setActiveFamily] = React.useState<ControlFamily>('body-color')
+  const [activeSettingsPanel, setActiveSettingsPanel] = React.useState<SettingsPanel>('basic')
   const art = project.artDirection
-  const templateArtSelected = project.templateArtLevel === 'template-art'
   const update = (patch: Partial<ArtDirection>) => setArtDirection({ ...art, ...patch })
   const intensity = art.colorIntensity ?? 'balanced'
   const selectedSolid = SOLID_PRESETS.find((preset) => !art.paletteFamily
@@ -277,11 +278,11 @@ const ArtDirectionPanel: React.FC<ArtDirectionPanelProps> = ({ noScrollVariant =
     <section aria-labelledby="live-editor-title" className={`rounded-2xl border border-slate-800 bg-slate-900/70 shadow-2xl shadow-black/20 ${noScrollVariant ? 'p-2' : 'p-3 sm:p-4'}`}>
       <div className={`${noScrollVariant ? 'mb-1' : 'mb-2'} flex items-center justify-between gap-2`}>
         <h2 id="live-editor-title" className="text-sm font-semibold text-slate-100">Design your QR</h2>
-        <div role="group" aria-label="Art level" className="grid grid-cols-2 rounded-lg bg-slate-950 p-1">
-          <button type="button" aria-pressed={!templateArtSelected} onClick={() => setTemplateArtLevel('basic')}
-            className={`rounded-md px-2 py-1 text-[10px] font-bold ${!templateArtSelected ? 'bg-slate-700 text-white' : 'text-slate-500'}`}>Basic QR</button>
-          <button type="button" aria-pressed={templateArtSelected} onClick={() => setTemplateArtLevel('template-art')}
-            className={`rounded-md px-2 py-1 text-[10px] font-bold ${templateArtSelected ? 'bg-sky-600 text-white' : 'text-slate-400'}`}>Template Art</button>
+        <div role="group" aria-label="Settings panel" className="grid grid-cols-2 rounded-lg bg-slate-950 p-1">
+          <button type="button" aria-pressed={activeSettingsPanel === 'basic'} onClick={() => setActiveSettingsPanel('basic')}
+            className={`rounded-md px-2 py-1 text-[10px] font-bold ${activeSettingsPanel === 'basic' ? 'bg-slate-700 text-white' : 'text-slate-500'}`}>Basic QR Settings</button>
+          <button type="button" aria-pressed={activeSettingsPanel === 'creator-signature'} onClick={() => { setTemplateArtLevel('template-art'); setActiveSettingsPanel('creator-signature') }}
+            className={`rounded-md px-2 py-1 text-[10px] font-bold ${activeSettingsPanel === 'creator-signature' ? 'bg-sky-600 text-white' : 'text-slate-400'}`}>Creator Signature</button>
         </div>
         <span className="inline-flex items-center gap-1 rounded-full bg-emerald-950/50 px-2 py-1 text-[10px] font-medium text-emerald-300">
           <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" /> Live
@@ -290,7 +291,7 @@ const ArtDirectionPanel: React.FC<ArtDirectionPanelProps> = ({ noScrollVariant =
 
       <div className={`grid items-start lg:grid-cols-[minmax(0,1fr)_344px] ${noScrollVariant ? 'gap-1' : 'gap-3'}`}>
         <div className={`order-2 min-w-0 lg:order-1 ${noScrollVariant ? 'space-y-1' : 'space-y-2.5'}`} data-testid="lower-design-controls">
-          {templateArtSelected ? <TemplateArtControls compact={noScrollVariant} /> : <>
+          {activeSettingsPanel === 'creator-signature' ? <TemplateArtControls compact={noScrollVariant} /> : <>
           {noScrollVariant && <div role="tablist" aria-label="Design control families" className="grid grid-cols-5 gap-1 rounded-xl bg-slate-950 p-1">
             {CONTROL_FAMILIES.map(({ family, label, glyph }) => {
               const selected = activeFamily === family

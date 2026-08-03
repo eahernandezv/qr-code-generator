@@ -52,20 +52,25 @@ describe('App integration', () => {
     expect(screen.getAllByRole('tablist', { name: 'Design control families' })).toHaveLength(1)
   })
 
-  it('keeps the QR preview zone stable and swaps the lower Basic controls to Creator Signature controls in Template Art', async () => {
+  it('toggles between Basic QR settings and Creator Signature settings while keeping one shared QR canvas', async () => {
     const user = userEvent.setup()
     render(<App />)
     expect(screen.getByTestId('studio-app')).toHaveAttribute('data-ux-variant', 'no-scroll')
     const previewZone = screen.getByTestId('qr-side-controls')
-    expect(previewZone).toContainElement(screen.getByRole('img', { name: 'QR Preview' }))
+    const preview = screen.getByRole('img', { name: 'QR Preview' })
+    expect(preview).toHaveAttribute('data-art-level', 'basic')
+    expect(previewZone).toContainElement(preview)
     expect(previewZone).toContainElement(screen.getByRole('group', { name: 'QR size' }))
     expect(previewZone).toContainElement(screen.getByRole('group', { name: 'Intensity' }))
+    expect(screen.getByRole('group', { name: 'Settings panel' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Basic QR Settings' })).toHaveAttribute('aria-pressed', 'true')
     expect(screen.getByRole('tablist', { name: 'Design control families' })).toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: 'Template Art' }))
+    await user.click(screen.getByRole('button', { name: 'Creator Signature' }))
 
+    expect(preview).toHaveAttribute('data-art-level', 'template-art')
     expect(screen.getByTestId('studio-app')).toHaveAttribute('data-ux-variant', 'no-scroll')
-    expect(screen.getByTestId('qr-side-controls')).toContainElement(screen.getByRole('img', { name: 'QR Preview' }))
+    expect(screen.getByTestId('qr-side-controls')).toContainElement(preview)
     expect(screen.getByTestId('qr-side-controls')).toContainElement(screen.getByRole('group', { name: 'QR size' }))
     expect(screen.getByTestId('qr-side-controls')).toContainElement(screen.getByRole('group', { name: 'Intensity' }))
     const lowerControls = screen.getByTestId('lower-design-controls')
@@ -73,6 +78,13 @@ describe('App integration', () => {
     expect(lowerControls).toContainElement(screen.getByRole('textbox', { name: 'Signature text' }))
     expect(screen.queryByRole('tablist', { name: 'Design control families' })).not.toBeInTheDocument()
     expect(screen.queryByRole('listbox', { name: 'Body Color' })).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Basic QR Settings' }))
+
+    expect(screen.getByRole('button', { name: 'Basic QR Settings' })).toHaveAttribute('aria-pressed', 'true')
+    expect(preview).toHaveAttribute('data-art-level', 'template-art')
+    expect(screen.getByRole('tablist', { name: 'Design control families' })).toBeInTheDocument()
+    expect(screen.getByRole('listbox', { name: 'Body Color' })).toBeInTheDocument()
   })
 
   it('uses accessible Core-backed Body Color, Corner Color, Style, Corners, and Eyes choices', async () => {
