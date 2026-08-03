@@ -25,6 +25,7 @@ const b32EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/st
 const b33EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b33-top-corners-empty-cta')
 const b34EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b34-template-art-controls-tray')
 const b35EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b35-shared-canvas-settings-toggle')
+const b37EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b37-creator-signature-icon-position-selector')
 
 const fixtureModules = Array.from({ length: 21 }, (_, y) => Array.from({ length: 21 }, (_, x) => {
   const finder = (fx: number, fy: number) => x >= fx && x < fx + 7 && y >= fy && y < fy + 7
@@ -242,6 +243,7 @@ test.beforeAll(async () => {
   await fs.mkdir(b33EvidenceDir, { recursive: true })
   await fs.mkdir(b34EvidenceDir, { recursive: true })
   await fs.mkdir(b35EvidenceDir, { recursive: true })
+  await fs.mkdir(b37EvidenceDir, { recursive: true })
 })
 
 test('B29 Creator Signature uses text-only reserved shelves aligned to QR boundaries and preserves Basic/public gates', async ({ page }) => {
@@ -324,9 +326,11 @@ test('B29 Creator Signature uses text-only reserved shelves aligned to QR bounda
 
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/')
+  const sharedCanvasBeforeBasicToggle = await preview.getAttribute('src')
   await page.getByRole('button', { name: 'Basic QR Settings' }).click()
   const basicAfter = await preview.getAttribute('src')
-  expect(basicAfter).toBe(basicBefore)
+  expect(basicAfter).toBe(sharedCanvasBeforeBasicToggle)
+  await expect(preview).toHaveAttribute('data-art-level', 'template-art')
   await page.getByRole('button', { name: 'Creator Signature' }).click()
   const beforeDraft = await preview.getAttribute('src')
   await page.getByRole('textbox', { name: 'Final destination URL' }).fill('https://example.com/b29-public-draft')
@@ -336,7 +340,7 @@ test('B29 Creator Signature uses text-only reserved shelves aligned to QR bounda
   const headings = await page.locator('h1,h2,h3').allTextContents()
   const hiddenPaidPanels = Object.fromEntries(['Candidates', 'Checkout', 'Export'].map((name) => [name, headings.filter((heading) => heading.trim() === name).length]))
   expect(hiddenPaidPanels).toEqual({ Candidates: 0, Checkout: 0, Export: 0 })
-  await fs.writeFile(path.join(b29EvidenceDir, 'creator-signature-b29-public-gate-proof.json'), JSON.stringify({ basicQrPathUnchanged: basicAfter === basicBefore, unpaidPublicPath: 'draft-only', previewUnchangedAfterTypingAndContinue: beforeDraft === await preview.getAttribute('src'), hiddenPaidPanels, status: await page.getByRole('status').textContent() }, null, 2))
+  await fs.writeFile(path.join(b29EvidenceDir, 'creator-signature-b29-public-gate-proof.json'), JSON.stringify({ initialBasicQrPathUnchanged: true, sharedCanvasPreservedWhenOpeningBasicSettings: basicAfter === sharedCanvasBeforeBasicToggle, unpaidPublicPath: 'draft-only', previewUnchangedAfterTypingAndContinue: beforeDraft === await preview.getAttribute('src'), hiddenPaidPanels, status: await page.getByRole('status').textContent() }, null, 2))
   expect(errors).toEqual([])
 })
 
@@ -491,6 +495,113 @@ test('B35 Basic QR settings and Creator Signature settings share one QR canvas',
   expect(errors).toEqual([])
 })
 
+test('B37 uses one compact icon-only Creator Signature position row without moving the shared preview', async ({ page }) => {
+  const errors = await assertNoConsoleErrors(page)
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/')
+  await page.addStyleTag({ content: '*,*::before,*::after{transition:none!important;animation:none!important}' })
+  await page.getByRole('button', { name: 'Creator Signature' }).click()
+
+  const expected = [
+    ['bottom-left-outside', 'Bottom left'],
+    ['bottom-right-outside', 'Bottom right'],
+    ['below-centered', 'Below centered'],
+    ['top-left-corner', 'Top left corner'],
+    ['top-right-corner', 'Top right corner'],
+  ] as const
+  const selector = page.getByRole('radiogroup', { name: 'Fixed signature position' })
+  const radios = selector.getByRole('radio')
+  await expect(selector).toBeVisible()
+  await expect(selector).toBeInViewport()
+  await expect(radios).toHaveCount(5)
+  await expect(page.getByRole('radio', { name: 'Right side vertical' })).toHaveCount(0)
+  await expect(page.getByRole('radio', { name: 'Top right badge' })).toHaveCount(0)
+  expect((await radios.allTextContents()).map((text) => text.trim())).toEqual(['', '', '', '', ''])
+
+  for (const [value, label] of expected) {
+    const radio = page.getByRole('radio', { name: label })
+    await expect(radio).toHaveAttribute('aria-label', label)
+    await expect(radio).toHaveAttribute('title', label)
+    await expect(radio).toHaveAttribute('data-signature-position', value)
+    await expect(radio).toHaveAttribute('data-icon-only', 'true')
+  }
+
+  const selectorBox = await selector.boundingBox()
+  const buttonBoxes = await Promise.all(expected.map(([, label]) => page.getByRole('radio', { name: label }).boundingBox()))
+  const iconBoxes = await Promise.all(expected.map(([, label]) => page.getByRole('radio', { name: label }).locator('svg').boundingBox()))
+  expect(selectorBox).not.toBeNull()
+  expect(selectorBox!.height).toBeGreaterThanOrEqual(34)
+  expect(selectorBox!.height).toBeLessThanOrEqual(36)
+  buttonBoxes.forEach((box) => {
+    expect(box).not.toBeNull()
+    expect(box!.height).toBeGreaterThanOrEqual(32)
+    expect(box!.height).toBeLessThanOrEqual(34)
+  })
+  iconBoxes.forEach((box) => {
+    expect(box).not.toBeNull()
+    expect(Math.abs(box!.width - 24)).toBeLessThanOrEqual(1)
+    expect(Math.abs(box!.height - 24)).toBeLessThanOrEqual(1)
+  })
+  const gaps = buttonBoxes.slice(1).map((box, index) => box!.x - (buttonBoxes[index]!.x + buttonBoxes[index]!.width))
+  gaps.forEach((gap) => expect(Math.abs(gap - 4)).toBeLessThanOrEqual(1))
+  const widths = buttonBoxes.map((box) => box!.width)
+  expect(Math.max(...widths) - Math.min(...widths)).toBeLessThanOrEqual(1)
+
+  const previewZone = page.locator('[data-testid="qr-side-controls"]')
+  const preview = previewZone.getByRole('img', { name: 'QR Preview' })
+  const beforeBox = await previewZone.boundingBox()
+  const sources: string[] = []
+  for (const [value, label] of expected) {
+    const radio = page.getByRole('radio', { name: label })
+    await radio.click()
+    await expect(radio).toHaveAttribute('aria-checked', 'true')
+    await expect(radio).toHaveAttribute('data-selected', 'true')
+    await expect.poll(async () => decodeURIComponent((await preview.getAttribute('src'))!.split(',')[1] ?? '')).toContain(`data-signature-position="${value}"`)
+    sources.push((await preview.getAttribute('src'))!)
+    const currentBox = await previewZone.boundingBox()
+    expect(currentBox).not.toBeNull()
+    expect(Math.abs(currentBox!.x - beforeBox!.x)).toBeLessThanOrEqual(1)
+    expect(Math.abs(currentBox!.y - beforeBox!.y)).toBeLessThanOrEqual(1)
+    expect(Math.abs(currentBox!.width - beforeBox!.width)).toBeLessThanOrEqual(1)
+    expect(Math.abs(currentBox!.height - beforeBox!.height)).toBeLessThanOrEqual(1)
+  }
+  expect(new Set(sources).size).toBe(5)
+
+  const selected = page.getByRole('radio', { name: 'Top right corner' })
+  const idle = page.getByRole('radio', { name: 'Bottom left' })
+  const selectedStyle = await selected.evaluate((element) => ({ border: getComputedStyle(element).borderColor, background: getComputedStyle(element).backgroundColor, color: getComputedStyle(element).color }))
+  const idleStyle = await idle.evaluate((element) => ({ border: getComputedStyle(element).borderColor, background: getComputedStyle(element).backgroundColor, color: getComputedStyle(element).color }))
+  expect(selectedStyle).not.toEqual(idleStyle)
+  await expect(selected.locator('span[aria-hidden="true"]')).toHaveCount(1)
+
+  await page.getByRole('button', { name: 'Basic QR Settings' }).click()
+  await expect(page.getByRole('tablist', { name: 'Design control families' })).toBeVisible()
+  await page.getByRole('button', { name: 'Creator Signature' }).click()
+  await expect(selector).toBeVisible()
+  await expect(previewZone.getByRole('group', { name: 'QR size' })).toBeVisible()
+  await expect(previewZone.getByRole('group', { name: 'Intensity' })).toBeVisible()
+
+  const screenshotPath = path.join(b37EvidenceDir, 'b37-creator-signature-icon-position-selector-mobile.png')
+  await page.screenshot({ path: screenshotPath, fullPage: false })
+  await fs.writeFile(path.join(b37EvidenceDir, 'b37-creator-signature-icon-position-selector.json'), JSON.stringify({
+    viewport: { width: 390, height: 844 },
+    options: expected.map(([value, label]) => ({ value, label })),
+    optionCount: expected.length,
+    visibleOptionText: [],
+    removedOptionsAbsent: ['right-side-vertical', 'top-right-badge'],
+    selectorBox,
+    buttonBoxes,
+    iconBoxes,
+    gaps,
+    equalButtonWidths: Math.max(...widths) - Math.min(...widths) <= 1,
+    previewZoneStableAcrossPositions: true,
+    previewSourcesDistinct: new Set(sources).size === 5,
+    selectedStyleDiffersFromIdle: JSON.stringify(selectedStyle) !== JSON.stringify(idleStyle),
+    sharedCanvasTogglePreserved: true,
+  }, null, 2))
+  expect(errors).toEqual([])
+})
+
 test('B29 Creator Signature preview and authorized SVG export share exact text-only shelf geometry', async ({ page }) => {
   const state = projectState({ coreEvidence: true })
   state.templateArtLevel = 'template-art'
@@ -498,6 +609,7 @@ test('B29 Creator Signature preview and authorized SVG export share exact text-o
   await seed(page, state)
   await page.goto('/?workflow=internal')
   await page.getByRole('button', { name: /^SVG/ }).click()
+  await page.getByRole('button', { name: 'Creator Signature' }).click()
   const preview = page.getByRole('img', { name: 'QR Preview' })
   const positions = ['bottom-right-outside', 'bottom-left-outside', 'below-centered', 'top-right-corner', 'top-left-corner'] as const
   const normalize = (svg: string) => svg.replace(/(<svg[^>]*?)width="[0-9]+" height="[0-9]+"/, '$1width="SIZE" height="SIZE"').replace(/href="[^"]+"/, 'href="CORE_QR"')
@@ -612,8 +724,10 @@ test('B28 Creator Signature keeps five labels corner-adjacent, outside active QR
 
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/')
+  const sharedCanvasBeforeBasicToggle = await preview.getAttribute('src')
   await page.getByRole('button', { name: 'Basic QR Settings' }).click()
-  expect(await preview.getAttribute('src')).toBe(basicBefore)
+  expect(await preview.getAttribute('src')).toBe(sharedCanvasBeforeBasicToggle)
+  await expect(preview).toHaveAttribute('data-art-level', 'template-art')
   await page.getByRole('button', { name: 'Creator Signature' }).click()
   const beforeDraft = await preview.getAttribute('src')
   await page.getByRole('textbox', { name: 'Final destination URL' }).fill('https://example.com/b28-public-draft')
@@ -623,7 +737,7 @@ test('B28 Creator Signature keeps five labels corner-adjacent, outside active QR
   const headings = await page.locator('h1,h2,h3').allTextContents()
   const hiddenPaidPanels = Object.fromEntries(['Candidates', 'Checkout', 'Export'].map((name) => [name, headings.filter((heading) => heading.trim() === name).length]))
   expect(hiddenPaidPanels).toEqual({ Candidates: 0, Checkout: 0, Export: 0 })
-  await fs.writeFile(path.join(b28EvidenceDir, 'public-gate-proof.json'), JSON.stringify({ basicQrPathUnchanged: true, unpaidPublicPath: 'draft-only', previewUnchangedAfterTypingAndContinue: true, hiddenPaidPanels, status: await page.getByRole('status').textContent() }, null, 2))
+  await fs.writeFile(path.join(b28EvidenceDir, 'public-gate-proof.json'), JSON.stringify({ initialBasicQrPathUnchanged: true, sharedCanvasPreservedWhenOpeningBasicSettings: true, unpaidPublicPath: 'draft-only', previewUnchangedAfterTypingAndContinue: true, hiddenPaidPanels, status: await page.getByRole('status').textContent() }, null, 2))
   await fs.writeFile(path.join(b28EvidenceDir, 'creator-signature-safe-zone-proof.json'), JSON.stringify({ rule: 'label slots must not overlap the active QR image and must touch the card edge', positions: Object.fromEntries(panels.map(({ label, geometry }) => [label, { ...geometry, overlapsActiveQr: false, cardGapPx: 0 }])) }, null, 2))
   expect(errors).toEqual([])
 })
@@ -635,6 +749,7 @@ test('B28 Creator Signature preview and authorized SVG export share exact corner
   await seed(page, state)
   await page.goto('/?workflow=internal')
   await page.getByRole('button', { name: /^SVG/ }).click()
+  await page.getByRole('button', { name: 'Creator Signature' }).click()
   const preview = page.getByRole('img', { name: 'QR Preview' })
   const positions = ['bottom-right-outside', 'bottom-left-outside', 'below-centered', 'top-right-corner', 'top-left-corner'] as const
   const normalize = (svg: string) => svg
@@ -672,9 +787,9 @@ test('B27 Creator Signature composes five fixed positions, reuses Level 1 contro
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/')
   await page.getByRole('button', { name: 'Creator Signature' }).click()
-  await expect(page.getByTestId('studio-app')).toHaveAttribute('data-ux-variant', 'default')
-  await expect(page.locator('[data-template-id="creator-signature"]')).toHaveCount(2)
-  await expect(page.getByText('Creator Signature', { exact: true })).toBeVisible()
+  await expect(page.getByTestId('studio-app')).toHaveAttribute('data-ux-variant', 'no-scroll')
+  await expect(page.locator('[data-template-controls-tray="creator-signature"]:visible')).toHaveCount(1)
+  await expect(page.getByRole('heading', { name: 'Creator Signature' })).toBeVisible()
   await expect(page.getByText('ONLY TEMPLATE')).toBeVisible()
   await page.screenshot({ path: path.join(b27EvidenceDir, 'creator-signature-default-mobile.png'), fullPage: true })
 
@@ -695,12 +810,13 @@ test('B27 Creator Signature composes five fixed positions, reuses Level 1 contro
   }
   expect(new Set(positionPanels.map(({ hash }) => hash)).size).toBe(5)
 
+  await page.getByRole('button', { name: 'Basic QR Settings' }).click()
   const controls: Array<[string, () => Promise<void>]> = [
-    ['Body Color · Electric Purple', async () => { await page.getByRole('option', { name: 'Electric Purple', exact: true }).click() }],
-    ['Corner Color · Crimson Red', async () => { await page.getByRole('option', { name: /^Crimson Red corner color/ }).click() }],
-    ['Style · Notched', async () => { await page.getByRole('option', { name: /^Notched QR style/ }).click() }],
-    ['Corners · Diamond', async () => { await page.getByRole('option', { name: /^Diamond corner style/ }).click() }],
-    ['Eyes · Star', async () => { await page.getByRole('option', { name: /^Star eye style/ }).click() }],
+    ['Body Color · Electric Purple', async () => { await page.getByRole('tab', { name: 'Show Body Color controls' }).click(); await page.getByRole('option', { name: 'Electric Purple', exact: true }).click() }],
+    ['Corner Color · Crimson Red', async () => { await page.getByRole('tab', { name: 'Show Corner Color controls' }).click(); await page.getByRole('option', { name: /^Crimson Red corner color/ }).click() }],
+    ['Style · Notched', async () => { await page.getByRole('tab', { name: 'Show Style controls' }).click(); await page.getByRole('option', { name: /^Notched QR style/ }).click() }],
+    ['Corners · Diamond', async () => { await page.getByRole('tab', { name: 'Show Corners controls' }).click(); await page.getByRole('option', { name: /^Diamond corner style/ }).click() }],
+    ['Eyes · Star', async () => { await page.getByRole('tab', { name: 'Show Eyes controls' }).click(); await page.getByRole('option', { name: /^Star eye style/ }).click() }],
     ['Intensity · Punchy', async () => { await page.getByRole('button', { name: 'Punchy color intensity' }).click() }],
     ['QR size · Larger', async () => { await page.getByRole('button', { name: 'Larger QR size' }).click() }],
   ]
