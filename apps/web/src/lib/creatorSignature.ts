@@ -34,8 +34,19 @@ export interface CreatorSignatureRect {
 
 export interface CreatorSignatureGeometry {
   qrImage: CreatorSignatureRect
+  qrContent: CreatorSignatureRect
   qrCard: CreatorSignatureRect
   labelSlot: CreatorSignatureRect
+}
+
+function visibleQrContent(qrImage: CreatorSignatureRect): CreatorSignatureRect {
+  const inset = Math.round(qrImage.width * 0.146)
+  return {
+    x: qrImage.x + inset,
+    y: qrImage.y + inset,
+    width: qrImage.width - inset * 2,
+    height: qrImage.height - inset * 2,
+  }
 }
 
 export function creatorSignatureGeometry(position: CreatorSignaturePosition): CreatorSignatureGeometry {
@@ -44,21 +55,22 @@ export function creatorSignatureGeometry(position: CreatorSignaturePosition): Cr
     : position === 'top-right-badge'
       ? { x: 125, y: 154, width: 470, height: 470 }
       : { x: 110, y: 55, width: 500, height: 500 }
+  const qrContent = visibleQrContent(qrImage)
   const qrCard = position === 'right-side-vertical'
     ? { x: 51, y: 96, width: 568, height: 468 }
     : position === 'top-right-badge'
       ? { x: 111, y: 48, width: 498, height: 590 }
       : { x: 96, y: 41, width: 528, height: 620 }
   const labelSlot = position === 'bottom-left-outside'
-    ? { x: qrImage.x, y: qrImage.y + qrImage.height, width: 260, height: 92 }
+    ? { x: qrContent.x, y: qrImage.y + qrImage.height, width: 260, height: 92 }
     : position === 'below-centered'
-      ? { x: 155, y: qrImage.y + qrImage.height, width: 410, height: 92 }
+      ? { x: qrContent.x, y: qrImage.y + qrImage.height, width: qrContent.width, height: 92 }
       : position === 'right-side-vertical'
         ? { x: qrImage.x + qrImage.width, y: qrImage.y, width: 100, height: qrImage.height }
         : position === 'top-right-badge'
-          ? { x: qrImage.x + qrImage.width - 260, y: 62, width: 260, height: 78 }
-          : { x: qrImage.x + qrImage.width - 260, y: qrImage.y + qrImage.height, width: 260, height: 92 }
-  return { qrImage, qrCard, labelSlot }
+          ? { x: qrContent.x + qrContent.width - 260, y: 62, width: 260, height: 78 }
+          : { x: qrContent.x + qrContent.width - 260, y: qrImage.y + qrImage.height, width: 260, height: 92 }
+  return { qrImage, qrContent, qrCard, labelSlot }
 }
 
 function textLayer(fields: CreatorSignatureTemplateFields, geometry: CreatorSignatureGeometry): string {
@@ -89,11 +101,11 @@ function textLayer(fields: CreatorSignatureTemplateFields, geometry: CreatorSign
   const reservedShelf = `<rect data-signature-reserved-shelf="true" x="${labelSlot.x}" y="${labelSlot.y}" width="${labelSlot.width}" height="${labelSlot.height}" fill="none" stroke="none" aria-hidden="true"/>`
 
   const shelfTextY = geometry.qrImage.y + geometry.qrImage.height + 24
-  if (position === 'bottom-left-outside') return `${reservedShelf}${lines('start', geometry.qrImage.x, shelfTextY)}`
-  if (position === 'below-centered') return `${reservedShelf}${lines('middle', 360, shelfTextY, { maxWidth: 380 })}`
+  if (position === 'bottom-left-outside') return `${reservedShelf}${lines('start', geometry.qrContent.x, shelfTextY)}`
+  if (position === 'below-centered') return `${reservedShelf}${lines('middle', geometry.qrContent.x + geometry.qrContent.width / 2, shelfTextY, { maxWidth: geometry.qrContent.width })}`
   if (position === 'right-side-vertical') return `${reservedShelf}<g transform="translate(538 330) rotate(90)">${lines('middle', 0, 0, { maxWidth: 400 })}</g>`
-  if (position === 'top-right-badge') return `${reservedShelf}${lines('end', geometry.qrImage.x + geometry.qrImage.width, 82)}`
-  return `${reservedShelf}${lines('end', geometry.qrImage.x + geometry.qrImage.width, shelfTextY)}`
+  if (position === 'top-right-badge') return `${reservedShelf}${lines('end', geometry.qrContent.x + geometry.qrContent.width, 82)}`
+  return `${reservedShelf}${lines('end', geometry.qrContent.x + geometry.qrContent.width, shelfTextY)}`
 }
 
 export function composeCreatorSignatureSvg(
@@ -105,7 +117,7 @@ export function composeCreatorSignatureSvg(
   const height = options.height ?? 720
   const position = fields.signaturePosition ?? 'bottom-right-outside'
   const geometry = creatorSignatureGeometry(position)
-  const { qrImage, qrCard, labelSlot } = geometry
+  const { qrImage, qrContent, qrCard, labelSlot } = geometry
   const safeQrSource = escapeXml(qrSource)
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 720 720" role="img" aria-label="Creator Signature Template Art QR">
   <defs><linearGradient id="cs-bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#020617"/><stop offset="1" stop-color="#111827"/></linearGradient></defs>
@@ -113,7 +125,7 @@ export function composeCreatorSignatureSvg(
   <path d="M42 82V42h40 M638 42h40v40 M42 638v40h40 M638 678h40v-40" fill="none" stroke="#38bdf8" stroke-width="3" stroke-linecap="round" opacity=".8"/>
   <circle cx="660" cy="660" r="80" fill="#2563eb" opacity=".08"/><circle cx="54" cy="55" r="42" fill="#38bdf8" opacity=".06"/>
   <rect data-qr-card-zone="${qrCard.x},${qrCard.y},${qrCard.width},${qrCard.height}" x="${qrCard.x}" y="${qrCard.y}" width="${qrCard.width}" height="${qrCard.height}" rx="26" fill="#fff" stroke="#cbd5e1" stroke-width="2"/>
-  <image data-qr-active-zone="${qrImage.x},${qrImage.y},${qrImage.width},${qrImage.height}" href="${safeQrSource}" x="${qrImage.x}" y="${qrImage.y}" width="${qrImage.width}" height="${qrImage.height}" preserveAspectRatio="xMidYMid meet"/>
+  <image data-qr-active-zone="${qrImage.x},${qrImage.y},${qrImage.width},${qrImage.height}" data-qr-content-zone="${qrContent.x},${qrContent.y},${qrContent.width},${qrContent.height}" href="${safeQrSource}" x="${qrImage.x}" y="${qrImage.y}" width="${qrImage.width}" height="${qrImage.height}" preserveAspectRatio="xMidYMid meet"/>
   <g data-template-layer="creator-signature" data-signature-position="${position}" data-signature-slot="${labelSlot.x},${labelSlot.y},${labelSlot.width},${labelSlot.height}">${textLayer(fields, geometry)}</g>
 </svg>`
 }
