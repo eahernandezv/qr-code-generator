@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   composeCreatorSignatureSvg,
+  creatorSignatureGeometry,
   CREATOR_SIGNATURE_POSITIONS,
   DEFAULT_CREATOR_SIGNATURE,
 } from './creatorSignature'
@@ -42,5 +43,19 @@ describe('Creator Signature template contract', () => {
     const empty = composeCreatorSignatureSvg(qr, {})
     expect(empty).toContain('SCAN TO CONNECT')
     expect(empty).toContain('data-signature-position="bottom-right-outside"')
+  })
+
+  it.each(CREATOR_SIGNATURE_POSITIONS)('$value keeps its label slot attached to the QR card and outside the active QR', ({ value }) => {
+    const { qrImage, qrCard, labelSlot } = creatorSignatureGeometry(value)
+    const overlaps = (a: typeof qrImage, b: typeof qrImage) =>
+      a.x < b.x + b.width && a.x + a.width > b.x && a.y < b.y + b.height && a.y + a.height > b.y
+    const gapX = Math.max(qrCard.x - (labelSlot.x + labelSlot.width), labelSlot.x - (qrCard.x + qrCard.width), 0)
+    const gapY = Math.max(qrCard.y - (labelSlot.y + labelSlot.height), labelSlot.y - (qrCard.y + qrCard.height), 0)
+
+    expect(overlaps(labelSlot, qrImage)).toBe(false)
+    expect(Math.hypot(gapX, gapY)).toBeLessThanOrEqual(1)
+    expect(composeCreatorSignatureSvg(qr, { signaturePosition: value })).toContain(
+      `data-signature-slot="${labelSlot.x},${labelSlot.y},${labelSlot.width},${labelSlot.height}"`,
+    )
   })
 })

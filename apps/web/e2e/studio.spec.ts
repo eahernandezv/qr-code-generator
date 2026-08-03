@@ -19,6 +19,7 @@ const b24EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/st
 const b25bEvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b25b-body-corner-color-ui')
 const b26bEvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b26b-expose-qrio-shapes')
 const b27EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b27-creator-signature-template')
+const b28EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b28-creator-signature-corner-adjacent-polish')
 
 const fixtureModules = Array.from({ length: 21 }, (_, y) => Array.from({ length: 21 }, (_, x) => {
   const finder = (fx: number, fy: number) => x >= fx && x < fx + 7 && y >= fy && y < fy + 7
@@ -230,6 +231,147 @@ test.beforeAll(async () => {
   await fs.mkdir(b25bEvidenceDir, { recursive: true })
   await fs.mkdir(b26bEvidenceDir, { recursive: true })
   await fs.mkdir(b27EvidenceDir, { recursive: true })
+  await fs.mkdir(b28EvidenceDir, { recursive: true })
+})
+
+test('B28 Creator Signature keeps five labels corner-adjacent, outside active QR, and preserves Basic/public gates', async ({ page }) => {
+  const errors = await assertNoConsoleErrors(page)
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/')
+  const preview = page.getByRole('img', { name: 'QR Preview' })
+  const basicBefore = await preview.getAttribute('src')
+  await expect(preview).toHaveAttribute('data-art-level', 'basic')
+  expect(decodeURIComponent(basicBefore!.split(',')[1] ?? '')).not.toContain('data-template-layer="creator-signature"')
+
+  await page.getByRole('button', { name: 'Template Art' }).click()
+  const positions = ['bottom-right-outside', 'bottom-left-outside', 'below-centered', 'right-side-vertical', 'top-right-badge'] as const
+  const panels: Array<{ label: string; source: string; bytes: Buffer; geometry: Record<string, number[]> }> = []
+  for (const value of positions) {
+    const option = page.locator(`[data-signature-position="${value}"]`)
+    await option.click()
+    await expect(option).toHaveAttribute('aria-checked', 'true')
+    await expect.poll(async () => decodeURIComponent((await preview.getAttribute('src'))!.split(',')[1] ?? '')).toContain(`data-signature-position="${value}"`)
+    const source = (await preview.getAttribute('src'))!
+    const decoded = decodeURIComponent(source.split(',')[1] ?? '')
+    const readZone = (name: string) => decoded.match(new RegExp(`${name}="([0-9,]+)"`))![1].split(',').map(Number)
+    const declared = { active: readZone('data-qr-active-zone'), card: readZone('data-qr-card-zone'), slot: readZone('data-signature-slot') }
+    const rendered = await page.evaluate((svg) => {
+      const host = document.createElement('div')
+      host.style.cssText = 'position:absolute;left:-10000px;top:0;width:720px;height:720px'
+      host.innerHTML = svg
+      document.body.append(host)
+      const box = (element: SVGGraphicsElement) => {
+        const value = element.getBBox()
+        return [value.x, value.y, value.width, value.height]
+      }
+      const result = {
+        active: box(host.querySelector<SVGGraphicsElement>('[data-qr-active-zone]')!),
+        card: box(host.querySelector<SVGGraphicsElement>('[data-qr-card-zone]')!),
+        slot: box(host.querySelector<SVGGraphicsElement>('[data-template-layer="creator-signature"]')!),
+      }
+      host.remove()
+      return result
+    }, decoded)
+    expect(rendered).toEqual(declared)
+    const { active, card, slot } = rendered
+    const overlaps = (a: number[], b: number[]) => a[0] < b[0] + b[2] && a[0] + a[2] > b[0] && a[1] < b[1] + b[3] && a[1] + a[3] > b[1]
+    const gapX = Math.max(card[0] - (slot[0] + slot[2]), slot[0] - (card[0] + card[2]), 0)
+    const gapY = Math.max(card[1] - (slot[1] + slot[3]), slot[1] - (card[1] + card[3]), 0)
+    expect(overlaps(slot, active)).toBe(false)
+    expect(Math.hypot(gapX, gapY)).toBeLessThanOrEqual(1)
+    panels.push({ label: value, source, bytes: await preview.screenshot(), geometry: { active, card, slot } })
+  }
+  expect(new Set(panels.map(({ source }) => createHash('sha256').update(source).digest('hex'))).size).toBe(5)
+
+  await page.setViewportSize({ width: 812, height: 590 })
+  await page.setContent(`<main style="margin:0;padding:16px;background:#020617;color:white;font:600 13px system-ui;display:grid;grid-template-columns:repeat(3,250px);gap:16px">${panels.map(({ label, bytes }) => `<figure style="margin:0"><figcaption style="height:28px">${label}</figcaption><img width="232" height="232" src="data:image/png;base64,${bytes.toString('base64')}"></figure>`).join('')}</main>`)
+  const contactSheetPath = path.join(b28EvidenceDir, 'creator-signature-corner-adjacent-contact-sheet.png')
+  await page.locator('main').screenshot({ path: contactSheetPath })
+
+  const overlayPanels = panels.map(({ label, source, geometry }) => {
+    const decoded = decodeURIComponent(source.split(',')[1] ?? '')
+    const [ax, ay, aw, ah] = geometry.active
+    const [sx, sy, sw, sh] = geometry.slot
+    const overlay = `<rect x="${ax}" y="${ay}" width="${aw}" height="${ah}" fill="none" stroke="#22c55e" stroke-width="8"/><rect x="${sx}" y="${sy}" width="${sw}" height="${sh}" fill="none" stroke="#f59e0b" stroke-width="8"/><text x="42" y="704" fill="#22c55e" font-size="18" font-family="system-ui">GREEN = ACTIVE QR SAFE</text><text x="410" y="704" fill="#f59e0b" font-size="18" font-family="system-ui">AMBER = LABEL SLOT</text>`
+    return { label, source: `data:image/svg+xml;charset=utf-8,${encodeURIComponent(decoded.replace('</svg>', `${overlay}</svg>`))}` }
+  })
+  await page.setContent(`<main style="margin:0;padding:16px;background:#020617;color:white;font:600 13px system-ui;display:grid;grid-template-columns:repeat(3,250px);gap:16px">${overlayPanels.map(({ label, source }) => `<figure style="margin:0"><figcaption style="height:28px">${label}</figcaption><img width="232" height="232" src="${source}"></figure>`).join('')}</main>`)
+  await page.locator('main').screenshot({ path: path.join(b28EvidenceDir, 'creator-signature-safe-zone-overlay.png') })
+
+  const legacyLines = (anchor: string, x: number, y: number, sizes = [30, 15, 13], gap = 28) => `<text x="${x}" y="${y}" text-anchor="${anchor}" fill="#f8fafc" font-family="Inter,system-ui,sans-serif" font-size="${sizes[0]}" font-weight="750">Ernesto Creates</text><text x="${x}" y="${y + gap}" text-anchor="${anchor}" fill="#94a3b8" font-family="Inter,system-ui,sans-serif" font-size="${sizes[1]}">@ernesto</text><text x="${x}" y="${y + gap * 2}" text-anchor="${anchor}" fill="#38bdf8" font-family="Inter,system-ui,sans-serif" font-size="${sizes[2]}" font-weight="700">SCAN TO CONNECT</text>`
+  const legacyPanels = panels.map(({ label, source }) => {
+    const decoded = decodeURIComponent(source.split(',')[1] ?? '')
+    const prefix = decoded.slice(0, decoded.indexOf('<g data-template-layer="creator-signature"'))
+    const layer = label === 'bottom-left-outside' ? legacyLines('start', 70, 606)
+      : label === 'below-centered' ? legacyLines('middle', 360, 606)
+        : label === 'right-side-vertical' ? `<g transform="translate(627 360) rotate(90)">${legacyLines('middle', 0, 0)}</g>`
+          : label === 'top-right-badge' ? `<rect x="384" y="34" width="270" height="92" rx="28" fill="#0f172a" stroke="#38bdf8" stroke-width="2"/>${legacyLines('middle', 519, 66, [18, 10, 8], 22)}`
+            : legacyLines('end', 650, 606)
+    return { label, source: `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`${prefix}<g data-template-layer="creator-signature" data-signature-position="${label}">${layer}</g></svg>`)}` }
+  })
+  await page.setViewportSize({ width: 812, height: 590 })
+  await page.setContent(`<main style="margin:0;padding:16px;background:#020617;color:white;font:600 13px system-ui;display:grid;grid-template-columns:repeat(3,250px);gap:16px">${legacyPanels.map(({ label, source }) => `<figure style="margin:0"><figcaption style="height:28px">${label}</figcaption><img width="232" height="232" src="${source}"></figure>`).join('')}</main>`)
+  const before = await page.locator('main').screenshot()
+  const after = await fs.readFile(contactSheetPath)
+  await page.setViewportSize({ width: 1660, height: 660 })
+  await page.setContent(`<main style="margin:0;padding:24px;background:#020617;color:white;font:700 18px system-ui;display:grid;grid-template-columns:1fr 1fr;gap:24px"><figure style="margin:0"><figcaption style="height:34px">BEFORE · B27 detached captions</figcaption><img style="max-width:100%" src="data:image/png;base64,${before.toString('base64')}"></figure><figure style="margin:0"><figcaption style="height:34px">AFTER · B28 corner-adjacent labels</figcaption><img style="max-width:100%" src="data:image/png;base64,${after.toString('base64')}"></figure></main>`)
+  await page.locator('main').screenshot({ path: path.join(b28EvidenceDir, 'creator-signature-before-after-b27-b28.png') })
+
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/')
+  await page.getByRole('button', { name: 'Basic QR' }).click()
+  expect(await preview.getAttribute('src')).toBe(basicBefore)
+  await page.getByRole('button', { name: 'Template Art' }).click()
+  const beforeDraft = await preview.getAttribute('src')
+  await page.getByRole('textbox', { name: 'Final destination URL' }).fill('https://example.com/b28-public-draft')
+  await page.getByRole('button', { name: 'Continue with this QR' }).click()
+  await expect(page.getByRole('status')).toContainText('QR activates after payment')
+  expect(await preview.getAttribute('src')).toBe(beforeDraft)
+  const headings = await page.locator('h1,h2,h3').allTextContents()
+  const hiddenPaidPanels = Object.fromEntries(['Candidates', 'Checkout', 'Export'].map((name) => [name, headings.filter((heading) => heading.trim() === name).length]))
+  expect(hiddenPaidPanels).toEqual({ Candidates: 0, Checkout: 0, Export: 0 })
+  await fs.writeFile(path.join(b28EvidenceDir, 'public-gate-proof.json'), JSON.stringify({ basicQrPathUnchanged: true, unpaidPublicPath: 'draft-only', previewUnchangedAfterTypingAndContinue: true, hiddenPaidPanels, status: await page.getByRole('status').textContent() }, null, 2))
+  await fs.writeFile(path.join(b28EvidenceDir, 'creator-signature-safe-zone-proof.json'), JSON.stringify({ rule: 'label slots must not overlap the active QR image and must touch the card edge', positions: Object.fromEntries(panels.map(({ label, geometry }) => [label, { ...geometry, overlapsActiveQr: false, cardGapPx: 0 }])) }, null, 2))
+  expect(errors).toEqual([])
+})
+
+test('B28 Creator Signature preview and authorized SVG export share exact corner-adjacent geometry', async ({ page }) => {
+  const state = projectState({ coreEvidence: true })
+  state.templateArtLevel = 'template-art'
+  state.templateArt = { templateId: 'creator-signature', outputIntent: 'square-card', fields: { signatureText: 'Corner Signature', handleText: '@corner-proof', ctaText: 'Scan the work', signaturePosition: 'bottom-right-outside' } }
+  await seed(page, state)
+  await page.goto('/?workflow=internal')
+  await page.getByRole('button', { name: /^SVG/ }).click()
+  const preview = page.getByRole('img', { name: 'QR Preview' })
+  const positions = ['bottom-right-outside', 'bottom-left-outside', 'below-centered', 'right-side-vertical', 'top-right-badge'] as const
+  const normalize = (svg: string) => svg
+    .replace(/(<svg[^>]*?)width="[0-9]+" height="[0-9]+"/, '$1width="SIZE" height="SIZE"')
+    .replace(/href="[^"]+"/, 'href="CORE_QR"')
+  const zone = (svg: string, name: string) => svg.match(new RegExp(`${name}="([0-9,]+)"`))![1].split(',').map(Number)
+  const parityByPosition: Record<string, unknown> = {}
+
+  for (const position of positions) {
+    const option = page.locator(`[data-signature-position="${position}"]`)
+    await option.click()
+    await expect(option).toHaveAttribute('aria-checked', 'true')
+    await expect.poll(async () => decodeURIComponent((await preview.getAttribute('src'))!.split(',')[1] ?? '')).toContain(`data-signature-position="${position}"`)
+    const previewSource = (await preview.getAttribute('src'))!
+    const previewSvg = decodeURIComponent(previewSource.split(',')[1] ?? '')
+    const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'Export SVG' }).click()])
+    const exportPath = path.join(b28EvidenceDir, `${position}-${download.suggestedFilename()}`)
+    await download.saveAs(exportPath)
+    const exportSvg = await fs.readFile(exportPath, 'utf8')
+    const normalizedPreview = normalize(previewSvg)
+    const normalizedExport = normalize(exportSvg)
+    expect(normalizedExport).toBe(normalizedPreview)
+    const previewGeometry = { active: zone(previewSvg, 'data-qr-active-zone'), card: zone(previewSvg, 'data-qr-card-zone'), slot: zone(previewSvg, 'data-signature-slot') }
+    const exportGeometry = { active: zone(exportSvg, 'data-qr-active-zone'), card: zone(exportSvg, 'data-qr-card-zone'), slot: zone(exportSvg, 'data-signature-slot') }
+    expect(exportGeometry).toEqual(previewGeometry)
+    parityByPosition[position] = { normalizedStructuralParity: true, previewGeometry, exportGeometry, previewSha256: createHash('sha256').update(previewSvg).digest('hex'), exportSha256: createHash('sha256').update(exportSvg).digest('hex'), normalizedSha256: createHash('sha256').update(normalizedPreview).digest('hex'), exportArtifactPath: exportPath }
+  }
+  const coreCalls = await page.evaluate(() => (window as typeof window & { __QR_CORE_EXPORT_CALLS__: unknown[] }).__QR_CORE_EXPORT_CALLS__)
+  expect(coreCalls).toHaveLength(positions.length)
+  await fs.writeFile(path.join(b28EvidenceDir, 'creator-signature-export-parity.json'), JSON.stringify({ allPositionsParity: true, positions: parityByPosition, coreExportAuthorityCalls: coreCalls.length }, null, 2))
 })
 
 test('B27 Creator Signature composes five fixed positions, reuses Level 1 controls, and preserves the public gate', async ({ page }) => {
