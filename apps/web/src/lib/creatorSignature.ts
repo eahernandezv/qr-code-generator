@@ -39,37 +39,114 @@ export interface CreatorSignatureGeometry {
   labelSlot: CreatorSignatureRect
 }
 
-function visibleQrContent(qrImage: CreatorSignatureRect): CreatorSignatureRect {
-  const inset = Math.round(qrImage.width * 0.146)
+function decodeSvgDataUrl(source: string): string | null {
+  const trimmed = source.trim()
+  if (trimmed.startsWith('<svg') || trimmed.startsWith('<?xml')) return trimmed
+  const match = trimmed.match(/^data:image\/svg\+xml(?:;charset=[^,]+)?,(.*)$/i)
+  if (!match) return null
+  try { return decodeURIComponent(match[1]) } catch { return match[1] }
+}
+
+function numericAttribute(element: string, name: string): number | null {
+  const match = element.match(new RegExp(`${name}="([0-9.-]+)"`))
+  return match ? Number(match[1]) : null
+}
+
+function fillLooksLikeQrModule(fill: string): boolean {
+  const normalized = fill.trim().toLowerCase()
+  if (normalized === 'none' || normalized.startsWith('url(')) return false
+  const hex = normalized.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/)
+  if (!hex) return true
+  const expanded = hex[1].length === 3 ? [...hex[1]].map((part) => part + part).join('') : hex[1]
+  const r = Number.parseInt(expanded.slice(0, 2), 16)
+  const g = Number.parseInt(expanded.slice(2, 4), 16)
+  const b = Number.parseInt(expanded.slice(4, 6), 16)
+  return (0.2126 * r + 0.7152 * g + 0.0722 * b) < 220
+}
+
+function mergeBounds(current: CreatorSignatureRect | null, x: number, y: number, width: number, height: number): CreatorSignatureRect {
+  if (!current) return { x, y, width, height }
+  const minX = Math.min(current.x, x)
+  const minY = Math.min(current.y, y)
+  const maxX = Math.max(current.x + current.width, x + width)
+  const maxY = Math.max(current.y + current.height, y + height)
+  return { x: minX, y: minY, width: maxX - minX, height: maxY - minY }
+}
+
+function mapRectToImage(sourceRect: CreatorSignatureRect, viewBox: CreatorSignatureRect, qrImage: CreatorSignatureRect): CreatorSignatureRect {
   return {
-    x: qrImage.x + inset,
-    y: qrImage.y + inset,
-    width: qrImage.width - inset * 2,
-    height: qrImage.height - inset * 2,
+    x: Math.round(qrImage.x + ((sourceRect.x - viewBox.x) / viewBox.width) * qrImage.width),
+    y: Math.round(qrImage.y + ((sourceRect.y - viewBox.y) / viewBox.height) * qrImage.height),
+    width: Math.round((sourceRect.width / viewBox.width) * qrImage.width),
+    height: Math.round((sourceRect.height / viewBox.height) * qrImage.height),
   }
 }
 
-export function creatorSignatureGeometry(position: CreatorSignaturePosition): CreatorSignatureGeometry {
+function fallbackVisibleQrContent(qrImage: CreatorSignatureRect): CreatorSignatureRect {
+  const inset = Math.round(qrImage.width * 0.146)
+  return { x: qrImage.x + inset, y: qrImage.y + inset, width: qrImage.width - inset * 2, height: qrImage.height - inset * 2 }
+}
+
+function visibleQrContent(qrImage: CreatorSignatureRect, qrSource?: string): CreatorSignatureRect {
+  const svg = qrSource ? decodeSvgDataUrl(qrSource) : null
+  if (!svg) return fallbackVisibleQrContent(qrImage)
+  const svgTag = svg.match(/<svg\b[^>]*>/)?.[0] ?? ''
+  const viewBoxValues = svgTag.match(/viewBox="([0-9.\-\s]+)"/)?.[1]?.trim().split(/\s+/).map(Number)
+  const width = numericAttribute(svgTag, 'width') ?? viewBoxValues?.[2]
+  const height = numericAttribute(svgTag, 'height') ?? viewBoxValues?.[3]
+  const viewBox = viewBoxValues?.length === 4
+    ? { x: viewBoxValues[0], y: viewBoxValues[1], width: viewBoxValues[2], height: viewBoxValues[3] }
+    : width && height ? { x: 0, y: 0, width, height } : null
+  if (!viewBox || !Number.isFinite(viewBox.width) || !Number.isFinite(viewBox.height) || viewBox.width <= 0 || viewBox.height <= 0) return fallbackVisibleQrContent(qrImage)
+
+  let bounds: CreatorSignatureRect | null = null
+  for (const element of svg.match(/<(rect|circle|path)\b[^>]*fill="[^"]+"[^>]*>/gi) ?? []) {
+    const fill = element.match(/fill="([^"]+)"/i)?.[1] ?? ''
+    if (!fillLooksLikeQrModule(fill)) continue
+    if (element.includes('width="100%"') || element.includes('height="100%"')) continue
+    if (element.startsWith('<rect')) {
+      const x = numericAttribute(element, 'x') ?? 0
+      const y = numericAttribute(element, 'y') ?? 0
+      const rectWidth = numericAttribute(element, 'width')
+      const rectHeight = numericAttribute(element, 'height')
+      if (rectWidth && rectHeight) bounds = mergeBounds(bounds, x, y, rectWidth, rectHeight)
+    } else if (element.startsWith('<circle')) {
+      const cx = numericAttribute(element, 'cx')
+      const cy = numericAttribute(element, 'cy')
+      const r = numericAttribute(element, 'r')
+      if (cx !== null && cy !== null && r !== null) bounds = mergeBounds(bounds, cx - r, cy - r, r * 2, r * 2)
+    } else {
+      const numbers = element.match(/[-+]?[0-9]*\.?[0-9]+/g)?.map(Number) ?? []
+      const xs = numbers.filter((_, index) => index % 2 === 0)
+      const ys = numbers.filter((_, index) => index % 2 === 1)
+      if (xs.length && ys.length) bounds = mergeBounds(bounds, Math.min(...xs), Math.min(...ys), Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys))
+    }
+  }
+  return bounds ? mapRectToImage(bounds, viewBox, qrImage) : fallbackVisibleQrContent(qrImage)
+}
+
+export function creatorSignatureGeometry(position: CreatorSignaturePosition, qrSource?: string): CreatorSignatureGeometry {
   const qrImage = position === 'right-side-vertical'
     ? { x: 65, y: 110, width: 440, height: 440 }
     : position === 'top-right-badge'
       ? { x: 125, y: 154, width: 470, height: 470 }
       : { x: 110, y: 55, width: 500, height: 500 }
-  const qrContent = visibleQrContent(qrImage)
+  const qrContent = visibleQrContent(qrImage, qrSource)
   const qrCard = position === 'right-side-vertical'
     ? { x: 51, y: 96, width: 568, height: 468 }
     : position === 'top-right-badge'
       ? { x: 111, y: 48, width: 498, height: 590 }
       : { x: 96, y: 41, width: 528, height: 620 }
+  const bottomShelfY = qrContent.y + qrContent.height + 8
   const labelSlot = position === 'bottom-left-outside'
-    ? { x: qrContent.x, y: qrImage.y + qrImage.height, width: 260, height: 92 }
+    ? { x: qrContent.x, y: bottomShelfY, width: 260, height: 76 }
     : position === 'below-centered'
-      ? { x: qrContent.x, y: qrImage.y + qrImage.height, width: qrContent.width, height: 92 }
+      ? { x: qrContent.x, y: bottomShelfY, width: qrContent.width, height: 76 }
       : position === 'right-side-vertical'
         ? { x: qrImage.x + qrImage.width, y: qrImage.y, width: 100, height: qrImage.height }
         : position === 'top-right-badge'
           ? { x: qrContent.x + qrContent.width - 260, y: 62, width: 260, height: 78 }
-          : { x: qrContent.x + qrContent.width - 260, y: qrImage.y + qrImage.height, width: 260, height: 92 }
+          : { x: qrContent.x + qrContent.width - 260, y: bottomShelfY, width: 260, height: 76 }
   return { qrImage, qrContent, qrCard, labelSlot }
 }
 
@@ -100,7 +177,7 @@ function textLayer(fields: CreatorSignatureTemplateFields, geometry: CreatorSign
   }
   const reservedShelf = `<rect data-signature-reserved-shelf="true" x="${labelSlot.x}" y="${labelSlot.y}" width="${labelSlot.width}" height="${labelSlot.height}" fill="none" stroke="none" aria-hidden="true"/>`
 
-  const shelfTextY = geometry.qrImage.y + geometry.qrImage.height + 24
+  const shelfTextY = geometry.qrContent.y + geometry.qrContent.height + 22
   if (position === 'bottom-left-outside') return `${reservedShelf}${lines('start', geometry.qrContent.x, shelfTextY)}`
   if (position === 'below-centered') return `${reservedShelf}${lines('middle', geometry.qrContent.x + geometry.qrContent.width / 2, shelfTextY, { maxWidth: geometry.qrContent.width })}`
   if (position === 'right-side-vertical') return `${reservedShelf}<g transform="translate(538 330) rotate(90)">${lines('middle', 0, 0, { maxWidth: 400 })}</g>`
@@ -111,12 +188,12 @@ function textLayer(fields: CreatorSignatureTemplateFields, geometry: CreatorSign
 export function composeCreatorSignatureSvg(
   qrSource: string,
   fields: CreatorSignatureTemplateFields,
-  options: { width?: number; height?: number } = {},
+  options: { width?: number; height?: number; geometrySource?: string } = {},
 ): string {
   const width = options.width ?? 720
   const height = options.height ?? 720
   const position = fields.signaturePosition ?? 'bottom-right-outside'
-  const geometry = creatorSignatureGeometry(position)
+  const geometry = creatorSignatureGeometry(position, options.geometrySource ?? qrSource)
   const { qrImage, qrContent, qrCard, labelSlot } = geometry
   const safeQrSource = escapeXml(qrSource)
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 720 720" role="img" aria-label="Creator Signature Template Art QR">
@@ -139,8 +216,9 @@ export async function composeCreatorSignaturePng(
   fields: CreatorSignatureTemplateFields,
   width: number,
   height: number,
+  geometrySource?: string,
 ): Promise<string> {
-  const svg = composeCreatorSignatureSvg(qrSource, fields, { width, height })
+  const svg = composeCreatorSignatureSvg(qrSource, fields, { width, height, geometrySource })
   const image = new Image()
   image.src = svgDataUrl(svg)
   await image.decode()

@@ -46,13 +46,13 @@ describe('Creator Signature template contract', () => {
   })
 
   it.each(CREATOR_SIGNATURE_POSITIONS)('$value keeps its label slot attached to the QR card and outside the active QR', ({ value }) => {
-    const { qrImage, qrCard, labelSlot } = creatorSignatureGeometry(value)
+    const { qrImage, qrContent, qrCard, labelSlot } = creatorSignatureGeometry(value)
     const overlaps = (a: typeof qrImage, b: typeof qrImage) =>
       a.x < b.x + b.width && a.x + a.width > b.x && a.y < b.y + b.height && a.y + a.height > b.y
     const gapX = Math.max(qrCard.x - (labelSlot.x + labelSlot.width), labelSlot.x - (qrCard.x + qrCard.width), 0)
     const gapY = Math.max(qrCard.y - (labelSlot.y + labelSlot.height), labelSlot.y - (qrCard.y + qrCard.height), 0)
 
-    expect(overlaps(labelSlot, qrImage)).toBe(false)
+    expect(overlaps(labelSlot, qrContent)).toBe(false)
     expect(Math.hypot(gapX, gapY)).toBeLessThanOrEqual(1)
     expect(composeCreatorSignatureSvg(qr, { signaturePosition: value })).toContain(
       `data-signature-slot="${labelSlot.x},${labelSlot.y},${labelSlot.width},${labelSlot.height}"`,
@@ -82,9 +82,25 @@ describe('Creator Signature template contract', () => {
     expect(right.labelSlot.x + right.labelSlot.width).toBe(right.qrContent.x + right.qrContent.width)
     expect(left.labelSlot.x).toBe(left.qrContent.x)
     expect(rightSvg).toContain(`data-qr-content-zone="${right.qrContent.x},${right.qrContent.y},${right.qrContent.width},${right.qrContent.height}"`)
-    expect(rightSvg).toContain(`x="${right.qrContent.x + right.qrContent.width}" y="${right.qrImage.y + right.qrImage.height + 24}" text-anchor="end"`)
-    expect(leftSvg).toContain(`x="${left.qrContent.x}" y="${left.qrImage.y + left.qrImage.height + 24}" text-anchor="start"`)
+    expect(rightSvg).toContain(`x="${right.qrContent.x + right.qrContent.width}" y="${right.qrContent.y + right.qrContent.height + 22}" text-anchor="end"`)
+    expect(leftSvg).toContain(`x="${left.qrContent.x}" y="${left.qrContent.y + left.qrContent.height + 22}" text-anchor="start"`)
     expect(rightSvg).not.toContain('stroke="#e2e8f0"')
     expect(leftSvg).not.toContain('stroke="#e2e8f0"')
+  })
+
+  it('moves the signature with the rendered Core QR content bounds without resizing text', () => {
+    const source = (start: number, size: number) => `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512"><rect width="512" height="512" fill="#ffffff"/><rect x="${start}" y="${start}" width="${size}" height="${size}" fill="#111827"/></svg>`)}`
+    const smallSvg = composeCreatorSignatureSvg(source(150, 212), { signaturePosition: 'bottom-right-outside' })
+    const largeSvg = composeCreatorSignatureSvg(source(80, 352), { signaturePosition: 'bottom-right-outside' })
+    const zone = (svg: string) => svg.match(/data-qr-content-zone="([0-9,]+)"/)![1]
+    const text = (svg: string) => svg.match(/<text x="([0-9.]+)" y="([0-9.]+)" text-anchor="end"[^>]*>/)!.slice(1).map(Number)
+    const [smallX, smallY] = text(smallSvg)
+    const [largeX, largeY] = text(largeSvg)
+
+    expect(zone(smallSvg)).not.toBe(zone(largeSvg))
+    expect(largeX).toBeGreaterThan(smallX)
+    expect(largeY).toBeGreaterThan(smallY)
+    expect(smallSvg).toContain('font-size="22"')
+    expect(largeSvg).toContain('font-size="22"')
   })
 })
