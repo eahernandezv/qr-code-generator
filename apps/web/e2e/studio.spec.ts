@@ -22,6 +22,7 @@ const b27EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/st
 const b28EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b28-creator-signature-corner-adjacent-polish')
 const b29EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b29-creator-signature-text-only-boundary-aligned')
 const b32EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b32-signature-follows-qr-size')
+const b33EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b33-top-corners-empty-cta')
 
 const fixtureModules = Array.from({ length: 21 }, (_, y) => Array.from({ length: 21 }, (_, x) => {
   const finder = (fx: number, fy: number) => x >= fx && x < fx + 7 && y >= fy && y < fy + 7
@@ -236,6 +237,7 @@ test.beforeAll(async () => {
   await fs.mkdir(b28EvidenceDir, { recursive: true })
   await fs.mkdir(b29EvidenceDir, { recursive: true })
   await fs.mkdir(b32EvidenceDir, { recursive: true })
+  await fs.mkdir(b33EvidenceDir, { recursive: true })
 })
 
 test('B29 Creator Signature uses text-only reserved shelves aligned to QR boundaries and preserves Basic/public gates', async ({ page }) => {
@@ -248,7 +250,7 @@ test('B29 Creator Signature uses text-only reserved shelves aligned to QR bounda
   expect(decodeURIComponent(basicBefore.split(',')[1] ?? '')).not.toContain('data-template-layer="creator-signature"')
 
   await page.getByRole('button', { name: 'Template Art' }).click()
-  const positions = ['bottom-right-outside', 'bottom-left-outside', 'below-centered', 'right-side-vertical', 'top-right-badge'] as const
+  const positions = ['bottom-right-outside', 'bottom-left-outside', 'below-centered', 'top-right-corner', 'top-left-corner'] as const
   const panels: Array<{ label: string; source: string; bytes: Buffer; geometry: Record<string, number[]> }> = []
   const overlaps = (a: number[], b: number[]) => a[0] < b[0] + b[2] && a[0] + a[2] > b[0] && a[1] < b[1] + b[3] && a[1] + a[3] > b[1]
   const contains = (outer: number[], inner: number[]) => inner[0] >= outer[0] && inner[1] >= outer[1]
@@ -379,6 +381,54 @@ test('B32 Creator Signature location follows QR size controls without resizing s
   expect(errors).toEqual([])
 })
 
+test('B33 Creator Signature replaces crossed-out options with top corners and keeps empty CTA empty', async ({ page }) => {
+  const errors = await assertNoConsoleErrors(page)
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/')
+  await page.addStyleTag({ content: '*,*::before,*::after{transition:none!important;animation:none!important}' })
+  await page.getByRole('button', { name: 'Template Art' }).click()
+  await expect(page.getByRole('radio', { name: 'Right side vertical' })).toHaveCount(0)
+  await expect(page.getByRole('radio', { name: 'Top right badge' })).toHaveCount(0)
+  await expect(page.getByRole('radio', { name: 'Top right corner' })).toBeVisible()
+  await expect(page.getByRole('radio', { name: 'Top left corner' })).toBeVisible()
+
+  const preview = page.getByRole('img', { name: 'QR Preview' })
+  await page.getByRole('textbox', { name: 'Signature text' }).fill('Ernesto Creates')
+  await page.getByRole('textbox', { name: 'Handle or subtitle' }).fill('Test')
+  await page.getByRole('textbox', { name: 'CTA text' }).fill('')
+
+  const parse = async () => {
+    const source = (await preview.getAttribute('src'))!
+    const decoded = decodeURIComponent(source.split(',')[1] ?? '')
+    const zone = (name: string) => decoded.match(new RegExp(`${name}="([0-9,]+)"`))![1].split(',').map(Number)
+    const firstText = decoded.match(/<text x="([0-9.]+)" y="([0-9.]+)" text-anchor="(start|end|middle)"[^>]*>/)!
+    return { source, decoded, content: zone('data-qr-content-zone'), slot: zone('data-signature-slot'), textX: Number(firstText[1]), textY: Number(firstText[2]), anchor: firstText[3] }
+  }
+  const proofs = []
+  for (const [label, value, anchor] of [
+    ['Top right corner', 'top-right-corner', 'end'],
+    ['Top left corner', 'top-left-corner', 'start'],
+  ] as const) {
+    await page.getByRole('radio', { name: label }).click()
+    await expect.poll(async () => decodeURIComponent((await preview.getAttribute('src'))!.split(',')[1] ?? '')).toContain(`data-signature-position="${value}"`)
+    const parsed = await parse()
+    const rightEdge = parsed.content[0] + parsed.content[2]
+    expect(parsed.decoded).not.toContain('SCAN TO CONNECT')
+    expect(parsed.anchor).toBe(anchor)
+    if (value === 'top-right-corner') expect(parsed.textX).toBe(rightEdge)
+    if (value === 'top-left-corner') expect(parsed.textX).toBe(parsed.content[0])
+    expect(parsed.content[1] - (parsed.slot[1] + parsed.slot[3])).toBeLessThanOrEqual(12)
+    proofs.push({ label, value, source: parsed.source, anchor: parsed.anchor, content: parsed.content, slot: parsed.slot, textX: parsed.textX, textY: parsed.textY, ctaRendered: parsed.decoded.includes('SCAN TO CONNECT') })
+    await preview.screenshot({ path: path.join(b33EvidenceDir, `${value}.png`) })
+  }
+  await page.setViewportSize({ width: 620, height: 340 })
+  await page.setContent(`<main style="margin:0;padding:16px;background:#020617;color:white;font:700 14px system-ui;display:grid;grid-template-columns:repeat(2,1fr);gap:16px">${proofs.map((proof) => `<figure style="margin:0"><figcaption>${proof.label}</figcaption><img width="240" height="240" src="${proof.source}"></figure>`).join('')}</main>`)
+  await page.locator('main').screenshot({ path: path.join(b33EvidenceDir, 'top-corners-empty-cta-contact-sheet.png') })
+  const jsonProofs = proofs.map((proof) => ({ label: proof.label, value: proof.value, anchor: proof.anchor, content: proof.content, slot: proof.slot, textX: proof.textX, textY: proof.textY, ctaRendered: proof.ctaRendered }))
+  await fs.writeFile(path.join(b33EvidenceDir, 'top-corners-empty-cta.json'), JSON.stringify({ removedOptions: ['Right side vertical', 'Top right badge'], addedOptions: ['Top right corner', 'Top left corner'], proofs: jsonProofs }, null, 2))
+  expect(errors).toEqual([])
+})
+
 test('B29 Creator Signature preview and authorized SVG export share exact text-only shelf geometry', async ({ page }) => {
   const state = projectState({ coreEvidence: true })
   state.templateArtLevel = 'template-art'
@@ -387,7 +437,7 @@ test('B29 Creator Signature preview and authorized SVG export share exact text-o
   await page.goto('/?workflow=internal')
   await page.getByRole('button', { name: /^SVG/ }).click()
   const preview = page.getByRole('img', { name: 'QR Preview' })
-  const positions = ['bottom-right-outside', 'bottom-left-outside', 'below-centered', 'right-side-vertical', 'top-right-badge'] as const
+  const positions = ['bottom-right-outside', 'bottom-left-outside', 'below-centered', 'top-right-corner', 'top-left-corner'] as const
   const normalize = (svg: string) => svg.replace(/(<svg[^>]*?)width="[0-9]+" height="[0-9]+"/, '$1width="SIZE" height="SIZE"').replace(/href="[^"]+"/, 'href="CORE_QR"')
   const zone = (svg: string, name: string) => svg.match(new RegExp(`${name}="([0-9,]+)"`))![1].split(',').map(Number)
   const parityByPosition: Record<string, unknown> = {}
@@ -422,7 +472,7 @@ test('B28 Creator Signature keeps five labels corner-adjacent, outside active QR
   expect(decodeURIComponent(basicBefore!.split(',')[1] ?? '')).not.toContain('data-template-layer="creator-signature"')
 
   await page.getByRole('button', { name: 'Template Art' }).click()
-  const positions = ['bottom-right-outside', 'bottom-left-outside', 'below-centered', 'right-side-vertical', 'top-right-badge'] as const
+  const positions = ['bottom-right-outside', 'bottom-left-outside', 'below-centered', 'top-right-corner', 'top-left-corner'] as const
   const panels: Array<{ label: string; source: string; bytes: Buffer; geometry: Record<string, number[]> }> = []
   for (const value of positions) {
     const option = page.locator(`[data-signature-position="${value}"]`)
@@ -485,8 +535,8 @@ test('B28 Creator Signature keeps five labels corner-adjacent, outside active QR
     const prefix = decoded.slice(0, decoded.indexOf('<g data-template-layer="creator-signature"'))
     const layer = label === 'bottom-left-outside' ? legacyLines('start', 70, 606)
       : label === 'below-centered' ? legacyLines('middle', 360, 606)
-        : label === 'right-side-vertical' ? `<g transform="translate(627 360) rotate(90)">${legacyLines('middle', 0, 0)}</g>`
-          : label === 'top-right-badge' ? `<rect x="384" y="34" width="270" height="92" rx="28" fill="#0f172a" stroke="#38bdf8" stroke-width="2"/>${legacyLines('middle', 519, 66, [18, 10, 8], 22)}`
+        : label === 'top-left-corner' ? legacyLines('start', 70, 92, [18, 10, 8], 22)
+          : label === 'top-right-corner' ? legacyLines('end', 650, 92, [18, 10, 8], 22)
             : legacyLines('end', 650, 606)
     return { label, source: `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`${prefix}<g data-template-layer="creator-signature" data-signature-position="${label}">${layer}</g></svg>`)}` }
   })
@@ -524,7 +574,7 @@ test('B28 Creator Signature preview and authorized SVG export share exact corner
   await page.goto('/?workflow=internal')
   await page.getByRole('button', { name: /^SVG/ }).click()
   const preview = page.getByRole('img', { name: 'QR Preview' })
-  const positions = ['bottom-right-outside', 'bottom-left-outside', 'below-centered', 'right-side-vertical', 'top-right-badge'] as const
+  const positions = ['bottom-right-outside', 'bottom-left-outside', 'below-centered', 'top-right-corner', 'top-left-corner'] as const
   const normalize = (svg: string) => svg
     .replace(/(<svg[^>]*?)width="[0-9]+" height="[0-9]+"/, '$1width="SIZE" height="SIZE"')
     .replace(/href="[^"]+"/, 'href="CORE_QR"')
@@ -568,7 +618,7 @@ test('B27 Creator Signature composes five fixed positions, reuses Level 1 contro
 
   const preview = page.getByRole('img', { name: 'QR Preview' })
   await expect(preview).toHaveAttribute('data-art-level', 'template-art')
-  const positions = ['bottom-right-outside', 'bottom-left-outside', 'below-centered', 'right-side-vertical', 'top-right-badge'] as const
+  const positions = ['bottom-right-outside', 'bottom-left-outside', 'below-centered', 'top-right-corner', 'top-left-corner'] as const
   const positionPanels: Array<{ label: string; bytes: Buffer; hash: string }> = []
   for (const value of positions) {
     const option = page.locator(`[data-signature-position="${value}"]`)
@@ -637,7 +687,7 @@ test('B27 Creator Signature composes five fixed positions, reuses Level 1 contro
 test('B27 paid export downloads composed Creator Signature SVG after Core export authority', async ({ page }) => {
   const state = projectState({ coreEvidence: true })
   state.templateArtLevel = 'template-art'
-  state.templateArt = { templateId: 'creator-signature', outputIntent: 'square-card', fields: { signatureText: 'Exported Signature', handleText: '@export-proof', ctaText: 'Scan the work', signaturePosition: 'top-right-badge' } }
+  state.templateArt = { templateId: 'creator-signature', outputIntent: 'square-card', fields: { signatureText: 'Exported Signature', handleText: '@export-proof', ctaText: 'Scan the work', signaturePosition: 'top-right-corner' } }
   await seed(page, state)
   await page.goto('/?workflow=internal')
   await page.getByRole('button', { name: 'Preview at size' }).click()
@@ -655,7 +705,7 @@ test('B27 paid export downloads composed Creator Signature SVG after Core export
     if (format === 'SVG') {
       const exported = bytes.toString('utf8')
       expect(exported).toContain('data-template-layer="creator-signature"')
-      expect(exported).toContain('data-signature-position="top-right-badge"')
+      expect(exported).toContain('data-signature-position="top-right-corner"')
       expect(exported).toContain('Exported Signature')
       expect(exported).toContain('<image')
       expect(exported).toContain('data-qr-fixture%3D%22module-matrix%22')
@@ -671,7 +721,7 @@ test('B27 paid export downloads composed Creator Signature SVG after Core export
   const embeddedCoreQrMatrix = exportedSvg.includes('data-qr-fixture%3D%22module-matrix%22')
   const coreCalls = await page.evaluate(() => (window as typeof window & { __QR_CORE_EXPORT_CALLS__: unknown[] }).__QR_CORE_EXPORT_CALLS__)
   expect(coreCalls).toHaveLength(2)
-  await fs.writeFile(path.join(b27EvidenceDir, 'creator-signature-export-proof.json'), JSON.stringify({ artifacts, composedTemplateLayer: true, embeddedCoreQr: embeddedCoreQrMatrix, embeddedCoreQrMatrix, signatureTextPresentInSvg: true, pngCompositionColorCountGreaterThanFour: true, position: 'top-right-badge', coreExportAuthorityCalls: coreCalls.length }, null, 2))
+  await fs.writeFile(path.join(b27EvidenceDir, 'creator-signature-export-proof.json'), JSON.stringify({ artifacts, composedTemplateLayer: true, embeddedCoreQr: embeddedCoreQrMatrix, embeddedCoreQrMatrix, signatureTextPresentInSvg: true, pngCompositionColorCountGreaterThanFour: true, position: 'top-right-corner', coreExportAuthorityCalls: coreCalls.length }, null, 2))
 })
 
 test('B26b exposes only accepted QR.io-inspired Core-backed Corners and Eyes shapes', async ({ page }) => {
