@@ -20,6 +20,7 @@ const b25bEvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/s
 const b26bEvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b26b-expose-qrio-shapes')
 const b27EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b27-creator-signature-template')
 const b28EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b28-creator-signature-corner-adjacent-polish')
+const b29EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b29-creator-signature-text-only-boundary-aligned')
 
 const fixtureModules = Array.from({ length: 21 }, (_, y) => Array.from({ length: 21 }, (_, x) => {
   const finder = (fx: number, fy: number) => x >= fx && x < fx + 7 && y >= fy && y < fy + 7
@@ -232,6 +233,131 @@ test.beforeAll(async () => {
   await fs.mkdir(b26bEvidenceDir, { recursive: true })
   await fs.mkdir(b27EvidenceDir, { recursive: true })
   await fs.mkdir(b28EvidenceDir, { recursive: true })
+  await fs.mkdir(b29EvidenceDir, { recursive: true })
+})
+
+test('B29 Creator Signature uses text-only reserved shelves aligned to QR boundaries and preserves Basic/public gates', async ({ page }) => {
+  const errors = await assertNoConsoleErrors(page)
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/')
+  const preview = page.getByRole('img', { name: 'QR Preview' })
+  const basicBefore = (await preview.getAttribute('src'))!
+  await expect(preview).toHaveAttribute('data-art-level', 'basic')
+  expect(decodeURIComponent(basicBefore.split(',')[1] ?? '')).not.toContain('data-template-layer="creator-signature"')
+
+  await page.getByRole('button', { name: 'Template Art' }).click()
+  const positions = ['bottom-right-outside', 'bottom-left-outside', 'below-centered', 'right-side-vertical', 'top-right-badge'] as const
+  const panels: Array<{ label: string; source: string; bytes: Buffer; geometry: Record<string, number[]> }> = []
+  const overlaps = (a: number[], b: number[]) => a[0] < b[0] + b[2] && a[0] + a[2] > b[0] && a[1] < b[1] + b[3] && a[1] + a[3] > b[1]
+  const contains = (outer: number[], inner: number[]) => inner[0] >= outer[0] && inner[1] >= outer[1]
+    && inner[0] + inner[2] <= outer[0] + outer[2] && inner[1] + inner[3] <= outer[1] + outer[3]
+
+  for (const value of positions) {
+    const option = page.locator(`[data-signature-position="${value}"]`)
+    await option.click()
+    await expect(option).toHaveAttribute('aria-checked', 'true')
+    await expect.poll(async () => decodeURIComponent((await preview.getAttribute('src'))!.split(',')[1] ?? '')).toContain(`data-signature-position="${value}"`)
+    const source = (await preview.getAttribute('src'))!
+    const decoded = decodeURIComponent(source.split(',')[1] ?? '')
+    const zone = (name: string) => decoded.match(new RegExp(`${name}="([0-9,]+)"`))![1].split(',').map(Number)
+    const geometry = { active: zone('data-qr-active-zone'), card: zone('data-qr-card-zone'), slot: zone('data-signature-slot') }
+    const layer = decoded.match(/<g data-template-layer="creator-signature"[\s\S]*?<\/g>/)![0]
+    expect(overlaps(geometry.slot, geometry.active)).toBe(false)
+    expect(contains(geometry.card, geometry.active)).toBe(true)
+    expect(contains(geometry.card, geometry.slot)).toBe(true)
+    expect(layer).toContain('data-signature-reserved-shelf="true"')
+    expect(layer).not.toContain('fill="#0f172a"')
+    expect(layer).not.toContain('stroke="#38bdf8"')
+    panels.push({ label: value, source, bytes: await preview.screenshot(), geometry })
+  }
+  expect(new Set(panels.map(({ source }) => createHash('sha256').update(source).digest('hex'))).size).toBe(5)
+  expect(panels[0].geometry.slot[0] + panels[0].geometry.slot[2]).toBe(panels[0].geometry.active[0] + panels[0].geometry.active[2])
+  expect(panels[1].geometry.slot[0]).toBe(panels[1].geometry.active[0])
+
+  await page.setViewportSize({ width: 812, height: 590 })
+  await page.setContent(`<main style="margin:0;padding:16px;background:#020617;color:white;font:600 13px system-ui;display:grid;grid-template-columns:repeat(3,250px);gap:16px">${panels.map(({ label, bytes }) => `<figure style="margin:0"><figcaption style="height:28px">${label}</figcaption><img width="232" height="232" src="data:image/png;base64,${bytes.toString('base64')}"></figure>`).join('')}</main>`)
+  await page.locator('main').screenshot({ path: path.join(b29EvidenceDir, 'creator-signature-b29-all-positions-contact-sheet.png') })
+
+  const overlayPanels = panels.map(({ label, source, geometry }) => {
+    const decoded = decodeURIComponent(source.split(',')[1] ?? '')
+    const [ax, ay, aw, ah] = geometry.active
+    const [sx, sy, sw, sh] = geometry.slot
+    const [cx, cy, cw, ch] = geometry.card
+    const overlay = `<rect x="${cx}" y="${cy}" width="${cw}" height="${ch}" fill="none" stroke="#60a5fa" stroke-width="7"/><rect x="${ax}" y="${ay}" width="${aw}" height="${ah}" fill="none" stroke="#22c55e" stroke-width="7"/><rect x="${sx}" y="${sy}" width="${sw}" height="${sh}" fill="none" stroke="#f59e0b" stroke-width="7"/><text x="30" y="704" fill="#60a5fa" font-size="15" font-family="system-ui">BLUE CARD</text><text x="250" y="704" fill="#22c55e" font-size="15" font-family="system-ui">GREEN CORE QR</text><text x="500" y="704" fill="#f59e0b" font-size="15" font-family="system-ui">AMBER SHELF</text>`
+    return { label, source: `data:image/svg+xml;charset=utf-8,${encodeURIComponent(decoded.replace('</svg>', `${overlay}</svg>`))}` }
+  })
+  await page.setContent(`<main style="margin:0;padding:16px;background:#020617;color:white;font:600 13px system-ui;display:grid;grid-template-columns:repeat(3,250px);gap:16px">${overlayPanels.map(({ label, source }) => `<figure style="margin:0"><figcaption style="height:28px">${label}</figcaption><img width="232" height="232" src="${source}"></figure>`).join('')}</main>`)
+  await page.locator('main').screenshot({ path: path.join(b29EvidenceDir, 'creator-signature-b29-safe-zone-overlay.png') })
+
+  const b29Default = decodeURIComponent(panels[0].source.split(',')[1] ?? '')
+  const b28Default = b29Default
+    .replace('data-qr-card-zone="96,41,528,620" x="96" y="41" width="528" height="620"', 'data-qr-card-zone="96,41,528,528" x="96" y="41" width="528" height="528"')
+    .replace(/\s*<line x1="110" y1="565" x2="610" y2="565" stroke="#e2e8f0" stroke-width="2"\/>/, '')
+    .replace(/<g data-template-layer="creator-signature"[\s\S]*?<\/g>/, '<g data-template-layer="creator-signature" data-signature-position="bottom-right-outside" data-signature-slot="370,569,270,90"><rect x="370" y="569" width="270" height="90" rx="18" fill="#0f172a" stroke="#38bdf8" stroke-width="2"/><text x="624" y="594" text-anchor="end" fill="#f8fafc" font-family="Inter,system-ui,sans-serif" font-size="18" font-weight="750">Ernesto Creates</text><text x="624" y="616" text-anchor="end" fill="#94a3b8" font-family="Inter,system-ui,sans-serif" font-size="10">@ernesto</text><text x="624" y="638" text-anchor="end" fill="#38bdf8" font-family="Inter,system-ui,sans-serif" font-size="8" font-weight="700">SCAN TO CONNECT</text></g>')
+  const b28Source = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(b28Default)}`
+  const b29Source = panels[0].source
+  await page.setViewportSize({ width: 1080, height: 590 })
+  await page.setContent(`<main style="margin:0;padding:24px;background:#020617;color:white;font:700 18px system-ui;display:grid;grid-template-columns:1fr 1fr;gap:24px"><figure style="margin:0"><figcaption style="height:34px">B28 · detached dark pill</figcaption><img width="500" height="500" src="${b28Source}"></figure><figure style="margin:0"><figcaption style="height:34px">B29 · text-only reserved shelf</figcaption><img width="500" height="500" src="${b29Source}"></figure></main>`)
+  await page.locator('main').screenshot({ path: path.join(b29EvidenceDir, 'creator-signature-b28-vs-b29-default-bottom-right.png') })
+  const b28Hash = createHash('sha256').update(b28Default).digest('hex')
+  const b29Hash = createHash('sha256').update(b29Default).digest('hex')
+  expect(b29Hash).not.toBe(b28Hash)
+  await fs.writeFile(path.join(b29EvidenceDir, 'creator-signature-b29-visual-delta.json'), JSON.stringify({
+    baseline: 'B28 merged baseline renderer reconstructed from frozen geometry', b28Sha256: b28Hash, b29Sha256: b29Hash, visiblyDifferent: true,
+    defaultBottomRight: { textOnly: true, darkBackground: false, blueBorder: false, pill: false, badge: false, rightBoundaryAligned: true, qrRightEdge: panels[0].geometry.active[0] + panels[0].geometry.active[2], textAnchorX: panels[0].geometry.active[0] + panels[0].geometry.active[2] },
+    bottomLeft: { textOnly: true, leftBoundaryAligned: true, qrLeftEdge: panels[1].geometry.active[0], textAnchorX: panels[1].geometry.active[0] },
+    positionsDistinct: true,
+  }, null, 2))
+
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/')
+  await page.getByRole('button', { name: 'Basic QR' }).click()
+  const basicAfter = await preview.getAttribute('src')
+  expect(basicAfter).toBe(basicBefore)
+  await page.getByRole('button', { name: 'Template Art' }).click()
+  const beforeDraft = await preview.getAttribute('src')
+  await page.getByRole('textbox', { name: 'Final destination URL' }).fill('https://example.com/b29-public-draft')
+  await page.getByRole('button', { name: 'Continue with this QR' }).click()
+  await expect(page.getByRole('status')).toContainText('QR activates after payment')
+  expect(await preview.getAttribute('src')).toBe(beforeDraft)
+  const headings = await page.locator('h1,h2,h3').allTextContents()
+  const hiddenPaidPanels = Object.fromEntries(['Candidates', 'Checkout', 'Export'].map((name) => [name, headings.filter((heading) => heading.trim() === name).length]))
+  expect(hiddenPaidPanels).toEqual({ Candidates: 0, Checkout: 0, Export: 0 })
+  await fs.writeFile(path.join(b29EvidenceDir, 'creator-signature-b29-public-gate-proof.json'), JSON.stringify({ basicQrPathUnchanged: basicAfter === basicBefore, unpaidPublicPath: 'draft-only', previewUnchangedAfterTypingAndContinue: beforeDraft === await preview.getAttribute('src'), hiddenPaidPanels, status: await page.getByRole('status').textContent() }, null, 2))
+  expect(errors).toEqual([])
+})
+
+test('B29 Creator Signature preview and authorized SVG export share exact text-only shelf geometry', async ({ page }) => {
+  const state = projectState({ coreEvidence: true })
+  state.templateArtLevel = 'template-art'
+  state.templateArt = { templateId: 'creator-signature', outputIntent: 'square-card', fields: { signatureText: 'Shelf Signature', handleText: '@shelf-proof', ctaText: 'Scan the work', signaturePosition: 'bottom-right-outside' } }
+  await seed(page, state)
+  await page.goto('/?workflow=internal')
+  await page.getByRole('button', { name: /^SVG/ }).click()
+  const preview = page.getByRole('img', { name: 'QR Preview' })
+  const positions = ['bottom-right-outside', 'bottom-left-outside', 'below-centered', 'right-side-vertical', 'top-right-badge'] as const
+  const normalize = (svg: string) => svg.replace(/(<svg[^>]*?)width="[0-9]+" height="[0-9]+"/, '$1width="SIZE" height="SIZE"').replace(/href="[^"]+"/, 'href="CORE_QR"')
+  const zone = (svg: string, name: string) => svg.match(new RegExp(`${name}="([0-9,]+)"`))![1].split(',').map(Number)
+  const parityByPosition: Record<string, unknown> = {}
+  for (const position of positions) {
+    const option = page.locator(`[data-signature-position="${position}"]`)
+    await option.click()
+    await expect(option).toHaveAttribute('aria-checked', 'true')
+    await expect.poll(async () => decodeURIComponent((await preview.getAttribute('src'))!.split(',')[1] ?? '')).toContain(`data-signature-position="${position}"`)
+    const previewSvg = decodeURIComponent(((await preview.getAttribute('src'))!).split(',')[1] ?? '')
+    const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'Export SVG' }).click()])
+    const exportPath = path.join(b29EvidenceDir, `${position}-${download.suggestedFilename()}`)
+    await download.saveAs(exportPath)
+    const exportSvg = await fs.readFile(exportPath, 'utf8')
+    expect(normalize(exportSvg)).toBe(normalize(previewSvg))
+    const previewGeometry = { active: zone(previewSvg, 'data-qr-active-zone'), card: zone(previewSvg, 'data-qr-card-zone'), slot: zone(previewSvg, 'data-signature-slot') }
+    const exportGeometry = { active: zone(exportSvg, 'data-qr-active-zone'), card: zone(exportSvg, 'data-qr-card-zone'), slot: zone(exportSvg, 'data-signature-slot') }
+    expect(exportGeometry).toEqual(previewGeometry)
+    parityByPosition[position] = { normalizedStructuralParity: true, previewGeometry, exportGeometry, previewSha256: createHash('sha256').update(previewSvg).digest('hex'), exportSha256: createHash('sha256').update(exportSvg).digest('hex'), exportArtifactPath: exportPath }
+  }
+  const coreCalls = await page.evaluate(() => (window as typeof window & { __QR_CORE_EXPORT_CALLS__: unknown[] }).__QR_CORE_EXPORT_CALLS__)
+  expect(coreCalls).toHaveLength(positions.length)
+  await fs.writeFile(path.join(b29EvidenceDir, 'creator-signature-b29-export-parity.json'), JSON.stringify({ allPositionsParity: true, textOnlyReservedShelf: true, positions: parityByPosition, coreExportAuthorityCalls: coreCalls.length }, null, 2))
 })
 
 test('B28 Creator Signature keeps five labels corner-adjacent, outside active QR, and preserves Basic/public gates', async ({ page }) => {
@@ -272,7 +398,9 @@ test('B28 Creator Signature keeps five labels corner-adjacent, outside active QR
       host.remove()
       return result
     }, decoded)
-    expect(rendered).toEqual(declared)
+    expect(rendered.active).toEqual(declared.active)
+    expect(rendered.card).toEqual(declared.card)
+    rendered.slot.forEach((coordinate, index) => expect(Math.abs(coordinate - declared.slot[index])).toBeLessThanOrEqual(1))
     const { active, card, slot } = rendered
     const overlaps = (a: number[], b: number[]) => a[0] < b[0] + b[2] && a[0] + a[2] > b[0] && a[1] < b[1] + b[3] && a[1] + a[3] > b[1]
     const gapX = Math.max(card[0] - (slot[0] + slot[2]), slot[0] - (card[0] + card[2]), 0)
