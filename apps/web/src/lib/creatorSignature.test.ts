@@ -58,4 +58,30 @@ describe('Creator Signature template contract', () => {
       `data-signature-slot="${labelSlot.x},${labelSlot.y},${labelSlot.width},${labelSlot.height}"`,
     )
   })
+
+  it.each(CREATOR_SIGNATURE_POSITIONS)('$value reserves card whitespace and renders text without a visible label container', ({ value }) => {
+    const { qrImage, qrCard, labelSlot } = creatorSignatureGeometry(value)
+    const contains = (outer: typeof qrCard, inner: typeof qrCard) =>
+      inner.x >= outer.x && inner.y >= outer.y
+      && inner.x + inner.width <= outer.x + outer.width
+      && inner.y + inner.height <= outer.y + outer.height
+    const svg = composeCreatorSignatureSvg(qr, { signaturePosition: value })
+
+    expect(contains(qrCard, qrImage)).toBe(true)
+    expect(contains(qrCard, labelSlot)).toBe(true)
+    expect(svg).toContain('data-signature-reserved-shelf="true"')
+    expect(svg).not.toContain('fill="#0f172a" stroke="#38bdf8"')
+  })
+
+  it('aligns the mirrored bottom shelves to the active QR vertical boundaries', () => {
+    const right = creatorSignatureGeometry('bottom-right-outside')
+    const left = creatorSignatureGeometry('bottom-left-outside')
+    const rightSvg = composeCreatorSignatureSvg(qr, { signaturePosition: 'bottom-right-outside' })
+    const leftSvg = composeCreatorSignatureSvg(qr, { signaturePosition: 'bottom-left-outside' })
+
+    expect(right.labelSlot.x + right.labelSlot.width).toBe(right.qrImage.x + right.qrImage.width)
+    expect(left.labelSlot.x).toBe(left.qrImage.x)
+    expect(rightSvg).toContain(`x="${right.qrImage.x + right.qrImage.width}" y="594" text-anchor="end"`)
+    expect(leftSvg).toContain(`x="${left.qrImage.x}" y="594" text-anchor="start"`)
+  })
 })

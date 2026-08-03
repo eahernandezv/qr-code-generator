@@ -44,21 +44,20 @@ export function creatorSignatureGeometry(position: CreatorSignaturePosition): Cr
     : position === 'top-right-badge'
       ? { x: 125, y: 154, width: 470, height: 470 }
       : { x: 110, y: 55, width: 500, height: 500 }
-  const qrCard = {
-    x: qrImage.x - 14,
-    y: qrImage.y - 14,
-    width: qrImage.width + 28,
-    height: qrImage.height + 28,
-  }
+  const qrCard = position === 'right-side-vertical'
+    ? { x: 51, y: 96, width: 568, height: 468 }
+    : position === 'top-right-badge'
+      ? { x: 111, y: 48, width: 498, height: 590 }
+      : { x: 96, y: 41, width: 528, height: 620 }
   const labelSlot = position === 'bottom-left-outside'
-    ? { x: 80, y: qrCard.y + qrCard.height, width: 270, height: 90 }
+    ? { x: qrImage.x, y: qrImage.y + qrImage.height, width: 260, height: 92 }
     : position === 'below-centered'
-      ? { x: 155, y: qrCard.y + qrCard.height, width: 410, height: 86 }
+      ? { x: 155, y: qrImage.y + qrImage.height, width: 410, height: 92 }
       : position === 'right-side-vertical'
-        ? { x: qrCard.x + qrCard.width, y: 110, width: 92, height: 440 }
+        ? { x: qrImage.x + qrImage.width, y: qrImage.y, width: 100, height: qrImage.height }
         : position === 'top-right-badge'
-          ? { x: 375, y: qrCard.y - 92, width: 264, height: 92 }
-          : { x: 370, y: qrCard.y + qrCard.height, width: 270, height: 90 }
+          ? { x: qrImage.x + qrImage.width - 260, y: 62, width: 260, height: 78 }
+          : { x: qrImage.x + qrImage.width - 260, y: qrImage.y + qrImage.height, width: 260, height: 92 }
   return { qrImage, qrCard, labelSlot }
 }
 
@@ -77,23 +76,23 @@ function textLayer(fields: CreatorSignatureTemplateFields, geometry: CreatorSign
     y: number,
     options: { signatureSize?: number; handleSize?: number; ctaSize?: number; maxWidth?: number; lineGap?: number } = {},
   ) => {
-    const signatureSize = options.signatureSize ?? 18
-    const handleSize = options.handleSize ?? 10
-    const ctaSize = options.ctaSize ?? 8
+    const signatureSize = options.signatureSize ?? 22
+    const handleSize = options.handleSize ?? 11
+    const ctaSize = options.ctaSize ?? 9
     const maxWidth = options.maxWidth ?? 220
     const lineGap = options.lineGap ?? 22
     return `
-    <text x="${x}" y="${y}" text-anchor="${anchor}" fill="#f8fafc" font-family="Inter,system-ui,sans-serif" font-size="${signatureSize}" font-weight="750" letter-spacing="-0.5"${fit(signature, signatureSize, maxWidth)}>${signature}</text>
-    <text x="${x}" y="${y + lineGap}" text-anchor="${anchor}" fill="#94a3b8" font-family="Inter,system-ui,sans-serif" font-size="${handleSize}" font-weight="550"${fit(handle, handleSize, maxWidth)}>${handle}</text>
-    <text x="${x}" y="${y + lineGap * 2}" text-anchor="${anchor}" fill="#38bdf8" font-family="Inter,system-ui,sans-serif" font-size="${ctaSize}" font-weight="700" letter-spacing="1.8"${fit(cta, ctaSize, maxWidth)}>${cta.toUpperCase()}</text>`
+    <text x="${x}" y="${y}" text-anchor="${anchor}" fill="#18213a" font-family="Inter,system-ui,sans-serif" font-size="${signatureSize}" font-weight="750" letter-spacing="-0.5"${fit(signature, signatureSize, maxWidth)}>${signature}</text>
+    <text x="${x}" y="${y + lineGap}" text-anchor="${anchor}" fill="#64748b" font-family="Inter,system-ui,sans-serif" font-size="${handleSize}" font-weight="550"${fit(handle, handleSize, maxWidth)}>${handle}</text>
+    <text x="${x}" y="${y + lineGap * 2}" text-anchor="${anchor}" fill="#036b8f" font-family="Inter,system-ui,sans-serif" font-size="${ctaSize}" font-weight="700" letter-spacing="1.8"${fit(cta, ctaSize, maxWidth)}>${cta.toUpperCase()}</text>`
   }
-  const backing = `<rect x="${labelSlot.x}" y="${labelSlot.y}" width="${labelSlot.width}" height="${labelSlot.height}" rx="18" fill="#0f172a" stroke="#38bdf8" stroke-width="2"/>`
+  const reservedShelf = `<rect data-signature-reserved-shelf="true" x="${labelSlot.x}" y="${labelSlot.y}" width="${labelSlot.width}" height="${labelSlot.height}" fill="none" stroke="none" aria-hidden="true"/>`
 
-  if (position === 'bottom-left-outside') return `${backing}${lines('start', 96, 594)}`
-  if (position === 'below-centered') return `${backing}${lines('middle', 360, 594, { maxWidth: 360 })}`
-  if (position === 'right-side-vertical') return `${backing}<g transform="translate(589 330) rotate(90)">${lines('middle', 0, 0, { maxWidth: 410 })}</g>`
-  if (position === 'top-right-badge') return `${backing}${lines('middle', 507, 78)}`
-  return `${backing}${lines('end', 624, 594)}`
+  if (position === 'bottom-left-outside') return `${reservedShelf}${lines('start', geometry.qrImage.x, 594)}`
+  if (position === 'below-centered') return `${reservedShelf}${lines('middle', 360, 594, { maxWidth: 380 })}`
+  if (position === 'right-side-vertical') return `${reservedShelf}<g transform="translate(555 330) rotate(90)">${lines('middle', 0, 0, { maxWidth: 400 })}</g>`
+  if (position === 'top-right-badge') return `${reservedShelf}${lines('end', geometry.qrImage.x + geometry.qrImage.width, 82)}`
+  return `${reservedShelf}${lines('end', geometry.qrImage.x + geometry.qrImage.width, 594)}`
 }
 
 export function composeCreatorSignatureSvg(
@@ -114,6 +113,11 @@ export function composeCreatorSignatureSvg(
   <circle cx="660" cy="660" r="80" fill="#2563eb" opacity=".08"/><circle cx="54" cy="55" r="42" fill="#38bdf8" opacity=".06"/>
   <rect data-qr-card-zone="${qrCard.x},${qrCard.y},${qrCard.width},${qrCard.height}" x="${qrCard.x}" y="${qrCard.y}" width="${qrCard.width}" height="${qrCard.height}" rx="26" fill="#fff" stroke="#cbd5e1" stroke-width="2"/>
   <image data-qr-active-zone="${qrImage.x},${qrImage.y},${qrImage.width},${qrImage.height}" href="${safeQrSource}" x="${qrImage.x}" y="${qrImage.y}" width="${qrImage.width}" height="${qrImage.height}" preserveAspectRatio="xMidYMid meet"/>
+  ${position === 'right-side-vertical'
+    ? `<line x1="${labelSlot.x + 10}" y1="${qrImage.y}" x2="${labelSlot.x + 10}" y2="${qrImage.y + qrImage.height}" stroke="#e2e8f0" stroke-width="2"/>`
+    : position === 'top-right-badge'
+      ? `<line x1="${qrImage.x}" y1="${qrImage.y - 8}" x2="${qrImage.x + qrImage.width}" y2="${qrImage.y - 8}" stroke="#e2e8f0" stroke-width="2"/>`
+      : `<line x1="${qrImage.x}" y1="${qrImage.y + qrImage.height + 10}" x2="${qrImage.x + qrImage.width}" y2="${qrImage.y + qrImage.height + 10}" stroke="#e2e8f0" stroke-width="2"/>`}
   <g data-template-layer="creator-signature" data-signature-position="${position}" data-signature-slot="${labelSlot.x},${labelSlot.y},${labelSlot.width},${labelSlot.height}">${textLayer(fields, geometry)}</g>
 </svg>`
 }
