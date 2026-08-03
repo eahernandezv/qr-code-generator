@@ -126,11 +126,11 @@ function visibleQrContent(qrImage: CreatorSignatureRect, qrSource?: string): Cre
 }
 
 export function creatorSignatureGeometry(position: CreatorSignaturePosition, qrSource?: string): CreatorSignatureGeometry {
-  const qrImage = { x: 110, y: 55, width: 500, height: 500 }
+  const qrImage = { x: 0, y: 0, width: 720, height: 720 }
   const qrContent = visibleQrContent(qrImage, qrSource)
-  const qrCard = { x: 96, y: 41, width: 528, height: 620 }
-  const bottomShelfY = qrContent.y + qrContent.height + 8
-  const topShelfY = Math.max(qrCard.y, qrContent.y - 84)
+  const qrCard = { x: 0, y: 0, width: 720, height: 720 }
+  const bottomShelfY = Math.min(qrImage.y + qrImage.height - 86, qrContent.y + qrContent.height + 8)
+  const topShelfY = Math.max(qrImage.y + 8, qrContent.y - 78)
   const labelSlot = position === 'bottom-left-outside'
     ? { x: qrContent.x, y: bottomShelfY, width: 260, height: 76 }
     : position === 'below-centered'
@@ -191,12 +191,7 @@ export function composeCreatorSignatureSvg(
   const { qrImage, qrContent, qrCard, labelSlot } = geometry
   const safeQrSource = escapeXml(qrSource)
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 720 720" role="img" aria-label="Creator Signature Template Art QR">
-  <defs><linearGradient id="cs-bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#020617"/><stop offset="1" stop-color="#111827"/></linearGradient></defs>
-  <rect width="720" height="720" rx="42" fill="url(#cs-bg)"/>
-  <path d="M42 82V42h40 M638 42h40v40 M42 638v40h40 M638 678h40v-40" fill="none" stroke="#38bdf8" stroke-width="3" stroke-linecap="round" opacity=".8"/>
-  <circle cx="660" cy="660" r="80" fill="#2563eb" opacity=".08"/><circle cx="54" cy="55" r="42" fill="#38bdf8" opacity=".06"/>
-  <rect data-qr-card-zone="${qrCard.x},${qrCard.y},${qrCard.width},${qrCard.height}" x="${qrCard.x}" y="${qrCard.y}" width="${qrCard.width}" height="${qrCard.height}" rx="26" fill="#fff" stroke="#cbd5e1" stroke-width="2"/>
-  <image data-qr-active-zone="${qrImage.x},${qrImage.y},${qrImage.width},${qrImage.height}" data-qr-content-zone="${qrContent.x},${qrContent.y},${qrContent.width},${qrContent.height}" href="${safeQrSource}" x="${qrImage.x}" y="${qrImage.y}" width="${qrImage.width}" height="${qrImage.height}" preserveAspectRatio="xMidYMid meet"/>
+  <image data-qr-card-zone="${qrCard.x},${qrCard.y},${qrCard.width},${qrCard.height}" data-qr-active-zone="${qrImage.x},${qrImage.y},${qrImage.width},${qrImage.height}" data-qr-content-zone="${qrContent.x},${qrContent.y},${qrContent.width},${qrContent.height}" href="${safeQrSource}" x="${qrImage.x}" y="${qrImage.y}" width="${qrImage.width}" height="${qrImage.height}" preserveAspectRatio="xMidYMid meet"/>
   <g data-template-layer="creator-signature" data-signature-position="${position}" data-signature-slot="${labelSlot.x},${labelSlot.y},${labelSlot.width},${labelSlot.height}">${textLayer(fields, geometry)}</g>
 </svg>`
 }
