@@ -23,6 +23,7 @@ const b28EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/st
 const b29EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b29-creator-signature-text-only-boundary-aligned')
 const b32EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b32-signature-follows-qr-size')
 const b33EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b33-top-corners-empty-cta')
+const b34EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b34-template-art-controls-tray')
 
 const fixtureModules = Array.from({ length: 21 }, (_, y) => Array.from({ length: 21 }, (_, x) => {
   const finder = (fx: number, fy: number) => x >= fx && x < fx + 7 && y >= fy && y < fy + 7
@@ -238,6 +239,7 @@ test.beforeAll(async () => {
   await fs.mkdir(b29EvidenceDir, { recursive: true })
   await fs.mkdir(b32EvidenceDir, { recursive: true })
   await fs.mkdir(b33EvidenceDir, { recursive: true })
+  await fs.mkdir(b34EvidenceDir, { recursive: true })
 })
 
 test('B29 Creator Signature uses text-only reserved shelves aligned to QR boundaries and preserves Basic/public gates', async ({ page }) => {
@@ -426,6 +428,48 @@ test('B33 Creator Signature replaces crossed-out options with top corners and ke
   await page.locator('main').screenshot({ path: path.join(b33EvidenceDir, 'top-corners-empty-cta-contact-sheet.png') })
   const jsonProofs = proofs.map((proof) => ({ label: proof.label, value: proof.value, anchor: proof.anchor, content: proof.content, slot: proof.slot, textX: proof.textX, textY: proof.textY, ctaRendered: proof.ctaRendered }))
   await fs.writeFile(path.join(b33EvidenceDir, 'top-corners-empty-cta.json'), JSON.stringify({ removedOptions: ['Right side vertical', 'Top right badge'], addedOptions: ['Top right corner', 'Top left corner'], proofs: jsonProofs }, null, 2))
+  expect(errors).toEqual([])
+})
+
+test('B34 Template Art keeps QR preview zone stable and swaps Basic controls tray to Creator Signature', async ({ page }) => {
+  const errors = await assertNoConsoleErrors(page)
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/')
+  await page.addStyleTag({ content: '*,*::before,*::after{transition:none!important;animation:none!important}' })
+  await expect(page.locator('[data-testid="studio-app"]')).toHaveAttribute('data-ux-variant', 'no-scroll')
+  const previewZone = page.locator('[data-testid="qr-side-controls"]')
+  const lowerControls = page.locator('[data-testid="lower-design-controls"]')
+  await expect(previewZone.getByRole('img', { name: 'QR Preview' })).toBeVisible()
+  await expect(previewZone.getByRole('group', { name: 'QR size' })).toBeVisible()
+  await expect(previewZone.getByRole('group', { name: 'Intensity' })).toBeVisible()
+  await expect(lowerControls.getByRole('tablist', { name: 'Design control families' })).toBeVisible()
+  await expect(lowerControls.getByRole('listbox', { name: 'Body Color' })).toBeVisible()
+  const beforeBox = await previewZone.boundingBox()
+
+  await page.getByRole('button', { name: 'Template Art', pressed: false }).click()
+  await expect(page.locator('[data-testid="studio-app"]')).toHaveAttribute('data-ux-variant', 'no-scroll')
+  await expect(previewZone.getByRole('img', { name: 'QR Preview' })).toBeVisible()
+  await expect(previewZone.getByRole('group', { name: 'QR size' })).toBeVisible()
+  await expect(previewZone.getByRole('group', { name: 'Intensity' })).toBeVisible()
+  await expect(lowerControls.getByRole('heading', { name: 'Creator Signature' })).toBeVisible()
+  await expect(lowerControls.getByRole('textbox', { name: 'Signature text' })).toBeVisible()
+  await expect(lowerControls.getByRole('radio', { name: 'Top right corner' })).toBeVisible()
+  await expect(lowerControls.getByRole('tablist', { name: 'Design control families' })).toHaveCount(0)
+  await expect(lowerControls.getByRole('listbox', { name: 'Body Color' })).toHaveCount(0)
+  const afterBox = await previewZone.boundingBox()
+  expect(beforeBox).not.toBeNull()
+  expect(afterBox).not.toBeNull()
+  expect(Math.abs((afterBox!.y) - (beforeBox!.y))).toBeLessThanOrEqual(2)
+  expect(Math.abs((afterBox!.height) - (beforeBox!.height))).toBeLessThanOrEqual(2)
+  await page.screenshot({ path: path.join(b34EvidenceDir, 'after-template-art-controls-tray.png'), fullPage: true })
+  await fs.writeFile(path.join(b34EvidenceDir, 'template-art-controls-tray.json'), JSON.stringify({
+    uxVariant: await page.locator('[data-testid="studio-app"]').getAttribute('data-ux-variant'),
+    beforePreviewZone: beforeBox,
+    afterPreviewZone: afterBox,
+    previewZoneStable: Math.abs(afterBox!.y - beforeBox!.y) <= 2 && Math.abs(afterBox!.height - beforeBox!.height) <= 2,
+    lowerTrayShowsCreatorSignature: true,
+    basicControlsHiddenInTemplateArt: true,
+  }, null, 2))
   expect(errors).toEqual([])
 })
 
