@@ -268,6 +268,10 @@ test('B29 Creator Signature uses text-only reserved shelves aligned to QR bounda
     expect(layer).toContain('data-signature-reserved-shelf="true"')
     expect(layer).not.toContain('fill="#0f172a"')
     expect(layer).not.toContain('stroke="#38bdf8"')
+    expect(decoded).not.toContain('stroke="#e2e8f0"')
+    if (value === 'bottom-right-outside' || value === 'bottom-left-outside' || value === 'below-centered') {
+      expect(layer).toContain(`y="${geometry.active[1] + geometry.active[3] + 24}"`)
+    }
     panels.push({ label: value, source, bytes: await preview.screenshot(), geometry })
   }
   expect(new Set(panels.map(({ source }) => createHash('sha256').update(source).digest('hex'))).size).toBe(5)
@@ -393,7 +397,7 @@ test('B28 Creator Signature keeps five labels corner-adjacent, outside active QR
       const result = {
         active: box(host.querySelector<SVGGraphicsElement>('[data-qr-active-zone]')!),
         card: box(host.querySelector<SVGGraphicsElement>('[data-qr-card-zone]')!),
-        slot: box(host.querySelector<SVGGraphicsElement>('[data-template-layer="creator-signature"]')!),
+        slot: box(host.querySelector<SVGGraphicsElement>('[data-signature-reserved-shelf="true"]')!),
       }
       host.remove()
       return result

@@ -88,11 +88,12 @@ function textLayer(fields: CreatorSignatureTemplateFields, geometry: CreatorSign
   }
   const reservedShelf = `<rect data-signature-reserved-shelf="true" x="${labelSlot.x}" y="${labelSlot.y}" width="${labelSlot.width}" height="${labelSlot.height}" fill="none" stroke="none" aria-hidden="true"/>`
 
-  if (position === 'bottom-left-outside') return `${reservedShelf}${lines('start', geometry.qrImage.x, 594)}`
-  if (position === 'below-centered') return `${reservedShelf}${lines('middle', 360, 594, { maxWidth: 380 })}`
-  if (position === 'right-side-vertical') return `${reservedShelf}<g transform="translate(555 330) rotate(90)">${lines('middle', 0, 0, { maxWidth: 400 })}</g>`
+  const shelfTextY = geometry.qrImage.y + geometry.qrImage.height + 24
+  if (position === 'bottom-left-outside') return `${reservedShelf}${lines('start', geometry.qrImage.x, shelfTextY)}`
+  if (position === 'below-centered') return `${reservedShelf}${lines('middle', 360, shelfTextY, { maxWidth: 380 })}`
+  if (position === 'right-side-vertical') return `${reservedShelf}<g transform="translate(538 330) rotate(90)">${lines('middle', 0, 0, { maxWidth: 400 })}</g>`
   if (position === 'top-right-badge') return `${reservedShelf}${lines('end', geometry.qrImage.x + geometry.qrImage.width, 82)}`
-  return `${reservedShelf}${lines('end', geometry.qrImage.x + geometry.qrImage.width, 594)}`
+  return `${reservedShelf}${lines('end', geometry.qrImage.x + geometry.qrImage.width, shelfTextY)}`
 }
 
 export function composeCreatorSignatureSvg(
@@ -113,11 +114,6 @@ export function composeCreatorSignatureSvg(
   <circle cx="660" cy="660" r="80" fill="#2563eb" opacity=".08"/><circle cx="54" cy="55" r="42" fill="#38bdf8" opacity=".06"/>
   <rect data-qr-card-zone="${qrCard.x},${qrCard.y},${qrCard.width},${qrCard.height}" x="${qrCard.x}" y="${qrCard.y}" width="${qrCard.width}" height="${qrCard.height}" rx="26" fill="#fff" stroke="#cbd5e1" stroke-width="2"/>
   <image data-qr-active-zone="${qrImage.x},${qrImage.y},${qrImage.width},${qrImage.height}" href="${safeQrSource}" x="${qrImage.x}" y="${qrImage.y}" width="${qrImage.width}" height="${qrImage.height}" preserveAspectRatio="xMidYMid meet"/>
-  ${position === 'right-side-vertical'
-    ? `<line x1="${labelSlot.x + 10}" y1="${qrImage.y}" x2="${labelSlot.x + 10}" y2="${qrImage.y + qrImage.height}" stroke="#e2e8f0" stroke-width="2"/>`
-    : position === 'top-right-badge'
-      ? `<line x1="${qrImage.x}" y1="${qrImage.y - 8}" x2="${qrImage.x + qrImage.width}" y2="${qrImage.y - 8}" stroke="#e2e8f0" stroke-width="2"/>`
-      : `<line x1="${qrImage.x}" y1="${qrImage.y + qrImage.height + 10}" x2="${qrImage.x + qrImage.width}" y2="${qrImage.y + qrImage.height + 10}" stroke="#e2e8f0" stroke-width="2"/>`}
   <g data-template-layer="creator-signature" data-signature-position="${position}" data-signature-slot="${labelSlot.x},${labelSlot.y},${labelSlot.width},${labelSlot.height}">${textLayer(fields, geometry)}</g>
 </svg>`
 }

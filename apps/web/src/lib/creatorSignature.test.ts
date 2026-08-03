@@ -81,7 +81,9 @@ describe('Creator Signature template contract', () => {
 
     expect(right.labelSlot.x + right.labelSlot.width).toBe(right.qrImage.x + right.qrImage.width)
     expect(left.labelSlot.x).toBe(left.qrImage.x)
-    expect(rightSvg).toContain(`x="${right.qrImage.x + right.qrImage.width}" y="594" text-anchor="end"`)
-    expect(leftSvg).toContain(`x="${left.qrImage.x}" y="594" text-anchor="start"`)
+    expect(rightSvg).toContain(`x="${right.qrImage.x + right.qrImage.width}" y="${right.qrImage.y + right.qrImage.height + 24}" text-anchor="end"`)
+    expect(leftSvg).toContain(`x="${left.qrImage.x}" y="${left.qrImage.y + left.qrImage.height + 24}" text-anchor="start"`)
+    expect(rightSvg).not.toContain('stroke="#e2e8f0"')
+    expect(leftSvg).not.toContain('stroke="#e2e8f0"')
   })
 })
