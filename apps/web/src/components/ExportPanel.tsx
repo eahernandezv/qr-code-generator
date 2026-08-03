@@ -6,6 +6,7 @@ import { guestCommerce } from '../lib/commerceClient'
 import type { CoreExportArtifact, CoreExportRequest } from '../lib/coreExportClient'
 import { coreExportClient } from '../lib/coreExportClient'
 import { composeCreatorSignaturePng, composeCreatorSignatureSvg, DEFAULT_CREATOR_SIGNATURE, svgDataUrl } from '../lib/creatorSignature'
+import { buildStudioGenerationRequest, renderStudioPreview } from '../lib/studioGenerationRequest'
 
 const FORMATS: { value: CoreExportRequest['formats'][number]; label: string; ext: string; desc: string }[] = [
   { value: 'png', label: 'PNG', ext: '.png', desc: 'Core-validated raster' },
@@ -32,6 +33,18 @@ function artifactDownloadHref(file: CoreExportArtifact['files'][number]): string
   return file.format === 'svg'
     ? `data:image/svg+xml;charset=utf-8,${encodeURIComponent(file.data)}`
     : file.data
+}
+
+function normalizeBrowserSvg(svg: string): string {
+  return svg.replace(/(fill="[^"]+")([^>]*?)\s\1/g, '$1$2')
+}
+
+function currentPreviewCoreSource(project: ReturnType<typeof useStudioStore.getState>['project']): string | undefined {
+  if (!project.payload.raw.trim()) return undefined
+  const artifact = renderStudioPreview(buildStudioGenerationRequest({ payload: project.payload, artDirection: project.artDirection }))
+  return artifact.format === 'svg'
+    ? `data:image/svg+xml;charset=utf-8,${encodeURIComponent(normalizeBrowserSvg(artifact.data))}`
+    : artifact.data
 }
 
 function ValidationSummary({
@@ -221,11 +234,12 @@ const ExportPanel: React.FC = () => {
   async function composeTemplateArtifact(artifact: CoreExportArtifact): Promise<CoreExportArtifact> {
     if (project.templateArtLevel !== 'template-art') return artifact
     const fields = (project.templateArt ?? DEFAULT_CREATOR_SIGNATURE).fields
+    const geometrySource = currentPreviewCoreSource(project) ?? selectedCandidate?.previewUrl
     const files = await Promise.all(artifact.files.map(async (file) => {
       const qrSource = file.format === 'svg' ? svgDataUrl(file.data) : file.data
       return file.format === 'svg'
-        ? { ...file, data: composeCreatorSignatureSvg(qrSource, fields, { width: file.width, height: file.height }) }
-        : { ...file, data: await composeCreatorSignaturePng(qrSource, fields, file.width, file.height) }
+        ? { ...file, data: composeCreatorSignatureSvg(qrSource, fields, { width: file.width, height: file.height, geometrySource }) }
+        : { ...file, data: await composeCreatorSignaturePng(qrSource, fields, file.width, file.height, geometrySource) }
     }))
     return { ...artifact, files }
   }

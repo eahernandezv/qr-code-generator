@@ -21,6 +21,7 @@ const b26bEvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/s
 const b27EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b27-creator-signature-template')
 const b28EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b28-creator-signature-corner-adjacent-polish')
 const b29EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b29-creator-signature-text-only-boundary-aligned')
+const b32EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b32-signature-follows-qr-size')
 
 const fixtureModules = Array.from({ length: 21 }, (_, y) => Array.from({ length: 21 }, (_, x) => {
   const finder = (fx: number, fy: number) => x >= fx && x < fx + 7 && y >= fy && y < fy + 7
@@ -234,6 +235,7 @@ test.beforeAll(async () => {
   await fs.mkdir(b27EvidenceDir, { recursive: true })
   await fs.mkdir(b28EvidenceDir, { recursive: true })
   await fs.mkdir(b29EvidenceDir, { recursive: true })
+  await fs.mkdir(b32EvidenceDir, { recursive: true })
 })
 
 test('B29 Creator Signature uses text-only reserved shelves aligned to QR boundaries and preserves Basic/public gates', async ({ page }) => {
@@ -262,7 +264,7 @@ test('B29 Creator Signature uses text-only reserved shelves aligned to QR bounda
     const zone = (name: string) => decoded.match(new RegExp(`${name}="([0-9,]+)"`))![1].split(',').map(Number)
     const geometry = { active: zone('data-qr-active-zone'), content: zone('data-qr-content-zone'), card: zone('data-qr-card-zone'), slot: zone('data-signature-slot') }
     const layer = decoded.match(/<g data-template-layer="creator-signature"[\s\S]*?<\/g>/)![0]
-    expect(overlaps(geometry.slot, geometry.active)).toBe(false)
+    expect(overlaps(geometry.slot, geometry.content)).toBe(false)
     expect(contains(geometry.card, geometry.active)).toBe(true)
     expect(contains(geometry.card, geometry.slot)).toBe(true)
     expect(layer).toContain('data-signature-reserved-shelf="true"')
@@ -270,7 +272,7 @@ test('B29 Creator Signature uses text-only reserved shelves aligned to QR bounda
     expect(layer).not.toContain('stroke="#38bdf8"')
     expect(decoded).not.toContain('stroke="#e2e8f0"')
     if (value === 'bottom-right-outside' || value === 'bottom-left-outside' || value === 'below-centered') {
-      expect(layer).toContain(`y="${geometry.active[1] + geometry.active[3] + 24}"`)
+      expect(layer).toContain(`y="${geometry.content[1] + geometry.content[3] + 22}"`)
     }
     panels.push({ label: value, source, bytes: await preview.screenshot(), geometry })
   }
@@ -332,6 +334,51 @@ test('B29 Creator Signature uses text-only reserved shelves aligned to QR bounda
   expect(errors).toEqual([])
 })
 
+test('B32 Creator Signature location follows QR size controls without resizing signature text', async ({ page }) => {
+  const errors = await assertNoConsoleErrors(page)
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/')
+  await page.addStyleTag({ content: '*,*::before,*::after{transition:none!important;animation:none!important}' })
+  await page.getByRole('button', { name: 'Template Art' }).click()
+  const preview = page.getByRole('img', { name: 'QR Preview' })
+  const measurements: Array<{ label: string; content: number[]; slot: number[]; textX: number; textY: number; fontSize: number; source: string }> = []
+  const parse = (source: string) => {
+    const decoded = decodeURIComponent(source.split(',')[1] ?? '')
+    const zone = (name: string) => decoded.match(new RegExp(`${name}="([0-9,]+)"`))![1].split(',').map(Number)
+    const text = decoded.match(/<text x="([0-9.]+)" y="([0-9.]+)" text-anchor="end"[^>]*font-size="([0-9.]+)"/)!
+    return { decoded, content: zone('data-qr-content-zone'), slot: zone('data-signature-slot'), textX: Number(text[1]), textY: Number(text[2]), fontSize: Number(text[3]) }
+  }
+  for (const label of ['Smaller', 'Balanced', 'Larger']) {
+    const button = page.getByRole('button', { name: `${label} QR size` })
+    await button.click()
+    await expect(button).toHaveAttribute('aria-pressed', 'true')
+    await expect.poll(async () => {
+      const source = (await preview.getAttribute('src'))!
+      return parse(source).content.join(',')
+    }).not.toBe(measurements.length ? measurements[measurements.length - 1].content.join(',') : '__unset__')
+    const source = (await preview.getAttribute('src'))!
+    const parsed = parse(source)
+    measurements.push({ label, content: parsed.content, slot: parsed.slot, textX: parsed.textX, textY: parsed.textY, fontSize: parsed.fontSize, source })
+    await preview.screenshot({ path: path.join(b32EvidenceDir, `creator-signature-${label.toLowerCase()}-qr-size.png`) })
+  }
+  expect(new Set(measurements.map((item) => item.content.join(','))).size).toBe(3)
+  expect(new Set(measurements.map((item) => `${item.textX},${item.textY}`)).size).toBe(3)
+  expect(new Set(measurements.map((item) => item.fontSize)).size).toBe(1)
+  for (const item of measurements) {
+    expect(item.textX).toBe(item.content[0] + item.content[2])
+    expect(item.textY).toBe(item.content[1] + item.content[3] + 22)
+    expect(item.slot[0] + item.slot[2]).toBe(item.content[0] + item.content[2])
+  }
+  await page.setViewportSize({ width: 820, height: 360 })
+  await page.setContent(`<main style="margin:0;padding:16px;background:#020617;color:white;font:700 14px system-ui;display:grid;grid-template-columns:repeat(3,1fr);gap:16px">${measurements.map(({ label, source }) => `<figure style="margin:0"><figcaption>${label}</figcaption><img width="240" height="240" src="${source}"></figure>`).join('')}</main>`)
+  await page.locator('main').screenshot({ path: path.join(b32EvidenceDir, 'creator-signature-qr-size-movement-contact-sheet.png') })
+  await fs.writeFile(path.join(b32EvidenceDir, 'creator-signature-qr-size-movement.json'), JSON.stringify({
+    verdict: 'signature_location_moves_with_qr_size; signature_font_size_constant',
+    measurements: measurements.map(({ label, content, slot, textX, textY, fontSize }) => ({ label, content, slot, textX, textY, fontSize })),
+  }, null, 2))
+  expect(errors).toEqual([])
+})
+
 test('B29 Creator Signature preview and authorized SVG export share exact text-only shelf geometry', async ({ page }) => {
   const state = projectState({ coreEvidence: true })
   state.templateArtLevel = 'template-art'
@@ -385,7 +432,7 @@ test('B28 Creator Signature keeps five labels corner-adjacent, outside active QR
     const source = (await preview.getAttribute('src'))!
     const decoded = decodeURIComponent(source.split(',')[1] ?? '')
     const readZone = (name: string) => decoded.match(new RegExp(`${name}="([0-9,]+)"`))![1].split(',').map(Number)
-    const declared = { active: readZone('data-qr-active-zone'), card: readZone('data-qr-card-zone'), slot: readZone('data-signature-slot') }
+    const declared = { active: readZone('data-qr-active-zone'), content: readZone('data-qr-content-zone'), card: readZone('data-qr-card-zone'), slot: readZone('data-signature-slot') }
     const rendered = await page.evaluate((svg) => {
       const host = document.createElement('div')
       host.style.cssText = 'position:absolute;left:-10000px;top:0;width:720px;height:720px'
@@ -407,12 +454,13 @@ test('B28 Creator Signature keeps five labels corner-adjacent, outside active QR
     expect(rendered.card).toEqual(declared.card)
     rendered.slot.forEach((coordinate, index) => expect(Math.abs(coordinate - declared.slot[index])).toBeLessThanOrEqual(1))
     const { active, card, slot } = rendered
+    const { content } = declared
     const overlaps = (a: number[], b: number[]) => a[0] < b[0] + b[2] && a[0] + a[2] > b[0] && a[1] < b[1] + b[3] && a[1] + a[3] > b[1]
     const gapX = Math.max(card[0] - (slot[0] + slot[2]), slot[0] - (card[0] + card[2]), 0)
     const gapY = Math.max(card[1] - (slot[1] + slot[3]), slot[1] - (card[1] + card[3]), 0)
-    expect(overlaps(slot, active)).toBe(false)
+    expect(overlaps(slot, content)).toBe(false)
     expect(Math.hypot(gapX, gapY)).toBeLessThanOrEqual(1)
-    panels.push({ label: value, source, bytes: await preview.screenshot(), geometry: { active, card, slot } })
+    panels.push({ label: value, source, bytes: await preview.screenshot(), geometry: { active, content, card, slot } })
   }
   expect(new Set(panels.map(({ source }) => createHash('sha256').update(source).digest('hex'))).size).toBe(5)
 
