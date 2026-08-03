@@ -260,7 +260,7 @@ test('B29 Creator Signature uses text-only reserved shelves aligned to QR bounda
     const source = (await preview.getAttribute('src'))!
     const decoded = decodeURIComponent(source.split(',')[1] ?? '')
     const zone = (name: string) => decoded.match(new RegExp(`${name}="([0-9,]+)"`))![1].split(',').map(Number)
-    const geometry = { active: zone('data-qr-active-zone'), card: zone('data-qr-card-zone'), slot: zone('data-signature-slot') }
+    const geometry = { active: zone('data-qr-active-zone'), content: zone('data-qr-content-zone'), card: zone('data-qr-card-zone'), slot: zone('data-signature-slot') }
     const layer = decoded.match(/<g data-template-layer="creator-signature"[\s\S]*?<\/g>/)![0]
     expect(overlaps(geometry.slot, geometry.active)).toBe(false)
     expect(contains(geometry.card, geometry.active)).toBe(true)
@@ -275,8 +275,8 @@ test('B29 Creator Signature uses text-only reserved shelves aligned to QR bounda
     panels.push({ label: value, source, bytes: await preview.screenshot(), geometry })
   }
   expect(new Set(panels.map(({ source }) => createHash('sha256').update(source).digest('hex'))).size).toBe(5)
-  expect(panels[0].geometry.slot[0] + panels[0].geometry.slot[2]).toBe(panels[0].geometry.active[0] + panels[0].geometry.active[2])
-  expect(panels[1].geometry.slot[0]).toBe(panels[1].geometry.active[0])
+  expect(panels[0].geometry.slot[0] + panels[0].geometry.slot[2]).toBe(panels[0].geometry.content[0] + panels[0].geometry.content[2])
+  expect(panels[1].geometry.slot[0]).toBe(panels[1].geometry.content[0])
 
   await page.setViewportSize({ width: 812, height: 590 })
   await page.setContent(`<main style="margin:0;padding:16px;background:#020617;color:white;font:600 13px system-ui;display:grid;grid-template-columns:repeat(3,250px);gap:16px">${panels.map(({ label, bytes }) => `<figure style="margin:0"><figcaption style="height:28px">${label}</figcaption><img width="232" height="232" src="data:image/png;base64,${bytes.toString('base64')}"></figure>`).join('')}</main>`)
@@ -285,9 +285,10 @@ test('B29 Creator Signature uses text-only reserved shelves aligned to QR bounda
   const overlayPanels = panels.map(({ label, source, geometry }) => {
     const decoded = decodeURIComponent(source.split(',')[1] ?? '')
     const [ax, ay, aw, ah] = geometry.active
+    const [qx, qy, qw, qh] = geometry.content
     const [sx, sy, sw, sh] = geometry.slot
     const [cx, cy, cw, ch] = geometry.card
-    const overlay = `<rect x="${cx}" y="${cy}" width="${cw}" height="${ch}" fill="none" stroke="#60a5fa" stroke-width="7"/><rect x="${ax}" y="${ay}" width="${aw}" height="${ah}" fill="none" stroke="#22c55e" stroke-width="7"/><rect x="${sx}" y="${sy}" width="${sw}" height="${sh}" fill="none" stroke="#f59e0b" stroke-width="7"/><text x="30" y="704" fill="#60a5fa" font-size="15" font-family="system-ui">BLUE CARD</text><text x="250" y="704" fill="#22c55e" font-size="15" font-family="system-ui">GREEN CORE QR</text><text x="500" y="704" fill="#f59e0b" font-size="15" font-family="system-ui">AMBER SHELF</text>`
+    const overlay = `<rect x="${cx}" y="${cy}" width="${cw}" height="${ch}" fill="none" stroke="#60a5fa" stroke-width="7"/><rect x="${ax}" y="${ay}" width="${aw}" height="${ah}" fill="none" stroke="#22c55e" stroke-width="7" opacity=".35"/><rect x="${qx}" y="${qy}" width="${qw}" height="${qh}" fill="none" stroke="#ef4444" stroke-width="7"/><rect x="${sx}" y="${sy}" width="${sw}" height="${sh}" fill="none" stroke="#f59e0b" stroke-width="7"/><text x="30" y="704" fill="#60a5fa" font-size="15" font-family="system-ui">BLUE CARD</text><text x="205" y="704" fill="#ef4444" font-size="15" font-family="system-ui">RED VISIBLE QR BORDER</text><text x="500" y="704" fill="#f59e0b" font-size="15" font-family="system-ui">AMBER SHELF</text>`
     return { label, source: `data:image/svg+xml;charset=utf-8,${encodeURIComponent(decoded.replace('</svg>', `${overlay}</svg>`))}` }
   })
   await page.setContent(`<main style="margin:0;padding:16px;background:#020617;color:white;font:600 13px system-ui;display:grid;grid-template-columns:repeat(3,250px);gap:16px">${overlayPanels.map(({ label, source }) => `<figure style="margin:0"><figcaption style="height:28px">${label}</figcaption><img width="232" height="232" src="${source}"></figure>`).join('')}</main>`)
@@ -308,8 +309,8 @@ test('B29 Creator Signature uses text-only reserved shelves aligned to QR bounda
   expect(b29Hash).not.toBe(b28Hash)
   await fs.writeFile(path.join(b29EvidenceDir, 'creator-signature-b29-visual-delta.json'), JSON.stringify({
     baseline: 'B28 merged baseline renderer reconstructed from frozen geometry', b28Sha256: b28Hash, b29Sha256: b29Hash, visiblyDifferent: true,
-    defaultBottomRight: { textOnly: true, darkBackground: false, blueBorder: false, pill: false, badge: false, rightBoundaryAligned: true, qrRightEdge: panels[0].geometry.active[0] + panels[0].geometry.active[2], textAnchorX: panels[0].geometry.active[0] + panels[0].geometry.active[2] },
-    bottomLeft: { textOnly: true, leftBoundaryAligned: true, qrLeftEdge: panels[1].geometry.active[0], textAnchorX: panels[1].geometry.active[0] },
+    defaultBottomRight: { textOnly: true, darkBackground: false, blueBorder: false, pill: false, badge: false, rightBoundaryAligned: true, qrVisibleRightEdge: panels[0].geometry.content[0] + panels[0].geometry.content[2], textAnchorX: panels[0].geometry.content[0] + panels[0].geometry.content[2] },
+    bottomLeft: { textOnly: true, leftBoundaryAligned: true, qrVisibleLeftEdge: panels[1].geometry.content[0], textAnchorX: panels[1].geometry.content[0] },
     positionsDistinct: true,
   }, null, 2))
 
