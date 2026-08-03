@@ -24,6 +24,7 @@ const b29EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/st
 const b32EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b32-signature-follows-qr-size')
 const b33EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b33-top-corners-empty-cta')
 const b34EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b34-template-art-controls-tray')
+const b35EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b35-shared-canvas-settings-toggle')
 
 const fixtureModules = Array.from({ length: 21 }, (_, y) => Array.from({ length: 21 }, (_, x) => {
   const finder = (fx: number, fy: number) => x >= fx && x < fx + 7 && y >= fy && y < fy + 7
@@ -240,6 +241,7 @@ test.beforeAll(async () => {
   await fs.mkdir(b32EvidenceDir, { recursive: true })
   await fs.mkdir(b33EvidenceDir, { recursive: true })
   await fs.mkdir(b34EvidenceDir, { recursive: true })
+  await fs.mkdir(b35EvidenceDir, { recursive: true })
 })
 
 test('B29 Creator Signature uses text-only reserved shelves aligned to QR boundaries and preserves Basic/public gates', async ({ page }) => {
@@ -251,7 +253,7 @@ test('B29 Creator Signature uses text-only reserved shelves aligned to QR bounda
   await expect(preview).toHaveAttribute('data-art-level', 'basic')
   expect(decodeURIComponent(basicBefore.split(',')[1] ?? '')).not.toContain('data-template-layer="creator-signature"')
 
-  await page.getByRole('button', { name: 'Template Art' }).click()
+  await page.getByRole('button', { name: 'Creator Signature' }).click()
   const positions = ['bottom-right-outside', 'bottom-left-outside', 'below-centered', 'top-right-corner', 'top-left-corner'] as const
   const panels: Array<{ label: string; source: string; bytes: Buffer; geometry: Record<string, number[]> }> = []
   const overlaps = (a: number[], b: number[]) => a[0] < b[0] + b[2] && a[0] + a[2] > b[0] && a[1] < b[1] + b[3] && a[1] + a[3] > b[1]
@@ -322,10 +324,10 @@ test('B29 Creator Signature uses text-only reserved shelves aligned to QR bounda
 
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/')
-  await page.getByRole('button', { name: 'Basic QR' }).click()
+  await page.getByRole('button', { name: 'Basic QR Settings' }).click()
   const basicAfter = await preview.getAttribute('src')
   expect(basicAfter).toBe(basicBefore)
-  await page.getByRole('button', { name: 'Template Art' }).click()
+  await page.getByRole('button', { name: 'Creator Signature' }).click()
   const beforeDraft = await preview.getAttribute('src')
   await page.getByRole('textbox', { name: 'Final destination URL' }).fill('https://example.com/b29-public-draft')
   await page.getByRole('button', { name: 'Continue with this QR' }).click()
@@ -343,7 +345,7 @@ test('B32 Creator Signature location follows QR size controls without resizing s
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/')
   await page.addStyleTag({ content: '*,*::before,*::after{transition:none!important;animation:none!important}' })
-  await page.getByRole('button', { name: 'Template Art' }).click()
+  await page.getByRole('button', { name: 'Creator Signature' }).click()
   const preview = page.getByRole('img', { name: 'QR Preview' })
   const measurements: Array<{ label: string; content: number[]; slot: number[]; textX: number; textY: number; fontSize: number; source: string }> = []
   const parse = (source: string) => {
@@ -388,7 +390,7 @@ test('B33 Creator Signature replaces crossed-out options with top corners and ke
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/')
   await page.addStyleTag({ content: '*,*::before,*::after{transition:none!important;animation:none!important}' })
-  await page.getByRole('button', { name: 'Template Art' }).click()
+  await page.getByRole('button', { name: 'Creator Signature' }).click()
   await expect(page.getByRole('radio', { name: 'Right side vertical' })).toHaveCount(0)
   await expect(page.getByRole('radio', { name: 'Top right badge' })).toHaveCount(0)
   await expect(page.getByRole('radio', { name: 'Top right corner' })).toBeVisible()
@@ -431,7 +433,7 @@ test('B33 Creator Signature replaces crossed-out options with top corners and ke
   expect(errors).toEqual([])
 })
 
-test('B34 Template Art keeps QR preview zone stable and swaps Basic controls tray to Creator Signature', async ({ page }) => {
+test('B35 Basic QR settings and Creator Signature settings share one QR canvas', async ({ page }) => {
   const errors = await assertNoConsoleErrors(page)
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/')
@@ -439,36 +441,52 @@ test('B34 Template Art keeps QR preview zone stable and swaps Basic controls tra
   await expect(page.locator('[data-testid="studio-app"]')).toHaveAttribute('data-ux-variant', 'no-scroll')
   const previewZone = page.locator('[data-testid="qr-side-controls"]')
   const lowerControls = page.locator('[data-testid="lower-design-controls"]')
-  await expect(previewZone.getByRole('img', { name: 'QR Preview' })).toBeVisible()
+  const preview = previewZone.getByRole('img', { name: 'QR Preview' })
+  await expect(preview).toBeVisible()
+  await expect(preview).toHaveAttribute('data-art-level', 'basic')
   await expect(previewZone.getByRole('group', { name: 'QR size' })).toBeVisible()
   await expect(previewZone.getByRole('group', { name: 'Intensity' })).toBeVisible()
+  await expect(page.getByRole('group', { name: 'Settings panel' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Basic QR Settings' })).toHaveAttribute('aria-pressed', 'true')
   await expect(lowerControls.getByRole('tablist', { name: 'Design control families' })).toBeVisible()
   await expect(lowerControls.getByRole('listbox', { name: 'Body Color' })).toBeVisible()
   const beforeBox = await previewZone.boundingBox()
 
-  await page.getByRole('button', { name: 'Template Art', pressed: false }).click()
-  await expect(page.locator('[data-testid="studio-app"]')).toHaveAttribute('data-ux-variant', 'no-scroll')
-  await expect(previewZone.getByRole('img', { name: 'QR Preview' })).toBeVisible()
-  await expect(previewZone.getByRole('group', { name: 'QR size' })).toBeVisible()
-  await expect(previewZone.getByRole('group', { name: 'Intensity' })).toBeVisible()
+  await page.getByRole('button', { name: 'Creator Signature', pressed: false }).click()
+  await expect(preview).toHaveAttribute('data-art-level', 'template-art')
   await expect(lowerControls.getByRole('heading', { name: 'Creator Signature' })).toBeVisible()
   await expect(lowerControls.getByRole('textbox', { name: 'Signature text' })).toBeVisible()
   await expect(lowerControls.getByRole('radio', { name: 'Top right corner' })).toBeVisible()
   await expect(lowerControls.getByRole('tablist', { name: 'Design control families' })).toHaveCount(0)
-  await expect(lowerControls.getByRole('listbox', { name: 'Body Color' })).toHaveCount(0)
+  const signatureSource = await preview.getAttribute('src')
+  expect(decodeURIComponent(signatureSource!.split(',')[1] ?? '')).toContain('data-template-layer="creator-signature"')
+
+  await page.getByRole('button', { name: 'Basic QR Settings' }).click()
+  await expect(page.getByRole('button', { name: 'Basic QR Settings' })).toHaveAttribute('aria-pressed', 'true')
+  await expect(preview).toHaveAttribute('data-art-level', 'template-art')
+  await expect(lowerControls.getByRole('tablist', { name: 'Design control families' })).toBeVisible()
+  await expect(lowerControls.getByRole('listbox', { name: 'Body Color' })).toBeVisible()
+  await lowerControls.getByRole('option', { name: 'Electric Purple' }).click()
+  await expect(lowerControls.getByRole('option', { name: 'Electric Purple selected' })).toBeVisible()
+  const updatedSource = await preview.getAttribute('src')
+  const updatedSvg = decodeURIComponent(updatedSource!.split(',')[1] ?? '')
+  expect(updatedSvg).toContain('data-template-layer="creator-signature"')
+  expect(updatedSource).not.toBe(signatureSource)
+
   const afterBox = await previewZone.boundingBox()
   expect(beforeBox).not.toBeNull()
   expect(afterBox).not.toBeNull()
   expect(Math.abs((afterBox!.y) - (beforeBox!.y))).toBeLessThanOrEqual(2)
   expect(Math.abs((afterBox!.height) - (beforeBox!.height))).toBeLessThanOrEqual(2)
-  await page.screenshot({ path: path.join(b34EvidenceDir, 'after-template-art-controls-tray.png'), fullPage: true })
-  await fs.writeFile(path.join(b34EvidenceDir, 'template-art-controls-tray.json'), JSON.stringify({
+  await page.locator('[data-testid="studio-app"]').screenshot({ path: path.join(b35EvidenceDir, 'b35-shared-canvas-settings-toggle.png') })
+  await fs.writeFile(path.join(b35EvidenceDir, 'b35-shared-canvas-settings-toggle.json'), JSON.stringify({
     uxVariant: await page.locator('[data-testid="studio-app"]').getAttribute('data-ux-variant'),
     beforePreviewZone: beforeBox,
     afterPreviewZone: afterBox,
     previewZoneStable: Math.abs(afterBox!.y - beforeBox!.y) <= 2 && Math.abs(afterBox!.height - beforeBox!.height) <= 2,
-    lowerTrayShowsCreatorSignature: true,
-    basicControlsHiddenInTemplateArt: true,
+    creatorSignatureAddedToSharedCanvas: true,
+    basicSettingsStillEditSharedCanvas: updatedSource !== signatureSource,
+    signatureStillPresentAfterBasicSettingsEdit: updatedSvg.includes('data-template-layer="creator-signature"'),
   }, null, 2))
   expect(errors).toEqual([])
 })
@@ -515,7 +533,7 @@ test('B28 Creator Signature keeps five labels corner-adjacent, outside active QR
   await expect(preview).toHaveAttribute('data-art-level', 'basic')
   expect(decodeURIComponent(basicBefore!.split(',')[1] ?? '')).not.toContain('data-template-layer="creator-signature"')
 
-  await page.getByRole('button', { name: 'Template Art' }).click()
+  await page.getByRole('button', { name: 'Creator Signature' }).click()
   const positions = ['bottom-right-outside', 'bottom-left-outside', 'below-centered', 'top-right-corner', 'top-left-corner'] as const
   const panels: Array<{ label: string; source: string; bytes: Buffer; geometry: Record<string, number[]> }> = []
   for (const value of positions) {
@@ -594,9 +612,9 @@ test('B28 Creator Signature keeps five labels corner-adjacent, outside active QR
 
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/')
-  await page.getByRole('button', { name: 'Basic QR' }).click()
+  await page.getByRole('button', { name: 'Basic QR Settings' }).click()
   expect(await preview.getAttribute('src')).toBe(basicBefore)
-  await page.getByRole('button', { name: 'Template Art' }).click()
+  await page.getByRole('button', { name: 'Creator Signature' }).click()
   const beforeDraft = await preview.getAttribute('src')
   await page.getByRole('textbox', { name: 'Final destination URL' }).fill('https://example.com/b28-public-draft')
   await page.getByRole('button', { name: 'Continue with this QR' }).click()
@@ -653,7 +671,7 @@ test('B27 Creator Signature composes five fixed positions, reuses Level 1 contro
   const errors = await assertNoConsoleErrors(page)
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/')
-  await page.getByRole('button', { name: 'Template Art' }).click()
+  await page.getByRole('button', { name: 'Creator Signature' }).click()
   await expect(page.getByTestId('studio-app')).toHaveAttribute('data-ux-variant', 'default')
   await expect(page.locator('[data-template-id="creator-signature"]')).toHaveCount(2)
   await expect(page.getByText('Creator Signature', { exact: true })).toBeVisible()
@@ -706,7 +724,7 @@ test('B27 Creator Signature composes five fixed positions, reuses Level 1 contro
 
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/')
-  await page.getByRole('button', { name: 'Template Art' }).click()
+  await page.getByRole('button', { name: 'Creator Signature' }).click()
   const layout = await page.evaluate(() => {
     const previewBox = document.querySelector<HTMLElement>('img[alt="QR Preview"]')!.getBoundingClientRect()
     const template = document.querySelector<HTMLElement>('[data-template-id="creator-signature"]')!.getBoundingClientRect()
