@@ -4,8 +4,8 @@ export const CREATOR_SIGNATURE_POSITIONS: ReadonlyArray<{ value: CreatorSignatur
   { value: 'bottom-right-outside', label: 'Bottom right' },
   { value: 'bottom-left-outside', label: 'Bottom left' },
   { value: 'below-centered', label: 'Below centered' },
-  { value: 'right-side-vertical', label: 'Right side vertical' },
-  { value: 'top-right-badge', label: 'Top right badge' },
+  { value: 'top-right-corner', label: 'Top right corner' },
+  { value: 'top-left-corner', label: 'Top left corner' },
 ]
 
 export const DEFAULT_CREATOR_SIGNATURE: TemplateArtSpec = {
@@ -126,26 +126,19 @@ function visibleQrContent(qrImage: CreatorSignatureRect, qrSource?: string): Cre
 }
 
 export function creatorSignatureGeometry(position: CreatorSignaturePosition, qrSource?: string): CreatorSignatureGeometry {
-  const qrImage = position === 'right-side-vertical'
-    ? { x: 65, y: 110, width: 440, height: 440 }
-    : position === 'top-right-badge'
-      ? { x: 125, y: 154, width: 470, height: 470 }
-      : { x: 110, y: 55, width: 500, height: 500 }
+  const qrImage = { x: 110, y: 55, width: 500, height: 500 }
   const qrContent = visibleQrContent(qrImage, qrSource)
-  const qrCard = position === 'right-side-vertical'
-    ? { x: 51, y: 96, width: 568, height: 468 }
-    : position === 'top-right-badge'
-      ? { x: 111, y: 48, width: 498, height: 590 }
-      : { x: 96, y: 41, width: 528, height: 620 }
+  const qrCard = { x: 96, y: 41, width: 528, height: 620 }
   const bottomShelfY = qrContent.y + qrContent.height + 8
+  const topShelfY = Math.max(qrCard.y, qrContent.y - 84)
   const labelSlot = position === 'bottom-left-outside'
     ? { x: qrContent.x, y: bottomShelfY, width: 260, height: 76 }
     : position === 'below-centered'
       ? { x: qrContent.x, y: bottomShelfY, width: qrContent.width, height: 76 }
-      : position === 'right-side-vertical'
-        ? { x: qrImage.x + qrImage.width, y: qrImage.y, width: 100, height: qrImage.height }
-        : position === 'top-right-badge'
-          ? { x: qrContent.x + qrContent.width - 260, y: 62, width: 260, height: 78 }
+      : position === 'top-left-corner'
+        ? { x: qrContent.x, y: topShelfY, width: 260, height: 76 }
+        : position === 'top-right-corner'
+          ? { x: qrContent.x + qrContent.width - 260, y: topShelfY, width: 260, height: 76 }
           : { x: qrContent.x + qrContent.width - 260, y: bottomShelfY, width: 260, height: 76 }
   return { qrImage, qrContent, qrCard, labelSlot }
 }
@@ -153,7 +146,7 @@ export function creatorSignatureGeometry(position: CreatorSignaturePosition, qrS
 function textLayer(fields: CreatorSignatureTemplateFields, geometry: CreatorSignatureGeometry): string {
   const signature = bounded(fields.signatureText, 32)
   const handle = bounded(fields.handleText, 36)
-  const cta = bounded(fields.ctaText || 'Scan to connect', 28)
+  const cta = bounded(fields.ctaText, 28)
   const position = fields.signaturePosition ?? 'bottom-right-outside'
   const { labelSlot } = geometry
   const fit = (value: string, fontSize: number, maxWidth: number) => value.length * fontSize * 0.58 > maxWidth
@@ -178,10 +171,11 @@ function textLayer(fields: CreatorSignatureTemplateFields, geometry: CreatorSign
   const reservedShelf = `<rect data-signature-reserved-shelf="true" x="${labelSlot.x}" y="${labelSlot.y}" width="${labelSlot.width}" height="${labelSlot.height}" fill="none" stroke="none" aria-hidden="true"/>`
 
   const shelfTextY = geometry.qrContent.y + geometry.qrContent.height + 22
+  const topShelfTextY = labelSlot.y + 22
   if (position === 'bottom-left-outside') return `${reservedShelf}${lines('start', geometry.qrContent.x, shelfTextY)}`
   if (position === 'below-centered') return `${reservedShelf}${lines('middle', geometry.qrContent.x + geometry.qrContent.width / 2, shelfTextY, { maxWidth: geometry.qrContent.width })}`
-  if (position === 'right-side-vertical') return `${reservedShelf}<g transform="translate(538 330) rotate(90)">${lines('middle', 0, 0, { maxWidth: 400 })}</g>`
-  if (position === 'top-right-badge') return `${reservedShelf}${lines('end', geometry.qrContent.x + geometry.qrContent.width, 82)}`
+  if (position === 'top-left-corner') return `${reservedShelf}${lines('start', geometry.qrContent.x, topShelfTextY)}`
+  if (position === 'top-right-corner') return `${reservedShelf}${lines('end', geometry.qrContent.x + geometry.qrContent.width, topShelfTextY)}`
   return `${reservedShelf}${lines('end', geometry.qrContent.x + geometry.qrContent.width, shelfTextY)}`
 }
 

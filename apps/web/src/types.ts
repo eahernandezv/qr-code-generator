@@ -57,8 +57,8 @@ export type CreatorSignaturePosition =
   | 'bottom-right-outside'
   | 'bottom-left-outside'
   | 'below-centered'
-  | 'right-side-vertical'
-  | 'top-right-badge'
+  | 'top-right-corner'
+  | 'top-left-corner'
 
 export interface CreatorSignatureTemplateFields {
   signatureText?: string

@@ -9,13 +9,20 @@ import {
 const qr = 'data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%2F%3E'
 
 describe('Creator Signature template contract', () => {
-  it('exposes exactly the five frozen fixed positions and one template id', () => {
+  it('exposes the fixed positions with top corners replacing badge/vertical options', () => {
     expect(CREATOR_SIGNATURE_POSITIONS.map(({ value }) => value)).toEqual([
       'bottom-right-outside',
       'bottom-left-outside',
       'below-centered',
-      'right-side-vertical',
-      'top-right-badge',
+      'top-right-corner',
+      'top-left-corner',
+    ])
+    expect(CREATOR_SIGNATURE_POSITIONS.map(({ label }) => label)).toEqual([
+      'Bottom right',
+      'Bottom left',
+      'Below centered',
+      'Top right corner',
+      'Top left corner',
     ])
     expect(DEFAULT_CREATOR_SIGNATURE.templateId).toBe('creator-signature')
   })
@@ -36,12 +43,12 @@ describe('Creator Signature template contract', () => {
 
   it('bounds user-facing text and preserves a clean empty-field composition', () => {
     const long = 'x'.repeat(100)
-    const bounded = composeCreatorSignatureSvg(qr, { signatureText: long, handleText: long, ctaText: long, signaturePosition: 'top-right-badge' })
+    const bounded = composeCreatorSignatureSvg(qr, { signatureText: long, handleText: long, ctaText: long, signaturePosition: 'top-right-corner' })
     expect(bounded).not.toContain('x'.repeat(37))
     expect(bounded).toContain('textLength="220"')
     expect(bounded).toContain('lengthAdjust="spacingAndGlyphs"')
-    const empty = composeCreatorSignatureSvg(qr, {})
-    expect(empty).toContain('SCAN TO CONNECT')
+    const empty = composeCreatorSignatureSvg(qr, { signatureText: 'Creator', handleText: 'Handle', ctaText: '' })
+    expect(empty).not.toContain('SCAN TO CONNECT')
     expect(empty).toContain('data-signature-position="bottom-right-outside"')
   })
 
@@ -86,6 +93,22 @@ describe('Creator Signature template contract', () => {
     expect(leftSvg).toContain(`x="${left.qrContent.x}" y="${left.qrContent.y + left.qrContent.height + 22}" text-anchor="start"`)
     expect(rightSvg).not.toContain('stroke="#e2e8f0"')
     expect(leftSvg).not.toContain('stroke="#e2e8f0"')
+  })
+
+  it('aligns the mirrored top corners to the visible QR vertical boundaries and close to the top border', () => {
+    const right = creatorSignatureGeometry('top-right-corner')
+    const left = creatorSignatureGeometry('top-left-corner')
+    const rightSvg = composeCreatorSignatureSvg(qr, { signaturePosition: 'top-right-corner' })
+    const leftSvg = composeCreatorSignatureSvg(qr, { signaturePosition: 'top-left-corner' })
+
+    expect(right.labelSlot.x + right.labelSlot.width).toBe(right.qrContent.x + right.qrContent.width)
+    expect(left.labelSlot.x).toBe(left.qrContent.x)
+    expect(right.qrContent.y - (right.labelSlot.y + right.labelSlot.height)).toBeLessThanOrEqual(12)
+    expect(left.qrContent.y - (left.labelSlot.y + left.labelSlot.height)).toBeLessThanOrEqual(12)
+    expect(rightSvg).toContain(`x="${right.qrContent.x + right.qrContent.width}" y="${right.labelSlot.y + 22}" text-anchor="end"`)
+    expect(leftSvg).toContain(`x="${left.qrContent.x}" y="${left.labelSlot.y + 22}" text-anchor="start"`)
+    expect(rightSvg).not.toContain('top-right-badge')
+    expect(leftSvg).not.toContain('right-side-vertical')
   })
 
   it('moves the signature with the rendered Core QR content bounds without resizing text', () => {
