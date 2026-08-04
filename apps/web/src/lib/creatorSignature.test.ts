@@ -161,12 +161,12 @@ describe('Creator Signature template contract', () => {
     ['top-right-corner', -1], ['top-left-corner', -1],
   ] as const)('moves %s by 4px per mm in the correct direction without scaling text', (position, direction) => {
     const zero = composeCreatorSignatureSvg(qr, { line1Text: 'Creator', signaturePosition: position, boundaryOffsetMm: 0 })
-    const two = composeCreatorSignatureSvg(qr, { line1Text: 'Creator', signaturePosition: position, boundaryOffsetMm: 2 })
+    const three = composeCreatorSignatureSvg(qr, { line1Text: 'Creator', signaturePosition: position, boundaryOffsetMm: 3 })
     const y = (svg: string) => Number(svg.match(/data-signature-line="1" x="[0-9.]+" y="([0-9.]+)"/)![1])
 
-    expect(y(two) - y(zero)).toBe(direction * 2 * CREATOR_SIGNATURE_PX_PER_MM)
+    expect(y(three) - y(zero)).toBe(direction * 3 * CREATOR_SIGNATURE_PX_PER_MM)
     expect(zero).toContain('font-size="22"')
-    expect(two).toContain('font-size="22"')
-    expect(two).toContain('data-signature-offset-mm="2"')
+    expect(three).toContain('font-size="22"')
+    expect(three).toContain('data-signature-offset-mm="3"')
   })
 })

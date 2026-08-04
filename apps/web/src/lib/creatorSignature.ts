@@ -43,7 +43,7 @@ export const CREATOR_SIGNATURE_COLORS: ReadonlyArray<{ value: CreatorSignatureCo
   { value: 'dark-ink', label: 'Dark ink' },
 ]
 
-export const CREATOR_SIGNATURE_OFFSETS: ReadonlyArray<CreatorSignatureBoundaryOffsetMm> = [0, 1, 2]
+export const CREATOR_SIGNATURE_OFFSETS: ReadonlyArray<CreatorSignatureBoundaryOffsetMm> = [0, 1, 2, 3]
 export const CREATOR_SIGNATURE_PX_PER_MM = 4
 
 const escapeXml = (value: string) => value.replace(/[<>&"']/g, (character) => ({
