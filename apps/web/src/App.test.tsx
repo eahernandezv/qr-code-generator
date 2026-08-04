@@ -37,6 +37,8 @@ describe('App integration', () => {
     const user = userEvent.setup()
     render(<App />)
     expect(screen.getByTestId('studio-app')).toHaveAttribute('data-ux-variant', 'no-scroll')
+    expect(screen.getByRole('region', { name: 'Basic QR Settings controls' })).toHaveAttribute('data-basic-controls-tray', 'true')
+    expect(screen.getByRole('region', { name: 'Basic QR Settings controls' }).className).toContain('border')
     expect(screen.getByRole('tablist', { name: 'Design control families' })).toBeInTheDocument()
     const bodyColorTab = screen.getByRole('tab', { name: 'Show Body Color controls' })
     const cornerColorTab = screen.getByRole('tab', { name: 'Show Corner Color controls' })
@@ -93,6 +95,7 @@ describe('App integration', () => {
     expect(screen.getByRole('button', { name: 'Basic QR Settings' })).toHaveAttribute('aria-pressed', 'true')
     expect(preview).toHaveAttribute('data-art-level', 'template-art')
     expect(screen.getByRole('tablist', { name: 'Design control families' })).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: 'Basic QR Settings controls' })).toContainElement(screen.getByRole('listbox', { name: 'Body Color' }))
     expect(screen.getByRole('listbox', { name: 'Body Color' })).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Destination' }))
 
