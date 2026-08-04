@@ -629,6 +629,10 @@ test('B38 mobile Creator Signature supports exactly two styled lines and directi
   await line2.fill('Studio line two')
   await page.getByRole('combobox', { name: 'Line 1 font' }).selectOption('serif')
   await page.getByRole('combobox', { name: 'Line 2 font' }).selectOption('mono')
+  expect(await page.getByRole('combobox', { name: 'Line 1 size' }).locator('option').allTextContents()).toEqual(['Small', 'Medium', 'Large'])
+  expect(await page.getByRole('combobox', { name: 'Line 2 size' }).locator('option').allTextContents()).toEqual(['Small', 'Medium', 'Large'])
+  await page.getByRole('combobox', { name: 'Line 1 size' }).selectOption('large')
+  await page.getByRole('combobox', { name: 'Line 2 size' }).selectOption('small')
   await page.getByRole('combobox', { name: 'Line 1 colour' }).selectOption('primary')
   await page.getByRole('combobox', { name: 'Line 2 colour' }).selectOption('accent')
 
@@ -642,9 +646,13 @@ test('B38 mobile Creator Signature supports exactly two styled lines and directi
   const svg = async () => decodeURIComponent(((await preview.getAttribute('src')) ?? '').split(',')[1] ?? '')
   const lineMetrics = async () => {
     const source = await svg()
-    const match = source.match(/data-signature-line="1" x="[0-9.]+" y="([0-9.]+)"[^>]*font-size="([0-9.]+)"/)
-    expect(match).not.toBeNull()
-    return { y: Number(match![1]), fontSize: Number(match![2]), source }
+    const line1 = source.match(/data-signature-line="1"[^>]*x="[0-9.]+" y="([0-9.]+)"[^>]*font-size="([0-9.]+)"/)
+    const line2 = source.match(/data-signature-line="2"[^>]*x="[0-9.]+" y="([0-9.]+)"[^>]*font-size="([0-9.]+)"/)
+    expect(line1).not.toBeNull()
+    expect(line2).not.toBeNull()
+    const zone = source.match(/data-qr-content-zone="([0-9,]+)"/)![1].split(',').map(Number)
+    const qrContent = { x: zone[0], y: zone[1], width: zone[2], height: zone[3] }
+    return { y: Number(line1![1]), line2Y: Number(line2![1]), fontSize: Number(line1![2]), line2FontSize: Number(line2![2]), lineGap: Number(line2![1]) - Number(line1![1]), qrContent, source }
   }
 
   await page.getByRole('radio', { name: 'Bottom right' }).click()
@@ -662,6 +670,13 @@ test('B38 mobile Creator Signature supports exactly two styled lines and directi
   await expect.poll(async () => (await lineMetrics()).y).toBe(top0.y - 12)
   const top2 = await lineMetrics()
   expect(top2.fontSize).toBe(top0.fontSize)
+  expect(bottom0.fontSize).toBe(26)
+  expect(bottom0.line2FontSize).toBe(9)
+  expect(bottom0.lineGap).toBe(26 + 4)
+  const bottomBorderGap = bottom0.y - (bottom0.qrContent.y + bottom0.qrContent.height)
+  const topBorderGap = top0.qrContent.y - top0.line2Y
+  expect(bottomBorderGap).toBe(22)
+  expect(topBorderGap).toBe(bottomBorderGap)
   expect(top2.source).toContain('data-template-layer="creator-signature"')
   expect(top2.source.match(/data-signature-line=/g)).toHaveLength(2)
   expect(top2.source).not.toContain('Scan to connect')
@@ -678,10 +693,12 @@ test('B38 mobile Creator Signature supports exactly two styled lines and directi
     viewport: { width: 390, height: 844 },
     lineInputCount: 2,
     fonts: { line1: 'serif', line2: 'mono' },
+    fontSizes: { line1: 'large', line2: 'small' },
+    lineGapPx: bottom0.lineGap,
     colors: { line1: 'primary', line2: 'accent' },
     offsetOptions: ['0mm', '1mm', '2mm', '3mm'],
-    bottom: { zeroMmY: bottom0.y, threeMmY: bottom2.y, deltaPx: bottom2.y - bottom0.y, fontSizeStable: bottom2.fontSize === bottom0.fontSize },
-    top: { zeroMmY: top0.y, threeMmY: top2.y, deltaPx: top2.y - top0.y, fontSizeStable: top2.fontSize === top0.fontSize },
+    bottom: { zeroMmY: bottom0.y, threeMmY: bottom2.y, deltaPx: bottom2.y - bottom0.y, borderGapPx: bottomBorderGap, fontSizeStable: bottom2.fontSize === bottom0.fontSize },
+    top: { zeroMmY: top0.y, threeMmY: top2.y, deltaPx: top2.y - top0.y, borderGapPx: topBorderGap, fontSizeStable: top2.fontSize === top0.fontSize },
     previewBoxStableAcrossBasicAndTemplate: JSON.stringify(signaturePreviewBox) === JSON.stringify(basicPreviewBox),
     templateLayerPresent: top2.source.includes('data-template-layer="creator-signature"'),
     renderedLineCount: top2.source.match(/data-signature-line=/g)?.length ?? 0,

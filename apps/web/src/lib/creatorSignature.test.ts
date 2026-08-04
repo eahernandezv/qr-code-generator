@@ -14,6 +14,8 @@ describe('Creator Signature template contract', () => {
   it('keeps the default Creator Signature text fields empty and renders no default signature copy', () => {
     expect(DEFAULT_CREATOR_SIGNATURE.fields.line1Text).toBe('')
     expect(DEFAULT_CREATOR_SIGNATURE.fields.line2Text).toBe('')
+    expect(DEFAULT_CREATOR_SIGNATURE.fields.line1Size).toBe('medium')
+    expect(DEFAULT_CREATOR_SIGNATURE.fields.line2Size).toBe('medium')
     const svg = composeCreatorSignatureSvg(qr, DEFAULT_CREATOR_SIGNATURE.fields)
     expect(svg).not.toContain('Ernesto Creates')
     expect(svg).not.toContain('@ernesto')
@@ -125,10 +127,17 @@ describe('Creator Signature template contract', () => {
 
     expect(right.labelSlot.x + right.labelSlot.width).toBe(right.qrContent.x + right.qrContent.width)
     expect(left.labelSlot.x).toBe(left.qrContent.x)
+    const defaultLineGap = 22 + CREATOR_SIGNATURE_PX_PER_MM
+    const topTextY = right.qrContent.y - 22 - defaultLineGap
+    const topLine2Baseline = topTextY + defaultLineGap
+    const bottom = creatorSignatureGeometry('bottom-right-outside')
+    const bottomTextY = bottom.qrContent.y + bottom.qrContent.height + 22
     expect(right.qrContent.y - (right.labelSlot.y + right.labelSlot.height)).toBeLessThanOrEqual(12)
     expect(left.qrContent.y - (left.labelSlot.y + left.labelSlot.height)).toBeLessThanOrEqual(12)
-    expect(rightSvg).toContain(`x="${right.qrContent.x + right.qrContent.width}" y="${right.labelSlot.y + 22}" text-anchor="end"`)
-    expect(leftSvg).toContain(`x="${left.qrContent.x}" y="${left.labelSlot.y + 22}" text-anchor="start"`)
+    expect(right.qrContent.y - topLine2Baseline).toBe(bottomTextY - (bottom.qrContent.y + bottom.qrContent.height))
+    expect(left.qrContent.y - topLine2Baseline).toBe(bottomTextY - (bottom.qrContent.y + bottom.qrContent.height))
+    expect(rightSvg).toContain(`x="${right.qrContent.x + right.qrContent.width}" y="${topTextY}" text-anchor="end"`)
+    expect(leftSvg).toContain(`x="${left.qrContent.x}" y="${topTextY}" text-anchor="start"`)
     expect(rightSvg).not.toContain('top-right-badge')
     expect(leftSvg).not.toContain('right-side-vertical')
   })
@@ -138,7 +147,7 @@ describe('Creator Signature template contract', () => {
     const smallSvg = composeCreatorSignatureSvg(source(150, 212), { line1Text: 'Creator', signaturePosition: 'bottom-right-outside' })
     const largeSvg = composeCreatorSignatureSvg(source(80, 352), { line1Text: 'Creator', signaturePosition: 'bottom-right-outside' })
     const zone = (svg: string) => svg.match(/data-qr-content-zone="([0-9,]+)"/)![1]
-    const text = (svg: string) => svg.match(/<text data-signature-line="1" x="([0-9.]+)" y="([0-9.]+)" text-anchor="end"[^>]*>/)!.slice(1).map(Number)
+    const text = (svg: string) => svg.match(/<text data-signature-line="1"[^>]*x="([0-9.]+)" y="([0-9.]+)" text-anchor="end"[^>]*>/)!.slice(1).map(Number)
     const [smallX, smallY] = text(smallSvg)
     const [largeX, largeY] = text(largeSvg)
 
@@ -171,11 +180,25 @@ describe('Creator Signature template contract', () => {
   ] as const)('moves %s by 4px per mm in the correct direction without scaling text', (position, direction) => {
     const zero = composeCreatorSignatureSvg(qr, { line1Text: 'Creator', signaturePosition: position, boundaryOffsetMm: 0 })
     const three = composeCreatorSignatureSvg(qr, { line1Text: 'Creator', signaturePosition: position, boundaryOffsetMm: 3 })
-    const y = (svg: string) => Number(svg.match(/data-signature-line="1" x="[0-9.]+" y="([0-9.]+)"/)![1])
+    const y = (svg: string) => Number(svg.match(/data-signature-line="1"[^>]*x="[0-9.]+" y="([0-9.]+)"/)![1])
 
     expect(y(three) - y(zero)).toBe(direction * 3 * CREATOR_SIGNATURE_PX_PER_MM)
     expect(zero).toContain('font-size="22"')
     expect(three).toContain('font-size="22"')
     expect(three).toContain('data-signature-offset-mm="3"')
+  })
+
+  it('renders three curated font-size choices per line and increases the line gap by 1mm at medium size', () => {
+    const medium = composeCreatorSignatureSvg(qr, { line1Text: 'Creator', line2Text: 'Subtitle' })
+    const largeSmall = composeCreatorSignatureSvg(qr, { line1Text: 'Creator', line2Text: 'Subtitle', line1Size: 'large', line2Size: 'small' })
+    const positions = (svg: string) => [...svg.matchAll(/data-signature-line="([12])"[^>]*y="([0-9.]+)"[^>]*font-size="([0-9.]+)"/g)].map((match) => ({ line: match[1], y: Number(match[2]), size: Number(match[3]) }))
+    const mediumLines = positions(medium)
+    const largeSmallLines = positions(largeSmall)
+
+    expect(mediumLines.map((line) => line.size)).toEqual([22, 11])
+    expect(mediumLines[1].y - mediumLines[0].y).toBe(22 + CREATOR_SIGNATURE_PX_PER_MM)
+    expect(largeSmallLines.map((line) => line.size)).toEqual([26, 9])
+    expect(largeSmall).toContain('data-signature-size="large"')
+    expect(largeSmall).toContain('data-signature-size="small"')
   })
 })

@@ -153,6 +153,10 @@ describe('App integration', () => {
     expect(screen.queryByText('ONLY TEMPLATE')).not.toBeInTheDocument()
     await user.selectOptions(screen.getByRole('combobox', { name: 'Line 1 font' }), 'serif')
     await user.selectOptions(screen.getByRole('combobox', { name: 'Line 2 font' }), 'mono')
+    expect(Array.from(screen.getByRole('combobox', { name: 'Line 1 size' }).querySelectorAll('option')).map((option) => option.textContent)).toEqual(['Small', 'Medium', 'Large'])
+    expect(Array.from(screen.getByRole('combobox', { name: 'Line 2 size' }).querySelectorAll('option')).map((option) => option.textContent)).toEqual(['Small', 'Medium', 'Large'])
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Line 1 size' }), 'large')
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Line 2 size' }), 'small')
     await user.selectOptions(screen.getByRole('combobox', { name: 'Line 1 colour' }), 'primary')
     await user.selectOptions(screen.getByRole('combobox', { name: 'Line 2 colour' }), 'accent')
     const offset = screen.getByRole('combobox', { name: 'Signature boundary offset' })
@@ -160,7 +164,7 @@ describe('App integration', () => {
     await user.selectOptions(offset, '3')
 
     expect(useStudioStore.getState().project.templateArt?.fields).toMatchObject({
-      line1Font: 'serif', line2Font: 'mono', line1Color: 'primary', line2Color: 'accent', boundaryOffsetMm: 3,
+      line1Font: 'serif', line2Font: 'mono', line1Size: 'large', line2Size: 'small', line1Color: 'primary', line2Color: 'accent', boundaryOffsetMm: 3,
     })
   })
 
