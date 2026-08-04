@@ -1,6 +1,5 @@
 import React from 'react'
 import { useStudioStore } from './store'
-import PayloadInput from './components/PayloadInput'
 import ArtDirectionPanel from './components/ArtDirectionPanel'
 import CandidateBoard from './components/CandidateBoard'
 import ExportPanel from './components/ExportPanel'
@@ -42,11 +41,7 @@ const App: React.FC = () => {
       </header>
 
       <main className={`mx-auto max-w-6xl px-3 sm:px-4 ${noScrollVariant ? 'flex h-[calc(100dvh-41px)] flex-col gap-1.5 overflow-hidden py-1.5' : 'space-y-4 py-3 sm:py-5'}`}>
-        <ArtDirectionPanel noScrollVariant={noScrollVariant} />
-
-        <div id="destination" className="scroll-mt-16">
-          <PayloadInput key={project.projectId} livePreviewPayloadUpdates={hasLivePayloadPreviewEntitlement} compact={noScrollVariant} />
-        </div>
+        <ArtDirectionPanel noScrollVariant={noScrollVariant} livePreviewPayloadUpdates={hasLivePayloadPreviewEntitlement} />
 
         {showSecondaryWorkflow && <section aria-labelledby="finish-title" className="space-y-3 border-t border-slate-900 pt-4">
           <div>

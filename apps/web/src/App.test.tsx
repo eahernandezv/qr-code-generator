@@ -16,15 +16,16 @@ describe('App integration', () => {
 
   it('keeps the public path focused on the compact editor and destination', () => {
     render(<App />)
-    expect(screen.getByRole('heading', { name: /Design your QR/i })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: /Design your QR/i })).not.toBeInTheDocument()
     expect(screen.getByRole('img', { name: 'QR Preview' })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: /Destination/i })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: /Destination/i })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Destination' })).toHaveAttribute('aria-pressed', 'false')
     expect(screen.queryByText('Love this look?')).not.toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: /Candidates/i })).not.toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: 'Export' })).not.toBeInTheDocument()
     expect(screen.queryByText('Live Core-backed preview')).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Continue with this QR' })).toBeDisabled()
-    expect(screen.getByText('After checkout: PNG + SVG downloads · Social and print sizes')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Continue with this QR' })).not.toBeInTheDocument()
+    expect(screen.queryByText('After checkout: PNG + SVG downloads · Social and print sizes')).not.toBeInTheDocument()
     expect(screen.queryByText('Bind the real destination before generation.')).not.toBeInTheDocument()
     for (const removedLabel of ['Color', 'Palette', 'Style', 'Corners', 'Eyes', 'Intensity']) {
       expect(screen.queryByText(removedLabel, { exact: true })).not.toBeInTheDocument()
@@ -87,6 +88,15 @@ describe('App integration', () => {
     expect(preview).toHaveAttribute('data-art-level', 'template-art')
     expect(screen.getByRole('tablist', { name: 'Design control families' })).toBeInTheDocument()
     expect(screen.getByRole('listbox', { name: 'Body Color' })).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Destination' }))
+
+    expect(screen.getByRole('button', { name: 'Destination' })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByTestId('lower-design-controls')).toContainElement(screen.getByRole('heading', { name: 'Destination' }))
+    expect(screen.getByRole('textbox', { name: 'Final destination URL' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Continue with this QR' })).toBeDisabled()
+
+    await user.click(screen.getByRole('button', { name: 'Creator Signature' }))
+    expect(screen.queryByRole('heading', { name: 'Destination' })).not.toBeInTheDocument()
   })
 
   it('uses one icon-only five-position Creator Signature radio row', async () => {
@@ -187,6 +197,7 @@ describe('App integration', () => {
   it('keeps public typing draft-only while internal entitlement can live-update', async () => {
     const user = userEvent.setup()
     const publicView = render(<App />)
+    await user.click(screen.getByRole('button', { name: 'Destination' }))
     await user.type(screen.getByRole('textbox', { name: 'Final destination URL' }), 'public.example')
     expect(useStudioStore.getState().project.payload.raw).toBe('')
     publicView.unmount()
@@ -194,6 +205,7 @@ describe('App integration', () => {
     resetStore()
     window.history.replaceState({}, '', '/?workflow=internal')
     render(<App />)
+    await user.click(screen.getByRole('button', { name: 'Destination' }))
     await user.type(screen.getByRole('textbox', { name: 'Final destination URL' }), 'member.example')
     expect(useStudioStore.getState().project.payload.normalized).toBe('https://member.example/')
   })

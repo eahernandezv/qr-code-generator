@@ -27,6 +27,7 @@ const b34EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/st
 const b35EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b35-shared-canvas-settings-toggle')
 const b37EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b37-creator-signature-icon-position-selector')
 const b38EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b38-two-line-signature-font-color-offset')
+const b40EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b40-destination-toggle-tray')
 
 const fixtureModules = Array.from({ length: 21 }, (_, y) => Array.from({ length: 21 }, (_, x) => {
   const finder = (fx: number, fy: number) => x >= fx && x < fx + 7 && y >= fy && y < fy + 7
@@ -685,6 +686,64 @@ test('B38 mobile Creator Signature supports exactly two styled lines and directi
     renderedLineCount: top2.source.match(/data-signature-line=/g)?.length ?? 0,
     thirdLineOrCtaAbsent: !top2.source.includes('data-signature-line="3"') && !top2.source.includes('Scan to connect'),
     positionSelectorIconOnly: true,
+  }, null, 2))
+  expect(errors).toEqual([])
+})
+
+test('B40 removes Design heading and flips Destination into the settings tray', async ({ page }) => {
+  const errors = await assertNoConsoleErrors(page)
+  await fs.mkdir(b40EvidenceDir, { recursive: true })
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/')
+  await page.addStyleTag({ content: '*,*::before,*::after{transition:none!important;animation:none!important}' })
+  const lowerControls = page.locator('[data-testid="lower-design-controls"]')
+  const previewZone = page.locator('[data-testid="qr-side-controls"]')
+  const preview = previewZone.getByRole('img', { name: 'QR Preview' })
+  const previewBox = await previewZone.boundingBox()
+
+  await expect(page.getByRole('heading', { name: 'Design your QR' })).toHaveCount(0)
+  await expect(page.getByRole('group', { name: 'Settings panel' }).getByRole('button')).toHaveCount(3)
+  await expect(page.getByRole('button', { name: 'Basic QR Settings' })).toHaveAttribute('aria-pressed', 'true')
+  await expect(page.getByRole('button', { name: 'Creator Signature' })).toHaveAttribute('aria-pressed', 'false')
+  await expect(page.getByRole('button', { name: 'Destination' })).toHaveAttribute('aria-pressed', 'false')
+  await expect(page.getByRole('heading', { name: 'Destination' })).toHaveCount(0)
+  await expect(page.getByRole('textbox', { name: 'Final destination URL' })).toHaveCount(0)
+  await expect(lowerControls.getByRole('tablist', { name: 'Design control families' })).toBeVisible()
+
+  await page.getByRole('button', { name: 'Destination' }).click()
+  await expect(page.getByRole('button', { name: 'Destination' })).toHaveAttribute('aria-pressed', 'true')
+  await expect(lowerControls.getByRole('heading', { name: 'Destination' })).toBeVisible()
+  await expect(lowerControls.getByRole('textbox', { name: 'Final destination URL' })).toBeVisible()
+  await expect(lowerControls.getByRole('button', { name: 'Continue with this QR' })).toBeDisabled()
+  await expect(lowerControls.getByRole('tablist', { name: 'Design control families' })).toHaveCount(0)
+  await expect(page.getByRole('heading', { name: 'Design your QR' })).toHaveCount(0)
+
+  await page.getByRole('textbox', { name: 'Final destination URL' }).fill('https://example.com/b40-public-draft')
+  const beforeDraft = await preview.getAttribute('src')
+  await page.getByRole('button', { name: 'Continue with this QR' }).click()
+  await expect(page.getByRole('status')).toContainText('QR activates after payment')
+  const afterContinue = await preview.getAttribute('src')
+  expect(afterContinue).toBe(beforeDraft)
+
+  await page.getByRole('button', { name: 'Creator Signature' }).click()
+  await expect(lowerControls.getByRole('heading', { name: 'Creator Signature' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Destination' })).toHaveCount(0)
+  await expect(page.getByRole('textbox', { name: 'Final destination URL' })).toHaveCount(0)
+  const signatureBox = await previewZone.boundingBox()
+  expect(previewBox).not.toBeNull()
+  expect(signatureBox).not.toBeNull()
+  expect(Math.abs(signatureBox!.y - previewBox!.y)).toBeLessThanOrEqual(2)
+  expect(Math.abs(signatureBox!.height - previewBox!.height)).toBeLessThanOrEqual(2)
+
+  const screenshotPath = path.join(b40EvidenceDir, 'b40-destination-toggle-mobile.png')
+  await page.screenshot({ path: screenshotPath, fullPage: false })
+  await fs.writeFile(path.join(b40EvidenceDir, 'b40-destination-toggle.json'), JSON.stringify({
+    designHeadingVisible: 0,
+    settingsButtons: ['Basic QR Settings', 'Creator Signature', 'Destination'],
+    destinationHiddenUntilSelected: true,
+    destinationDraftOnly: beforeDraft === afterContinue,
+    previewZoneStable: Math.abs(signatureBox!.y - previewBox!.y) <= 2 && Math.abs(signatureBox!.height - previewBox!.height) <= 2,
+    screenshotPath,
   }, null, 2))
   expect(errors).toEqual([])
 })
