@@ -122,12 +122,14 @@ function PrintPreview({
   size,
   candidate,
   templateArt,
+  palette,
 }: {
   open: boolean
   onClose: () => void
   size: typeof SIZES[number]
   candidate: import('../types').Candidate
   templateArt?: import('../types').TemplateArtSpec
+  palette?: import('../lib/creatorSignature').CreatorSignaturePalette
 }) {
   const closeBtnRef = React.useRef<HTMLButtonElement>(null)
   const previousFocusRef = React.useRef<HTMLElement | null>(null)
@@ -158,7 +160,7 @@ function PrintPreview({
   const mm = (px: number) => ((px / (size.dpi || 300)) * 25.4).toFixed(1)
   const physicalSize = `${mm(size.width)}×${mm(size.height)} mm`
   const previewSource = candidate.previewUrl && templateArt
-    ? svgDataUrl(composeCreatorSignatureSvg(candidate.previewUrl, templateArt.fields))
+    ? svgDataUrl(composeCreatorSignatureSvg(candidate.previewUrl, templateArt.fields, { palette }))
     : candidate.previewUrl || ''
 
   return (
@@ -238,8 +240,8 @@ const ExportPanel: React.FC = () => {
     const files = await Promise.all(artifact.files.map(async (file) => {
       const qrSource = file.format === 'svg' ? svgDataUrl(file.data) : file.data
       return file.format === 'svg'
-        ? { ...file, data: composeCreatorSignatureSvg(qrSource, fields, { width: file.width, height: file.height, geometrySource }) }
-        : { ...file, data: await composeCreatorSignaturePng(qrSource, fields, file.width, file.height, geometrySource) }
+        ? { ...file, data: composeCreatorSignatureSvg(qrSource, fields, { width: file.width, height: file.height, geometrySource, palette: { ...project.artDirection.palette, darkInk: project.style?.foreground } }) }
+        : { ...file, data: await composeCreatorSignaturePng(qrSource, fields, file.width, file.height, geometrySource, { ...project.artDirection.palette, darkInk: project.style?.foreground }) }
     }))
     return { ...artifact, files }
   }
@@ -460,6 +462,7 @@ const ExportPanel: React.FC = () => {
         size={currentSize}
         candidate={selectedCandidate!}
         templateArt={project.templateArtLevel === 'template-art' ? (project.templateArt ?? DEFAULT_CREATOR_SIGNATURE) : undefined}
+        palette={{ ...project.artDirection.palette, darkInk: project.style?.foreground }}
       />
     </section>
   )

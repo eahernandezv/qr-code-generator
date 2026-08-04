@@ -1,10 +1,17 @@
 import type { KeyboardEvent } from 'react'
 import { useStudioStore } from '../store'
-import type { CreatorSignaturePosition, CreatorSignatureTemplateFields } from '../types'
-import { CREATOR_SIGNATURE_POSITIONS, DEFAULT_CREATOR_SIGNATURE } from '../lib/creatorSignature'
+import type { CreatorSignatureColor, CreatorSignatureFont, CreatorSignaturePosition, CreatorSignatureTemplateFields } from '../types'
+import {
+  CREATOR_SIGNATURE_COLORS,
+  CREATOR_SIGNATURE_FONTS,
+  CREATOR_SIGNATURE_OFFSETS,
+  CREATOR_SIGNATURE_POSITIONS,
+  DEFAULT_CREATOR_SIGNATURE,
+} from '../lib/creatorSignature'
 
 const inputClass = 'w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none placeholder:text-slate-600 focus:border-studio-500 focus:ring-2 focus:ring-studio-500/30'
 const compactInputClass = 'w-full rounded-lg border border-slate-700 bg-slate-950 px-2.5 py-1.5 text-xs text-slate-100 outline-none placeholder:text-slate-600 focus:border-studio-500 focus:ring-2 focus:ring-studio-500/30'
+const compactSelectClass = 'min-w-0 rounded-md border border-slate-700 bg-slate-950 px-1.5 py-1 text-[11px] text-slate-100 outline-none focus:border-studio-500 focus:ring-2 focus:ring-studio-500/30'
 
 const POSITION_ORDER: ReadonlyArray<CreatorSignaturePosition> = [
   'bottom-left-outside',
@@ -43,6 +50,8 @@ export default function TemplateArtControls({ compact = false }: { compact?: boo
   const { project, setTemplateArt } = useStudioStore()
   const spec = project.templateArt ?? DEFAULT_CREATOR_SIGNATURE
   const fields = spec.fields
+  const line1Text = fields.line1Text ?? fields.signatureText ?? ''
+  const line2Text = fields.line2Text ?? fields.handleText ?? ''
   const update = (patch: Partial<CreatorSignatureTemplateFields>) => setTemplateArt({
     templateId: 'creator-signature',
     outputIntent: 'square-card',
@@ -70,30 +79,50 @@ export default function TemplateArtControls({ compact = false }: { compact?: boo
       </div>
       <span className="shrink-0 rounded-full bg-emerald-950 px-2 py-1 text-[10px] font-bold text-emerald-300">ONLY TEMPLATE</span>
     </div>
-    <div className={`grid gap-2 ${compact ? 'grid-cols-1' : 'sm:grid-cols-3'}`}>
-      <label className="text-[11px] font-medium text-slate-400">Signature text
-        <input className={compact ? compactInputClass : inputClass} aria-label="Signature text" maxLength={32} value={fields.signatureText ?? ''} onChange={(event) => update({ signatureText: event.target.value })} placeholder="Your signature" />
-      </label>
-      <label className="text-[11px] font-medium text-slate-400">Handle / subtitle
-        <input className={compact ? compactInputClass : inputClass} aria-label="Handle or subtitle" maxLength={36} value={fields.handleText ?? ''} onChange={(event) => update({ handleText: event.target.value })} placeholder="@handle" />
-      </label>
-      <label className="text-[11px] font-medium text-slate-400">CTA text
-        <input className={compact ? compactInputClass : inputClass} aria-label="CTA text" maxLength={28} value={fields.ctaText ?? ''} onChange={(event) => update({ ctaText: event.target.value })} placeholder="Scan to connect" />
+    <div className={`grid gap-2 ${compact ? 'grid-cols-1' : 'sm:grid-cols-2'}`}>
+      {([
+        { line: 1, text: line1Text, maxLength: 32, font: fields.line1Font ?? 'sans', color: fields.line1Color ?? 'dark-ink' },
+        { line: 2, text: line2Text, maxLength: 36, font: fields.line2Font ?? 'sans', color: fields.line2Color ?? 'secondary' },
+      ] as const).map(({ line, text, maxLength, font, color }) => <div key={line} className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-end gap-1.5">
+        <label className="min-w-0 text-[11px] font-medium text-slate-400">Line {line}
+          <input className={compact ? compactInputClass : inputClass} aria-label={`Line ${line}`} maxLength={maxLength} value={text}
+            onChange={(event) => update(line === 1 ? { line1Text: event.target.value } : { line2Text: event.target.value })} placeholder={line === 1 ? 'Your signature' : '@handle'} />
+        </label>
+        <label className="text-[10px] font-medium text-slate-500">Font
+          <select className={compactSelectClass} aria-label={`Line ${line} font`} value={font}
+            onChange={(event) => update(line === 1 ? { line1Font: event.target.value as CreatorSignatureFont } : { line2Font: event.target.value as CreatorSignatureFont })}>
+            {CREATOR_SIGNATURE_FONTS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+          </select>
+        </label>
+        <label className="text-[10px] font-medium text-slate-500">Colour
+          <select className={compactSelectClass} aria-label={`Line ${line} colour`} value={color}
+            onChange={(event) => update(line === 1 ? { line1Color: event.target.value as CreatorSignatureColor } : { line2Color: event.target.value as CreatorSignatureColor })}>
+            {CREATOR_SIGNATURE_COLORS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+          </select>
+        </label>
+      </div>)}
+    </div>
+    <div className={`${compact ? 'mt-2' : 'mt-3'} grid grid-cols-[minmax(0,1fr)_auto] items-end gap-2`}>
+      <fieldset>
+        <legend className="sr-only">Fixed signature position</legend>
+        <div className="grid h-9 grid-cols-5 gap-1" role="radiogroup" aria-label="Fixed signature position" data-signature-position-selector="icon-row">
+          {POSITION_OPTIONS.map(({ value, label }, index) => {
+            const selected = (fields.signaturePosition ?? 'bottom-right-outside') === value
+            return <button key={value} id={`signature-position-${value}`} type="button" role="radio" aria-label={label} title={label} aria-checked={selected} tabIndex={selected ? 0 : -1}
+              data-signature-position={value} data-icon-only="true" data-selected={selected ? 'true' : 'false'} onClick={() => update({ signaturePosition: value })} onKeyDown={(event) => movePositionFocus(event, index)}
+              className={`relative flex h-8 min-w-0 items-center justify-center rounded-md border p-0 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white ${selected ? 'border-sky-400 bg-sky-500/25 text-sky-200 shadow-sm shadow-sky-500/20' : 'border-slate-700 bg-slate-950 text-slate-500 hover:border-slate-500 hover:text-slate-300'}`}>
+              <PositionIcon position={value} />
+              {selected && <span aria-hidden="true" className="absolute right-1 top-1 h-1.5 w-1.5 rounded-full bg-sky-300 ring-1 ring-slate-950" />}
+            </button>
+          })}
+        </div>
+      </fieldset>
+      <label className="text-[10px] font-medium text-slate-500">Boundary offset
+        <select className={compactSelectClass} aria-label="Signature boundary offset" value={fields.boundaryOffsetMm ?? 0}
+          onChange={(event) => update({ boundaryOffsetMm: Number(event.target.value) as 0 | 1 | 2 })}>
+          {CREATOR_SIGNATURE_OFFSETS.map((offset) => <option key={offset} value={offset}>{offset}mm</option>)}
+        </select>
       </label>
     </div>
-    <fieldset className={compact ? 'mt-2' : 'mt-3'}>
-      <legend className="sr-only">Fixed signature position</legend>
-      <div className="grid h-9 grid-cols-5 gap-1" role="radiogroup" aria-label="Fixed signature position" data-signature-position-selector="icon-row">
-        {POSITION_OPTIONS.map(({ value, label }, index) => {
-          const selected = (fields.signaturePosition ?? 'bottom-right-outside') === value
-          return <button key={value} id={`signature-position-${value}`} type="button" role="radio" aria-label={label} title={label} aria-checked={selected} tabIndex={selected ? 0 : -1}
-            data-signature-position={value} data-icon-only="true" data-selected={selected ? 'true' : 'false'} onClick={() => update({ signaturePosition: value })} onKeyDown={(event) => movePositionFocus(event, index)}
-            className={`relative flex h-8 min-w-0 items-center justify-center rounded-md border p-0 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white ${selected ? 'border-sky-400 bg-sky-500/25 text-sky-200 shadow-sm shadow-sky-500/20' : 'border-slate-700 bg-slate-950 text-slate-500 hover:border-slate-500 hover:text-slate-300'}`}>
-            <PositionIcon position={value} />
-            {selected && <span aria-hidden="true" className="absolute right-1 top-1 h-1.5 w-1.5 rounded-full bg-sky-300 ring-1 ring-slate-950" />}
-          </button>
-        })}
-      </div>
-    </fieldset>
   </section>
 }

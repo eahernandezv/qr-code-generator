@@ -75,7 +75,9 @@ describe('App integration', () => {
     expect(screen.getByTestId('qr-side-controls')).toContainElement(screen.getByRole('group', { name: 'Intensity' }))
     const lowerControls = screen.getByTestId('lower-design-controls')
     expect(lowerControls).toContainElement(screen.getByRole('heading', { name: 'Creator Signature' }))
-    expect(lowerControls).toContainElement(screen.getByRole('textbox', { name: 'Signature text' }))
+    expect(lowerControls).toContainElement(screen.getByRole('textbox', { name: 'Line 1' }))
+    expect(lowerControls).toContainElement(screen.getByRole('textbox', { name: 'Line 2' }))
+    expect(screen.queryByRole('textbox', { name: 'CTA text' })).not.toBeInTheDocument()
     expect(screen.queryByRole('tablist', { name: 'Design control families' })).not.toBeInTheDocument()
     expect(screen.queryByRole('listbox', { name: 'Body Color' })).not.toBeInTheDocument()
 
@@ -117,6 +119,26 @@ describe('App integration', () => {
     expect(screen.getByRole('radio', { name: 'Top right corner' })).toHaveAttribute('aria-checked', 'true')
     expect(screen.getByRole('radio', { name: 'Top right corner' })).toHaveFocus()
     expect(useStudioStore.getState().project.templateArt?.fields.signaturePosition).toBe('top-right-corner')
+  })
+
+  it('edits exactly two independently styled Creator Signature lines with fixed offset choices', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    await user.click(screen.getByRole('button', { name: 'Creator Signature' }))
+
+    expect(screen.getAllByRole('textbox').filter((input) => /^Line [12]$/.test(input.getAttribute('aria-label') ?? ''))).toHaveLength(2)
+    expect(screen.queryByRole('textbox', { name: /CTA|Line 3/i })).not.toBeInTheDocument()
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Line 1 font' }), 'serif')
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Line 2 font' }), 'mono')
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Line 1 colour' }), 'primary')
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Line 2 colour' }), 'accent')
+    const offset = screen.getByRole('combobox', { name: 'Signature boundary offset' })
+    expect(Array.from(offset.querySelectorAll('option')).map((option) => option.textContent)).toEqual(['0mm', '1mm', '2mm'])
+    await user.selectOptions(offset, '2')
+
+    expect(useStudioStore.getState().project.templateArt?.fields).toMatchObject({
+      line1Font: 'serif', line2Font: 'mono', line1Color: 'primary', line2Color: 'accent', boundaryOffsetMm: 2,
+    })
   })
 
   it('uses accessible Core-backed Body Color, Corner Color, Style, Corners, and Eyes choices', async () => {

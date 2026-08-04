@@ -48,7 +48,9 @@ const QRPreview: React.FC<QRPreviewProps> = ({ size = 320, className = '', useDe
         ? `data:image/svg+xml;charset=utf-8,${encodeURIComponent(browserSvg)}`
         : artifact.data
       const url = project.templateArtLevel === 'template-art'
-        ? svgDataUrl(composeCreatorSignatureSvg(coreUrl, (project.templateArt ?? DEFAULT_CREATOR_SIGNATURE).fields))
+        ? svgDataUrl(composeCreatorSignatureSvg(coreUrl, (project.templateArt ?? DEFAULT_CREATOR_SIGNATURE).fields, {
+            palette: { ...artDirection.palette, darkInk: project.style?.foreground },
+          }))
         : coreUrl
       setDataUrl(url)
       setError(null)
@@ -56,7 +58,7 @@ const QRPreview: React.FC<QRPreviewProps> = ({ size = 320, className = '', useDe
       setDataUrl('')
       setError(caught instanceof Error ? caught.message : 'Render failed')
     }
-  }, [previewPayload, artDirection, project.templateArtLevel, project.templateArt])
+  }, [previewPayload, artDirection, project.style?.foreground, project.templateArtLevel, project.templateArt])
 
   return (
     <div className={`relative flex flex-col items-center ${className}`}>
