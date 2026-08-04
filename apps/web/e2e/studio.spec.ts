@@ -756,10 +756,11 @@ test('B42 outlines Basic QR Settings as a matching lower tray section', async ({
   await page.goto('/')
   await page.addStyleTag({ content: '*,*::before,*::after{transition:none!important;animation:none!important}' })
   const lowerControls = page.locator('[data-testid="lower-design-controls"]')
-  const basicTray = lowerControls.getByRole('region', { name: 'Basic QR Settings controls' })
+  const basicTray = lowerControls.getByRole('region', { name: 'Color Settings' })
   await expect(page.getByRole('button', { name: 'Basic QR Settings' })).toHaveAttribute('aria-pressed', 'true')
   await expect(basicTray).toBeVisible()
   await expect(basicTray).toHaveAttribute('data-basic-controls-tray', 'true')
+  await expect(basicTray.getByRole('heading', { name: 'Color Settings' })).toBeVisible()
   await expect(basicTray.getByRole('tablist', { name: 'Design control families' })).toBeVisible()
   await expect(basicTray.getByRole('listbox', { name: 'Body Color' })).toBeVisible()
   const metrics = await basicTray.evaluate((element) => {
@@ -786,12 +787,14 @@ test('B42 outlines Basic QR Settings as a matching lower tray section', async ({
   await expect(basicTray).toHaveCount(0)
   await expect(lowerControls.getByRole('heading', { name: 'Creator Signature' })).toBeVisible()
   await page.getByRole('button', { name: 'Basic QR Settings' }).click()
-  await expect(lowerControls.getByRole('region', { name: 'Basic QR Settings controls' })).toBeVisible()
+  await expect(lowerControls.getByRole('region', { name: 'Color Settings' })).toBeVisible()
+  await expect(lowerControls.getByRole('heading', { name: 'Color Settings' })).toBeVisible()
 
   const screenshotPath = path.join(b42EvidenceDir, 'b42-basic-tray-outline-mobile.png')
   await page.screenshot({ path: screenshotPath, fullPage: false })
   await fs.writeFile(path.join(b42EvidenceDir, 'b42-basic-tray-outline.json'), JSON.stringify({
     basicTrayOutlined: true,
+    title: 'Color Settings',
     metrics,
     screenshotPath,
   }, null, 2))
