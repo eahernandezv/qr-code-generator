@@ -87,6 +87,38 @@ describe('App integration', () => {
     expect(screen.getByRole('listbox', { name: 'Body Color' })).toBeInTheDocument()
   })
 
+  it('uses one icon-only five-position Creator Signature radio row', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    await user.click(screen.getByRole('button', { name: 'Creator Signature' }))
+
+    const selector = screen.getByRole('radiogroup', { name: 'Fixed signature position' })
+    const expected = ['Bottom left', 'Bottom right', 'Below centered', 'Top left corner', 'Top right corner']
+    const radios = Array.from(selector.querySelectorAll<HTMLButtonElement>('[role="radio"]'))
+
+    expect(radios).toHaveLength(5)
+    expect(radios.map((radio) => radio.getAttribute('aria-label'))).toEqual(expected)
+    expect(radios.every((radio) => radio.textContent?.trim() === '')).toBe(true)
+    for (const name of expected) {
+      expect(screen.getByRole('radio', { name })).toHaveAttribute('title', name)
+    }
+    expect(screen.queryByRole('radio', { name: 'Right side vertical' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('radio', { name: 'Top right badge' })).not.toBeInTheDocument()
+
+    const previewZone = screen.getByTestId('qr-side-controls')
+    const preview = screen.getByRole('img', { name: 'QR Preview' })
+    expect(previewZone).toContainElement(preview)
+    await user.click(screen.getByRole('radio', { name: 'Top left corner' }))
+    expect(screen.getByRole('radio', { name: 'Top left corner' })).toHaveAttribute('aria-checked', 'true')
+    expect(useStudioStore.getState().project.templateArt?.fields.signaturePosition).toBe('top-left-corner')
+    expect(previewZone).toContainElement(preview)
+
+    await user.keyboard('{ArrowRight}')
+    expect(screen.getByRole('radio', { name: 'Top right corner' })).toHaveAttribute('aria-checked', 'true')
+    expect(screen.getByRole('radio', { name: 'Top right corner' })).toHaveFocus()
+    expect(useStudioStore.getState().project.templateArt?.fields.signaturePosition).toBe('top-right-corner')
+  })
+
   it('uses accessible Core-backed Body Color, Corner Color, Style, Corners, and Eyes choices', async () => {
     const user = userEvent.setup()
     render(<App />)
