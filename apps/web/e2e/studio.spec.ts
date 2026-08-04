@@ -28,6 +28,7 @@ const b35EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/st
 const b37EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b37-creator-signature-icon-position-selector')
 const b38EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b38-two-line-signature-font-color-offset')
 const b40EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b40-destination-toggle-tray')
+const b42EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b42-basic-tray-outline')
 
 const fixtureModules = Array.from({ length: 21 }, (_, y) => Array.from({ length: 21 }, (_, x) => {
   const finder = (fx: number, fy: number) => x >= fx && x < fx + 7 && y >= fy && y < fy + 7
@@ -743,6 +744,55 @@ test('B40 removes Design heading and flips Destination into the settings tray', 
     destinationHiddenUntilSelected: true,
     destinationDraftOnly: beforeDraft === afterContinue,
     previewZoneStable: Math.abs(signatureBox!.y - previewBox!.y) <= 2 && Math.abs(signatureBox!.height - previewBox!.height) <= 2,
+    screenshotPath,
+  }, null, 2))
+  expect(errors).toEqual([])
+})
+
+test('B42 outlines Basic QR Settings as a matching lower tray section', async ({ page }) => {
+  const errors = await assertNoConsoleErrors(page)
+  await fs.mkdir(b42EvidenceDir, { recursive: true })
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/')
+  await page.addStyleTag({ content: '*,*::before,*::after{transition:none!important;animation:none!important}' })
+  const lowerControls = page.locator('[data-testid="lower-design-controls"]')
+  const basicTray = lowerControls.getByRole('region', { name: 'Basic QR Settings controls' })
+  await expect(page.getByRole('button', { name: 'Basic QR Settings' })).toHaveAttribute('aria-pressed', 'true')
+  await expect(basicTray).toBeVisible()
+  await expect(basicTray).toHaveAttribute('data-basic-controls-tray', 'true')
+  await expect(basicTray.getByRole('tablist', { name: 'Design control families' })).toBeVisible()
+  await expect(basicTray.getByRole('listbox', { name: 'Body Color' })).toBeVisible()
+  const metrics = await basicTray.evaluate((element) => {
+    const box = element.getBoundingClientRect()
+    const style = getComputedStyle(element)
+    return {
+      box: { x: box.x, y: box.y, width: box.width, height: box.height },
+      borderWidth: style.borderWidth,
+      borderRadius: style.borderRadius,
+      borderColor: style.borderColor,
+      backgroundColor: style.backgroundColor,
+      paddingTop: style.paddingTop,
+      paddingRight: style.paddingRight,
+      paddingBottom: style.paddingBottom,
+      paddingLeft: style.paddingLeft,
+    }
+  })
+  expect(metrics.borderWidth).toBe('1px')
+  expect(Number.parseFloat(metrics.borderRadius)).toBeGreaterThanOrEqual(12)
+  expect(Number.parseFloat(metrics.paddingTop)).toBeGreaterThan(0)
+  expect(metrics.box.width).toBeGreaterThan(300)
+
+  await page.getByRole('button', { name: 'Creator Signature' }).click()
+  await expect(basicTray).toHaveCount(0)
+  await expect(lowerControls.getByRole('heading', { name: 'Creator Signature' })).toBeVisible()
+  await page.getByRole('button', { name: 'Basic QR Settings' }).click()
+  await expect(lowerControls.getByRole('region', { name: 'Basic QR Settings controls' })).toBeVisible()
+
+  const screenshotPath = path.join(b42EvidenceDir, 'b42-basic-tray-outline-mobile.png')
+  await page.screenshot({ path: screenshotPath, fullPage: false })
+  await fs.writeFile(path.join(b42EvidenceDir, 'b42-basic-tray-outline.json'), JSON.stringify({
+    basicTrayOutlined: true,
+    metrics,
     screenshotPath,
   }, null, 2))
   expect(errors).toEqual([])
