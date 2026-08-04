@@ -128,16 +128,18 @@ describe('App integration', () => {
 
     expect(screen.getAllByRole('textbox').filter((input) => /^Line [12]$/.test(input.getAttribute('aria-label') ?? ''))).toHaveLength(2)
     expect(screen.queryByRole('textbox', { name: /CTA|Line 3/i })).not.toBeInTheDocument()
+    expect(screen.queryByText('Level 2 · Template Art')).not.toBeInTheDocument()
+    expect(screen.queryByText('ONLY TEMPLATE')).not.toBeInTheDocument()
     await user.selectOptions(screen.getByRole('combobox', { name: 'Line 1 font' }), 'serif')
     await user.selectOptions(screen.getByRole('combobox', { name: 'Line 2 font' }), 'mono')
     await user.selectOptions(screen.getByRole('combobox', { name: 'Line 1 colour' }), 'primary')
     await user.selectOptions(screen.getByRole('combobox', { name: 'Line 2 colour' }), 'accent')
     const offset = screen.getByRole('combobox', { name: 'Signature boundary offset' })
-    expect(Array.from(offset.querySelectorAll('option')).map((option) => option.textContent)).toEqual(['0mm', '1mm', '2mm'])
-    await user.selectOptions(offset, '2')
+    expect(Array.from(offset.querySelectorAll('option')).map((option) => option.textContent)).toEqual(['0mm', '1mm', '2mm', '3mm'])
+    await user.selectOptions(offset, '3')
 
     expect(useStudioStore.getState().project.templateArt?.fields).toMatchObject({
-      line1Font: 'serif', line2Font: 'mono', line1Color: 'primary', line2Color: 'accent', boundaryOffsetMm: 2,
+      line1Font: 'serif', line2Font: 'mono', line1Color: 'primary', line2Color: 'accent', boundaryOffsetMm: 3,
     })
   })
 

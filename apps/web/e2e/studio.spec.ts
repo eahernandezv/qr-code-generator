@@ -636,7 +636,7 @@ test('B38 mobile Creator Signature supports exactly two styled lines and directi
   for (const radio of await radios.all()) await expect(radio).toHaveAttribute('data-icon-only', 'true')
 
   const offset = page.getByRole('combobox', { name: 'Signature boundary offset' })
-  expect(await offset.locator('option').allTextContents()).toEqual(['0mm', '1mm', '2mm'])
+  expect(await offset.locator('option').allTextContents()).toEqual(['0mm', '1mm', '2mm', '3mm'])
   const svg = async () => decodeURIComponent(((await preview.getAttribute('src')) ?? '').split(',')[1] ?? '')
   const lineMetrics = async () => {
     const source = await svg()
@@ -648,16 +648,16 @@ test('B38 mobile Creator Signature supports exactly two styled lines and directi
   await page.getByRole('radio', { name: 'Bottom right' }).click()
   await offset.selectOption('0')
   const bottom0 = await lineMetrics()
-  await offset.selectOption('2')
-  await expect.poll(async () => (await lineMetrics()).y).toBe(bottom0.y + 8)
+  await offset.selectOption('3')
+  await expect.poll(async () => (await lineMetrics()).y).toBe(bottom0.y + 12)
   const bottom2 = await lineMetrics()
   expect(bottom2.fontSize).toBe(bottom0.fontSize)
 
   await page.getByRole('radio', { name: 'Top right corner' }).click()
   await offset.selectOption('0')
   const top0 = await lineMetrics()
-  await offset.selectOption('2')
-  await expect.poll(async () => (await lineMetrics()).y).toBe(top0.y - 8)
+  await offset.selectOption('3')
+  await expect.poll(async () => (await lineMetrics()).y).toBe(top0.y - 12)
   const top2 = await lineMetrics()
   expect(top2.fontSize).toBe(top0.fontSize)
   expect(top2.source).toContain('data-template-layer="creator-signature"')
@@ -677,9 +677,9 @@ test('B38 mobile Creator Signature supports exactly two styled lines and directi
     lineInputCount: 2,
     fonts: { line1: 'serif', line2: 'mono' },
     colors: { line1: 'primary', line2: 'accent' },
-    offsetOptions: ['0mm', '1mm', '2mm'],
-    bottom: { zeroMmY: bottom0.y, twoMmY: bottom2.y, deltaPx: bottom2.y - bottom0.y, fontSizeStable: bottom2.fontSize === bottom0.fontSize },
-    top: { zeroMmY: top0.y, twoMmY: top2.y, deltaPx: top2.y - top0.y, fontSizeStable: top2.fontSize === top0.fontSize },
+    offsetOptions: ['0mm', '1mm', '2mm', '3mm'],
+    bottom: { zeroMmY: bottom0.y, threeMmY: bottom2.y, deltaPx: bottom2.y - bottom0.y, fontSizeStable: bottom2.fontSize === bottom0.fontSize },
+    top: { zeroMmY: top0.y, threeMmY: top2.y, deltaPx: top2.y - top0.y, fontSizeStable: top2.fontSize === top0.fontSize },
     previewBoxStableAcrossBasicAndTemplate: JSON.stringify(signaturePreviewBox) === JSON.stringify(basicPreviewBox),
     templateLayerPresent: top2.source.includes('data-template-layer="creator-signature"'),
     renderedLineCount: top2.source.match(/data-signature-line=/g)?.length ?? 0,
@@ -877,7 +877,8 @@ test('B27 Creator Signature composes five fixed positions, reuses Level 1 contro
   await expect(page.getByTestId('studio-app')).toHaveAttribute('data-ux-variant', 'no-scroll')
   await expect(page.locator('[data-template-controls-tray="creator-signature"]:visible')).toHaveCount(1)
   await expect(page.getByRole('heading', { name: 'Creator Signature' })).toBeVisible()
-  await expect(page.getByText('ONLY TEMPLATE')).toBeVisible()
+  await expect(page.getByText('ONLY TEMPLATE')).toHaveCount(0)
+  await expect(page.getByText('Level 2 · Template Art')).toHaveCount(0)
   await page.screenshot({ path: path.join(b27EvidenceDir, 'creator-signature-default-mobile.png'), fullPage: true })
 
   const preview = page.getByRole('img', { name: 'QR Preview' })

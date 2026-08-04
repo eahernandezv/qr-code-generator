@@ -71,13 +71,9 @@ export default function TemplateArtControls({ compact = false }: { compact?: boo
   }
 
   return <section aria-labelledby="creator-signature-title" className={`rounded-xl border border-sky-500/30 bg-sky-950/20 ${compact ? 'p-2' : 'p-3'}`} data-template-id="creator-signature" data-template-controls-tray="creator-signature">
-    <div className={`${compact ? 'mb-2' : 'mb-3'} flex items-start justify-between gap-2`}>
-      <div>
-        <p className="text-[10px] font-bold uppercase tracking-[.18em] text-sky-400">Level 2 · Template Art</p>
-        <h3 id="creator-signature-title" className={`${compact ? 'text-sm' : 'text-base'} font-semibold text-white`}>Creator Signature</h3>
-        {!compact && <p className="text-xs text-slate-400">One designed layout system. Text stays outside the QR safe area.</p>}
-      </div>
-      <span className="shrink-0 rounded-full bg-emerald-950 px-2 py-1 text-[10px] font-bold text-emerald-300">ONLY TEMPLATE</span>
+    <div className={compact ? 'mb-2' : 'mb-3'}>
+      <h3 id="creator-signature-title" className={`${compact ? 'text-sm' : 'text-base'} font-semibold text-white`}>Creator Signature</h3>
+      {!compact && <p className="text-xs text-slate-400">Text stays outside the QR safe area.</p>}
     </div>
     <div className={`grid gap-2 ${compact ? 'grid-cols-1' : 'sm:grid-cols-2'}`}>
       {([
@@ -119,7 +115,7 @@ export default function TemplateArtControls({ compact = false }: { compact?: boo
       </fieldset>
       <label className="text-[10px] font-medium text-slate-500">Boundary offset
         <select className={compactSelectClass} aria-label="Signature boundary offset" value={fields.boundaryOffsetMm ?? 0}
-          onChange={(event) => update({ boundaryOffsetMm: Number(event.target.value) as 0 | 1 | 2 })}>
+          onChange={(event) => update({ boundaryOffsetMm: Number(event.target.value) as 0 | 1 | 2 | 3 })}>
           {CREATOR_SIGNATURE_OFFSETS.map((offset) => <option key={offset} value={offset}>{offset}mm</option>)}
         </select>
       </label>

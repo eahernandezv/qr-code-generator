@@ -62,7 +62,7 @@ export type CreatorSignaturePosition =
 
 export type CreatorSignatureFont = 'sans' | 'serif' | 'mono'
 export type CreatorSignatureColor = 'primary' | 'secondary' | 'accent' | 'dark-ink'
-export type CreatorSignatureBoundaryOffsetMm = 0 | 1 | 2
+export type CreatorSignatureBoundaryOffsetMm = 0 | 1 | 2 | 3
 
 export interface CreatorSignatureTemplateFields {
   line1Text?: string
