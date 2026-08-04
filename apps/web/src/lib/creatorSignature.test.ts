@@ -3,6 +3,7 @@ import {
   composeCreatorSignatureSvg,
   creatorSignatureGeometry,
   CREATOR_SIGNATURE_POSITIONS,
+  CREATOR_SIGNATURE_PX_PER_MM,
   DEFAULT_CREATOR_SIGNATURE,
 } from './creatorSignature'
 
@@ -50,6 +51,7 @@ describe('Creator Signature template contract', () => {
     const empty = composeCreatorSignatureSvg(qr, { signatureText: 'Creator', handleText: 'Handle', ctaText: '' })
     expect(empty).not.toContain('SCAN TO CONNECT')
     expect(empty).not.toContain('Scan to connect')
+    expect(empty.match(/data-signature-line=/g)).toHaveLength(2)
     expect(empty).toContain('data-signature-position="bottom-right-outside"')
   })
 
@@ -94,8 +96,8 @@ describe('Creator Signature template contract', () => {
   it('aligns the mirrored bottom shelves to the active QR vertical boundaries', () => {
     const right = creatorSignatureGeometry('bottom-right-outside')
     const left = creatorSignatureGeometry('bottom-left-outside')
-    const rightSvg = composeCreatorSignatureSvg(qr, { signaturePosition: 'bottom-right-outside' })
-    const leftSvg = composeCreatorSignatureSvg(qr, { signaturePosition: 'bottom-left-outside' })
+    const rightSvg = composeCreatorSignatureSvg(qr, { line1Text: 'Creator', signaturePosition: 'bottom-right-outside' })
+    const leftSvg = composeCreatorSignatureSvg(qr, { line1Text: 'Creator', signaturePosition: 'bottom-left-outside' })
 
     expect(right.labelSlot.x + right.labelSlot.width).toBe(right.qrContent.x + right.qrContent.width)
     expect(left.labelSlot.x).toBe(left.qrContent.x)
@@ -109,8 +111,8 @@ describe('Creator Signature template contract', () => {
   it('aligns the mirrored top corners to the visible QR vertical boundaries and close to the top border', () => {
     const right = creatorSignatureGeometry('top-right-corner')
     const left = creatorSignatureGeometry('top-left-corner')
-    const rightSvg = composeCreatorSignatureSvg(qr, { signaturePosition: 'top-right-corner' })
-    const leftSvg = composeCreatorSignatureSvg(qr, { signaturePosition: 'top-left-corner' })
+    const rightSvg = composeCreatorSignatureSvg(qr, { line1Text: 'Creator', signaturePosition: 'top-right-corner' })
+    const leftSvg = composeCreatorSignatureSvg(qr, { line1Text: 'Creator', signaturePosition: 'top-left-corner' })
 
     expect(right.labelSlot.x + right.labelSlot.width).toBe(right.qrContent.x + right.qrContent.width)
     expect(left.labelSlot.x).toBe(left.qrContent.x)
@@ -124,10 +126,10 @@ describe('Creator Signature template contract', () => {
 
   it('moves the signature with the rendered Core QR content bounds without resizing text', () => {
     const source = (start: number, size: number) => `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512"><rect width="512" height="512" fill="#ffffff"/><rect x="${start}" y="${start}" width="${size}" height="${size}" fill="#111827"/></svg>`)}`
-    const smallSvg = composeCreatorSignatureSvg(source(150, 212), { signaturePosition: 'bottom-right-outside' })
-    const largeSvg = composeCreatorSignatureSvg(source(80, 352), { signaturePosition: 'bottom-right-outside' })
+    const smallSvg = composeCreatorSignatureSvg(source(150, 212), { line1Text: 'Creator', signaturePosition: 'bottom-right-outside' })
+    const largeSvg = composeCreatorSignatureSvg(source(80, 352), { line1Text: 'Creator', signaturePosition: 'bottom-right-outside' })
     const zone = (svg: string) => svg.match(/data-qr-content-zone="([0-9,]+)"/)![1]
-    const text = (svg: string) => svg.match(/<text x="([0-9.]+)" y="([0-9.]+)" text-anchor="end"[^>]*>/)!.slice(1).map(Number)
+    const text = (svg: string) => svg.match(/<text data-signature-line="1" x="([0-9.]+)" y="([0-9.]+)" text-anchor="end"[^>]*>/)!.slice(1).map(Number)
     const [smallX, smallY] = text(smallSvg)
     const [largeX, largeY] = text(largeSvg)
 
@@ -136,5 +138,35 @@ describe('Creator Signature template contract', () => {
     expect(largeY).toBeGreaterThan(smallY)
     expect(smallSvg).toContain('font-size="22"')
     expect(largeSvg).toContain('font-size="22"')
+  })
+
+  it('maps legacy text to two lines, ignores CTA, and applies independent fonts and palette colours', () => {
+    const svg = composeCreatorSignatureSvg(qr, {
+      signatureText: 'Legacy creator', handleText: '@legacy', ctaText: 'Never render this',
+      line1Font: 'serif', line2Font: 'mono', line1Color: 'primary', line2Color: 'accent',
+    }, { palette: { primary: '#112233', accent: '#445566' } })
+
+    expect(svg.match(/data-signature-line=/g)).toHaveLength(2)
+    expect(svg).toContain('Legacy creator')
+    expect(svg).toContain('@legacy')
+    expect(svg).not.toContain('Never render this')
+    expect(svg).toContain('font-family="Georgia,Times New Roman,serif"')
+    expect(svg).toContain('font-family="ui-monospace,SFMono-Regular,Menlo,monospace"')
+    expect(svg).toContain('fill="#112233"')
+    expect(svg).toContain('fill="#445566"')
+  })
+
+  it.each([
+    ['bottom-right-outside', 1], ['bottom-left-outside', 1], ['below-centered', 1],
+    ['top-right-corner', -1], ['top-left-corner', -1],
+  ] as const)('moves %s by 4px per mm in the correct direction without scaling text', (position, direction) => {
+    const zero = composeCreatorSignatureSvg(qr, { line1Text: 'Creator', signaturePosition: position, boundaryOffsetMm: 0 })
+    const two = composeCreatorSignatureSvg(qr, { line1Text: 'Creator', signaturePosition: position, boundaryOffsetMm: 2 })
+    const y = (svg: string) => Number(svg.match(/data-signature-line="1" x="[0-9.]+" y="([0-9.]+)"/)![1])
+
+    expect(y(two) - y(zero)).toBe(direction * 2 * CREATOR_SIGNATURE_PX_PER_MM)
+    expect(zero).toContain('font-size="22"')
+    expect(two).toContain('font-size="22"')
+    expect(two).toContain('data-signature-offset-mm="2"')
   })
 })

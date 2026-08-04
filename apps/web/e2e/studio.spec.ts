@@ -26,6 +26,7 @@ const b33EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/st
 const b34EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b34-template-art-controls-tray')
 const b35EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b35-shared-canvas-settings-toggle')
 const b37EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b37-creator-signature-icon-position-selector')
+const b38EvidenceDir = path.resolve(process.cwd(), '../../.work-loop/evidence/studio-b38-two-line-signature-font-color-offset')
 
 const fixtureModules = Array.from({ length: 21 }, (_, y) => Array.from({ length: 21 }, (_, x) => {
   const finder = (fx: number, fy: number) => x >= fx && x < fx + 7 && y >= fy && y < fy + 7
@@ -244,6 +245,7 @@ test.beforeAll(async () => {
   await fs.mkdir(b34EvidenceDir, { recursive: true })
   await fs.mkdir(b35EvidenceDir, { recursive: true })
   await fs.mkdir(b37EvidenceDir, { recursive: true })
+  await fs.mkdir(b38EvidenceDir, { recursive: true })
 })
 
 test('B29 Creator Signature uses text-only reserved shelves aligned to QR boundaries and preserves Basic/public gates', async ({ page }) => {
@@ -355,7 +357,7 @@ test('B32 Creator Signature location follows QR size controls without resizing s
   const parse = (source: string) => {
     const decoded = decodeURIComponent(source.split(',')[1] ?? '')
     const zone = (name: string) => decoded.match(new RegExp(`${name}="([0-9,]+)"`))![1].split(',').map(Number)
-    const text = decoded.match(/<text x="([0-9.]+)" y="([0-9.]+)" text-anchor="end"[^>]*font-size="([0-9.]+)"/)!
+    const text = decoded.match(/<text data-signature-line="1" x="([0-9.]+)" y="([0-9.]+)" text-anchor="end"[^>]*font-size="([0-9.]+)"/)!
     return { decoded, content: zone('data-qr-content-zone'), slot: zone('data-signature-slot'), textX: Number(text[1]), textY: Number(text[2]), fontSize: Number(text[3]) }
   }
   for (const label of ['Smaller', 'Balanced', 'Larger']) {
@@ -389,7 +391,7 @@ test('B32 Creator Signature location follows QR size controls without resizing s
   expect(errors).toEqual([])
 })
 
-test('B33 Creator Signature replaces crossed-out options with top corners and keeps empty CTA empty', async ({ page }) => {
+test('B33 Creator Signature replaces crossed-out options with top corners and keeps legacy CTA output absent', async ({ page }) => {
   const errors = await assertNoConsoleErrors(page)
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/')
@@ -401,15 +403,15 @@ test('B33 Creator Signature replaces crossed-out options with top corners and ke
   await expect(page.getByRole('radio', { name: 'Top left corner' })).toBeVisible()
 
   const preview = page.getByRole('img', { name: 'QR Preview' })
-  await page.getByRole('textbox', { name: 'Signature text' }).fill('Ernesto Creates')
-  await page.getByRole('textbox', { name: 'Handle or subtitle' }).fill('Test')
-  await page.getByRole('textbox', { name: 'CTA text' }).fill('')
+  await page.getByRole('textbox', { name: 'Line 1' }).fill('Ernesto Creates')
+  await page.getByRole('textbox', { name: 'Line 2' }).fill('Test')
+  await expect(page.getByRole('textbox', { name: 'CTA text' })).toHaveCount(0)
 
   const parse = async () => {
     const source = (await preview.getAttribute('src'))!
     const decoded = decodeURIComponent(source.split(',')[1] ?? '')
     const zone = (name: string) => decoded.match(new RegExp(`${name}="([0-9,]+)"`))![1].split(',').map(Number)
-    const firstText = decoded.match(/<text x="([0-9.]+)" y="([0-9.]+)" text-anchor="(start|end|middle)"[^>]*>/)!
+    const firstText = decoded.match(/<text data-signature-line="1" x="([0-9.]+)" y="([0-9.]+)" text-anchor="(start|end|middle)"[^>]*>/)!
     return { source, decoded, content: zone('data-qr-content-zone'), slot: zone('data-signature-slot'), textX: Number(firstText[1]), textY: Number(firstText[2]), anchor: firstText[3] }
   }
   const proofs = []
@@ -459,7 +461,7 @@ test('B35 Basic QR settings and Creator Signature settings share one QR canvas',
   await page.getByRole('button', { name: 'Creator Signature', pressed: false }).click()
   await expect(preview).toHaveAttribute('data-art-level', 'template-art')
   await expect(lowerControls.getByRole('heading', { name: 'Creator Signature' })).toBeVisible()
-  await expect(lowerControls.getByRole('textbox', { name: 'Signature text' })).toBeVisible()
+  await expect(lowerControls.getByRole('textbox', { name: 'Line 1' })).toBeVisible()
   await expect(lowerControls.getByRole('radio', { name: 'Top right corner' })).toBeVisible()
   await expect(lowerControls.getByRole('tablist', { name: 'Design control families' })).toHaveCount(0)
   const signatureSource = await preview.getAttribute('src')
@@ -598,6 +600,91 @@ test('B37 uses one compact icon-only Creator Signature position row without movi
     previewSourcesDistinct: new Set(sources).size === 5,
     selectedStyleDiffersFromIdle: JSON.stringify(selectedStyle) !== JSON.stringify(idleStyle),
     sharedCanvasTogglePreserved: true,
+  }, null, 2))
+  expect(errors).toEqual([])
+})
+
+test('B38 mobile Creator Signature supports exactly two styled lines and directional boundary offsets', async ({ page }) => {
+  const errors = await assertNoConsoleErrors(page)
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/')
+  await page.addStyleTag({ content: '*,*::before,*::after{transition:none!important;animation:none!important}' })
+
+  const previewZone = page.locator('[data-testid="qr-side-controls"]')
+  const preview = previewZone.getByRole('img', { name: 'QR Preview' })
+  const basicPreviewBox = await preview.boundingBox()
+  await page.getByRole('button', { name: 'Creator Signature' }).click()
+  await expect(preview).toHaveAttribute('data-art-level', 'template-art')
+  const signaturePreviewBox = await preview.boundingBox()
+  expect(signaturePreviewBox).toEqual(basicPreviewBox)
+
+  const line1 = page.getByRole('textbox', { name: 'Line 1' })
+  const line2 = page.getByRole('textbox', { name: 'Line 2' })
+  await expect(line1).toBeVisible()
+  await expect(line2).toBeVisible()
+  await expect(page.getByRole('textbox', { name: /CTA|Line 3/i })).toHaveCount(0)
+  await line1.fill('Studio line one')
+  await line2.fill('Studio line two')
+  await page.getByRole('combobox', { name: 'Line 1 font' }).selectOption('serif')
+  await page.getByRole('combobox', { name: 'Line 2 font' }).selectOption('mono')
+  await page.getByRole('combobox', { name: 'Line 1 colour' }).selectOption('primary')
+  await page.getByRole('combobox', { name: 'Line 2 colour' }).selectOption('accent')
+
+  const radios = page.getByRole('radiogroup', { name: 'Fixed signature position' }).getByRole('radio')
+  await expect(radios).toHaveCount(5)
+  expect((await radios.allTextContents()).map((text) => text.trim())).toEqual(['', '', '', '', ''])
+  for (const radio of await radios.all()) await expect(radio).toHaveAttribute('data-icon-only', 'true')
+
+  const offset = page.getByRole('combobox', { name: 'Signature boundary offset' })
+  expect(await offset.locator('option').allTextContents()).toEqual(['0mm', '1mm', '2mm'])
+  const svg = async () => decodeURIComponent(((await preview.getAttribute('src')) ?? '').split(',')[1] ?? '')
+  const lineMetrics = async () => {
+    const source = await svg()
+    const match = source.match(/data-signature-line="1" x="[0-9.]+" y="([0-9.]+)"[^>]*font-size="([0-9.]+)"/)
+    expect(match).not.toBeNull()
+    return { y: Number(match![1]), fontSize: Number(match![2]), source }
+  }
+
+  await page.getByRole('radio', { name: 'Bottom right' }).click()
+  await offset.selectOption('0')
+  const bottom0 = await lineMetrics()
+  await offset.selectOption('2')
+  await expect.poll(async () => (await lineMetrics()).y).toBe(bottom0.y + 8)
+  const bottom2 = await lineMetrics()
+  expect(bottom2.fontSize).toBe(bottom0.fontSize)
+
+  await page.getByRole('radio', { name: 'Top right corner' }).click()
+  await offset.selectOption('0')
+  const top0 = await lineMetrics()
+  await offset.selectOption('2')
+  await expect.poll(async () => (await lineMetrics()).y).toBe(top0.y - 8)
+  const top2 = await lineMetrics()
+  expect(top2.fontSize).toBe(top0.fontSize)
+  expect(top2.source).toContain('data-template-layer="creator-signature"')
+  expect(top2.source.match(/data-signature-line=/g)).toHaveLength(2)
+  expect(top2.source).not.toContain('Scan to connect')
+  expect(top2.source).not.toContain('data-signature-line="3"')
+  expect(top2.source).toContain('font-family="Georgia,Times New Roman,serif"')
+  expect(top2.source).toContain('font-family="ui-monospace,SFMono-Regular,Menlo,monospace"')
+  expect(top2.source).toContain('fill="#5162da"')
+  expect(top2.source).toContain('fill="#a5bdff"')
+
+  const screenshotPath = path.join(b38EvidenceDir, 'b38-two-line-signature-mobile.png')
+  const evidencePath = path.join(b38EvidenceDir, 'b38-two-line-signature-mobile.json')
+  await page.screenshot({ path: screenshotPath, fullPage: false })
+  await fs.writeFile(evidencePath, JSON.stringify({
+    viewport: { width: 390, height: 844 },
+    lineInputCount: 2,
+    fonts: { line1: 'serif', line2: 'mono' },
+    colors: { line1: 'primary', line2: 'accent' },
+    offsetOptions: ['0mm', '1mm', '2mm'],
+    bottom: { zeroMmY: bottom0.y, twoMmY: bottom2.y, deltaPx: bottom2.y - bottom0.y, fontSizeStable: bottom2.fontSize === bottom0.fontSize },
+    top: { zeroMmY: top0.y, twoMmY: top2.y, deltaPx: top2.y - top0.y, fontSizeStable: top2.fontSize === top0.fontSize },
+    previewBoxStableAcrossBasicAndTemplate: JSON.stringify(signaturePreviewBox) === JSON.stringify(basicPreviewBox),
+    templateLayerPresent: top2.source.includes('data-template-layer="creator-signature"'),
+    renderedLineCount: top2.source.match(/data-signature-line=/g)?.length ?? 0,
+    thirdLineOrCtaAbsent: !top2.source.includes('data-signature-line="3"') && !top2.source.includes('Scan to connect'),
+    positionSelectorIconOnly: true,
   }, null, 2))
   expect(errors).toEqual([])
 })

@@ -60,9 +60,23 @@ export type CreatorSignaturePosition =
   | 'top-right-corner'
   | 'top-left-corner'
 
+export type CreatorSignatureFont = 'sans' | 'serif' | 'mono'
+export type CreatorSignatureColor = 'primary' | 'secondary' | 'accent' | 'dark-ink'
+export type CreatorSignatureBoundaryOffsetMm = 0 | 1 | 2
+
 export interface CreatorSignatureTemplateFields {
+  line1Text?: string
+  line2Text?: string
+  line1Font?: CreatorSignatureFont
+  line2Font?: CreatorSignatureFont
+  line1Color?: CreatorSignatureColor
+  line2Color?: CreatorSignatureColor
+  boundaryOffsetMm?: CreatorSignatureBoundaryOffsetMm
+  /** Legacy persisted field; used only when line1Text is absent. */
   signatureText?: string
+  /** Legacy persisted field; used only when line2Text is absent. */
   handleText?: string
+  /** Legacy persisted field; retained for hydration compatibility and never rendered. */
   ctaText?: string
   signaturePosition?: CreatorSignaturePosition
 }

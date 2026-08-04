@@ -1,4 +1,11 @@
-import type { CreatorSignaturePosition, CreatorSignatureTemplateFields, TemplateArtSpec } from '../types'
+import type {
+  CreatorSignatureBoundaryOffsetMm,
+  CreatorSignatureColor,
+  CreatorSignatureFont,
+  CreatorSignaturePosition,
+  CreatorSignatureTemplateFields,
+  TemplateArtSpec,
+} from '../types'
 
 export const CREATOR_SIGNATURE_POSITIONS: ReadonlyArray<{ value: CreatorSignaturePosition; label: string }> = [
   { value: 'bottom-right-outside', label: 'Bottom right' },
@@ -12,12 +19,32 @@ export const DEFAULT_CREATOR_SIGNATURE: TemplateArtSpec = {
   templateId: 'creator-signature',
   outputIntent: 'square-card',
   fields: {
-    signatureText: 'Ernesto Creates',
-    handleText: '@ernesto',
-    ctaText: 'Scan to connect',
+    line1Text: 'Ernesto Creates',
+    line2Text: '@ernesto',
+    line1Font: 'sans',
+    line2Font: 'sans',
+    line1Color: 'dark-ink',
+    line2Color: 'secondary',
+    boundaryOffsetMm: 0,
     signaturePosition: 'bottom-right-outside',
   },
 }
+
+export const CREATOR_SIGNATURE_FONTS: ReadonlyArray<{ value: CreatorSignatureFont; label: string }> = [
+  { value: 'sans', label: 'Sans' },
+  { value: 'serif', label: 'Serif' },
+  { value: 'mono', label: 'Mono' },
+]
+
+export const CREATOR_SIGNATURE_COLORS: ReadonlyArray<{ value: CreatorSignatureColor; label: string }> = [
+  { value: 'primary', label: 'Body color' },
+  { value: 'secondary', label: 'Corner color' },
+  { value: 'accent', label: 'Accent' },
+  { value: 'dark-ink', label: 'Dark ink' },
+]
+
+export const CREATOR_SIGNATURE_OFFSETS: ReadonlyArray<CreatorSignatureBoundaryOffsetMm> = [0, 1, 2]
+export const CREATOR_SIGNATURE_PX_PER_MM = 4
 
 const escapeXml = (value: string) => value.replace(/[<>&"']/g, (character) => ({
   '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&apos;',
@@ -125,13 +152,17 @@ function visibleQrContent(qrImage: CreatorSignatureRect, qrSource?: string): Cre
   return bounds ? mapRectToImage(bounds, viewBox, qrImage) : fallbackVisibleQrContent(qrImage)
 }
 
-export function creatorSignatureGeometry(position: CreatorSignaturePosition, qrSource?: string): CreatorSignatureGeometry {
+export function creatorSignatureGeometry(
+  position: CreatorSignaturePosition,
+  qrSource?: string,
+  boundaryOffsetMm: CreatorSignatureBoundaryOffsetMm = 0,
+): CreatorSignatureGeometry {
   const qrImage = { x: 0, y: 0, width: 720, height: 720 }
   const qrContent = visibleQrContent(qrImage, qrSource)
   const qrCard = { x: 0, y: 0, width: 720, height: 720 }
   const bottomShelfY = Math.min(qrImage.y + qrImage.height - 86, qrContent.y + qrContent.height + 8)
   const topShelfY = Math.max(qrImage.y + 8, qrContent.y - 78)
-  const labelSlot = position === 'bottom-left-outside'
+  const baseLabelSlot = position === 'bottom-left-outside'
     ? { x: qrContent.x, y: bottomShelfY, width: 260, height: 76 }
     : position === 'below-centered'
       ? { x: qrContent.x, y: bottomShelfY, width: qrContent.width, height: 76 }
@@ -140,13 +171,48 @@ export function creatorSignatureGeometry(position: CreatorSignaturePosition, qrS
         : position === 'top-right-corner'
           ? { x: qrContent.x + qrContent.width - 260, y: topShelfY, width: 260, height: 76 }
           : { x: qrContent.x + qrContent.width - 260, y: bottomShelfY, width: 260, height: 76 }
+  const direction = position === 'top-left-corner' || position === 'top-right-corner' ? -1 : 1
+  const labelSlot = { ...baseLabelSlot, y: baseLabelSlot.y + direction * boundaryOffsetMm * CREATOR_SIGNATURE_PX_PER_MM }
   return { qrImage, qrContent, qrCard, labelSlot }
 }
 
-function textLayer(fields: CreatorSignatureTemplateFields, geometry: CreatorSignatureGeometry): string {
-  const signature = bounded(fields.signatureText, 32)
-  const handle = bounded(fields.handleText, 36)
-  const cta = bounded(fields.ctaText, 28)
+const FONT_FAMILIES: Record<CreatorSignatureFont, string> = {
+  sans: 'Inter,system-ui,sans-serif',
+  serif: 'Georgia,Times New Roman,serif',
+  mono: 'ui-monospace,SFMono-Regular,Menlo,monospace',
+}
+
+const DEFAULT_COLORS: Record<CreatorSignatureColor, string> = {
+  primary: '#5162da',
+  secondary: '#323eaf',
+  accent: '#a5bdff',
+  'dark-ink': '#18213a',
+}
+
+export interface CreatorSignaturePalette {
+  primary?: string
+  secondary?: string
+  accent?: string
+  darkInk?: string
+}
+
+function selectedColor(value: CreatorSignatureColor | undefined, palette: CreatorSignaturePalette): string {
+  const selected = CREATOR_SIGNATURE_COLORS.some((option) => option.value === value) ? value! : 'dark-ink'
+  if (selected === 'dark-ink') return palette.darkInk ?? DEFAULT_COLORS[selected]
+  return palette[selected] ?? DEFAULT_COLORS[selected]
+}
+
+function selectedFont(value: CreatorSignatureFont | undefined): CreatorSignatureFont {
+  return CREATOR_SIGNATURE_FONTS.some((option) => option.value === value) ? value! : 'sans'
+}
+
+function selectedOffset(value: CreatorSignatureBoundaryOffsetMm | undefined): CreatorSignatureBoundaryOffsetMm {
+  return CREATOR_SIGNATURE_OFFSETS.some((offset) => offset === value) ? value! : 0
+}
+
+function textLayer(fields: CreatorSignatureTemplateFields, geometry: CreatorSignatureGeometry, palette: CreatorSignaturePalette): string {
+  const line1 = bounded(fields.line1Text ?? fields.signatureText, 32)
+  const line2 = bounded(fields.line2Text ?? fields.handleText, 36)
   const position = fields.signaturePosition ?? 'bottom-right-outside'
   const { labelSlot } = geometry
   const fit = (value: string, fontSize: number, maxWidth: number) => value.length * fontSize * 0.58 > maxWidth
@@ -156,21 +222,20 @@ function textLayer(fields: CreatorSignatureTemplateFields, geometry: CreatorSign
     anchor: 'start' | 'middle' | 'end',
     x: number,
     y: number,
-    options: { signatureSize?: number; handleSize?: number; ctaSize?: number; maxWidth?: number; lineGap?: number } = {},
+    options: { line1Size?: number; line2Size?: number; maxWidth?: number; lineGap?: number } = {},
   ) => {
-    const signatureSize = options.signatureSize ?? 22
-    const handleSize = options.handleSize ?? 11
-    const ctaSize = options.ctaSize ?? 9
+    const line1Size = options.line1Size ?? 22
+    const line2Size = options.line2Size ?? 11
     const maxWidth = options.maxWidth ?? 220
     const lineGap = options.lineGap ?? 22
-    return `
-    <text x="${x}" y="${y}" text-anchor="${anchor}" fill="#18213a" font-family="Inter,system-ui,sans-serif" font-size="${signatureSize}" font-weight="750" letter-spacing="-0.5"${fit(signature, signatureSize, maxWidth)}>${signature}</text>
-    <text x="${x}" y="${y + lineGap}" text-anchor="${anchor}" fill="#64748b" font-family="Inter,system-ui,sans-serif" font-size="${handleSize}" font-weight="550"${fit(handle, handleSize, maxWidth)}>${handle}</text>
-    <text x="${x}" y="${y + lineGap * 2}" text-anchor="${anchor}" fill="#036b8f" font-family="Inter,system-ui,sans-serif" font-size="${ctaSize}" font-weight="700" letter-spacing="1.8"${fit(cta, ctaSize, maxWidth)}>${cta.toUpperCase()}</text>`
+    const renderedLine1 = line1 ? `<text data-signature-line="1" x="${x}" y="${y}" text-anchor="${anchor}" fill="${selectedColor(fields.line1Color, palette)}" font-family="${FONT_FAMILIES[selectedFont(fields.line1Font)]}" font-size="${line1Size}" font-weight="750" letter-spacing="-0.5"${fit(line1, line1Size, maxWidth)}>${line1}</text>` : ''
+    const renderedLine2 = line2 ? `<text data-signature-line="2" x="${x}" y="${y + lineGap}" text-anchor="${anchor}" fill="${selectedColor(fields.line2Color ?? 'secondary', palette)}" font-family="${FONT_FAMILIES[selectedFont(fields.line2Font)]}" font-size="${line2Size}" font-weight="550"${fit(line2, line2Size, maxWidth)}>${line2}</text>` : ''
+    return `\n    ${renderedLine1}\n    ${renderedLine2}`
   }
   const reservedShelf = `<rect data-signature-reserved-shelf="true" x="${labelSlot.x}" y="${labelSlot.y}" width="${labelSlot.width}" height="${labelSlot.height}" fill="none" stroke="none" aria-hidden="true"/>`
 
   const shelfTextY = geometry.qrContent.y + geometry.qrContent.height + 22
+    + selectedOffset(fields.boundaryOffsetMm) * CREATOR_SIGNATURE_PX_PER_MM
   const topShelfTextY = labelSlot.y + 22
   if (position === 'bottom-left-outside') return `${reservedShelf}${lines('start', geometry.qrContent.x, shelfTextY)}`
   if (position === 'below-centered') return `${reservedShelf}${lines('middle', geometry.qrContent.x + geometry.qrContent.width / 2, shelfTextY, { maxWidth: geometry.qrContent.width })}`
@@ -182,17 +247,18 @@ function textLayer(fields: CreatorSignatureTemplateFields, geometry: CreatorSign
 export function composeCreatorSignatureSvg(
   qrSource: string,
   fields: CreatorSignatureTemplateFields,
-  options: { width?: number; height?: number; geometrySource?: string } = {},
+  options: { width?: number; height?: number; geometrySource?: string; palette?: CreatorSignaturePalette } = {},
 ): string {
   const width = options.width ?? 720
   const height = options.height ?? 720
   const position = fields.signaturePosition ?? 'bottom-right-outside'
-  const geometry = creatorSignatureGeometry(position, options.geometrySource ?? qrSource)
+  const boundaryOffsetMm = selectedOffset(fields.boundaryOffsetMm)
+  const geometry = creatorSignatureGeometry(position, options.geometrySource ?? qrSource, boundaryOffsetMm)
   const { qrImage, qrContent, qrCard, labelSlot } = geometry
   const safeQrSource = escapeXml(qrSource)
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 720 720" role="img" aria-label="Creator Signature Template Art QR">
   <image data-qr-card-zone="${qrCard.x},${qrCard.y},${qrCard.width},${qrCard.height}" data-qr-active-zone="${qrImage.x},${qrImage.y},${qrImage.width},${qrImage.height}" data-qr-content-zone="${qrContent.x},${qrContent.y},${qrContent.width},${qrContent.height}" href="${safeQrSource}" x="${qrImage.x}" y="${qrImage.y}" width="${qrImage.width}" height="${qrImage.height}" preserveAspectRatio="xMidYMid meet"/>
-  <g data-template-layer="creator-signature" data-signature-position="${position}" data-signature-slot="${labelSlot.x},${labelSlot.y},${labelSlot.width},${labelSlot.height}">${textLayer(fields, geometry)}</g>
+  <g data-template-layer="creator-signature" data-signature-position="${position}" data-signature-offset-mm="${boundaryOffsetMm}" data-signature-slot="${labelSlot.x},${labelSlot.y},${labelSlot.width},${labelSlot.height}">${textLayer(fields, geometry, options.palette ?? {})}</g>
 </svg>`
 }
 
@@ -206,8 +272,9 @@ export async function composeCreatorSignaturePng(
   width: number,
   height: number,
   geometrySource?: string,
+  palette?: CreatorSignaturePalette,
 ): Promise<string> {
-  const svg = composeCreatorSignatureSvg(qrSource, fields, { width, height, geometrySource })
+  const svg = composeCreatorSignatureSvg(qrSource, fields, { width, height, geometrySource, palette })
   const image = new Image()
   image.src = svgDataUrl(svg)
   await image.decode()
