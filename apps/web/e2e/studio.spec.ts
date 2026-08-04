@@ -331,7 +331,7 @@ test('B29 Creator Signature uses text-only reserved shelves aligned to QR bounda
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/')
   const sharedCanvasBeforeBasicToggle = await preview.getAttribute('src')
-  await page.getByRole('button', { name: 'Basic QR Settings' }).click()
+  await page.getByRole('button', { name: 'QR Style' }).click()
   const basicAfter = await preview.getAttribute('src')
   expect(basicAfter).toBe(sharedCanvasBeforeBasicToggle)
   await expect(preview).toHaveAttribute('data-art-level', 'template-art')
@@ -455,7 +455,7 @@ test('B35 Basic QR settings and Creator Signature settings share one QR canvas',
   await expect(previewZone.getByRole('group', { name: 'QR size' })).toBeVisible()
   await expect(previewZone.getByRole('group', { name: 'Intensity' })).toBeVisible()
   await expect(page.getByRole('group', { name: 'Settings panel' })).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Basic QR Settings' })).toHaveAttribute('aria-pressed', 'true')
+  await expect(page.getByRole('button', { name: 'QR Style' })).toHaveAttribute('aria-pressed', 'true')
   await expect(lowerControls.getByRole('tablist', { name: 'Design control families' })).toBeVisible()
   await expect(lowerControls.getByRole('listbox', { name: 'Body Color' })).toBeVisible()
   const beforeBox = await previewZone.boundingBox()
@@ -469,8 +469,8 @@ test('B35 Basic QR settings and Creator Signature settings share one QR canvas',
   const signatureSource = await preview.getAttribute('src')
   expect(decodeURIComponent(signatureSource!.split(',')[1] ?? '')).toContain('data-template-layer="creator-signature"')
 
-  await page.getByRole('button', { name: 'Basic QR Settings' }).click()
-  await expect(page.getByRole('button', { name: 'Basic QR Settings' })).toHaveAttribute('aria-pressed', 'true')
+  await page.getByRole('button', { name: 'QR Style' }).click()
+  await expect(page.getByRole('button', { name: 'QR Style' })).toHaveAttribute('aria-pressed', 'true')
   await expect(preview).toHaveAttribute('data-art-level', 'template-art')
   await expect(lowerControls.getByRole('tablist', { name: 'Design control families' })).toBeVisible()
   await expect(lowerControls.getByRole('listbox', { name: 'Body Color' })).toBeVisible()
@@ -578,7 +578,7 @@ test('B37 uses one compact icon-only Creator Signature position row without movi
   expect(selectedStyle).not.toEqual(idleStyle)
   await expect(selected.locator('span[aria-hidden="true"]')).toHaveCount(1)
 
-  await page.getByRole('button', { name: 'Basic QR Settings' }).click()
+  await page.getByRole('button', { name: 'QR Style' }).click()
   await expect(page.getByRole('tablist', { name: 'Design control families' })).toBeVisible()
   await page.getByRole('button', { name: 'Creator Signature' }).click()
   await expect(selector).toBeVisible()
@@ -704,7 +704,7 @@ test('B40 removes Design heading and flips Destination into the settings tray', 
 
   await expect(page.getByRole('heading', { name: 'Design your QR' })).toHaveCount(0)
   await expect(page.getByRole('group', { name: 'Settings panel' }).getByRole('button')).toHaveCount(3)
-  await expect(page.getByRole('button', { name: 'Basic QR Settings' })).toHaveAttribute('aria-pressed', 'true')
+  await expect(page.getByRole('button', { name: 'QR Style' })).toHaveAttribute('aria-pressed', 'true')
   await expect(page.getByRole('button', { name: 'Creator Signature' })).toHaveAttribute('aria-pressed', 'false')
   await expect(page.getByRole('button', { name: 'Destination' })).toHaveAttribute('aria-pressed', 'false')
   await expect(page.getByRole('heading', { name: 'Destination' })).toHaveCount(0)
@@ -740,7 +740,7 @@ test('B40 removes Design heading and flips Destination into the settings tray', 
   await page.screenshot({ path: screenshotPath, fullPage: false })
   await fs.writeFile(path.join(b40EvidenceDir, 'b40-destination-toggle.json'), JSON.stringify({
     designHeadingVisible: 0,
-    settingsButtons: ['Basic QR Settings', 'Creator Signature', 'Destination'],
+    settingsButtons: ['QR Style', 'Creator Signature', 'Destination'],
     destinationHiddenUntilSelected: true,
     destinationDraftOnly: beforeDraft === afterContinue,
     previewZoneStable: Math.abs(signatureBox!.y - previewBox!.y) <= 2 && Math.abs(signatureBox!.height - previewBox!.height) <= 2,
@@ -749,18 +749,18 @@ test('B40 removes Design heading and flips Destination into the settings tray', 
   expect(errors).toEqual([])
 })
 
-test('B42 outlines Basic QR Settings as a matching lower tray section', async ({ page }) => {
+test('B42 outlines QR Style as a matching lower tray section', async ({ page }) => {
   const errors = await assertNoConsoleErrors(page)
   await fs.mkdir(b42EvidenceDir, { recursive: true })
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/')
   await page.addStyleTag({ content: '*,*::before,*::after{transition:none!important;animation:none!important}' })
   const lowerControls = page.locator('[data-testid="lower-design-controls"]')
-  const basicTray = lowerControls.getByRole('region', { name: 'Color Settings' })
-  await expect(page.getByRole('button', { name: 'Basic QR Settings' })).toHaveAttribute('aria-pressed', 'true')
+  const basicTray = lowerControls.getByRole('region', { name: 'QR Style' })
+  await expect(page.getByRole('button', { name: 'QR Style' })).toHaveAttribute('aria-pressed', 'true')
   await expect(basicTray).toBeVisible()
   await expect(basicTray).toHaveAttribute('data-basic-controls-tray', 'true')
-  await expect(basicTray.getByRole('heading', { name: 'Color Settings' })).toBeVisible()
+  await expect(basicTray.getByRole('heading', { name: 'QR Style' })).toBeVisible()
   await expect(basicTray.getByRole('tablist', { name: 'Design control families' })).toBeVisible()
   await expect(basicTray.getByRole('listbox', { name: 'Body Color' })).toBeVisible()
   const metrics = await basicTray.evaluate((element) => {
@@ -786,15 +786,15 @@ test('B42 outlines Basic QR Settings as a matching lower tray section', async ({
   await page.getByRole('button', { name: 'Creator Signature' }).click()
   await expect(basicTray).toHaveCount(0)
   await expect(lowerControls.getByRole('heading', { name: 'Creator Signature' })).toBeVisible()
-  await page.getByRole('button', { name: 'Basic QR Settings' }).click()
-  await expect(lowerControls.getByRole('region', { name: 'Color Settings' })).toBeVisible()
-  await expect(lowerControls.getByRole('heading', { name: 'Color Settings' })).toBeVisible()
+  await page.getByRole('button', { name: 'QR Style' }).click()
+  await expect(lowerControls.getByRole('region', { name: 'QR Style' })).toBeVisible()
+  await expect(lowerControls.getByRole('heading', { name: 'QR Style' })).toBeVisible()
 
   const screenshotPath = path.join(b42EvidenceDir, 'b42-basic-tray-outline-mobile.png')
   await page.screenshot({ path: screenshotPath, fullPage: false })
   await fs.writeFile(path.join(b42EvidenceDir, 'b42-basic-tray-outline.json'), JSON.stringify({
     basicTrayOutlined: true,
-    title: 'Color Settings',
+    title: 'QR Style',
     metrics,
     screenshotPath,
   }, null, 2))
@@ -924,7 +924,7 @@ test('B28 Creator Signature keeps five labels corner-adjacent, outside active QR
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/')
   const sharedCanvasBeforeBasicToggle = await preview.getAttribute('src')
-  await page.getByRole('button', { name: 'Basic QR Settings' }).click()
+  await page.getByRole('button', { name: 'QR Style' }).click()
   expect(await preview.getAttribute('src')).toBe(sharedCanvasBeforeBasicToggle)
   await expect(preview).toHaveAttribute('data-art-level', 'template-art')
   await page.getByRole('button', { name: 'Creator Signature' }).click()
@@ -1010,7 +1010,7 @@ test('B27 Creator Signature composes five fixed positions, reuses Level 1 contro
   }
   expect(new Set(positionPanels.map(({ hash }) => hash)).size).toBe(5)
 
-  await page.getByRole('button', { name: 'Basic QR Settings' }).click()
+  await page.getByRole('button', { name: 'QR Style' }).click()
   const controls: Array<[string, () => Promise<void>]> = [
     ['Body Color · Electric Purple', async () => { await page.getByRole('tab', { name: 'Show Body Color controls' }).click(); await page.getByRole('option', { name: 'Electric Purple', exact: true }).click() }],
     ['Corner Color · Crimson Red', async () => { await page.getByRole('tab', { name: 'Show Corner Color controls' }).click(); await page.getByRole('option', { name: /^Crimson Red corner color/ }).click() }],
