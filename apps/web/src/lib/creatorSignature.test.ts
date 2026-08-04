@@ -10,6 +10,15 @@ import {
 const qr = 'data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%2F%3E'
 
 describe('Creator Signature template contract', () => {
+
+  it('keeps the default Creator Signature text fields empty and renders no default signature copy', () => {
+    expect(DEFAULT_CREATOR_SIGNATURE.fields.line1Text).toBe('')
+    expect(DEFAULT_CREATOR_SIGNATURE.fields.line2Text).toBe('')
+    const svg = composeCreatorSignatureSvg(qr, DEFAULT_CREATOR_SIGNATURE.fields)
+    expect(svg).not.toContain('Ernesto Creates')
+    expect(svg).not.toContain('@ernesto')
+    expect(svg.match(/data-signature-line=/g)).toBeNull()
+  })
   it('exposes the fixed positions with top corners replacing badge/vertical options', () => {
     expect(CREATOR_SIGNATURE_POSITIONS.map(({ value }) => value)).toEqual([
       'bottom-right-outside',

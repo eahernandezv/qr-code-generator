@@ -19,8 +19,8 @@ export const DEFAULT_CREATOR_SIGNATURE: TemplateArtSpec = {
   templateId: 'creator-signature',
   outputIntent: 'square-card',
   fields: {
-    line1Text: 'Ernesto Creates',
-    line2Text: '@ernesto',
+    line1Text: '',
+    line2Text: '',
     line1Font: 'sans',
     line2Font: 'sans',
     line1Color: 'dark-ink',
