@@ -281,21 +281,18 @@ const ArtDirectionPanel: React.FC<ArtDirectionPanelProps> = ({ noScrollVariant =
       <div className={`${noScrollVariant ? 'mb-1' : 'mb-2'} flex items-center justify-between gap-2`}>
         <div role="group" aria-label="Settings panel" className="grid min-w-0 flex-1 grid-cols-3 rounded-lg bg-slate-950 p-1">
           <button type="button" aria-pressed={activeSettingsPanel === 'basic'} onClick={() => setActiveSettingsPanel('basic')}
-            className={`rounded-md px-1 py-1 text-[9px] font-bold whitespace-nowrap ${activeSettingsPanel === 'basic' ? 'bg-slate-700 text-white' : 'text-slate-500'}`}>Basic QR Settings</button>
+            className={`rounded-md px-1 py-1 text-[9px] font-bold whitespace-nowrap ${activeSettingsPanel === 'basic' ? 'bg-slate-700 text-white' : 'text-slate-500'}`}>QR Style</button>
           <button type="button" aria-pressed={activeSettingsPanel === 'creator-signature'} onClick={() => { setTemplateArtLevel('template-art'); setActiveSettingsPanel('creator-signature') }}
             className={`rounded-md px-1 py-1 text-[9px] font-bold whitespace-nowrap ${activeSettingsPanel === 'creator-signature' ? 'bg-sky-600 text-white' : 'text-slate-400'}`}>Creator Signature</button>
           <button type="button" aria-pressed={activeSettingsPanel === 'destination'} onClick={() => setActiveSettingsPanel('destination')}
             className={`rounded-md px-1 py-1 text-[9px] font-bold whitespace-nowrap ${activeSettingsPanel === 'destination' ? 'bg-studio-600 text-white' : 'text-slate-400'}`}>Destination</button>
         </div>
-        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-950/50 px-2 py-1 text-[10px] font-medium text-emerald-300">
-          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" /> Live
-        </span>
       </div>
 
       <div className={`grid items-start lg:grid-cols-[minmax(0,1fr)_344px] ${noScrollVariant ? 'gap-1' : 'gap-3'}`}>
         <div className={`order-2 min-w-0 lg:order-1 ${noScrollVariant ? 'space-y-1' : 'space-y-2.5'}`} data-testid="lower-design-controls">
-          {activeSettingsPanel === 'destination' ? <PayloadInput key={project.projectId} livePreviewPayloadUpdates={livePreviewPayloadUpdates} compact={noScrollVariant} /> : activeSettingsPanel === 'creator-signature' ? <TemplateArtControls compact={noScrollVariant} /> : <section aria-labelledby="color-settings-title" className={`rounded-xl border border-slate-700/70 bg-slate-950/35 ${noScrollVariant ? 'p-1.5' : 'p-3'}`} data-basic-controls-tray="true">
-            <h3 id="color-settings-title" className={`${noScrollVariant ? 'mb-1 text-sm' : 'mb-2 text-base'} font-semibold text-white`}>Color Settings</h3>
+          {activeSettingsPanel === 'destination' ? <PayloadInput key={project.projectId} livePreviewPayloadUpdates={livePreviewPayloadUpdates} compact={noScrollVariant} /> : activeSettingsPanel === 'creator-signature' ? <TemplateArtControls compact={noScrollVariant} /> : <section aria-labelledby="qr-style-title" className={`rounded-xl border border-slate-700/70 bg-slate-950/35 ${noScrollVariant ? 'p-1.5' : 'p-3'}`} data-basic-controls-tray="true">
+            <h3 id="qr-style-title" className={`${noScrollVariant ? 'mb-1 text-sm' : 'mb-2 text-base'} font-semibold text-white`}>QR Style</h3>
           {noScrollVariant && <div role="tablist" aria-label="Design control families" className="grid grid-cols-5 gap-1 rounded-xl bg-slate-950 p-1">
             {CONTROL_FAMILIES.map(({ family, label, glyph }) => {
               const selected = activeFamily === family
