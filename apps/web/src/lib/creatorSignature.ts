@@ -2,6 +2,7 @@ import type {
   CreatorSignatureBoundaryOffsetMm,
   CreatorSignatureColor,
   CreatorSignatureFont,
+  CreatorSignatureFontSize,
   CreatorSignaturePosition,
   CreatorSignatureTemplateFields,
   TemplateArtSpec,
@@ -23,6 +24,8 @@ export const DEFAULT_CREATOR_SIGNATURE: TemplateArtSpec = {
     line2Text: '',
     line1Font: 'sans',
     line2Font: 'sans',
+    line1Size: 'medium',
+    line2Size: 'medium',
     line1Color: 'dark-ink',
     line2Color: 'secondary',
     boundaryOffsetMm: 0,
@@ -34,6 +37,12 @@ export const CREATOR_SIGNATURE_FONTS: ReadonlyArray<{ value: CreatorSignatureFon
   { value: 'sans', label: 'Sans' },
   { value: 'serif', label: 'Serif' },
   { value: 'mono', label: 'Mono' },
+]
+
+export const CREATOR_SIGNATURE_FONT_SIZES: ReadonlyArray<{ value: CreatorSignatureFontSize; label: string }> = [
+  { value: 'small', label: 'Small' },
+  { value: 'medium', label: 'Medium' },
+  { value: 'large', label: 'Large' },
 ]
 
 export const CREATOR_SIGNATURE_COLORS: ReadonlyArray<{ value: CreatorSignatureColor; label: string }> = [
@@ -206,6 +215,12 @@ function selectedFont(value: CreatorSignatureFont | undefined): CreatorSignature
   return CREATOR_SIGNATURE_FONTS.some((option) => option.value === value) ? value! : 'sans'
 }
 
+function selectedFontSize(value: CreatorSignatureFontSize | undefined, line: 1 | 2): number {
+  const selected = CREATOR_SIGNATURE_FONT_SIZES.some((option) => option.value === value) ? value! : 'medium'
+  if (line === 1) return selected === 'small' ? 18 : selected === 'large' ? 26 : 22
+  return selected === 'small' ? 9 : selected === 'large' ? 13 : 11
+}
+
 function selectedOffset(value: CreatorSignatureBoundaryOffsetMm | undefined): CreatorSignatureBoundaryOffsetMm {
   return CREATOR_SIGNATURE_OFFSETS.some((offset) => offset === value) ? value! : 0
 }
@@ -218,25 +233,26 @@ function textLayer(fields: CreatorSignatureTemplateFields, geometry: CreatorSign
   const fit = (value: string, fontSize: number, maxWidth: number) => value.length * fontSize * 0.58 > maxWidth
     ? ` textLength="${maxWidth}" lengthAdjust="spacingAndGlyphs"`
     : ''
+  const line1Size = selectedFontSize(fields.line1Size, 1)
+  const line2Size = selectedFontSize(fields.line2Size, 2)
+  const lineGap = line1Size + CREATOR_SIGNATURE_PX_PER_MM
   const lines = (
     anchor: 'start' | 'middle' | 'end',
     x: number,
     y: number,
-    options: { line1Size?: number; line2Size?: number; maxWidth?: number; lineGap?: number } = {},
+    options: { maxWidth?: number } = {},
   ) => {
-    const line1Size = options.line1Size ?? 22
-    const line2Size = options.line2Size ?? 11
     const maxWidth = options.maxWidth ?? 220
-    const lineGap = options.lineGap ?? 22
-    const renderedLine1 = line1 ? `<text data-signature-line="1" x="${x}" y="${y}" text-anchor="${anchor}" fill="${selectedColor(fields.line1Color, palette)}" font-family="${FONT_FAMILIES[selectedFont(fields.line1Font)]}" font-size="${line1Size}" font-weight="750" letter-spacing="-0.5"${fit(line1, line1Size, maxWidth)}>${line1}</text>` : ''
-    const renderedLine2 = line2 ? `<text data-signature-line="2" x="${x}" y="${y + lineGap}" text-anchor="${anchor}" fill="${selectedColor(fields.line2Color ?? 'secondary', palette)}" font-family="${FONT_FAMILIES[selectedFont(fields.line2Font)]}" font-size="${line2Size}" font-weight="550"${fit(line2, line2Size, maxWidth)}>${line2}</text>` : ''
+    const renderedLine1 = line1 ? `<text data-signature-line="1" data-signature-size="${fields.line1Size ?? 'medium'}" x="${x}" y="${y}" text-anchor="${anchor}" fill="${selectedColor(fields.line1Color, palette)}" font-family="${FONT_FAMILIES[selectedFont(fields.line1Font)]}" font-size="${line1Size}" font-weight="750" letter-spacing="-0.5"${fit(line1, line1Size, maxWidth)}>${line1}</text>` : ''
+    const renderedLine2 = line2 ? `<text data-signature-line="2" data-signature-size="${fields.line2Size ?? 'medium'}" x="${x}" y="${y + lineGap}" text-anchor="${anchor}" fill="${selectedColor(fields.line2Color ?? 'secondary', palette)}" font-family="${FONT_FAMILIES[selectedFont(fields.line2Font)]}" font-size="${line2Size}" font-weight="550"${fit(line2, line2Size, maxWidth)}>${line2}</text>` : ''
     return `\n    ${renderedLine1}\n    ${renderedLine2}`
   }
   const reservedShelf = `<rect data-signature-reserved-shelf="true" x="${labelSlot.x}" y="${labelSlot.y}" width="${labelSlot.width}" height="${labelSlot.height}" fill="none" stroke="none" aria-hidden="true"/>`
 
   const shelfTextY = geometry.qrContent.y + geometry.qrContent.height + 22
     + selectedOffset(fields.boundaryOffsetMm) * CREATOR_SIGNATURE_PX_PER_MM
-  const topShelfTextY = labelSlot.y + 22
+  const topShelfTextY = geometry.qrContent.y - 22 - lineGap
+    - selectedOffset(fields.boundaryOffsetMm) * CREATOR_SIGNATURE_PX_PER_MM
   if (position === 'bottom-left-outside') return `${reservedShelf}${lines('start', geometry.qrContent.x, shelfTextY)}`
   if (position === 'below-centered') return `${reservedShelf}${lines('middle', geometry.qrContent.x + geometry.qrContent.width / 2, shelfTextY, { maxWidth: geometry.qrContent.width })}`
   if (position === 'top-left-corner') return `${reservedShelf}${lines('start', geometry.qrContent.x, topShelfTextY)}`

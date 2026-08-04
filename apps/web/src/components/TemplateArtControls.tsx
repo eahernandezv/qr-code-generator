@@ -1,9 +1,10 @@
 import type { KeyboardEvent } from 'react'
 import { useStudioStore } from '../store'
-import type { CreatorSignatureColor, CreatorSignatureFont, CreatorSignaturePosition, CreatorSignatureTemplateFields } from '../types'
+import type { CreatorSignatureColor, CreatorSignatureFont, CreatorSignatureFontSize, CreatorSignaturePosition, CreatorSignatureTemplateFields } from '../types'
 import {
   CREATOR_SIGNATURE_COLORS,
   CREATOR_SIGNATURE_FONTS,
+  CREATOR_SIGNATURE_FONT_SIZES,
   CREATOR_SIGNATURE_OFFSETS,
   CREATOR_SIGNATURE_POSITIONS,
   DEFAULT_CREATOR_SIGNATURE,
@@ -77,25 +78,33 @@ export default function TemplateArtControls({ compact = false }: { compact?: boo
     </div>
     <div className={`grid gap-2 ${compact ? 'grid-cols-1' : 'sm:grid-cols-2'}`}>
       {([
-        { line: 1, text: line1Text, maxLength: 32, font: fields.line1Font ?? 'sans', color: fields.line1Color ?? 'dark-ink' },
-        { line: 2, text: line2Text, maxLength: 36, font: fields.line2Font ?? 'sans', color: fields.line2Color ?? 'secondary' },
-      ] as const).map(({ line, text, maxLength, font, color }) => <div key={line} className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-end gap-1.5">
+        { line: 1, text: line1Text, maxLength: 32, font: fields.line1Font ?? 'sans', size: fields.line1Size ?? 'medium', color: fields.line1Color ?? 'dark-ink' },
+        { line: 2, text: line2Text, maxLength: 36, font: fields.line2Font ?? 'sans', size: fields.line2Size ?? 'medium', color: fields.line2Color ?? 'secondary' },
+      ] as const).map(({ line, text, maxLength, font, size, color }) => <div key={line} className="grid gap-1">
         <label className="min-w-0 text-[11px] font-medium text-slate-400">Line {line}
           <input className={compact ? compactInputClass : inputClass} aria-label={`Line ${line}`} maxLength={maxLength} value={text}
             onChange={(event) => update(line === 1 ? { line1Text: event.target.value } : { line2Text: event.target.value })} placeholder={line === 1 ? 'Your signature' : '@handle'} />
         </label>
-        <label className="text-[10px] font-medium text-slate-500">Font
-          <select className={compactSelectClass} aria-label={`Line ${line} font`} value={font}
-            onChange={(event) => update(line === 1 ? { line1Font: event.target.value as CreatorSignatureFont } : { line2Font: event.target.value as CreatorSignatureFont })}>
-            {CREATOR_SIGNATURE_FONTS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
-          </select>
-        </label>
-        <label className="text-[10px] font-medium text-slate-500">Colour
-          <select className={compactSelectClass} aria-label={`Line ${line} colour`} value={color}
-            onChange={(event) => update(line === 1 ? { line1Color: event.target.value as CreatorSignatureColor } : { line2Color: event.target.value as CreatorSignatureColor })}>
-            {CREATOR_SIGNATURE_COLORS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
-          </select>
-        </label>
+        <div className="grid grid-cols-3 gap-1.5">
+          <label className="text-[10px] font-medium text-slate-500">Font
+            <select className={compactSelectClass} aria-label={`Line ${line} font`} value={font}
+              onChange={(event) => update(line === 1 ? { line1Font: event.target.value as CreatorSignatureFont } : { line2Font: event.target.value as CreatorSignatureFont })}>
+              {CREATOR_SIGNATURE_FONTS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+            </select>
+          </label>
+          <label className="text-[10px] font-medium text-slate-500">Size
+            <select className={compactSelectClass} aria-label={`Line ${line} size`} value={size}
+              onChange={(event) => update(line === 1 ? { line1Size: event.target.value as CreatorSignatureFontSize } : { line2Size: event.target.value as CreatorSignatureFontSize })}>
+              {CREATOR_SIGNATURE_FONT_SIZES.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+            </select>
+          </label>
+          <label className="text-[10px] font-medium text-slate-500">Colour
+            <select className={compactSelectClass} aria-label={`Line ${line} colour`} value={color}
+              onChange={(event) => update(line === 1 ? { line1Color: event.target.value as CreatorSignatureColor } : { line2Color: event.target.value as CreatorSignatureColor })}>
+              {CREATOR_SIGNATURE_COLORS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+            </select>
+          </label>
+        </div>
       </div>)}
     </div>
     <div className={`${compact ? 'mt-2' : 'mt-3'} grid grid-cols-[minmax(0,1fr)_auto] items-end gap-2`}>

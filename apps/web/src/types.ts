@@ -61,6 +61,7 @@ export type CreatorSignaturePosition =
   | 'top-left-corner'
 
 export type CreatorSignatureFont = 'sans' | 'serif' | 'mono'
+export type CreatorSignatureFontSize = 'small' | 'medium' | 'large'
 export type CreatorSignatureColor = 'primary' | 'secondary' | 'accent' | 'dark-ink'
 export type CreatorSignatureBoundaryOffsetMm = 0 | 1 | 2 | 3
 
@@ -69,6 +70,8 @@ export interface CreatorSignatureTemplateFields {
   line2Text?: string
   line1Font?: CreatorSignatureFont
   line2Font?: CreatorSignatureFont
+  line1Size?: CreatorSignatureFontSize
+  line2Size?: CreatorSignatureFontSize
   line1Color?: CreatorSignatureColor
   line2Color?: CreatorSignatureColor
   boundaryOffsetMm?: CreatorSignatureBoundaryOffsetMm
