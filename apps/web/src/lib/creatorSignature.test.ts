@@ -191,7 +191,7 @@ describe('Creator Signature template contract', () => {
     expect(three).toContain('data-signature-offset-mm="3"')
   })
 
-  it('adds a built-in 2mm bottom baseline at the visible 0mm setting and tightens the two-line gap by 2mm', () => {
+  it('adds a stronger built-in 4mm bottom baseline at visible 0mm and tightens the two-line gap by 3mm', () => {
     const bottom = composeCreatorSignatureSvg(qr, { line1Text: 'Creator', line2Text: 'Handle', signaturePosition: 'bottom-right-outside', boundaryOffsetMm: 0 })
     const top = composeCreatorSignatureSvg(qr, { line1Text: 'Creator', line2Text: 'Handle', signaturePosition: 'top-right-corner', boundaryOffsetMm: 0 })
     const lineYs = (svg: string) => [...svg.matchAll(/data-signature-line="([12])"[^>]*y="([0-9.]+)"/g)].map((match) => Number(match[2]))
@@ -199,7 +199,7 @@ describe('Creator Signature template contract', () => {
     const topGeometry = creatorSignatureGeometry('top-right-corner')
     const tightenedGap = 22 + CREATOR_SIGNATURE_PX_PER_MM - LINE_GAP_REDUCTION_MM * CREATOR_SIGNATURE_PX_PER_MM
 
-    expect(lineYs(bottom)[0]).toBe(bottomGeometry.qrContent.y + bottomGeometry.qrContent.height + 22 + 2 * CREATOR_SIGNATURE_PX_PER_MM)
+    expect(lineYs(bottom)[0]).toBe(bottomGeometry.qrContent.y + bottomGeometry.qrContent.height + 22 + BOTTOM_SIGNATURE_LINE1_BASE_OFFSET_MM * CREATOR_SIGNATURE_PX_PER_MM)
     expect(lineYs(bottom)[1] - lineYs(bottom)[0]).toBe(tightenedGap)
     expect(lineYs(top)[1] - lineYs(top)[0]).toBe(tightenedGap)
     expect(lineYs(top)[0]).toBe(topGeometry.qrContent.y - 22 - tightenedGap)
