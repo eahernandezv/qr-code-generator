@@ -6,8 +6,10 @@ import ExportPanel from './components/ExportPanel'
 import RecoveryPanel from './components/RecoveryPanel'
 import CheckoutPanel from './components/CheckoutPanel'
 import CreatorSignatureIconConcept from './components/CreatorSignatureIconConcept'
+import CreatorSignatureSpaceConcept from './components/CreatorSignatureSpaceConcept'
 
 const CREATOR_SIGNATURE_CONCEPT_PATH = '/concepts/creator-signature-ux/creator'
+const CREATOR_SIGNATURE_SPACE_CONCEPT_PATH = '/concepts/creator-signature-ux/space-creator'
 
 const App: React.FC = () => {
   const { project, resetProject } = useStudioStore()
@@ -16,6 +18,9 @@ const App: React.FC = () => {
   const showSecondaryWorkflow = searchParams.get('workflow') === 'internal'
   if (pathname === CREATOR_SIGNATURE_CONCEPT_PATH) {
     return <CreatorSignatureIconConcept />
+  }
+  if (pathname === CREATOR_SIGNATURE_SPACE_CONCEPT_PATH) {
+    return <CreatorSignatureSpaceConcept />
   }
   const noScrollVariant = !showSecondaryWorkflow && searchParams.get('uxVariant') !== 'scroll'
   const hasLivePayloadPreviewEntitlement = showSecondaryWorkflow || project.entitlement.type !== 'preview'

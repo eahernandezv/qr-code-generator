@@ -14,6 +14,39 @@ function resetStore() {
 describe('App integration', () => {
   beforeEach(resetStore)
 
+  it('uses one shared style toolbar for two independently editable lines on the space-efficient concept route', async () => {
+    const user = userEvent.setup()
+    window.history.replaceState({}, '', '/concepts/creator-signature-ux/space-creator')
+    render(<App />)
+
+    expect(screen.getByTestId('creator-signature-space-concept')).toBeInTheDocument()
+    expect(screen.getAllByRole('textbox', { name: /^Signature line [12]$/ })).toHaveLength(2)
+    expect(screen.queryByRole('textbox', { name: /Line 3|CTA/i })).not.toBeInTheDocument()
+    expect(screen.getAllByRole('group', { name: /^Line [12] font$/ })).toHaveLength(1)
+    expect(screen.getAllByRole('group', { name: /^Line [12] size$/ })).toHaveLength(1)
+    expect(screen.getAllByRole('group', { name: /^Line [12] colour$/ })).toHaveLength(1)
+
+    await user.click(screen.getByRole('button', { name: 'Line 1 handwritten font' }))
+    await user.click(screen.getByRole('button', { name: 'Line 1 extra large size' }))
+    await user.click(screen.getByRole('button', { name: 'Line 1 accent' }))
+    await user.click(screen.getByRole('button', { name: 'Edit line 2 style' }))
+
+    expect(screen.getByRole('group', { name: 'Line 2 font' }).querySelectorAll('button')).toHaveLength(6)
+    expect(screen.getByRole('group', { name: 'Line 2 size' }).querySelectorAll('button')).toHaveLength(4)
+    expect(screen.getByRole('group', { name: 'Line 2 colour' }).querySelectorAll('button')).toHaveLength(4)
+    await user.click(screen.getByRole('button', { name: 'Line 2 mono font' }))
+    await user.click(screen.getByRole('button', { name: 'Line 2 small size' }))
+    await user.click(screen.getByRole('button', { name: 'Line 2 corner color' }))
+    await user.click(screen.getByRole('radio', { name: 'Top left corner' }))
+    await user.click(screen.getByRole('radio', { name: '3mm boundary offset' }))
+
+    expect(useStudioStore.getState().project.templateArt?.fields).toMatchObject({
+      line1Font: 'handwritten', line1Size: 'extra-large', line1Color: 'accent',
+      line2Font: 'mono', line2Size: 'small', line2Color: 'secondary',
+      signaturePosition: 'top-left-corner', boundaryOffsetMm: 3,
+    })
+  })
+
   it('renders the independent icon-first Creator Signature concept only on its child route', async () => {
     const user = userEvent.setup()
     const rootView = render(<App />)
