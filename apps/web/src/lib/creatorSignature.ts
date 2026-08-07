@@ -58,8 +58,8 @@ export const CREATOR_SIGNATURE_COLORS: ReadonlyArray<{ value: CreatorSignatureCo
 
 export const CREATOR_SIGNATURE_OFFSETS: ReadonlyArray<CreatorSignatureBoundaryOffsetMm> = [0, 1, 2, 3]
 export const CREATOR_SIGNATURE_PX_PER_MM = 4
-export const BOTTOM_SIGNATURE_LINE1_BASE_OFFSET_MM = 2
-export const LINE_GAP_REDUCTION_MM = 2
+export const BOTTOM_SIGNATURE_LINE1_BASE_OFFSET_MM = 4
+export const LINE_GAP_REDUCTION_MM = 3
 
 const escapeXml = (value: string) => value.replace(/[<>&"']/g, (character) => ({
   '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&apos;',
