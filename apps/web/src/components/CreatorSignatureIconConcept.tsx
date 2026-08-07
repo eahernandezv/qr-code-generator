@@ -37,6 +37,15 @@ function FontIcon({ value }: { value: CreatorSignatureFont }) {
   if (value === 'mono') return <svg aria-hidden="true" viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round">
     <path d="M7 6H4v12h3M17 6h3v12h-3M8.5 16V8l3.5 5 3.5-5v8" />
   </svg>
+  if (value === 'cursive') return <svg aria-hidden="true" viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.65" strokeLinecap="round">
+    <path d="M5 16c2.5-7 6.2-9 7.1-5.6.8 3-4.5 7.7-5.8 4.3-1.1-2.8 4.7-2.7 6.2-.2 1.2 2 2.8.8 3.7-1.2.4 2.5 1.4 3.5 3.1 1.3M4 19c4.8-1.4 10.3-.7 15 .2" />
+  </svg>
+  if (value === 'handwritten') return <svg aria-hidden="true" viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+    <path d="m5 17 3.2-10 2.1 9 3-8 1.5 8.5L19 6M4.5 19c4-1 9.7-1 15 0" />
+  </svg>
+  if (value === 'display') return <svg aria-hidden="true" viewBox="0 0 24 24" className="h-6 w-6" fill="currentColor">
+    <path d="M5 5h6v3H9v8h2v3H5v-3h1V8H5zm8 0h6v4h-2V8h-1v8h1v-3h2v6h-6v-3h1V8h-1z" />
+  </svg>
   return <svg aria-hidden="true" viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={value === 'serif' ? 1.65 : 2} strokeLinecap="round" strokeLinejoin="round">
     {value === 'serif' && <path d="M5.5 19h5M13.5 19h5M9 5h6" />}
     <path d="M7.5 18 12 6l4.5 12M9.5 13.5h5" />
@@ -44,7 +53,7 @@ function FontIcon({ value }: { value: CreatorSignatureFont }) {
 }
 
 function SizeIcon({ value }: { value: CreatorSignatureFontSize }) {
-  const size = value === 'small' ? 8 : value === 'medium' ? 13 : 18
+  const size = value === 'small' ? 8 : value === 'medium' ? 13 : value === 'large' ? 18 : 22
   return <svg aria-hidden="true" viewBox="0 0 24 24" className="h-6 w-6" fill="none">
     <rect x={(24 - size) / 2} y={(24 - size) / 2} width={size} height={size} rx="2" fill="currentColor" opacity=".2" />
     <path d={`M${12 - size / 4} ${12 - size / 3}h${size / 2}M12 ${12 - size / 3}v${size * .67}`} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
@@ -124,18 +133,20 @@ function LineControls({ line, fields, update, colours }: {
       />
     </label>
 
-    <div className="mt-3 grid grid-cols-[1fr_1fr_1.25fr] gap-2">
-      <div role="group" aria-label={`Line ${line} font`} className="grid grid-cols-3 gap-1 rounded-xl bg-black/20 p-1">
+    <div className="mt-3 grid gap-2">
+      <div role="group" aria-label={`Line ${line} font`} className="grid grid-cols-6 gap-1 rounded-xl bg-black/20 p-1">
         {CREATOR_SIGNATURE_FONTS.map((option) => <ControlButton key={option.value} selected={font === option.value} label={`Line ${line} ${option.label.toLowerCase()} font`}
           onClick={() => update(linePatch('line1Font', 'line2Font', option.value))}><FontIcon value={option.value} /></ControlButton>)}
       </div>
-      <div role="group" aria-label={`Line ${line} size`} className="grid grid-cols-3 gap-1 rounded-xl bg-black/20 p-1">
-        {CREATOR_SIGNATURE_FONT_SIZES.map((option) => <ControlButton key={option.value} selected={size === option.value} label={`Line ${line} ${option.label.toLowerCase()} size`}
-          onClick={() => update(linePatch('line1Size', 'line2Size', option.value))}><SizeIcon value={option.value} /></ControlButton>)}
-      </div>
-      <div role="group" aria-label={`Line ${line} colour`} className="grid grid-cols-4 gap-1 rounded-xl bg-black/20 p-1">
-        {CREATOR_SIGNATURE_COLORS.map((option) => <ControlButton key={option.value} selected={colour === option.value} label={`Line ${line} ${option.label.toLowerCase()}`}
-          onClick={() => update(linePatch('line1Color', 'line2Color', option.value))}><ColourIcon colour={colours[option.value]} /></ControlButton>)}
+      <div className="grid grid-cols-2 gap-2">
+        <div role="group" aria-label={`Line ${line} size`} className="grid grid-cols-4 gap-1 rounded-xl bg-black/20 p-1">
+          {CREATOR_SIGNATURE_FONT_SIZES.map((option) => <ControlButton key={option.value} selected={size === option.value} label={`Line ${line} ${option.label.toLowerCase()} size`}
+            onClick={() => update(linePatch('line1Size', 'line2Size', option.value))}><SizeIcon value={option.value} /></ControlButton>)}
+        </div>
+        <div role="group" aria-label={`Line ${line} colour`} className="grid grid-cols-4 gap-1 rounded-xl bg-black/20 p-1">
+          {CREATOR_SIGNATURE_COLORS.map((option) => <ControlButton key={option.value} selected={colour === option.value} label={`Line ${line} ${option.label.toLowerCase()}`}
+            onClick={() => update(linePatch('line1Color', 'line2Color', option.value))}><ColourIcon colour={colours[option.value]} /></ControlButton>)}
+        </div>
       </div>
     </div>
   </section>

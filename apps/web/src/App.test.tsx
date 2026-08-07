@@ -24,8 +24,8 @@ describe('App integration', () => {
     expect(screen.queryByText('Creator Signature')).not.toBeInTheDocument()
 
     for (const line of [1, 2]) {
-      expect(screen.getByRole('group', { name: `Line ${line} font` }).querySelectorAll('button')).toHaveLength(3)
-      expect(screen.getByRole('group', { name: `Line ${line} size` }).querySelectorAll('button')).toHaveLength(3)
+      expect(screen.getByRole('group', { name: `Line ${line} font` }).querySelectorAll('button')).toHaveLength(6)
+      expect(screen.getByRole('group', { name: `Line ${line} size` }).querySelectorAll('button')).toHaveLength(4)
       expect(screen.getByRole('group', { name: `Line ${line} colour` }).querySelectorAll('button')).toHaveLength(4)
     }
     expect(Array.from(screen.getByRole('radiogroup', { name: 'Signature placement' }).querySelectorAll('[role="radio"]')).map((option) => option.getAttribute('aria-label'))).toEqual([
@@ -35,8 +35,8 @@ describe('App integration', () => {
       '0mm boundary offset', '1mm boundary offset', '2mm boundary offset', '3mm boundary offset',
     ])
 
-    await user.click(screen.getByRole('button', { name: 'Line 1 serif font' }))
-    await user.click(screen.getByRole('button', { name: 'Line 1 large size' }))
+    await user.click(screen.getByRole('button', { name: 'Line 1 handwritten font' }))
+    await user.click(screen.getByRole('button', { name: 'Line 1 extra large size' }))
     await user.click(screen.getByRole('button', { name: 'Line 1 accent' }))
     await user.click(screen.getByRole('button', { name: 'Line 2 mono font' }))
     await user.click(screen.getByRole('button', { name: 'Line 2 small size' }))
@@ -45,8 +45,8 @@ describe('App integration', () => {
     await user.click(screen.getByRole('radio', { name: '3mm boundary offset' }))
 
     expect(useStudioStore.getState().project.templateArt?.fields).toMatchObject({
-      line1Font: 'serif',
-      line1Size: 'large',
+      line1Font: 'handwritten',
+      line1Size: 'extra-large',
       line1Color: 'accent',
       line2Font: 'mono',
       line2Size: 'small',
@@ -198,8 +198,8 @@ describe('App integration', () => {
     expect(screen.queryByText('ONLY TEMPLATE')).not.toBeInTheDocument()
     await user.selectOptions(screen.getByRole('combobox', { name: 'Line 1 font' }), 'serif')
     await user.selectOptions(screen.getByRole('combobox', { name: 'Line 2 font' }), 'mono')
-    expect(Array.from(screen.getByRole('combobox', { name: 'Line 1 size' }).querySelectorAll('option')).map((option) => option.textContent)).toEqual(['Small', 'Medium', 'Large'])
-    expect(Array.from(screen.getByRole('combobox', { name: 'Line 2 size' }).querySelectorAll('option')).map((option) => option.textContent)).toEqual(['Small', 'Medium', 'Large'])
+    expect(Array.from(screen.getByRole('combobox', { name: 'Line 1 size' }).querySelectorAll('option')).map((option) => option.textContent)).toEqual(['Small', 'Medium', 'Large', 'Extra Large'])
+    expect(Array.from(screen.getByRole('combobox', { name: 'Line 2 size' }).querySelectorAll('option')).map((option) => option.textContent)).toEqual(['Small', 'Medium', 'Large', 'Extra Large'])
     await user.selectOptions(screen.getByRole('combobox', { name: 'Line 1 size' }), 'large')
     await user.selectOptions(screen.getByRole('combobox', { name: 'Line 2 size' }), 'small')
     await user.selectOptions(screen.getByRole('combobox', { name: 'Line 1 colour' }), 'primary')
