@@ -8,7 +8,8 @@ Status: READY_FOR_PRODUCT_ARCHITECT_REVIEW
 
 - Required baseline: `origin/main` at `a9a3084dbd9ed50a1b63f56c512f6884ef142676`.
 - Target branch: `creator/creator-signature-space-efficient-v2`.
-- Implementation/evidence commit: `867b80eb2aadb167dac01922a59457c76105d111`.
+- Implementation commit: `867b80eb2aadb167dac01922a59457c76105d111`.
+- Refreshed populated browser-evidence commit: `d2da37b102fb856b4a5ef9abb48f7d49c2bf39dd`.
 - Route path: `/concepts/creator-signature-ux/space-creator`.
 - Local verification URL: `http://127.0.0.1:4178/concepts/creator-signature-ux/space-creator`.
 - The public Studio route and the existing `/concepts/creator-signature-ux/creator` concept remain unchanged.
@@ -49,14 +50,14 @@ Placement and boundary offset remain compact icon-only radio groups below the sh
 
 - Mobile: `docs/program/evidence/creator-signature-space-efficiency-challenge/space-creator-mobile-390x844.png`
   - Dimensions: 390×844
-  - Bytes: 83,495
-  - SHA-256: `3ad5cadd34720ac731b543a2f905c05ebf209ceb1248cd3e5f772feb014a14b4`
+  - Bytes: 85,589
+  - SHA-256: `38fb8550e763518524490f15a041ef720c6b3afef4430a61b6cb3e97f948cbd6`
 - Desktop: `docs/program/evidence/creator-signature-space-efficiency-challenge/space-creator-desktop-1440x1000.png`
   - Dimensions: 1440×1000
-  - Bytes: 325,468
-  - SHA-256: `135984729bfb9bf85f58bf6c8e455bcdee5a9d82cbe68f16895f298f8c197bf4`
+  - Bytes: 330,052
+  - SHA-256: `44b9c19800c9117e9b245f8a7ac5467f797193054cbdf1d29eb31c76ff74da94`
 
-Screenshots were captured from the isolated route with Playwright Chromium after a 1.5-second settle delay. Chromium required the locally cached runtime-library path and Node 20 (`npx -y node@20`) because the host default is Node 18.
+Screenshots were reproduced from the isolated route with Playwright Chromium after applying distinct styles and populated text to both lines. Chromium used Node 22 (`npx --yes node@22`) and the locally cached runtime-library path because the host default cannot run Playwright 1.62.
 
 ## Verification gates
 
@@ -69,14 +70,17 @@ Screenshots were captured from the isolated route with Playwright Chromium after
 4. `npx pnpm@9.0.0 --filter @qr/web test -- App.test.tsx QRPreview.test.tsx creatorSignature.test.ts`
    - PASS, exit `0`; 3 files passed, 42 tests passed.
 5. `npx pnpm@9.0.0 --filter @qr/web build`
-   - PASS, exit `0`; TypeScript and Vite production build completed, 127 modules transformed.
-6. Focused changed-file lint:
+   - PASS, exit `0`; TypeScript and Vite production build completed, 127 modules transformed in 3.50s.
+6. Reproduced Chromium route proof:
+   - PASS; zero page/console errors; exactly 2 lines, 1 shared toolbar, 6 fonts, 4 sizes, 4 colors, 5 placements, and 4 offsets.
+   - Desktop and mobile both reported no horizontal overflow and `scrollHeight === viewportHeight`.
+7. Focused changed-file lint:
    - `npx pnpm@9.0.0 --filter @qr/web exec eslint src/components/CreatorSignatureSpaceConcept.tsx src/App.tsx src/App.test.tsx --max-warnings 0`
    - PASS, exit `0`.
-7. Repository-wide web lint (supplemental, not a suggested SOW gate):
+8. Repository-wide web lint (supplemental, not a suggested SOW gate):
    - `npx pnpm@9.0.0 --filter @qr/web lint`
    - Existing baseline blocker: exit `1` from one `react-hooks/exhaustive-deps` warning in unchanged `CreatorSignatureIconConcept.tsx:169`; the new component and changed files are clean under `--max-warnings 0`.
-8. `git diff --check`
+9. `git diff --check`
    - PASS.
 
 ## Push/read-back and handoff
