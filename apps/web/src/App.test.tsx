@@ -14,10 +14,11 @@ function resetStore() {
 describe('App integration', () => {
   beforeEach(resetStore)
 
-  it('renders the independent icon-first Creator Signature concept on the public root and child route', async () => {
+  it('renders the independent icon-first Creator Signature concept only on its child route', async () => {
     const user = userEvent.setup()
     const rootView = render(<App />)
-    expect(screen.getByTestId('creator-signature-icon-concept')).toBeInTheDocument()
+    expect(screen.getByTestId('studio-app')).toBeInTheDocument()
+    expect(screen.queryByTestId('creator-signature-icon-concept')).not.toBeInTheDocument()
     rootView.unmount()
 
     window.history.replaceState({}, '', '/concepts/creator-signature-ux/creator')
@@ -25,7 +26,7 @@ describe('App integration', () => {
 
     expect(screen.getByTestId('creator-signature-icon-concept')).toBeInTheDocument()
     expect(screen.getAllByRole('textbox', { name: /^Signature line [12]$/ })).toHaveLength(2)
-    expect(screen.queryByText('Creator Signature')).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Creator Signature' })).not.toBeInTheDocument()
 
     for (const line of [1, 2]) {
       expect(screen.getByRole('group', { name: `Line ${line} font` }).querySelectorAll('button')).toHaveLength(6)
@@ -64,7 +65,6 @@ describe('App integration', () => {
   })
 
   it('keeps the public path focused on the compact editor and destination', () => {
-    window.history.replaceState({}, '', '/?studio=classic')
     render(<App />)
     expect(screen.queryByRole('heading', { name: /Design your QR/i })).not.toBeInTheDocument()
     expect(screen.getByRole('img', { name: 'QR Preview' })).toBeInTheDocument()
@@ -85,7 +85,6 @@ describe('App integration', () => {
 
   it('uses the no-scroll comparison layout as the default public route and keeps scrollable Version A behind an explicit query', async () => {
     const user = userEvent.setup()
-    window.history.replaceState({}, '', '/?studio=classic')
     render(<App />)
     expect(screen.getByTestId('studio-app')).toHaveAttribute('data-ux-variant', 'no-scroll')
     expect(screen.getByRole('region', { name: 'QR Style' })).toHaveAttribute('data-basic-controls-tray', 'true')
@@ -109,7 +108,6 @@ describe('App integration', () => {
 
   it('toggles between Basic QR settings and Creator Signature settings while keeping one shared QR canvas', async () => {
     const user = userEvent.setup()
-    window.history.replaceState({}, '', '/?studio=classic')
     render(<App />)
     expect(screen.getByTestId('studio-app')).toHaveAttribute('data-ux-variant', 'no-scroll')
     const previewZone = screen.getByTestId('qr-side-controls')
@@ -164,7 +162,6 @@ describe('App integration', () => {
 
   it('uses one icon-only five-position Creator Signature radio row', async () => {
     const user = userEvent.setup()
-    window.history.replaceState({}, '', '/?studio=classic')
     render(<App />)
     await user.click(screen.getByRole('button', { name: 'Creator Signature' }))
 
@@ -175,6 +172,7 @@ describe('App integration', () => {
     expect(radios).toHaveLength(5)
     expect(radios.map((radio) => radio.getAttribute('aria-label'))).toEqual(expected)
     expect(radios.every((radio) => radio.textContent?.trim() === '')).toBe(true)
+    expect(screen.getByRole('radiogroup', { name: 'Signature boundary offset' }).querySelectorAll('[role="radio"]')).toHaveLength(4)
     for (const name of expected) {
       expect(screen.getByRole('radio', { name })).toHaveAttribute('title', name)
     }
@@ -197,7 +195,6 @@ describe('App integration', () => {
 
   it('edits exactly two independently styled Creator Signature lines with fixed offset choices', async () => {
     const user = userEvent.setup()
-    window.history.replaceState({}, '', '/?studio=classic')
     render(<App />)
     await user.click(screen.getByRole('button', { name: 'Creator Signature' }))
 
@@ -205,17 +202,19 @@ describe('App integration', () => {
     expect(screen.queryByRole('textbox', { name: /CTA|Line 3/i })).not.toBeInTheDocument()
     expect(screen.queryByText('Level 2 · Template Art')).not.toBeInTheDocument()
     expect(screen.queryByText('ONLY TEMPLATE')).not.toBeInTheDocument()
-    await user.selectOptions(screen.getByRole('combobox', { name: 'Line 1 font' }), 'serif')
-    await user.selectOptions(screen.getByRole('combobox', { name: 'Line 2 font' }), 'mono')
-    expect(Array.from(screen.getByRole('combobox', { name: 'Line 1 size' }).querySelectorAll('option')).map((option) => option.textContent)).toEqual(['Small', 'Medium', 'Large', 'Extra Large'])
-    expect(Array.from(screen.getByRole('combobox', { name: 'Line 2 size' }).querySelectorAll('option')).map((option) => option.textContent)).toEqual(['Small', 'Medium', 'Large', 'Extra Large'])
-    await user.selectOptions(screen.getByRole('combobox', { name: 'Line 1 size' }), 'large')
-    await user.selectOptions(screen.getByRole('combobox', { name: 'Line 2 size' }), 'small')
-    await user.selectOptions(screen.getByRole('combobox', { name: 'Line 1 colour' }), 'primary')
-    await user.selectOptions(screen.getByRole('combobox', { name: 'Line 2 colour' }), 'accent')
-    const offset = screen.getByRole('combobox', { name: 'Signature boundary offset' })
-    expect(Array.from(offset.querySelectorAll('option')).map((option) => option.textContent)).toEqual(['0mm', '1mm', '2mm', '3mm'])
-    await user.selectOptions(offset, '3')
+    expect(screen.queryByRole('combobox', { name: /Line [12] (font|size|colour)/ })).not.toBeInTheDocument()
+    expect(screen.getByRole('group', { name: 'Line 1 font' }).querySelectorAll('button')).toHaveLength(6)
+    expect(screen.getByRole('group', { name: 'Line 2 font' }).querySelectorAll('button')).toHaveLength(6)
+    expect(screen.getByRole('group', { name: 'Line 1 size' }).querySelectorAll('button')).toHaveLength(4)
+    expect(screen.getByRole('group', { name: 'Line 2 size' }).querySelectorAll('button')).toHaveLength(4)
+    await user.click(screen.getByRole('button', { name: 'Line 1 serif font' }))
+    await user.click(screen.getByRole('button', { name: 'Line 2 mono font' }))
+    await user.click(screen.getByRole('button', { name: 'Line 1 large size' }))
+    await user.click(screen.getByRole('button', { name: 'Line 2 small size' }))
+    await user.click(screen.getByRole('button', { name: 'Line 1 body color' }))
+    await user.click(screen.getByRole('button', { name: 'Line 2 accent' }))
+    expect(Array.from(screen.getByRole('radiogroup', { name: 'Signature boundary offset' }).querySelectorAll('[role="radio"]')).map((option) => option.getAttribute('aria-label'))).toEqual(['0mm boundary offset', '1mm boundary offset', '2mm boundary offset', '3mm boundary offset'])
+    await user.click(screen.getByRole('radio', { name: '3mm boundary offset' }))
 
     expect(useStudioStore.getState().project.templateArt?.fields).toMatchObject({
       line1Font: 'serif', line2Font: 'mono', line1Size: 'large', line2Size: 'small', line1Color: 'primary', line2Color: 'accent', boundaryOffsetMm: 3,
@@ -224,7 +223,6 @@ describe('App integration', () => {
 
   it('uses accessible Core-backed Body Color, Corner Color, Style, Corners, and Eyes choices', async () => {
     const user = userEvent.setup()
-    window.history.replaceState({}, '', '/?studio=classic')
     render(<App />)
     expect(screen.queryByRole('combobox')).not.toBeInTheDocument()
     const bodyColors = screen.getByRole('listbox', { name: 'Body Color' })
@@ -266,7 +264,6 @@ describe('App integration', () => {
 
   it('keeps public typing draft-only while internal entitlement can live-update', async () => {
     const user = userEvent.setup()
-    window.history.replaceState({}, '', '/?studio=classic')
     const publicView = render(<App />)
     await user.click(screen.getByRole('button', { name: 'Destination' }))
     await user.type(screen.getByRole('textbox', { name: 'Final destination URL' }), 'public.example')
