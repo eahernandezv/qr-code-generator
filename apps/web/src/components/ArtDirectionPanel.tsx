@@ -246,12 +246,13 @@ function IntensityIcon({ intensity }: { intensity: ColorIntensity }) {
 interface ArtDirectionPanelProps {
   noScrollVariant?: boolean
   livePreviewPayloadUpdates?: boolean
+  signatureInspectorVariant?: 'per-line' | 'shared-active-line'
 }
 
-const ArtDirectionPanel: React.FC<ArtDirectionPanelProps> = ({ noScrollVariant = false, livePreviewPayloadUpdates = false }) => {
+const ArtDirectionPanel: React.FC<ArtDirectionPanelProps> = ({ noScrollVariant = false, livePreviewPayloadUpdates = false, signatureInspectorVariant = 'per-line' }) => {
   const { project, setArtDirection, setTemplateArtLevel } = useStudioStore()
   const [activeFamily, setActiveFamily] = React.useState<ControlFamily>('body-color')
-  const [activeSettingsPanel, setActiveSettingsPanel] = React.useState<SettingsPanel>('basic')
+  const [activeSettingsPanel, setActiveSettingsPanel] = React.useState<SettingsPanel>(signatureInspectorVariant === 'shared-active-line' ? 'creator-signature' : 'basic')
   const art = project.artDirection
   const update = (patch: Partial<ArtDirection>) => setArtDirection({ ...art, ...patch })
   const intensity = art.colorIntensity ?? 'balanced'
@@ -261,6 +262,10 @@ const ArtDirectionPanel: React.FC<ArtDirectionPanelProps> = ({ noScrollVariant =
   const selectedStyle = STYLE_OPTIONS.find((style) => style.moduleStyle === (art.moduleStyle ?? 'rounded')) ?? STYLE_OPTIONS[1]
   const selectedCorner = EYE_FRAME_OPTIONS.find((option) => option.style === (art.eyeFrameStyle ?? art.eyeStyle ?? 'rounded')) ?? EYE_FRAME_OPTIONS[1]
   const selectedEye = EYE_BALL_OPTIONS.find((option) => option.style === (art.eyeBallStyle ?? art.eyeStyle ?? 'rounded')) ?? EYE_BALL_OPTIONS[1]
+
+  React.useEffect(() => {
+    if (signatureInspectorVariant === 'shared-active-line') setTemplateArtLevel('template-art')
+  }, [setTemplateArtLevel, signatureInspectorVariant])
 
   const moveFamilyFocus = (event: React.KeyboardEvent<HTMLButtonElement>, current: ControlFamily) => {
     const currentIndex = CONTROL_FAMILIES.findIndex(({ family }) => family === current)
@@ -291,7 +296,7 @@ const ArtDirectionPanel: React.FC<ArtDirectionPanelProps> = ({ noScrollVariant =
 
       <div className={`grid items-start lg:grid-cols-[minmax(0,1fr)_344px] ${noScrollVariant ? 'gap-1' : 'gap-3'}`}>
         <div className={`order-2 min-w-0 lg:order-1 ${noScrollVariant ? 'space-y-1' : 'space-y-2.5'}`} data-testid="lower-design-controls">
-          {activeSettingsPanel === 'destination' ? <PayloadInput key={project.projectId} livePreviewPayloadUpdates={livePreviewPayloadUpdates} compact={noScrollVariant} /> : activeSettingsPanel === 'creator-signature' ? <TemplateArtControls compact={noScrollVariant} /> : <section aria-labelledby="qr-style-title" className={`rounded-xl border border-slate-700/70 bg-slate-950/35 ${noScrollVariant ? 'p-1.5' : 'p-3'}`} data-basic-controls-tray="true">
+          {activeSettingsPanel === 'destination' ? <PayloadInput key={project.projectId} livePreviewPayloadUpdates={livePreviewPayloadUpdates} compact={noScrollVariant} /> : activeSettingsPanel === 'creator-signature' ? <TemplateArtControls compact={noScrollVariant} inspectorVariant={signatureInspectorVariant} /> : <section aria-labelledby="qr-style-title" className={`rounded-xl border border-slate-700/70 bg-slate-950/35 ${noScrollVariant ? 'p-1.5' : 'p-3'}`} data-basic-controls-tray="true">
             <h3 id="qr-style-title" className={`${noScrollVariant ? 'mb-1 text-sm' : 'mb-2 text-base'} font-semibold text-white`}>QR Style</h3>
           {noScrollVariant && <div role="tablist" aria-label="Design control families" className="grid grid-cols-5 gap-1 rounded-xl bg-slate-950 p-1">
             {CONTROL_FAMILIES.map(({ family, label, glyph }) => {

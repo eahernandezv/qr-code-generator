@@ -64,6 +64,42 @@ describe('App integration', () => {
     expect(useStudioStore.getState().project.templateArtLevel).toBe('basic')
   })
 
+  it('route-isolates a shared active-line style inspector without changing the main Studio route', async () => {
+    const user = userEvent.setup()
+    const rootView = render(<App />)
+    expect(rootView.container.querySelector('[data-signature-inspector="shared-active-line"]')).not.toBeInTheDocument()
+    rootView.unmount()
+
+    window.history.replaceState({}, '', '/concepts/creator-signature-ux/space-studio')
+    render(<App />)
+    expect(screen.getByTestId('studio-app')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Creator Signature' })).toHaveAttribute('aria-pressed', 'true')
+    expect(document.querySelectorAll('[data-signature-inspector="shared-active-line"]')).toHaveLength(1)
+    expect(screen.getAllByRole('textbox', { name: /^Line [12]$/ })).toHaveLength(2)
+    expect(screen.getAllByRole('group', { name: /^Line [12] font$/ })).toHaveLength(1)
+    expect(screen.getAllByRole('group', { name: /^Line [12] size$/ })).toHaveLength(1)
+    expect(screen.getAllByRole('group', { name: /^Line [12] colour$/ })).toHaveLength(1)
+    expect(screen.getByRole('button', { name: 'Style line 1' })).toHaveAttribute('aria-pressed', 'true')
+
+    await user.click(screen.getByRole('button', { name: 'Line 1 serif font' }))
+    await user.click(screen.getByRole('button', { name: 'Line 1 large size' }))
+    await user.click(screen.getByRole('button', { name: 'Line 1 body color' }))
+    await user.click(screen.getByRole('button', { name: 'Style line 2' }))
+    expect(screen.getByRole('button', { name: 'Style line 2' })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('group', { name: 'Line 2 font' }).querySelectorAll('button')).toHaveLength(6)
+    await user.click(screen.getByRole('button', { name: 'Line 2 mono font' }))
+    await user.click(screen.getByRole('button', { name: 'Line 2 small size' }))
+    await user.click(screen.getByRole('button', { name: 'Line 2 accent' }))
+
+    expect(useStudioStore.getState().project.templateArt?.fields).toMatchObject({
+      line1Font: 'serif', line1Size: 'large', line1Color: 'primary',
+      line2Font: 'mono', line2Size: 'small', line2Color: 'accent',
+    })
+    expect(screen.queryByRole('textbox', { name: /Line 3|CTA/i })).not.toBeInTheDocument()
+    expect(screen.getByRole('radiogroup', { name: 'Fixed signature position' }).querySelectorAll('[role="radio"]')).toHaveLength(5)
+    expect(screen.getByRole('radiogroup', { name: 'Signature boundary offset' }).querySelectorAll('[role="radio"]')).toHaveLength(4)
+  })
+
   it('keeps the public path focused on the compact editor and destination', () => {
     render(<App />)
     expect(screen.queryByRole('heading', { name: /Design your QR/i })).not.toBeInTheDocument()

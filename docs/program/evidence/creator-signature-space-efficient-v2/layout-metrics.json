@@ -1,0 +1,129 @@
+{
+  "route": "/concepts/creator-signature-ux/space-studio",
+  "url": "http://127.0.0.1:4189/concepts/creator-signature-ux/space-studio",
+  "currentDuplicatedMobile": {
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "document": {
+      "scrollHeight": 844,
+      "clientHeight": 844
+    },
+    "tray": {
+      "x": 21,
+      "y": 360,
+      "width": 356,
+      "height": 436,
+      "bottom": 796
+    },
+    "editor": {
+      "x": 12,
+      "y": 49,
+      "width": 366,
+      "height": 756,
+      "bottom": 805
+    },
+    "preview": null,
+    "textboxCount": 2,
+    "styleGroupCount": 6,
+    "activeCards": [],
+    "positionCount": 5,
+    "offsetCount": 4,
+    "hasThirdLineOrCta": false
+  },
+  "sharedInspectorMobileInitial": {
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "document": {
+      "scrollHeight": 844,
+      "clientHeight": 844
+    },
+    "tray": {
+      "x": 21,
+      "y": 360,
+      "width": 356,
+      "height": 352,
+      "bottom": 712
+    },
+    "editor": {
+      "x": 12,
+      "y": 49,
+      "width": 366,
+      "height": 672,
+      "bottom": 721
+    },
+    "preview": null,
+    "textboxCount": 2,
+    "styleGroupCount": 3,
+    "activeCards": [
+      {
+        "line": "Signature line 1 settings",
+        "active": "true"
+      },
+      {
+        "line": "Signature line 2 settings",
+        "active": "false"
+      }
+    ],
+    "positionCount": 5,
+    "offsetCount": 4,
+    "hasThirdLineOrCta": false
+  },
+  "sharedInspectorMobileFinal": {
+    "activeLine": "Signature line 2 settings",
+    "scrollHeight": 844,
+    "clientHeight": 844,
+    "trayHeight": 352,
+    "viewportOverflowX": false
+  },
+  "sharedInspectorDesktop": {
+    "viewport": {
+      "width": 1440,
+      "height": 1000
+    },
+    "document": {
+      "scrollHeight": 1000,
+      "clientHeight": 1000
+    },
+    "tray": {
+      "x": 169,
+      "y": 92,
+      "width": 754,
+      "height": 304,
+      "bottom": 396
+    },
+    "editor": {
+      "x": 160,
+      "y": 49,
+      "width": 1120,
+      "height": 356,
+      "bottom": 405
+    },
+    "preview": null,
+    "textboxCount": 2,
+    "styleGroupCount": 3,
+    "activeCards": [
+      {
+        "line": "Signature line 1 settings",
+        "active": "true"
+      },
+      {
+        "line": "Signature line 2 settings",
+        "active": "false"
+      }
+    ],
+    "positionCount": 5,
+    "offsetCount": 4,
+    "hasThirdLineOrCta": false
+  },
+  "footprint": {
+    "duplicatedTrayHeightPx": 436,
+    "sharedTrayHeightPx": 352,
+    "reductionPx": 84,
+    "reductionPercent": 19.3
+  },
+  "browserErrors": []
+}

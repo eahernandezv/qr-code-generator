@@ -1,0 +1,64 @@
+FINAL_GATE_BASELINE=a9a3084dbd9ed50a1b63f56c512f6884ef142676
+FINAL_GATE_BRANCH=studio/creator-signature-space-efficient-v2
+$ CI=1 npx pnpm@9.0.0 install --frozen-lockfile
+Scope: all 8 workspace projects
+Lockfile is up to date, resolution step is skipped
+Already up to date
+
+Done in 1.9s
+$ npx pnpm@9.0.0 --filter @qr/qr-core build
+
+> @qr/qr-core@0.1.0 build /tmp/qr-studio-space-efficient-v2/packages/qr-core
+> node -e "require('fs').rmSync('dist',{recursive:true,force:true})" && tsc
+
+$ npx pnpm@9.0.0 --filter @qr/artistic-qr build
+
+> @qr/artistic-qr@0.1.0 build /tmp/qr-studio-space-efficient-v2/packages/artistic-qr
+> node -e "require('fs').rmSync('dist',{recursive:true,force:true})" && tsc
+
+$ npx pnpm@9.0.0 --filter @qr/web test -- App.test.tsx QRPreview.test.tsx creatorSignature.test.ts
+
+> @qr/web@0.1.0 test /tmp/qr-studio-space-efficient-v2/apps/web
+> vitest run "App.test.tsx" "QRPreview.test.tsx" "creatorSignature.test.ts"
+
+
+ RUN  v3.2.6 /tmp/qr-studio-space-efficient-v2/apps/web
+
+ ✓ src/lib/creatorSignature.test.ts (29 tests) 54ms
+ ✓ src/components/QRPreview.test.tsx (3 tests) 105ms
+ ✓ src/App.test.tsx (10 tests) 4605ms
+   ✓ App integration > renders the independent icon-first Creator Signature concept only on its child route  1010ms
+   ✓ App integration > route-isolates a shared active-line style inspector without changing the main Studio route  561ms
+   ✓ App integration > toggles between Basic QR settings and Creator Signature settings while keeping one shared QR canvas  400ms
+   ✓ App integration > uses one icon-only five-position Creator Signature radio row  306ms
+   ✓ App integration > edits exactly two independently styled Creator Signature lines with fixed offset choices  594ms
+   ✓ App integration > uses accessible Core-backed Body Color, Corner Color, Style, Corners, and Eyes choices  841ms
+   ✓ App integration > keeps public typing draft-only while internal entitlement can live-update  478ms
+
+ Test Files  3 passed (3)
+      Tests  42 passed (42)
+   Start at  20:22:07
+   Duration  7.41s (transform 930ms, setup 1.66s, collect 1.29s, tests 4.76s, environment 2.54s, prepare 879ms)
+
+$ npx pnpm@9.0.0 --filter @qr/web build
+
+> @qr/web@0.1.0 build /tmp/qr-studio-space-efficient-v2/apps/web
+> tsc && vite build
+
+vite v6.4.3 building for production...
+transforming...
+✓ 126 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                                                0.43 kB │ gzip:  0.30 kB
+dist/assets/icon-eye-frame-d-frame-r8G2irT-.svg                4.51 kB │ gzip:  0.46 kB
+dist/assets/icon-eye-frame-leaf-frame-Df2t5M-N.svg             4.64 kB │ gzip:  0.44 kB
+dist/assets/icon-eye-frame-hex-CLqh2H6M.svg                    4.74 kB │ gzip:  0.44 kB
+dist/assets/icon-eye-frame-inset-leaf-frame-BQeTsYzU.svg       4.91 kB │ gzip:  0.46 kB
+dist/assets/icon-eye-frame-diamond-C8cIeFz9.svg                4.91 kB │ gzip:  0.48 kB
+dist/assets/icon-eye-frame-opposing-leaf-frame-C_8ktXhk.svg    5.04 kB │ gzip:  0.47 kB
+dist/assets/index-DUziC8ox.css                                32.10 kB │ gzip:  6.47 kB
+dist/assets/index-BYPk-hAW.js                                316.85 kB │ gzip: 94.04 kB │ map: 879.86 kB
+✓ built in 3.31s
+$ git diff --check
+FINAL_GATE_SUCCESS
