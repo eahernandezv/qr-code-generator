@@ -151,7 +151,12 @@ export default function CreatorSignatureIconConcept() {
     fields: { ...fields, ...patch },
   }), [fields, setTemplateArt])
 
-  React.useEffect(() => setTemplateArtLevel('template-art'), [setTemplateArtLevel])
+  const initialTemplateArtLevel = React.useRef(project.templateArtLevel ?? 'basic')
+
+  React.useEffect(() => {
+    setTemplateArtLevel('template-art')
+    return () => setTemplateArtLevel(initialTemplateArtLevel.current)
+  }, [setTemplateArtLevel])
 
   const colours: Record<CreatorSignatureColor, string> = {
     primary: project.artDirection.palette?.primary ?? '#5162da',
@@ -174,7 +179,7 @@ export default function CreatorSignatureIconConcept() {
     document.getElementById(id(options[next]))?.focus()
   }
 
-  return <main data-testid="creator-signature-icon-concept" className="min-h-[100dvh] overflow-hidden bg-[#07101d] text-white">
+  return <main data-testid="creator-signature-icon-concept" className="min-h-[100dvh] overflow-x-hidden bg-[#07101d] text-white">
     <div aria-hidden="true" className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_72%_18%,rgba(34,211,238,.13),transparent_28%),radial-gradient(circle_at_8%_82%,rgba(99,102,241,.16),transparent_32%),linear-gradient(145deg,#07101d_0%,#0a1221_58%,#07101d_100%)]" />
     <div className="relative mx-auto grid min-h-[100dvh] max-w-7xl items-center gap-5 px-3 py-4 lg:grid-cols-[minmax(0,1fr)_minmax(420px,.9fr)] lg:px-8 lg:py-7">
       <section aria-label="Creator Signature preview" className="order-1 flex min-h-0 items-center justify-center rounded-[2rem] border border-white/10 bg-white/[.025] p-3 shadow-2xl shadow-black/30 backdrop-blur-sm lg:h-[calc(100dvh-3.5rem)] lg:p-7">

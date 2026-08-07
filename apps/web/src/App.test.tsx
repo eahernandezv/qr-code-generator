@@ -17,7 +17,7 @@ describe('App integration', () => {
   it('renders the independent icon-first Creator Signature concept only on its child route', async () => {
     const user = userEvent.setup()
     window.history.replaceState({}, '', '/concepts/creator-signature-ux/creator')
-    render(<App />)
+    const conceptView = render(<App />)
 
     expect(screen.getByTestId('creator-signature-icon-concept')).toBeInTheDocument()
     expect(screen.getAllByRole('textbox', { name: /^Signature line [12]$/ })).toHaveLength(2)
@@ -54,6 +54,9 @@ describe('App integration', () => {
       signaturePosition: 'top-left-corner',
       boundaryOffsetMm: 3,
     })
+
+    conceptView.unmount()
+    expect(useStudioStore.getState().project.templateArtLevel).toBe('basic')
   })
 
   it('keeps the public path focused on the compact editor and destination', () => {

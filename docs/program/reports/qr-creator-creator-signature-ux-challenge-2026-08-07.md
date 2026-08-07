@@ -11,7 +11,7 @@
 
 - Child route path: `/concepts/creator-signature-ux/creator`
 - Baseline-host URL after this branch is integrated/deployed: `https://placeholder-online.com/concepts/creator-signature-ux/creator`
-- Local proof URL used: `http://127.0.0.1:4175/concepts/creator-signature-ux/creator`
+- Local proof URL used for final capture: `http://127.0.0.1:4176/concepts/creator-signature-ux/creator`
 - The public `/` route remains on the baseline Studio.
 
 ## Concept rationale
@@ -45,7 +45,7 @@ All controls update the existing `CreatorSignatureTemplateFields` and the existi
 
 1. `docs/program/evidence/creator-signature-icon-ux/creator-desktop-1440x1000.png`
    - Dimensions: 1440×1000
-   - SHA-256: `52de74efcbfb1f53e00ee0220989da8f8354fc62fada4fcf6f6c88cc468f0ebf`
+   - SHA-256: `7f7f41cab23396d34f403dbf38e99b6b56d0f876810fea23540c72bf1f35b396`
 2. `docs/program/evidence/creator-signature-icon-ux/creator-mobile-390x844.png`
    - Full-page dimensions: 390×860 from a 390×844 viewport
    - SHA-256: `8aa1efa8758864a0b713999695cc16d040813310db69d98db717d2c94660aeea`
@@ -161,6 +161,9 @@ Remediation:
 
 - Restored `QRPreview.tsx` and `index.css` exactly to baseline.
 - Scoped preview sizing and caption hiding to the new component through local Tailwind descendant selectors.
+- Replaced root `overflow-hidden` with horizontal-only clipping so short mobile viewports retain native vertical scrolling.
+- Restored the prior template-art level when the concept route unmounts, preventing isolated-route state from leaking back into the main Studio.
+- Added regression coverage for route-state cleanup.
 - Re-ran focused tests, build, full web tests, browser proof, and screenshots successfully.
 
 The untracked-file concern from the interim review is resolved by the final branch commit containing the component and evidence.
@@ -170,9 +173,9 @@ The untracked-file concern from the interim review is resolved by the final bran
 1. **Discoverability:** icon-only controls reduce visual noise but require recognition. Hover titles and screen-reader names provide exact semantics; touch users rely on the icon and immediate preview response.
 2. **Color meaning:** swatches communicate output directly, but body/corner/accent/dark-ink role names are not visibly spelled out. This is intentionally consistent with the no-copy constraint.
 3. **Offset precision:** pure spacing icons could not truthfully distinguish millimeters, so compact unit values remain visible inside the four selection buttons.
-4. **Mobile height:** the full mobile composition is 860px tall for an 844px viewport, requiring approximately 16px of vertical scroll; there is no horizontal clipping.
+4. **Mobile height:** the full mobile composition is 860px tall for an 844px viewport, requiring approximately 16px of native vertical scroll; horizontal overflow remains clipped.
 5. **Route hosting:** direct navigation requires the existing SPA fallback configuration when deployed. Vite direct-route proof passed locally.
-6. **Concept behavior:** entering the isolated concept route switches the existing project to `template-art`, as required for a real Creator Signature preview. It does not change destination, commerce, or export state.
+6. **Concept behavior:** entering the isolated concept route temporarily switches the existing project to `template-art`, as required for a real Creator Signature preview. Unmount restores the prior level, and destination, commerce, and export state are untouched.
 
 ## Source-contract availability note
 
