@@ -1,4 +1,4 @@
-import type { KeyboardEvent, ReactNode } from 'react'
+import { useState, type KeyboardEvent, type ReactNode } from 'react'
 import { useStudioStore } from '../store'
 import type {
   CreatorSignatureBoundaryOffsetMm,
@@ -97,6 +97,7 @@ function IconButton({ selected, label, onClick, children, role, checked, tabInde
 
 export default function TemplateArtControls({ compact = false }: { compact?: boolean }) {
   const { project, setTemplateArt } = useStudioStore()
+  const [activeLine, setActiveLine] = useState<1 | 2>(1)
   const spec = project.templateArt ?? DEFAULT_CREATOR_SIGNATURE
   const fields = spec.fields
   const update = (patch: Partial<CreatorSignatureTemplateFields>) => setTemplateArt({
@@ -121,46 +122,52 @@ export default function TemplateArtControls({ compact = false }: { compact?: boo
     apply(options[next])
     document.getElementById(id(options[next]))?.focus()
   }
-  const linePatch = <T,>(line: 1 | 2, key1: keyof CreatorSignatureTemplateFields, key2: keyof CreatorSignatureTemplateFields, value: T) => ({ [line === 1 ? key1 : key2]: value }) as Partial<CreatorSignatureTemplateFields>
+  const linePatch = <T,>(key1: keyof CreatorSignatureTemplateFields, key2: keyof CreatorSignatureTemplateFields, value: T) => ({ [activeLine === 1 ? key1 : key2]: value }) as Partial<CreatorSignatureTemplateFields>
   const selectedPosition = fields.signaturePosition ?? 'bottom-right-outside'
   const selectedOffset = fields.boundaryOffsetMm ?? 0
+  const activeFont = (activeLine === 1 ? fields.line1Font : fields.line2Font) ?? 'sans'
+  const activeSize = (activeLine === 1 ? fields.line1Size : fields.line2Size) ?? 'medium'
+  const activeColour = (activeLine === 1 ? fields.line1Color : fields.line2Color) ?? (activeLine === 1 ? 'dark-ink' : 'secondary')
 
   return <section aria-labelledby="creator-signature-title" className={`${panelClass} ${compact ? 'p-2' : 'p-3'}`} data-template-id="creator-signature" data-template-controls-tray="creator-signature">
     <h3 id="creator-signature-title" className="sr-only">Creator Signature</h3>
     <div className={`grid ${compact ? 'gap-2' : 'gap-3'}`}>
-      {([1, 2] as const).map((line) => {
-        const text = line === 1 ? fields.line1Text ?? fields.signatureText ?? '' : fields.line2Text ?? fields.handleText ?? ''
-        const font = (line === 1 ? fields.line1Font : fields.line2Font) ?? 'sans'
-        const size = (line === 1 ? fields.line1Size : fields.line2Size) ?? 'medium'
-        const colour = (line === 1 ? fields.line1Color : fields.line2Color) ?? (line === 1 ? 'dark-ink' : 'secondary')
-        return <section key={line} aria-label={`Signature line ${line} settings`} className={`rounded-xl border border-white/10 bg-slate-950/55 ${compact ? 'p-2' : 'p-3'} shadow-xl shadow-black/20`}>
-          <label className="relative block">
-            <span className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500" aria-hidden="true">
-              {line === 1
-                ? <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.7"><path d="m5 16-1 4 4-1L18.5 8.5a2.1 2.1 0 0 0-3-3zM13.8 7.2l3 3" /></svg>
-                : <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.65"><circle cx="12" cy="12" r="8" /><path d="M15.5 9v5.2c0 2 3 2 3-.7V12a6.5 6.5 0 1 0-2.2 4.9" /></svg>}
-            </span>
-            <span className="sr-only">Signature line {line}</span>
+      <section aria-label="Signature lines" className={`grid ${compact ? 'gap-1.5 rounded-xl border border-white/10 bg-slate-950/55 p-2' : 'gap-2 rounded-xl border border-white/10 bg-slate-950/55 p-3'} shadow-xl shadow-black/20`}>
+        {([1, 2] as const).map((line) => {
+          const selected = activeLine === line
+          const text = line === 1 ? fields.line1Text ?? fields.signatureText ?? '' : fields.line2Text ?? fields.handleText ?? ''
+          const font = (line === 1 ? fields.line1Font : fields.line2Font) ?? 'sans'
+          const size = (line === 1 ? fields.line1Size : fields.line2Size) ?? 'medium'
+          const colour = (line === 1 ? fields.line1Color : fields.line2Color) ?? (line === 1 ? 'dark-ink' : 'secondary')
+          return <div key={line} className={`grid grid-cols-[2rem_minmax(0,1fr)_5.25rem] items-center ${compact ? 'gap-1.5 rounded-xl p-1.5' : 'gap-2 rounded-xl p-2'} border transition ${selected ? 'border-cyan-300/55 bg-cyan-300/[.06]' : 'border-white/[.07] bg-white/[.025]'}`}>
+            <button type="button" aria-label={`Edit line ${line} style`} title={`Edit line ${line} style`} aria-pressed={selected} onClick={() => setActiveLine(line)} className={`${iconButton} ${selected ? selectedButton : idleButton} ${compact ? 'h-8 text-[10px]' : 'h-10 text-xs'} font-bold tracking-wide`}>L{line}</button>
             <input aria-label={`Line ${line}`} value={text} maxLength={line === 1 ? 32 : 36}
+              onFocus={() => setActiveLine(line)}
               onChange={(event) => update(line === 1 ? { line1Text: event.target.value } : { line2Text: event.target.value })}
               placeholder={line === 1 ? 'Signature line 1' : '@handle · line 2'}
-              className={`w-full rounded-xl border border-white/10 bg-white/[.045] pl-8 pr-2 text-slate-100 outline-none placeholder:text-slate-500 focus:border-cyan-300/70 focus:ring-2 focus:ring-cyan-300/15 ${compact ? 'h-9 text-xs' : 'h-11 text-sm'}`} />
-          </label>
-          <div className={`${compact ? 'mt-2 gap-1.5' : 'mt-3 gap-2'} grid`}>
-            <div role="group" aria-label={`Line ${line} font`} className="grid grid-cols-6 gap-1 rounded-xl bg-black/20 p-1">
-              {CREATOR_SIGNATURE_FONTS.map((option) => <IconButton key={option.value} selected={font === option.value} label={`Line ${line} ${option.label.toLowerCase()} font`} onClick={() => update(linePatch(line, 'line1Font', 'line2Font', option.value))} className={compact ? 'h-8' : 'h-10'}><FontIcon value={option.value} /></IconButton>)}
+              className={`min-w-0 rounded-xl border border-white/10 bg-white/[.045] px-2.5 text-slate-100 outline-none placeholder:text-slate-500 focus:border-cyan-300/70 focus:ring-2 focus:ring-cyan-300/15 ${compact ? 'h-8 text-xs' : 'h-10 text-sm'}`} />
+            <button type="button" aria-label={`Edit line ${line} style: ${font}, ${size}, ${CREATOR_SIGNATURE_COLORS.find((item) => item.value === colour)?.label}`} title={`Line ${line}: ${font}, ${size}`} aria-pressed={selected} onClick={() => setActiveLine(line)} className={`flex ${compact ? 'h-8' : 'h-10'} items-center justify-center gap-1 rounded-xl border ${selected ? 'border-cyan-300/40 bg-cyan-300/[.08] text-cyan-100' : 'border-white/10 bg-black/20 text-slate-400'} focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300`}>
+              <FontIcon value={font} /><SizeIcon value={size} /><ColourIcon colour={colours[colour]} />
+            </button>
+          </div>
+        })}
+      </section>
+
+      <section aria-label={`Line ${activeLine} shared style toolbar`} className={`rounded-xl border border-white/10 bg-slate-950/55 ${compact ? 'p-2' : 'p-3'} shadow-xl shadow-black/20`} data-shared-signature-toolbar="true">
+        <div className={`${compact ? 'grid gap-1.5' : 'grid gap-2'}`}>
+          <div role="group" aria-label={`Line ${activeLine} font`} className="grid grid-cols-6 gap-1 rounded-xl bg-black/20 p-1">
+            {CREATOR_SIGNATURE_FONTS.map((option) => <IconButton key={option.value} selected={activeFont === option.value} label={`Line ${activeLine} ${option.label.toLowerCase()} font`} onClick={() => update(linePatch('line1Font', 'line2Font', option.value))} className={compact ? 'h-8' : 'h-10'}><FontIcon value={option.value} /></IconButton>)}
+          </div>
+          <div className="grid grid-cols-2 gap-1.5">
+            <div role="group" aria-label={`Line ${activeLine} size`} className="grid grid-cols-4 gap-1 rounded-xl bg-black/20 p-1">
+              {CREATOR_SIGNATURE_FONT_SIZES.map((option) => <IconButton key={option.value} selected={activeSize === option.value} label={`Line ${activeLine} ${option.label.toLowerCase()} size`} onClick={() => update(linePatch('line1Size', 'line2Size', option.value))} className={compact ? 'h-8' : 'h-10'}><SizeIcon value={option.value} /></IconButton>)}
             </div>
-            <div className="grid grid-cols-2 gap-1.5">
-              <div role="group" aria-label={`Line ${line} size`} className="grid grid-cols-4 gap-1 rounded-xl bg-black/20 p-1">
-                {CREATOR_SIGNATURE_FONT_SIZES.map((option) => <IconButton key={option.value} selected={size === option.value} label={`Line ${line} ${option.label.toLowerCase()} size`} onClick={() => update(linePatch(line, 'line1Size', 'line2Size', option.value))} className={compact ? 'h-8' : 'h-10'}><SizeIcon value={option.value} /></IconButton>)}
-              </div>
-              <div role="group" aria-label={`Line ${line} colour`} className="grid grid-cols-4 gap-1 rounded-xl bg-black/20 p-1">
-                {CREATOR_SIGNATURE_COLORS.map((option) => <IconButton key={option.value} selected={colour === option.value} label={`Line ${line} ${option.label.toLowerCase()}`} onClick={() => update(linePatch(line, 'line1Color', 'line2Color', option.value))} className={compact ? 'h-8' : 'h-10'}><ColourIcon colour={colours[option.value]} /></IconButton>)}
-              </div>
+            <div role="group" aria-label={`Line ${activeLine} colour`} className="grid grid-cols-4 gap-1 rounded-xl bg-black/20 p-1">
+              {CREATOR_SIGNATURE_COLORS.map((option) => <IconButton key={option.value} selected={activeColour === option.value} label={`Line ${activeLine} ${option.label.toLowerCase()}`} onClick={() => update(linePatch('line1Color', 'line2Color', option.value))} className={compact ? 'h-8' : 'h-10'}><ColourIcon colour={colours[option.value]} /></IconButton>)}
             </div>
           </div>
-        </section>
-      })}
+        </div>
+      </section>
 
       <section className={`grid ${compact ? 'gap-2' : 'gap-3'} rounded-xl border border-white/10 bg-slate-950/55 ${compact ? 'p-2' : 'p-3'} shadow-xl shadow-black/20 sm:grid-cols-[1.3fr_1fr]`}>
         <fieldset>
