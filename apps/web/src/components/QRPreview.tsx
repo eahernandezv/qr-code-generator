@@ -87,10 +87,6 @@ const QRPreview: React.FC<QRPreviewProps> = ({ size = 320, className = '', useDe
           </div>
         )}
       </div>
-
-      <p className="mt-2 text-xs text-slate-500">
-        {previewPayload.raw.trim() ? `${project.templateArtLevel === 'template-art' ? 'Composed Creator Signature' : isDemo ? 'Demo destination' : 'Predictive Core preview'} · ${size}×${size} px` : ''}
-      </p>
     </div>
   )
 }
