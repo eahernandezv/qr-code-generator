@@ -14,6 +14,51 @@ function resetStore() {
 describe('App integration', () => {
   beforeEach(resetStore)
 
+  it('renders the independent icon-first Creator Signature concept only on its child route', async () => {
+    const user = userEvent.setup()
+    window.history.replaceState({}, '', '/concepts/creator-signature-ux/creator')
+    const conceptView = render(<App />)
+
+    expect(screen.getByTestId('creator-signature-icon-concept')).toBeInTheDocument()
+    expect(screen.getAllByRole('textbox', { name: /^Signature line [12]$/ })).toHaveLength(2)
+    expect(screen.queryByText('Creator Signature')).not.toBeInTheDocument()
+
+    for (const line of [1, 2]) {
+      expect(screen.getByRole('group', { name: `Line ${line} font` }).querySelectorAll('button')).toHaveLength(6)
+      expect(screen.getByRole('group', { name: `Line ${line} size` }).querySelectorAll('button')).toHaveLength(4)
+      expect(screen.getByRole('group', { name: `Line ${line} colour` }).querySelectorAll('button')).toHaveLength(4)
+    }
+    expect(Array.from(screen.getByRole('radiogroup', { name: 'Signature placement' }).querySelectorAll('[role="radio"]')).map((option) => option.getAttribute('aria-label'))).toEqual([
+      'Bottom left', 'Bottom right', 'Below centered', 'Top left corner', 'Top right corner',
+    ])
+    expect(Array.from(screen.getByRole('radiogroup', { name: 'Boundary offset' }).querySelectorAll('[role="radio"]')).map((option) => option.getAttribute('aria-label'))).toEqual([
+      '0mm boundary offset', '1mm boundary offset', '2mm boundary offset', '3mm boundary offset',
+    ])
+
+    await user.click(screen.getByRole('button', { name: 'Line 1 handwritten font' }))
+    await user.click(screen.getByRole('button', { name: 'Line 1 extra large size' }))
+    await user.click(screen.getByRole('button', { name: 'Line 1 accent' }))
+    await user.click(screen.getByRole('button', { name: 'Line 2 mono font' }))
+    await user.click(screen.getByRole('button', { name: 'Line 2 small size' }))
+    await user.click(screen.getByRole('button', { name: 'Line 2 corner color' }))
+    await user.click(screen.getByRole('radio', { name: 'Top left corner' }))
+    await user.click(screen.getByRole('radio', { name: '3mm boundary offset' }))
+
+    expect(useStudioStore.getState().project.templateArt?.fields).toMatchObject({
+      line1Font: 'handwritten',
+      line1Size: 'extra-large',
+      line1Color: 'accent',
+      line2Font: 'mono',
+      line2Size: 'small',
+      line2Color: 'secondary',
+      signaturePosition: 'top-left-corner',
+      boundaryOffsetMm: 3,
+    })
+
+    conceptView.unmount()
+    expect(useStudioStore.getState().project.templateArtLevel).toBe('basic')
+  })
+
   it('keeps the public path focused on the compact editor and destination', () => {
     render(<App />)
     expect(screen.queryByRole('heading', { name: /Design your QR/i })).not.toBeInTheDocument()
@@ -153,8 +198,8 @@ describe('App integration', () => {
     expect(screen.queryByText('ONLY TEMPLATE')).not.toBeInTheDocument()
     await user.selectOptions(screen.getByRole('combobox', { name: 'Line 1 font' }), 'serif')
     await user.selectOptions(screen.getByRole('combobox', { name: 'Line 2 font' }), 'mono')
-    expect(Array.from(screen.getByRole('combobox', { name: 'Line 1 size' }).querySelectorAll('option')).map((option) => option.textContent)).toEqual(['Small', 'Medium', 'Large'])
-    expect(Array.from(screen.getByRole('combobox', { name: 'Line 2 size' }).querySelectorAll('option')).map((option) => option.textContent)).toEqual(['Small', 'Medium', 'Large'])
+    expect(Array.from(screen.getByRole('combobox', { name: 'Line 1 size' }).querySelectorAll('option')).map((option) => option.textContent)).toEqual(['Small', 'Medium', 'Large', 'Extra Large'])
+    expect(Array.from(screen.getByRole('combobox', { name: 'Line 2 size' }).querySelectorAll('option')).map((option) => option.textContent)).toEqual(['Small', 'Medium', 'Large', 'Extra Large'])
     await user.selectOptions(screen.getByRole('combobox', { name: 'Line 1 size' }), 'large')
     await user.selectOptions(screen.getByRole('combobox', { name: 'Line 2 size' }), 'small')
     await user.selectOptions(screen.getByRole('combobox', { name: 'Line 1 colour' }), 'primary')

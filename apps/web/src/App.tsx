@@ -5,9 +5,15 @@ import CandidateBoard from './components/CandidateBoard'
 import ExportPanel from './components/ExportPanel'
 import RecoveryPanel from './components/RecoveryPanel'
 import CheckoutPanel from './components/CheckoutPanel'
+import CreatorSignatureIconConcept from './components/CreatorSignatureIconConcept'
+
+const CREATOR_SIGNATURE_CONCEPT_PATH = '/concepts/creator-signature-ux/creator'
 
 const App: React.FC = () => {
   const { project, resetProject } = useStudioStore()
+  if (typeof window !== 'undefined' && window.location.pathname === CREATOR_SIGNATURE_CONCEPT_PATH) {
+    return <CreatorSignatureIconConcept />
+  }
   const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams()
   const showSecondaryWorkflow = searchParams.get('workflow') === 'internal'
   const noScrollVariant = !showSecondaryWorkflow && searchParams.get('uxVariant') !== 'scroll'

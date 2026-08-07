@@ -37,12 +37,16 @@ export const CREATOR_SIGNATURE_FONTS: ReadonlyArray<{ value: CreatorSignatureFon
   { value: 'sans', label: 'Sans' },
   { value: 'serif', label: 'Serif' },
   { value: 'mono', label: 'Mono' },
+  { value: 'cursive', label: 'Cursive' },
+  { value: 'handwritten', label: 'Handwritten' },
+  { value: 'display', label: 'Display' },
 ]
 
 export const CREATOR_SIGNATURE_FONT_SIZES: ReadonlyArray<{ value: CreatorSignatureFontSize; label: string }> = [
   { value: 'small', label: 'Small' },
   { value: 'medium', label: 'Medium' },
   { value: 'large', label: 'Large' },
+  { value: 'extra-large', label: 'Extra Large' },
 ]
 
 export const CREATOR_SIGNATURE_COLORS: ReadonlyArray<{ value: CreatorSignatureColor; label: string }> = [
@@ -189,6 +193,9 @@ const FONT_FAMILIES: Record<CreatorSignatureFont, string> = {
   sans: 'Inter,system-ui,sans-serif',
   serif: 'Georgia,Times New Roman,serif',
   mono: 'ui-monospace,SFMono-Regular,Menlo,monospace',
+  cursive: 'Brush Script MT,Segoe Script,cursive',
+  handwritten: 'Segoe Print,Bradley Hand,cursive',
+  display: 'Impact,Arial Black,sans-serif',
 }
 
 const DEFAULT_COLORS: Record<CreatorSignatureColor, string> = {
@@ -217,8 +224,8 @@ function selectedFont(value: CreatorSignatureFont | undefined): CreatorSignature
 
 function selectedFontSize(value: CreatorSignatureFontSize | undefined, line: 1 | 2): number {
   const selected = CREATOR_SIGNATURE_FONT_SIZES.some((option) => option.value === value) ? value! : 'medium'
-  if (line === 1) return selected === 'small' ? 18 : selected === 'large' ? 26 : 22
-  return selected === 'small' ? 9 : selected === 'large' ? 13 : 11
+  if (line === 1) return selected === 'small' ? 18 : selected === 'large' ? 26 : selected === 'extra-large' ? 30 : 22
+  return selected === 'small' ? 9 : selected === 'large' ? 13 : selected === 'extra-large' ? 15 : 11
 }
 
 function selectedOffset(value: CreatorSignatureBoundaryOffsetMm | undefined): CreatorSignatureBoundaryOffsetMm {
@@ -230,21 +237,18 @@ function textLayer(fields: CreatorSignatureTemplateFields, geometry: CreatorSign
   const line2 = bounded(fields.line2Text ?? fields.handleText, 36)
   const position = fields.signaturePosition ?? 'bottom-right-outside'
   const { labelSlot } = geometry
-  const fit = (value: string, fontSize: number, maxWidth: number) => value.length * fontSize * 0.58 > maxWidth
-    ? ` textLength="${maxWidth}" lengthAdjust="spacingAndGlyphs"`
-    : ''
   const line1Size = selectedFontSize(fields.line1Size, 1)
   const line2Size = selectedFontSize(fields.line2Size, 2)
+  const line1Font = selectedFont(fields.line1Font)
+  const line2Font = selectedFont(fields.line2Font)
   const lineGap = line1Size + CREATOR_SIGNATURE_PX_PER_MM
   const lines = (
     anchor: 'start' | 'middle' | 'end',
     x: number,
     y: number,
-    options: { maxWidth?: number } = {},
   ) => {
-    const maxWidth = options.maxWidth ?? 220
-    const renderedLine1 = line1 ? `<text data-signature-line="1" data-signature-size="${fields.line1Size ?? 'medium'}" x="${x}" y="${y}" text-anchor="${anchor}" fill="${selectedColor(fields.line1Color, palette)}" font-family="${FONT_FAMILIES[selectedFont(fields.line1Font)]}" font-size="${line1Size}" font-weight="750" letter-spacing="-0.5"${fit(line1, line1Size, maxWidth)}>${line1}</text>` : ''
-    const renderedLine2 = line2 ? `<text data-signature-line="2" data-signature-size="${fields.line2Size ?? 'medium'}" x="${x}" y="${y + lineGap}" text-anchor="${anchor}" fill="${selectedColor(fields.line2Color ?? 'secondary', palette)}" font-family="${FONT_FAMILIES[selectedFont(fields.line2Font)]}" font-size="${line2Size}" font-weight="550"${fit(line2, line2Size, maxWidth)}>${line2}</text>` : ''
+    const renderedLine1 = line1 ? `<text data-signature-line="1" data-signature-font="${line1Font}" data-signature-size="${fields.line1Size ?? 'medium'}" x="${x}" y="${y}" text-anchor="${anchor}" fill="${selectedColor(fields.line1Color, palette)}" font-family="${FONT_FAMILIES[line1Font]}" font-size="${line1Size}" font-weight="750" letter-spacing="-0.5">${line1}</text>` : ''
+    const renderedLine2 = line2 ? `<text data-signature-line="2" data-signature-font="${line2Font}" data-signature-size="${fields.line2Size ?? 'medium'}" x="${x}" y="${y + lineGap}" text-anchor="${anchor}" fill="${selectedColor(fields.line2Color ?? 'secondary', palette)}" font-family="${FONT_FAMILIES[line2Font]}" font-size="${line2Size}" font-weight="550">${line2}</text>` : ''
     return `\n    ${renderedLine1}\n    ${renderedLine2}`
   }
   const reservedShelf = `<rect data-signature-reserved-shelf="true" x="${labelSlot.x}" y="${labelSlot.y}" width="${labelSlot.width}" height="${labelSlot.height}" fill="none" stroke="none" aria-hidden="true"/>`
@@ -254,7 +258,7 @@ function textLayer(fields: CreatorSignatureTemplateFields, geometry: CreatorSign
   const topShelfTextY = geometry.qrContent.y - 22 - lineGap
     - selectedOffset(fields.boundaryOffsetMm) * CREATOR_SIGNATURE_PX_PER_MM
   if (position === 'bottom-left-outside') return `${reservedShelf}${lines('start', geometry.qrContent.x, shelfTextY)}`
-  if (position === 'below-centered') return `${reservedShelf}${lines('middle', geometry.qrContent.x + geometry.qrContent.width / 2, shelfTextY, { maxWidth: geometry.qrContent.width })}`
+  if (position === 'below-centered') return `${reservedShelf}${lines('middle', geometry.qrContent.x + geometry.qrContent.width / 2, shelfTextY)}`
   if (position === 'top-left-corner') return `${reservedShelf}${lines('start', geometry.qrContent.x, topShelfTextY)}`
   if (position === 'top-right-corner') return `${reservedShelf}${lines('end', geometry.qrContent.x + geometry.qrContent.width, topShelfTextY)}`
   return `${reservedShelf}${lines('end', geometry.qrContent.x + geometry.qrContent.width, shelfTextY)}`

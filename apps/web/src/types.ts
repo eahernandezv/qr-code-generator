@@ -60,8 +60,8 @@ export type CreatorSignaturePosition =
   | 'top-right-corner'
   | 'top-left-corner'
 
-export type CreatorSignatureFont = 'sans' | 'serif' | 'mono'
-export type CreatorSignatureFontSize = 'small' | 'medium' | 'large'
+export type CreatorSignatureFont = 'sans' | 'serif' | 'mono' | 'cursive' | 'handwritten' | 'display'
+export type CreatorSignatureFontSize = 'small' | 'medium' | 'large' | 'extra-large'
 export type CreatorSignatureColor = 'primary' | 'secondary' | 'accent' | 'dark-ink'
 export type CreatorSignatureBoundaryOffsetMm = 0 | 1 | 2 | 3
 
