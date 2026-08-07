@@ -9,7 +9,7 @@ describe('QRPreview', () => {
     expect(screen.getByText(/Enter a payload to preview/i)).toBeInTheDocument()
   })
 
-  it('renders a preview when payload is provided', async () => {
+  it('renders a preview when payload is provided without metadata caption text', async () => {
     const state = useStudioStore.getState()
     state.setPayload({ raw: 'https://example.com', normalized: 'https://example.com', mode: 'url' })
 
@@ -17,6 +17,8 @@ describe('QRPreview', () => {
     await waitFor(() => {
       expect(screen.getByAltText('QR Preview')).toBeInTheDocument()
     })
+    expect(screen.queryByText(/Composed Creator Signature|Demo destination|Predictive Core preview/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/320×320 px/)).not.toBeInTheDocument()
   })
 
   it('removes every byte-identical duplicate fill attribute from Core preview SVG transport', () => {
