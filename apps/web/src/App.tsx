@@ -11,11 +11,13 @@ const CREATOR_SIGNATURE_CONCEPT_PATH = '/concepts/creator-signature-ux/creator'
 
 const App: React.FC = () => {
   const { project, resetProject } = useStudioStore()
-  if (typeof window !== 'undefined' && window.location.pathname === CREATOR_SIGNATURE_CONCEPT_PATH) {
-    return <CreatorSignatureIconConcept />
-  }
+  const pathname = typeof window !== 'undefined' ? window.location.pathname : '/'
   const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams()
   const showSecondaryWorkflow = searchParams.get('workflow') === 'internal'
+  const useClassicStudio = showSecondaryWorkflow || searchParams.get('studio') === 'classic' || searchParams.get('uxVariant') === 'scroll'
+  if (pathname === CREATOR_SIGNATURE_CONCEPT_PATH || (pathname === '/' && !useClassicStudio)) {
+    return <CreatorSignatureIconConcept />
+  }
   const noScrollVariant = !showSecondaryWorkflow && searchParams.get('uxVariant') !== 'scroll'
   const hasLivePayloadPreviewEntitlement = showSecondaryWorkflow || project.entitlement.type !== 'preview'
 
