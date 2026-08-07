@@ -11,6 +11,12 @@
 
 The dispatch's authoritative path `/home/hermes/qr-mvp-demo/docs/program/handoffs/qr-studio-creator-signature-ux-challenge-2026-08-07.md` was unavailable because `/home/hermes/qr-mvp-demo` did not exist in this execution context. The same path was absent from fetched `origin/main`, so the supplied SHA could not be independently recomputed. Implementation followed the complete frozen requirements included directly in the dispatch. Product Architect should compare this report/diff with the authoritative SOW copy before acceptance.
 
+## Git evidence
+
+- Implementation/evidence commit: `8f0bad86cc04a9e29e747ba80bd013fcfbd56e09`
+- The implementation commit was pushed to `origin/studio/creator-signature-icon-ux-concept` and local/remote SHA equality was verified.
+- GitHub open PR count for the target head was `0`.
+
 ## Child route
 
 - Route path: `/concepts/creator-signature-ux/studio`
