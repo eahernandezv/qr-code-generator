@@ -14,8 +14,7 @@ const App: React.FC = () => {
   const pathname = typeof window !== 'undefined' ? window.location.pathname : '/'
   const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams()
   const showSecondaryWorkflow = searchParams.get('workflow') === 'internal'
-  const useClassicStudio = showSecondaryWorkflow || searchParams.get('studio') === 'classic' || searchParams.get('uxVariant') === 'scroll'
-  if (pathname === CREATOR_SIGNATURE_CONCEPT_PATH || (pathname === '/' && !useClassicStudio)) {
+  if (pathname === CREATOR_SIGNATURE_CONCEPT_PATH) {
     return <CreatorSignatureIconConcept />
   }
   const noScrollVariant = !showSecondaryWorkflow && searchParams.get('uxVariant') !== 'scroll'
