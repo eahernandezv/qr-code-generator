@@ -14,8 +14,12 @@ function resetStore() {
 describe('App integration', () => {
   beforeEach(resetStore)
 
-  it('renders the independent icon-first Creator Signature concept only on its child route', async () => {
+  it('renders the independent icon-first Creator Signature concept on the public root and child route', async () => {
     const user = userEvent.setup()
+    const rootView = render(<App />)
+    expect(screen.getByTestId('creator-signature-icon-concept')).toBeInTheDocument()
+    rootView.unmount()
+
     window.history.replaceState({}, '', '/concepts/creator-signature-ux/creator')
     const conceptView = render(<App />)
 
@@ -60,6 +64,7 @@ describe('App integration', () => {
   })
 
   it('keeps the public path focused on the compact editor and destination', () => {
+    window.history.replaceState({}, '', '/?studio=classic')
     render(<App />)
     expect(screen.queryByRole('heading', { name: /Design your QR/i })).not.toBeInTheDocument()
     expect(screen.getByRole('img', { name: 'QR Preview' })).toBeInTheDocument()
@@ -80,6 +85,7 @@ describe('App integration', () => {
 
   it('uses the no-scroll comparison layout as the default public route and keeps scrollable Version A behind an explicit query', async () => {
     const user = userEvent.setup()
+    window.history.replaceState({}, '', '/?studio=classic')
     render(<App />)
     expect(screen.getByTestId('studio-app')).toHaveAttribute('data-ux-variant', 'no-scroll')
     expect(screen.getByRole('region', { name: 'QR Style' })).toHaveAttribute('data-basic-controls-tray', 'true')
@@ -103,6 +109,7 @@ describe('App integration', () => {
 
   it('toggles between Basic QR settings and Creator Signature settings while keeping one shared QR canvas', async () => {
     const user = userEvent.setup()
+    window.history.replaceState({}, '', '/?studio=classic')
     render(<App />)
     expect(screen.getByTestId('studio-app')).toHaveAttribute('data-ux-variant', 'no-scroll')
     const previewZone = screen.getByTestId('qr-side-controls')
@@ -157,6 +164,7 @@ describe('App integration', () => {
 
   it('uses one icon-only five-position Creator Signature radio row', async () => {
     const user = userEvent.setup()
+    window.history.replaceState({}, '', '/?studio=classic')
     render(<App />)
     await user.click(screen.getByRole('button', { name: 'Creator Signature' }))
 
@@ -189,6 +197,7 @@ describe('App integration', () => {
 
   it('edits exactly two independently styled Creator Signature lines with fixed offset choices', async () => {
     const user = userEvent.setup()
+    window.history.replaceState({}, '', '/?studio=classic')
     render(<App />)
     await user.click(screen.getByRole('button', { name: 'Creator Signature' }))
 
@@ -215,6 +224,7 @@ describe('App integration', () => {
 
   it('uses accessible Core-backed Body Color, Corner Color, Style, Corners, and Eyes choices', async () => {
     const user = userEvent.setup()
+    window.history.replaceState({}, '', '/?studio=classic')
     render(<App />)
     expect(screen.queryByRole('combobox')).not.toBeInTheDocument()
     const bodyColors = screen.getByRole('listbox', { name: 'Body Color' })
@@ -256,6 +266,7 @@ describe('App integration', () => {
 
   it('keeps public typing draft-only while internal entitlement can live-update', async () => {
     const user = userEvent.setup()
+    window.history.replaceState({}, '', '/?studio=classic')
     const publicView = render(<App />)
     await user.click(screen.getByRole('button', { name: 'Destination' }))
     await user.type(screen.getByRole('textbox', { name: 'Final destination URL' }), 'public.example')
