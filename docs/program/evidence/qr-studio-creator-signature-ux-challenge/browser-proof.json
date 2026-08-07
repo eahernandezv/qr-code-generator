@@ -1,0 +1,82 @@
+[
+  {
+    "viewport": {
+      "name": "mobile",
+      "width": 390,
+      "height": 844
+    },
+    "status": 200,
+    "url": "http://127.0.0.1:4183/concepts/creator-signature-ux/studio",
+    "consoleErrors": [],
+    "metrics": {
+      "rect": {
+        "x": 21,
+        "y": 383.5,
+        "width": 356,
+        "height": 362,
+        "bottom": 745.5
+      },
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "horizontalOverflow": false,
+      "visibleLeafText": [
+        "A",
+        "A",
+        "M",
+        "A",
+        "A",
+        "M",
+        "mm",
+        "mm",
+        "mm",
+        "mm"
+      ],
+      "selectedCount": 8,
+      "textInputs": 2,
+      "radioGroups": 8
+    },
+    "screenshot": "/home/hermes/QR-Code-Generator/docs/program/evidence/qr-studio-creator-signature-ux-challenge/creator-signature-concept-mobile.png"
+  },
+  {
+    "viewport": {
+      "name": "desktop",
+      "width": 1440,
+      "height": 1000
+    },
+    "status": 200,
+    "url": "http://127.0.0.1:4183/concepts/creator-signature-ux/studio",
+    "consoleErrors": [],
+    "metrics": {
+      "rect": {
+        "x": 169,
+        "y": 91.5,
+        "width": 754,
+        "height": 298,
+        "bottom": 389.5
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "horizontalOverflow": false,
+      "visibleLeafText": [
+        "A",
+        "A",
+        "M",
+        "A",
+        "A",
+        "M",
+        "mm",
+        "mm",
+        "mm",
+        "mm"
+      ],
+      "selectedCount": 8,
+      "textInputs": 2,
+      "radioGroups": 8
+    },
+    "screenshot": "/home/hermes/QR-Code-Generator/docs/program/evidence/qr-studio-creator-signature-ux-challenge/creator-signature-concept-desktop.png"
+  }
+]

@@ -168,6 +168,42 @@ describe('App integration', () => {
     })
   })
 
+  it('mounts the visual Creator Signature control concept only on its child route', async () => {
+    const user = userEvent.setup()
+    window.history.replaceState({}, '', '/concepts/creator-signature-ux/studio')
+    const view = render(<App />)
+
+    const concept = screen.getByRole('region', { name: 'Creator Signature' })
+    expect(concept).toHaveAttribute('data-creator-signature-concept', 'studio')
+    expect(screen.getByRole('img', { name: 'QR Preview' })).toHaveAttribute('data-art-level', 'template-art')
+    expect(screen.getAllByRole('textbox').filter((input) => /^Line [12]$/.test(input.getAttribute('aria-label') ?? ''))).toHaveLength(2)
+
+    const line1Font = screen.getByRole('radiogroup', { name: 'Line 1 font' })
+    const line1Size = screen.getByRole('radiogroup', { name: 'Line 1 size' })
+    const line2Colour = screen.getByRole('radiogroup', { name: 'Line 2 colour' })
+    expect(line1Font.querySelectorAll('[role="radio"]')).toHaveLength(3)
+    expect(line1Size.querySelectorAll('[role="radio"]')).toHaveLength(3)
+    expect(line2Colour.querySelectorAll('[role="radio"]')).toHaveLength(4)
+    expect(screen.getByRole('radiogroup', { name: 'Fixed signature position' }).querySelectorAll('[role="radio"]')).toHaveLength(5)
+    expect(Array.from(screen.getByRole('radiogroup', { name: 'Signature boundary offset' }).querySelectorAll('[role="radio"]')).map((radio) => radio.getAttribute('aria-label'))).toEqual(['0mm', '1mm', '2mm', '3mm'])
+
+    await user.click(line1Font.querySelector('[aria-label="Serif"]')!)
+    await user.click(line1Size.querySelector('[aria-label="Large"]')!)
+    await user.click(line2Colour.querySelector('[aria-label="Accent"]')!)
+    await user.click(screen.getByRole('radio', { name: 'Top left corner' }))
+    await user.click(screen.getByRole('radio', { name: '3mm' }))
+    expect(useStudioStore.getState().project.templateArt?.fields).toMatchObject({
+      line1Font: 'serif', line1Size: 'large', line2Color: 'accent', signaturePosition: 'top-left-corner', boundaryOffsetMm: 3,
+    })
+
+    view.unmount()
+    resetStore()
+    render(<App />)
+    await user.click(screen.getByRole('button', { name: 'Creator Signature' }))
+    expect(screen.queryByTestId('creator-signature-concept')).not.toBeInTheDocument()
+    expect(screen.getByRole('combobox', { name: 'Line 1 font' })).toBeInTheDocument()
+  })
+
   it('uses accessible Core-backed Body Color, Corner Color, Style, Corners, and Eyes choices', async () => {
     const user = userEvent.setup()
     render(<App />)

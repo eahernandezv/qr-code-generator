@@ -9,6 +9,7 @@ import CheckoutPanel from './components/CheckoutPanel'
 const App: React.FC = () => {
   const { project, resetProject } = useStudioStore()
   const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams()
+  const creatorSignatureConcept = typeof window !== 'undefined' && window.location.pathname === '/concepts/creator-signature-ux/studio'
   const showSecondaryWorkflow = searchParams.get('workflow') === 'internal'
   const noScrollVariant = !showSecondaryWorkflow && searchParams.get('uxVariant') !== 'scroll'
   const hasLivePayloadPreviewEntitlement = showSecondaryWorkflow || project.entitlement.type !== 'preview'
@@ -41,7 +42,7 @@ const App: React.FC = () => {
       </header>
 
       <main className={`mx-auto max-w-6xl px-3 sm:px-4 ${noScrollVariant ? 'flex h-[calc(100dvh-41px)] flex-col gap-1.5 overflow-hidden py-1.5' : 'space-y-4 py-3 sm:py-5'}`}>
-        <ArtDirectionPanel noScrollVariant={noScrollVariant} livePreviewPayloadUpdates={hasLivePayloadPreviewEntitlement} />
+        <ArtDirectionPanel noScrollVariant={noScrollVariant} livePreviewPayloadUpdates={hasLivePayloadPreviewEntitlement} creatorSignatureConcept={creatorSignatureConcept} />
 
         {showSecondaryWorkflow && <section aria-labelledby="finish-title" className="space-y-3 border-t border-slate-900 pt-4">
           <div>
