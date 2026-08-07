@@ -58,6 +58,8 @@ export const CREATOR_SIGNATURE_COLORS: ReadonlyArray<{ value: CreatorSignatureCo
 
 export const CREATOR_SIGNATURE_OFFSETS: ReadonlyArray<CreatorSignatureBoundaryOffsetMm> = [0, 1, 2, 3]
 export const CREATOR_SIGNATURE_PX_PER_MM = 4
+export const BOTTOM_SIGNATURE_LINE1_BASE_OFFSET_MM = 2
+export const LINE_GAP_REDUCTION_MM = 2
 
 const escapeXml = (value: string) => value.replace(/[<>&"']/g, (character) => ({
   '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&apos;',
@@ -241,7 +243,7 @@ function textLayer(fields: CreatorSignatureTemplateFields, geometry: CreatorSign
   const line2Size = selectedFontSize(fields.line2Size, 2)
   const line1Font = selectedFont(fields.line1Font)
   const line2Font = selectedFont(fields.line2Font)
-  const lineGap = line1Size + CREATOR_SIGNATURE_PX_PER_MM
+  const lineGap = line1Size + CREATOR_SIGNATURE_PX_PER_MM - LINE_GAP_REDUCTION_MM * CREATOR_SIGNATURE_PX_PER_MM
   const lines = (
     anchor: 'start' | 'middle' | 'end',
     x: number,
@@ -254,7 +256,7 @@ function textLayer(fields: CreatorSignatureTemplateFields, geometry: CreatorSign
   const reservedShelf = `<rect data-signature-reserved-shelf="true" x="${labelSlot.x}" y="${labelSlot.y}" width="${labelSlot.width}" height="${labelSlot.height}" fill="none" stroke="none" aria-hidden="true"/>`
 
   const shelfTextY = geometry.qrContent.y + geometry.qrContent.height + 22
-    + selectedOffset(fields.boundaryOffsetMm) * CREATOR_SIGNATURE_PX_PER_MM
+    + (BOTTOM_SIGNATURE_LINE1_BASE_OFFSET_MM + selectedOffset(fields.boundaryOffsetMm)) * CREATOR_SIGNATURE_PX_PER_MM
   const topShelfTextY = geometry.qrContent.y - 22 - lineGap
     - selectedOffset(fields.boundaryOffsetMm) * CREATOR_SIGNATURE_PX_PER_MM
   if (position === 'bottom-left-outside') return `${reservedShelf}${lines('start', geometry.qrContent.x, shelfTextY)}`
