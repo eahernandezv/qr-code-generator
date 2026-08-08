@@ -103,7 +103,7 @@ function IconButton({ selected, label, onClick, children, role, checked, tabInde
 
 export default function TemplateArtControls({ compact = false, inspectorVariant = 'shared-active-line' }: {
   compact?: boolean
-  inspectorVariant?: 'per-line' | 'shared-active-line'
+  inspectorVariant?: 'per-line' | 'shared-active-line' | 'card-alt'
 }) {
   const { project, setTemplateArt } = useStudioStore()
   const spec = project.templateArt ?? DEFAULT_CREATOR_SIGNATURE
@@ -134,9 +134,82 @@ export default function TemplateArtControls({ compact = false, inspectorVariant 
   const selectedPosition = fields.signaturePosition ?? 'bottom-right-outside'
   const selectedOffset = fields.boundaryOffsetMm ?? 0
   const [activeLine, setActiveLine] = useState<1 | 2>(1)
+  const [activeStyleRow, setActiveStyleRow] = useState<'font' | 'size' | 'colour'>('font')
+  const [showPlacement, setShowPlacement] = useState(false)
   const activeFont = (activeLine === 1 ? fields.line1Font : fields.line2Font) ?? 'sans'
   const activeSize = (activeLine === 1 ? fields.line1Size : fields.line2Size) ?? 'medium'
   const activeColour = (activeLine === 1 ? fields.line1Color : fields.line2Color) ?? (activeLine === 1 ? 'dark-ink' : 'secondary')
+
+  if (inspectorVariant === 'card-alt') {
+    const activeText = activeLine === 1 ? fields.line1Text ?? fields.signatureText ?? '' : fields.line2Text ?? fields.handleText ?? ''
+    const styleRows = [
+      { value: 'font' as const, label: 'Font', glyph: 'Aa' },
+      { value: 'size' as const, label: 'Size', glyph: 'T↕' },
+      { value: 'colour' as const, label: 'Colour', glyph: '●' },
+    ]
+    return <section aria-labelledby="creator-signature-card-alt-title" className={`${panelClass} ${compact ? 'p-1.5' : 'p-3'}`} data-template-id="creator-signature" data-template-controls-tray="creator-signature" data-signature-inspector="card-alt" data-ui-panel="harmony">
+      <h3 id="creator-signature-card-alt-title" className="sr-only">Creator Signature</h3>
+      <div className="rounded-2xl border border-slate-700/80 bg-slate-950/60 p-2 shadow-xl shadow-black/25" data-testid="creator-signature-card-alt">
+        <div role="tablist" aria-label="Signature lines" className="grid grid-cols-2 gap-1 rounded-xl bg-black/25 p-1">
+          {([1, 2] as const).map((line) => {
+            const selected = line === activeLine
+            const text = line === 1 ? fields.line1Text ?? fields.signatureText ?? '' : fields.line2Text ?? fields.handleText ?? ''
+            return <button key={line} id={`signature-line-tab-${line}`} type="button" role="tab" aria-selected={selected} aria-controls="signature-active-line-editor" tabIndex={selected ? 0 : -1} onClick={() => setActiveLine(line)}
+              onKeyDown={(event) => { if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return; event.preventDefault(); const next = line === 1 ? 2 : 1; setActiveLine(next); document.getElementById(`signature-line-tab-${next}`)?.focus() }}
+              className={`relative flex h-9 min-w-0 items-center gap-2 rounded-lg border px-2 text-left transition focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-300 ${selected ? selectedButton : idleButton}`}>
+              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-black/25 text-[10px] font-black">{line}</span>
+              <span className={`truncate text-[11px] font-semibold ${text ? 'text-slate-100' : 'text-slate-400'}`}>{text || `Line ${line}`}</span>
+              {selected && <SelectedDot />}
+            </button>
+          })}
+        </div>
+
+        <label id="signature-active-line-editor" className="mt-1.5 block">
+          <span className="sr-only">Signature line {activeLine}</span>
+          <input aria-label={`Line ${activeLine}`} value={activeText} maxLength={activeLine === 1 ? 32 : 36}
+            onChange={(event) => update(activeLine === 1 ? { line1Text: event.target.value } : { line2Text: event.target.value })}
+            placeholder={activeLine === 1 ? 'Signature line 1' : '@handle · line 2'}
+            className={`h-9 w-full rounded-xl border border-white/10 bg-white/[.045] px-3 text-xs text-slate-100 outline-none placeholder:text-slate-500 ${HARMONY_FOCUS_INPUT}`} />
+        </label>
+
+        <div role="tablist" aria-label={`Line ${activeLine} style controls`} className="mt-1.5 grid grid-cols-3 gap-1 rounded-xl bg-black/20 p-1">
+          {styleRows.map((row) => {
+            const selected = activeStyleRow === row.value
+            return <button key={row.value} id={`signature-style-tab-${row.value}`} type="button" role="tab" aria-selected={selected} tabIndex={selected ? 0 : -1} onClick={() => setActiveStyleRow(row.value)}
+              onKeyDown={(event) => { const index = styleRows.findIndex(({ value }) => value === row.value); let next = index; if (event.key === 'ArrowRight') next = (index + 1) % styleRows.length; else if (event.key === 'ArrowLeft') next = (index - 1 + styleRows.length) % styleRows.length; else return; event.preventDefault(); setActiveStyleRow(styleRows[next].value); document.getElementById(`signature-style-tab-${styleRows[next].value}`)?.focus() }}
+              className={`flex h-8 items-center justify-center gap-1 rounded-lg border text-[10px] font-bold ${selected ? selectedButton : idleButton}`}>
+              <span aria-hidden="true" className="text-xs">{row.glyph}</span><span>{row.label}</span>
+            </button>
+          })}
+        </div>
+
+        <div className="mt-1" data-testid={`signature-style-row-${activeStyleRow}`}>
+          {activeStyleRow === 'font' && <div role="group" aria-label={`Line ${activeLine} font`} className="grid grid-cols-6 gap-1 rounded-xl bg-black/20 p-1">
+            {CREATOR_SIGNATURE_FONTS.map((option) => <IconButton key={option.value} selected={activeFont === option.value} label={`Line ${activeLine} ${option.label.toLowerCase()} font`} onClick={() => update(linePatch(activeLine, 'line1Font', 'line2Font', option.value))} className="h-9"><FontIcon value={option.value} /></IconButton>)}
+          </div>}
+          {activeStyleRow === 'size' && <div role="group" aria-label={`Line ${activeLine} size`} className="grid grid-cols-4 gap-1 rounded-xl bg-black/20 p-1">
+            {CREATOR_SIGNATURE_FONT_SIZES.map((option) => <IconButton key={option.value} selected={activeSize === option.value} label={`Line ${activeLine} ${option.label.toLowerCase()} size`} onClick={() => update(linePatch(activeLine, 'line1Size', 'line2Size', option.value))} className="h-9"><SizeIcon value={option.value} /></IconButton>)}
+          </div>}
+          {activeStyleRow === 'colour' && <div role="group" aria-label={`Line ${activeLine} colour`} className="grid grid-cols-4 gap-1 rounded-xl bg-black/20 p-1">
+            {CREATOR_SIGNATURE_COLORS.map((option) => <IconButton key={option.value} selected={activeColour === option.value} label={`Line ${activeLine} ${option.label.toLowerCase()}`} onClick={() => update(linePatch(activeLine, 'line1Color', 'line2Color', option.value))} className="h-9"><ColourIcon colour={colours[option.value]} /></IconButton>)}
+          </div>}
+        </div>
+
+        <button type="button" aria-expanded={showPlacement} aria-controls="signature-card-placement" onClick={() => setShowPlacement((shown) => !shown)}
+          className={`mt-1.5 flex h-8 w-full items-center justify-between rounded-xl border px-2.5 text-[10px] font-bold focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-300 ${showPlacement ? selectedButton : idleButton}`}>
+          <span>Placement</span><span aria-hidden="true" className="text-slate-400">{showPlacement ? '−' : '+'}</span>
+        </button>
+        {showPlacement && <div id="signature-card-placement" className="mt-1 grid gap-1 sm:grid-cols-[1.3fr_1fr]">
+          <div role="radiogroup" aria-label="Fixed signature position" className="grid grid-cols-5 gap-1 rounded-xl bg-black/20 p-1">
+            {POSITIONS.map((option, index) => { const selected = selectedPosition === option.value; return <IconButton key={option.value} id={`signature-position-${option.value}`} role="radio" selected={selected} checked={selected} tabIndex={selected ? 0 : -1} label={option.label} onClick={() => update({ signaturePosition: option.value })} onKeyDown={(event) => moveRadio(event, POSITIONS, index, (next) => update({ signaturePosition: next.value }), (next) => `signature-position-${next.value}`)} className="h-9"><PositionIcon value={option.value} /></IconButton> })}
+          </div>
+          <div role="radiogroup" aria-label="Signature boundary offset" className="grid grid-cols-4 gap-1 rounded-xl bg-black/20 p-1">
+            {CREATOR_SIGNATURE_OFFSETS.map((offset, index) => { const selected = selectedOffset === offset; return <IconButton key={offset} id={`signature-offset-${offset}`} role="radio" selected={selected} checked={selected} tabIndex={selected ? 0 : -1} label={`${offset}mm boundary offset`} onClick={() => update({ boundaryOffsetMm: offset })} onKeyDown={(event) => moveRadio(event, CREATOR_SIGNATURE_OFFSETS, index, (next) => update({ boundaryOffsetMm: next }), (next) => `signature-offset-${next}`)} className="h-9"><OffsetIcon value={offset} /></IconButton> })}
+          </div>
+        </div>}
+      </div>
+    </section>
+  }
 
   if (inspectorVariant === 'shared-active-line') return <section aria-labelledby="creator-signature-title" className={`${panelClass} ${compact ? 'p-1.5' : 'p-3'}`} data-template-id="creator-signature" data-template-controls-tray="creator-signature" data-signature-inspector="shared-active-line" data-ui-panel="harmony">
     <h3 id="creator-signature-title" className="sr-only">Creator Signature</h3>

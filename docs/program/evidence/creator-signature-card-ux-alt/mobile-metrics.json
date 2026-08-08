@@ -1,0 +1,16 @@
+{
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "documentHeight": 844,
+  "bodyHeight": 844,
+  "card": {
+    "top": 370.5,
+    "bottom": 606.5,
+    "width": 342,
+    "height": 236
+  },
+  "textboxes": 1,
+  "lineTabs": 2
+}

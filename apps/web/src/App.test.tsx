@@ -14,6 +14,45 @@ function resetStore() {
 describe('App integration', () => {
   beforeEach(resetStore)
 
+  it('isolates a QR-Style Creator Signature card behind the card query and preserves two independent lines', async () => {
+    const user = userEvent.setup()
+    window.history.replaceState({}, '', '/?creatorSignatureUX=card')
+    render(<App />)
+    await user.click(screen.getByRole('button', { name: 'Creator Signature' }))
+
+    expect(screen.getByTestId('creator-signature-card-alt')).toBeInTheDocument()
+    expect(screen.getByRole('tablist', { name: 'Signature lines' }).querySelectorAll('[role="tab"]')).toHaveLength(2)
+    expect(screen.getByRole('tab', { name: /Line 1/ })).toHaveAttribute('aria-selected', 'true')
+    screen.getByRole('tab', { name: /Line 1/ }).focus()
+    await user.keyboard('{ArrowRight}')
+    expect(screen.getByRole('tab', { name: /Line 2/ })).toHaveFocus()
+    await user.keyboard('{ArrowLeft}')
+    expect(screen.getAllByRole('textbox')).toHaveLength(1)
+    expect(screen.getByRole('textbox', { name: 'Line 1' })).toHaveValue('')
+    expect(screen.queryByRole('textbox', { name: /Line 3|CTA/i })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Placement' })).toHaveAttribute('aria-expanded', 'false')
+
+    await user.type(screen.getByRole('textbox', { name: 'Line 1' }), 'Studio signature')
+    await user.click(screen.getByRole('button', { name: 'Line 1 handwritten font' }))
+    await user.click(screen.getByRole('tab', { name: /Line 2/ }))
+    await user.type(screen.getByRole('textbox', { name: 'Line 2' }), '@studio')
+    await user.click(screen.getByRole('tab', { name: /Size/ }))
+    expect(screen.getByRole('group', { name: 'Line 2 size' }).querySelectorAll('button')).toHaveLength(4)
+    await user.click(screen.getByRole('button', { name: 'Line 2 extra large size' }))
+    await user.click(screen.getByRole('tab', { name: /Colour/ }))
+    await user.click(screen.getByRole('button', { name: 'Line 2 accent' }))
+    await user.click(screen.getByRole('button', { name: 'Placement' }))
+    await user.click(screen.getByRole('radio', { name: 'Top left corner' }))
+    await user.click(screen.getByRole('radio', { name: '3mm boundary offset' }))
+
+    expect(useStudioStore.getState().project.templateArt?.fields).toMatchObject({
+      line1Text: 'Studio signature', line1Font: 'handwritten',
+      line2Text: '@studio', line2Size: 'extra-large', line2Color: 'accent',
+      signaturePosition: 'top-left-corner', boundaryOffsetMm: 3,
+    })
+    expect(screen.queryByText(/textLength|lengthAdjust/)).not.toBeInTheDocument()
+  })
+
   it('uses one shared style toolbar for two independently editable lines on the space-efficient concept route', async () => {
     const user = userEvent.setup()
     window.history.replaceState({}, '', '/concepts/creator-signature-ux/space-creator')

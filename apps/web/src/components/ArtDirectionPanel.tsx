@@ -255,9 +255,10 @@ function IntensityIcon({ intensity }: { intensity: ColorIntensity }) {
 interface ArtDirectionPanelProps {
   noScrollVariant?: boolean
   livePreviewPayloadUpdates?: boolean
+  creatorSignatureCardAlt?: boolean
 }
 
-const ArtDirectionPanel: React.FC<ArtDirectionPanelProps> = ({ noScrollVariant = false, livePreviewPayloadUpdates = false }) => {
+const ArtDirectionPanel: React.FC<ArtDirectionPanelProps> = ({ noScrollVariant = false, livePreviewPayloadUpdates = false, creatorSignatureCardAlt = false }) => {
   const { project, setArtDirection, setTemplateArtLevel } = useStudioStore()
   const [activeFamily, setActiveFamily] = React.useState<ControlFamily>('body-color')
   const [activeSettingsPanel, setActiveSettingsPanel] = React.useState<SettingsPanel>('basic')
@@ -303,7 +304,7 @@ const ArtDirectionPanel: React.FC<ArtDirectionPanelProps> = ({ noScrollVariant =
 
       <div className={`grid items-start lg:grid-cols-[minmax(0,1fr)_344px] ${noScrollVariant ? 'gap-1' : 'gap-3'}`}>
         <div className={`order-2 min-w-0 lg:order-1 ${noScrollVariant ? 'space-y-1' : 'space-y-2.5'}`} data-testid="lower-design-controls">
-          {activeSettingsPanel === 'destination' ? <PayloadInput key={project.projectId} livePreviewPayloadUpdates={livePreviewPayloadUpdates} compact={noScrollVariant} /> : activeSettingsPanel === 'creator-signature' ? <TemplateArtControls compact={noScrollVariant} /> : <section aria-labelledby="qr-style-title" className={`${HARMONY_PANEL} ${noScrollVariant ? 'p-1.5' : 'p-3'}`} data-basic-controls-tray="true" data-ui-panel="harmony">
+          {activeSettingsPanel === 'destination' ? <PayloadInput key={project.projectId} livePreviewPayloadUpdates={livePreviewPayloadUpdates} compact={noScrollVariant} /> : activeSettingsPanel === 'creator-signature' ? <TemplateArtControls compact={noScrollVariant} inspectorVariant={creatorSignatureCardAlt ? 'card-alt' : 'shared-active-line'} /> : <section aria-labelledby="qr-style-title" className={`${HARMONY_PANEL} ${noScrollVariant ? 'p-1.5' : 'p-3'}`} data-basic-controls-tray="true" data-ui-panel="harmony">
             <h3 id="qr-style-title" className={`${noScrollVariant ? 'mb-1 text-sm' : 'mb-2 text-base'} font-semibold text-white`}>QR Style</h3>
           {noScrollVariant && <div role="tablist" aria-label="Design control families" className="grid grid-cols-5 gap-1 rounded-xl bg-slate-950 p-1">
             {CONTROL_FAMILIES.map(({ family, label, glyph }) => {
