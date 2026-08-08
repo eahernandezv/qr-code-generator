@@ -244,7 +244,7 @@ describe('App integration', () => {
     await user.click(screen.getByRole('button', { name: 'Line 1 serif font' }))
     await user.click(screen.getByRole('button', { name: 'Line 1 large size' }))
     await user.click(screen.getByRole('button', { name: 'Line 1 body color' }))
-    await user.click(screen.getByRole('button', { name: 'Style line 2' }))
+    await user.click(screen.getByRole('button', { name: 'Edit signature line 2' }))
     expect(screen.getByRole('group', { name: 'Line 2 font' }).querySelectorAll('button')).toHaveLength(6)
     expect(screen.getByRole('group', { name: 'Line 2 size' }).querySelectorAll('button')).toHaveLength(4)
     await user.click(screen.getByRole('button', { name: 'Line 2 mono font' }))

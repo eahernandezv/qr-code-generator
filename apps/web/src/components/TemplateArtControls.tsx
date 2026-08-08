@@ -149,10 +149,10 @@ export default function TemplateArtControls({ compact = false, inspectorVariant 
           const size = (line === 1 ? fields.line1Size : fields.line2Size) ?? 'medium'
           const colour = (line === 1 ? fields.line1Color : fields.line2Color) ?? (line === 1 ? 'dark-ink' : 'secondary')
           return <section key={line} aria-label={`Signature line ${line} settings`} data-active-line={selected ? 'true' : 'false'}
-            className={`min-w-0 rounded-xl border p-1.5 transition ${selected ? 'border-cyan-300/80 bg-cyan-300/10 shadow-[0_0_0_1px_rgba(103,232,249,.14)]' : 'border-white/10 bg-slate-950/55'}`}>
-            <div className="mb-1 flex items-center gap-1">
-              <button type="button" aria-label={`Style line ${line}`} aria-pressed={selected} title={`Style line ${line}`} onClick={() => setActiveLine(line)}
-                className={`relative flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border text-[10px] font-black focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 ${selected ? selectedButton : idleButton}`}>
+            className={`min-w-0 rounded-xl border p-1.5 transition ${selected ? 'border-studio-400/80 bg-studio-500/15 ring-1 ring-studio-400/35 shadow-[0_5px_14px_rgba(49,46,129,.18)]' : 'border-white/10 bg-slate-950/55'}`}>
+              <div className="mb-1 flex items-center justify-between gap-1">
+                <button type="button" aria-pressed={selected} onClick={() => setActiveLine(line)} aria-label={`Edit signature line ${line}`}
+                className={`relative flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border text-[10px] font-black focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-300 focus-visible:ring-offset-1 focus-visible:ring-offset-slate-950 ${selected ? selectedButton : idleButton}`}>
                 {line}{selected && <SelectedDot />}
               </button>
               <span aria-hidden="true" className="flex min-w-0 flex-1 items-center justify-end gap-1 text-slate-300">
@@ -170,9 +170,9 @@ export default function TemplateArtControls({ compact = false, inspectorVariant 
         })}
       </div>
 
-      <section aria-label={`Line ${activeLine} shared style inspector`} className="rounded-xl border border-cyan-300/25 bg-slate-950/55 p-2 shadow-xl shadow-black/20">
-        <div className="mb-1.5 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[.16em] text-cyan-200">
-          <span className="flex h-5 w-5 items-center justify-center rounded-md bg-cyan-300/15 text-[9px]">{activeLine}</span>
+      <section aria-label={`Line ${activeLine} shared style inspector`} className="rounded-xl border border-slate-700/70 bg-slate-950/55 p-2 shadow-xl shadow-black/20">
+        <div className="mb-1.5 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[.16em] text-indigo-100">
+          <span className="flex h-5 w-5 items-center justify-center rounded-md border border-studio-400/70 bg-studio-500/20 text-[9px] text-indigo-100">{activeLine}</span>
           <span>Style</span>
         </div>
         <div className="grid gap-1.5">

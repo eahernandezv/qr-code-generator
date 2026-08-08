@@ -81,6 +81,15 @@ test('B31 uses one mobile selection grammar across QR Style, Creator Signature, 
   expect(panels['Creator Signature']).toEqual(panels['QR Style'])
   expect(panels.Destination).toEqual(panels['QR Style'])
 
+  await page.getByRole('button', { name: 'Creator Signature', exact: true }).click()
+  const activeSignatureLine = page.locator('[aria-label="Signature line 1 settings"][data-active-line="true"]')
+  await expect(activeSignatureLine).toBeVisible()
+  const activeSignatureLineStyle = await activeSignatureLine.evaluate(styles)
+  expect(activeSignatureLineStyle.borderColor).not.toContain('103, 232, 249')
+  expect(activeSignatureLineStyle.backgroundColor).not.toContain('103, 232, 249')
+  expect(activeSignatureLineStyle.borderColor).toBe('rgba(125, 150, 255, 0.8)')
+
+  await page.getByRole('button', { name: 'Destination', exact: true }).click()
   const selectedUrl = page.getByRole('button', { name: 'URL', exact: true })
   await expect(selectedUrl).toHaveAttribute('data-selection-token', 'primary')
   await expect(selectedUrl).toHaveAttribute('data-selection-state', 'selected')
