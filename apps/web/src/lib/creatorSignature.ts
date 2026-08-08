@@ -200,12 +200,12 @@ const FONT_FAMILIES: Record<CreatorSignatureFont, string> = {
   display: 'Impact,Arial Black,fantasy,sans-serif',
 }
 
-const FONT_VISUAL_ATTRIBUTES: Record<CreatorSignatureFont, { style?: string; weight1: number; weight2: number; letterSpacing1: string; letterSpacing2: string }> = {
+const FONT_VISUAL_ATTRIBUTES: Record<CreatorSignatureFont, { style?: string; scale?: number; weight1: number; weight2: number; letterSpacing1: string; letterSpacing2: string }> = {
   sans: { weight1: 750, weight2: 550, letterSpacing1: '-0.5', letterSpacing2: '0' },
   serif: { weight1: 700, weight2: 520, letterSpacing1: '0', letterSpacing2: '0' },
   mono: { weight1: 650, weight2: 520, letterSpacing1: '-0.2', letterSpacing2: '0.2' },
-  cursive: { style: 'italic', weight1: 650, weight2: 500, letterSpacing1: '0.2', letterSpacing2: '0.1' },
-  handwritten: { style: 'italic', weight1: 520, weight2: 460, letterSpacing1: '0.7', letterSpacing2: '0.5' },
+  cursive: { style: 'italic', scale: 1.16, weight1: 650, weight2: 500, letterSpacing1: '0.2', letterSpacing2: '0.1' },
+  handwritten: { style: 'italic', scale: 1.18, weight1: 520, weight2: 460, letterSpacing1: '0.7', letterSpacing2: '0.5' },
   display: { weight1: 900, weight2: 800, letterSpacing1: '0.6', letterSpacing2: '0.45' },
 }
 
@@ -235,10 +235,15 @@ function selectedFont(value: CreatorSignatureFont | undefined): CreatorSignature
 
 function fontVisualAttributes(font: CreatorSignatureFont, line: 1 | 2, size: number): string {
   const attributes = FONT_VISUAL_ATTRIBUTES[font]
+  const renderedSize = Math.round(size * (attributes.scale ?? 1))
   const style = attributes.style ? ` font-style="${attributes.style}"` : ''
   const weight = line === 1 ? attributes.weight1 : attributes.weight2
   const letterSpacing = line === 1 ? attributes.letterSpacing1 : attributes.letterSpacing2
-  return `font-family="${FONT_FAMILIES[font]}" font-size="${size}"${style} font-weight="${weight}" letter-spacing="${letterSpacing}"`
+  return `font-family="${FONT_FAMILIES[font]}" font-size="${renderedSize}"${style} font-weight="${weight}" letter-spacing="${letterSpacing}"`
+}
+
+function renderedFontSize(size: number, font: CreatorSignatureFont): number {
+  return Math.round(size * (FONT_VISUAL_ATTRIBUTES[font].scale ?? 1))
 }
 
 function selectedFontSize(value: CreatorSignatureFontSize | undefined, line: 1 | 2): number {
@@ -260,7 +265,9 @@ function textLayer(fields: CreatorSignatureTemplateFields, geometry: CreatorSign
   const line2Size = selectedFontSize(fields.line2Size, 2)
   const line1Font = selectedFont(fields.line1Font)
   const line2Font = selectedFont(fields.line2Font)
-  const lineGap = Math.max(line1Size - CREATOR_SIGNATURE_PX_PER_MM, line2Size + 3)
+  const line1RenderedSize = renderedFontSize(line1Size, line1Font)
+  const line2RenderedSize = renderedFontSize(line2Size, line2Font)
+  const lineGap = Math.max(line1RenderedSize - CREATOR_SIGNATURE_PX_PER_MM, line2RenderedSize + 3)
   const lines = (
     anchor: 'start' | 'middle' | 'end',
     x: number,

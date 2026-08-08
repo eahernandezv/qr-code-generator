@@ -215,9 +215,20 @@ describe('Creator Signature template contract', () => {
     const renderedTypeStyles = CREATOR_SIGNATURE_FONTS.map(({ value }) => {
       const svg = composeCreatorSignatureSvg(qr, { line1Text: 'Creator', line1Font: value })
       return svg.match(/<text data-signature-line="1"[^>]*>/)![0]
-        .match(/font-family="[^"]+" font-size="22"(?: font-style="[^"]+")? font-weight="[^"]+" letter-spacing="[^"]+"/)![0]
+        .match(/font-family="[^"]+" font-size="[0-9]+"(?: font-style="[^"]+")? font-weight="[^"]+" letter-spacing="[^"]+"/)![0]
     })
     expect(new Set(renderedTypeStyles).size).toBe(CREATOR_SIGNATURE_FONTS.length)
+    const cursive = composeCreatorSignatureSvg(qr, { line1Text: 'Creator', line1Font: 'cursive', line2Text: 'Handle', line2Font: 'cursive' })
+    const handwritten = composeCreatorSignatureSvg(qr, { line1Text: 'Creator', line1Font: 'handwritten', line2Text: 'Handle', line2Font: 'handwritten' })
+    expect(cursive).toContain('data-signature-font="cursive"')
+    expect(cursive).toContain('font-size="26" font-style="italic"')
+    expect(cursive).toContain('font-size="17" font-style="italic"')
+    expect(handwritten).toContain('data-signature-font="handwritten"')
+    expect(handwritten).toContain('font-size="26" font-style="italic"')
+    expect(handwritten).toContain('font-size="18" font-style="italic"')
+    const yPositions = (svg: string) => [...svg.matchAll(/data-signature-line="([12])"[^>]*y="([0-9.]+)"/g)].map((match) => Number(match[2]))
+    expect(yPositions(cursive)[1] - yPositions(cursive)[0]).toBe(22)
+    expect(yPositions(handwritten)[1] - yPositions(handwritten)[0]).toBe(22)
 
     const medium = composeCreatorSignatureSvg(qr, { line1Text: 'Creator', line2Text: 'Subtitle' })
     const extraSmall = composeCreatorSignatureSvg(qr, { line1Text: 'Creator', line2Text: 'Subtitle', line1Size: 'extra-large', line2Size: 'small' })
