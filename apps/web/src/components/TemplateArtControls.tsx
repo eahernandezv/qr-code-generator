@@ -145,21 +145,13 @@ export default function TemplateArtControls({ compact = false, inspectorVariant 
         {([1, 2] as const).map((line) => {
           const selected = activeLine === line
           const text = line === 1 ? fields.line1Text ?? fields.signatureText ?? '' : fields.line2Text ?? fields.handleText ?? ''
-          const font = (line === 1 ? fields.line1Font : fields.line2Font) ?? 'sans'
-          const size = (line === 1 ? fields.line1Size : fields.line2Size) ?? 'medium'
-          const colour = (line === 1 ? fields.line1Color : fields.line2Color) ?? (line === 1 ? 'dark-ink' : 'secondary')
           return <section key={line} aria-label={`Signature line ${line} settings`} data-active-line={selected ? 'true' : 'false'}
             className={`min-w-0 rounded-xl border p-1.5 transition ${selected ? 'border-studio-400/80 bg-studio-500/15 ring-1 ring-studio-400/35 shadow-[0_5px_14px_rgba(49,46,129,.18)]' : 'border-white/10 bg-slate-950/55'}`}>
-              <div className="mb-1 flex items-center justify-between gap-1">
-                <button type="button" aria-pressed={selected} onClick={() => setActiveLine(line)} aria-label={`Edit signature line ${line}`}
+            <div className="mb-1 flex items-center gap-1">
+              <button type="button" aria-pressed={selected} onClick={() => setActiveLine(line)} aria-label={`Edit signature line ${line}`}
                 className={`relative flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border text-[10px] font-black focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-300 focus-visible:ring-offset-1 focus-visible:ring-offset-slate-950 ${selected ? selectedButton : idleButton}`}>
                 {line}{selected && <SelectedDot />}
               </button>
-              <span aria-hidden="true" className="flex min-w-0 flex-1 items-center justify-end gap-1 text-slate-300">
-                <span className="flex h-6 w-6 items-center justify-center rounded-md bg-black/25"><FontIcon value={font} /></span>
-                <span className="flex h-6 w-6 items-center justify-center rounded-md bg-black/25"><SizeIcon value={size} /></span>
-                <span className="flex h-6 w-6 items-center justify-center rounded-md bg-black/25"><ColourIcon colour={colours[colour]} /></span>
-              </span>
             </div>
             <input aria-label={`Line ${line}`} value={text} maxLength={line === 1 ? 32 : 36}
               onFocus={() => setActiveLine(line)}
