@@ -6,4 +6,4 @@
 Running 1 test using 1 worker
 
 [1/1] [chromium-desktop] › e2e/ux-harmony-b31.spec.ts:43:1 › B31 uses one mobile selection grammar across QR Style, Creator Signature, and Destination
-  1 passed (4.0s)
+  1 passed (4.1s)

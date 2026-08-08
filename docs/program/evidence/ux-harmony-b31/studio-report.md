@@ -31,6 +31,7 @@
 - `apps/web/src/components/uiSelectionGrammar.ts`
 - `apps/web/src/components/ArtDirectionPanel.tsx`
 - `apps/web/src/components/TemplateArtControls.tsx`
+- `apps/web/src/components/CreatorSignatureIconConcept.tsx` (gate-only hook cleanup; no visual behavior change)
 - `apps/web/src/components/PayloadInput.tsx`
 - `apps/web/e2e/ux-harmony-b31.spec.ts`
 - `docs/program/evidence/ux-harmony-b31/studio-audit.md`
@@ -48,7 +49,7 @@ No `qr-core`, artistic engine, commerce contract, pricing, checkout, paid-gate, 
 | Install | `CI=1 npm exec --yes pnpm@9.0.0 -- install --frozen-lockfile` | PASS — lockfile current; 423 packages linked; 2.6s. |
 | Dependency builds + focused unit | build `@qr/qr-core`, build `@qr/artistic-qr`, then `pnpm --filter @qr/web test src/App.test.tsx` | PASS — 1 file, **10/10 tests**. Includes shared canvas, exact two-line Signature behavior, public draft-only gate, and accessible style controls. See `focused-unit-final.log`. |
 | Web production build | `pnpm --filter @qr/web build` | PASS — TypeScript + Vite, 128 modules, production bundle emitted. See `build-final.log`. |
-| Focused changed-file lint | ESLint on the five changed TS/TSX files with `--max-warnings 0` | PASS — zero findings. See `focused-lint-final.log`. |
+| Full web lint | `pnpm run lint` | PASS — zero errors and zero warnings after applying the established ref-capture cleanup to the concept route. See `lint-final.log`. |
 | B31 browser regression | Node 22 + canonical `pnpm --filter @qr/web test:e2e e2e/ux-harmony-b31.spec.ts` with the repository Playwright config | PASS — **1/1 Chromium test**. See `focused-browser-final.log`. |
 | Whitespace | `git diff --check` and staged `git diff --cached --check` | PASS. |
 | Visual inspection | Three final 390×844 screenshots plus pixel inspection | PASS — no clipped controls or vertical overflow; intended QR Style carousel edge affordance retained. |
@@ -74,7 +75,7 @@ No `qr-core`, artistic engine, commerce contract, pricing, checkout, paid-gate, 
 
 - First focused-unit invocation used an incorrect `npm exec` argument shape; it was superseded by `focused-unit-final.log` after building required workspace packages.
 - First Playwright attempt exposed host Node 18 while Playwright requires Node 20+; the final run used ephemeral Node 22.23.2. A second attempt exposed the host's alternate local-library path; the final run set `PLAYWRIGHT_LD_LIBRARY_PATH=$HOME/.cache/ms-playwright/local-libs/root/usr/lib/x86_64-linux-gnu` and passed.
-- Repository-wide web lint remains red on a **pre-existing, untouched** `react-hooks/exhaustive-deps` warning in `apps/web/src/components/CreatorSignatureIconConcept.tsx:169` (the script enforces zero warnings). All B31 changed files lint clean. This does not affect the customer-facing B31 route or the passing build/browser gate, but Product Architect may choose to schedule the unrelated cleanup.
+- The first fresh repository-wide lint exposed a pre-existing `react-hooks/exhaustive-deps` warning in `CreatorSignatureIconConcept.tsx`. B31 closed it with the same stable ref-capture pattern already used by the adjacent space-efficient concept; the final full lint is clean and runtime behavior is unchanged.
 - Visual evidence is Chromium at 390×844. No cross-browser matrix was required by this bounded SOW.
 
 ## Product Architect next step

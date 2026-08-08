@@ -165,8 +165,9 @@ export default function CreatorSignatureIconConcept() {
   const initialTemplateArtLevel = React.useRef(project.templateArtLevel ?? 'basic')
 
   React.useEffect(() => {
+    const restoreTemplateArtLevel = initialTemplateArtLevel.current
     setTemplateArtLevel('template-art')
-    return () => setTemplateArtLevel(initialTemplateArtLevel.current)
+    return () => setTemplateArtLevel(restoreTemplateArtLevel)
   }, [setTemplateArtLevel])
 
   const colours: Record<CreatorSignatureColor, string> = {

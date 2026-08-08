@@ -1,14 +1,3 @@
 
 > @qr/web@0.1.0 lint /tmp/qr-studio-b31/apps/web
 > eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0
-
-
-/tmp/qr-studio-b31/apps/web/src/components/CreatorSignatureIconConcept.tsx
-  169:62  warning  The ref value 'initialTemplateArtLevel.current' will likely have changed by the time this effect cleanup function runs. If this ref points to a node rendered by React, copy 'initialTemplateArtLevel.current' to a variable inside the effect, and use that variable in the cleanup function  react-hooks/exhaustive-deps
-
-✖ 1 problem (0 errors, 1 warning)
-
-ESLint found too many warnings (maximum: 0).
-/tmp/qr-studio-b31/apps/web:
- ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @qr/web@0.1.0 lint: `eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0`
-Exit status 1
