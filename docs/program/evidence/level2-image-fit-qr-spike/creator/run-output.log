@@ -1,0 +1,14 @@
+{
+  "totalAttempts": 768,
+  "generated": 640,
+  "encodingRejected": 128,
+  "scanPassed": 316,
+  "scanFailed": 324,
+  "distinctVersionsGenerated": [15, 7, 10],
+  "eccGenerated": ["Q", "H"],
+  "masksGenerated": [0, 1, 2, 3, 4, 5, 6, 7],
+  "startedAt": "2026-08-08T21:55:03.206Z",
+  "generatedAt": "2026-08-08T22:00:15.868Z",
+  "durationSeconds": 312.662,
+  "exitCode": 0
+}

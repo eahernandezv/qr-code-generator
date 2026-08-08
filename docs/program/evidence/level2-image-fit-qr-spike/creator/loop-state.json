@@ -1,0 +1,42 @@
+{
+  "schemaVersion": "observable-work-loop.v2",
+  "loopId": "level2-image-fit-qr-spike-creator-2026-08-08",
+  "objective": "Prove whether payload/slug/version/ECC/mask search improves image-fit QR quality while preserving controlled decoder safety.",
+  "scope": "Bounded QR Creator spike and evidence only; no frozen contract, UI, commerce, redirect runtime, or production package changes.",
+  "status": "COMPLETE",
+  "cycle": 3,
+  "currentStage": "final-verification",
+  "processOutcome": "exited",
+  "artifactDecision": "partial",
+  "criteria": {
+    "twoFixtures": "accepted",
+    "longAndShortPayloads": "accepted",
+    "versionsQHAndAllMasks": "accepted",
+    "concreteFitOrScanDifference": "accepted",
+    "physicalScanHonesty": "accepted",
+    "productReadyVisualFit": "partial"
+  },
+  "attempts": {
+    "canonicalTwoStrengthMatrix": { "outcome": "exited", "exitCode": 0, "attempts": 768 },
+    "expandedFourStrengthMatrix": { "outcome": "timed_out", "exitCode": 124, "timeoutSeconds": 600, "artifactDecision": "rejected" }
+  },
+  "authorization": {
+    "allowed": ["evidence harness", "local fixtures", "decoder tests", "local branch commit"],
+    "forbidden": ["modify frozen contracts", "merge main", "claim physical scans", "implement redirect runtime"]
+  },
+  "acceptedEvidence": [
+    "creator-report.md",
+    "candidates.json",
+    "contact-sheet.png",
+    "fixtures/bold-diamond.png",
+    "fixtures/medium-fox.png",
+    "sha256.txt"
+  ],
+  "blockers": [
+    "QR Core functional-region metadata omits alignment patterns",
+    "2% modifications are scan-safe but not clearly recognizable; 12% modifications fail decoder validation"
+  ],
+  "nextTransition": "QR Product Architect independently reviews PARTIAL verdict and approves or rejects the proposed functional-region contract addition.",
+  "createdAt": "2026-08-08T21:42:38Z",
+  "updatedAt": "2026-08-08T22:16:36Z"
+}
