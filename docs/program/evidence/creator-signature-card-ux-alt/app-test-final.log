@@ -1,0 +1,24 @@
+
+=== app-test FINAL ===
+
+> @qr/web@0.1.0 test /tmp/qr-studio-card-alt/apps/web
+> vitest run "src/App.test.tsx"
+
+
+ RUN  v3.2.6 /tmp/qr-studio-card-alt/apps/web
+
+ ✓ src/App.test.tsx (11 tests) 4056ms
+   ✓ App integration > isolates a QR-Style Creator Signature card behind the card query and preserves two independent lines  1066ms
+   ✓ App integration > uses one shared style toolbar for two independently editable lines on the space-efficient concept route  377ms
+   ✓ App integration > renders the independent icon-first Creator Signature concept only on its child route  422ms
+   ✓ App integration > edits exactly two independently styled Creator Signature lines with fixed offset choices  395ms
+   ✓ App integration > uses accessible Core-backed Body Color, Corner Color, Style, Corners, and Eyes choices  662ms
+   ✓ App integration > keeps public typing draft-only while internal entitlement can live-update  323ms
+
+ Test Files  1 passed (1)
+      Tests  11 passed (11)
+   Start at  13:34:02
+   Duration  6.12s (transform 615ms, setup 382ms, collect 744ms, tests 4.06s, environment 478ms, prepare 246ms)
+
+
+EXIT_CODE=0

@@ -1,0 +1,11 @@
+
+> @qr/web@0.1.0 test:e2e /tmp/qr-studio-card-alt/apps/web
+> FONTCONFIG_FILE=${PLAYWRIGHT_FONTCONFIG_FILE:-$HOME/.cache/ms-playwright/local-fonts.conf} LD_LIBRARY_PATH=${PLAYWRIGHT_LD_LIBRARY_PATH:-$HOME/.cache/ms-playwright/local-libs/usr/lib/x86_64-linux-gnu} playwright test "creator-signature-card-alt.spec.ts"
+
+
+Running 1 test using 1 worker
+
+[1/1] [chromium-desktop] › e2e/creator-signature-card-alt.spec.ts:9:1 › card alternative preserves two-line editing in one mobile viewport
+  1 passed (4.2s)
+
+EXIT_CODE=0

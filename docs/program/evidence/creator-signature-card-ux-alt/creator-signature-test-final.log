@@ -1,0 +1,18 @@
+
+=== creator-signature-test FINAL ===
+
+> @qr/web@0.1.0 test /tmp/qr-studio-card-alt/apps/web
+> vitest run "src/lib/creatorSignature.test.ts"
+
+
+ RUN  v3.2.6 /tmp/qr-studio-card-alt/apps/web
+
+ ✓ src/lib/creatorSignature.test.ts (30 tests) 23ms
+
+ Test Files  1 passed (1)
+      Tests  30 passed (30)
+   Start at  13:34:09
+   Duration  1.38s (transform 276ms, setup 338ms, collect 56ms, tests 23ms, environment 531ms, prepare 202ms)
+
+
+EXIT_CODE=0

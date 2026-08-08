@@ -1,0 +1,23 @@
+
+=== web-build FINAL ===
+
+> @qr/web@0.1.0 build /tmp/qr-studio-card-alt/apps/web
+> tsc && vite build
+
+vite v6.4.3 building for production...
+transforming...
+✓ 128 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                                                0.43 kB │ gzip:  0.30 kB
+dist/assets/icon-eye-frame-d-frame-r8G2irT-.svg                4.51 kB │ gzip:  0.46 kB
+dist/assets/icon-eye-frame-leaf-frame-Df2t5M-N.svg             4.64 kB │ gzip:  0.44 kB
+dist/assets/icon-eye-frame-hex-CLqh2H6M.svg                    4.74 kB │ gzip:  0.44 kB
+dist/assets/icon-eye-frame-inset-leaf-frame-BQeTsYzU.svg       4.91 kB │ gzip:  0.46 kB
+dist/assets/icon-eye-frame-diamond-C8cIeFz9.svg                4.91 kB │ gzip:  0.48 kB
+dist/assets/icon-eye-frame-opposing-leaf-frame-C_8ktXhk.svg    5.04 kB │ gzip:  0.48 kB
+dist/assets/index-8qratLJf.css                                34.79 kB │ gzip:  6.86 kB
+dist/assets/index-b0KY8ltK.js                                334.50 kB │ gzip: 96.80 kB │ map: 922.65 kB
+✓ built in 2.77s
+
+EXIT_CODE=0
