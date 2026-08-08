@@ -1,0 +1,27 @@
+
+> @qr/qr-core@0.1.0 build /tmp/qr-studio-b31/packages/qr-core
+> node -e "require('fs').rmSync('dist',{recursive:true,force:true})" && tsc
+
+
+> @qr/artistic-qr@0.1.0 build /tmp/qr-studio-b31/packages/artistic-qr
+> node -e "require('fs').rmSync('dist',{recursive:true,force:true})" && tsc
+
+
+> @qr/web@0.1.0 test /tmp/qr-studio-b31/apps/web
+> vitest run "src/App.test.tsx"
+
+
+ RUN  v3.2.6 /tmp/qr-studio-b31/apps/web
+
+ ✓ src/App.test.tsx (10 tests) 4149ms
+   ✓ App integration > uses one shared style toolbar for two independently editable lines on the space-efficient concept route  822ms
+   ✓ App integration > renders the independent icon-first Creator Signature concept only on its child route  608ms
+   ✓ App integration > toggles between Basic QR settings and Creator Signature settings while keeping one shared QR canvas  357ms
+   ✓ App integration > edits exactly two independently styled Creator Signature lines with fixed offset choices  493ms
+   ✓ App integration > uses accessible Core-backed Body Color, Corner Color, Style, Corners, and Eyes choices  738ms
+   ✓ App integration > keeps public typing draft-only while internal entitlement can live-update  439ms
+
+ Test Files  1 passed (1)
+      Tests  10 passed (10)
+   Start at  09:40:06
+   Duration  6.55s (transform 692ms, setup 418ms, collect 753ms, tests 4.15s, environment 651ms, prepare 179ms)

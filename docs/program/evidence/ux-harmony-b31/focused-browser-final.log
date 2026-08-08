@@ -1,0 +1,9 @@
+
+> @qr/web@0.1.0 test:e2e /tmp/qr-studio-b31/apps/web
+> FONTCONFIG_FILE=${PLAYWRIGHT_FONTCONFIG_FILE:-$HOME/.cache/ms-playwright/local-fonts.conf} LD_LIBRARY_PATH=${PLAYWRIGHT_LD_LIBRARY_PATH:-$HOME/.cache/ms-playwright/local-libs/usr/lib/x86_64-linux-gnu} playwright test "e2e/ux-harmony-b31.spec.ts"
+
+
+Running 1 test using 1 worker
+
+[1/1] [chromium-desktop] › e2e/ux-harmony-b31.spec.ts:43:1 › B31 uses one mobile selection grammar across QR Style, Creator Signature, and Destination
+  1 passed (4.0s)
