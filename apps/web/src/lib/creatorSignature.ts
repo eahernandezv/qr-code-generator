@@ -302,7 +302,7 @@ export function composeCreatorSignatureSvg(
   const geometry = creatorSignatureGeometry(position, options.geometrySource ?? qrSource, boundaryOffsetMm)
   const { qrImage, qrContent, qrCard, labelSlot } = geometry
   const safeQrSource = escapeXml(qrSource)
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 720 720" role="img" aria-label="Creator Signature Template Art QR">
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 720 720" role="img" aria-label="Creator Signature QR">
   <image data-qr-card-zone="${qrCard.x},${qrCard.y},${qrCard.width},${qrCard.height}" data-qr-active-zone="${qrImage.x},${qrImage.y},${qrImage.width},${qrImage.height}" data-qr-content-zone="${qrContent.x},${qrContent.y},${qrContent.width},${qrContent.height}" href="${safeQrSource}" x="${qrImage.x}" y="${qrImage.y}" width="${qrImage.width}" height="${qrImage.height}" preserveAspectRatio="xMidYMid meet"/>
   <g data-template-layer="creator-signature" data-signature-position="${position}" data-signature-offset-mm="${boundaryOffsetMm}" data-signature-slot="${labelSlot.x},${labelSlot.y},${labelSlot.width},${labelSlot.height}">${textLayer(fields, geometry, options.palette ?? {})}</g>
 </svg>`

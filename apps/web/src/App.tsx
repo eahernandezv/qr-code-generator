@@ -16,7 +16,6 @@ const App: React.FC = () => {
   const pathname = typeof window !== 'undefined' ? window.location.pathname : '/'
   const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams()
   const showSecondaryWorkflow = searchParams.get('workflow') === 'internal'
-  const creatorSignatureCardAlt = searchParams.get('creatorSignatureUX') === 'card'
   if (pathname === CREATOR_SIGNATURE_CONCEPT_PATH) {
     return <CreatorSignatureIconConcept />
   }
@@ -54,7 +53,7 @@ const App: React.FC = () => {
       </header>
 
       <main className={`mx-auto max-w-6xl px-3 sm:px-4 ${noScrollVariant ? 'flex h-[calc(100dvh-41px)] flex-col gap-1.5 overflow-hidden py-1.5' : 'space-y-4 py-3 sm:py-5'}`}>
-        <ArtDirectionPanel noScrollVariant={noScrollVariant} livePreviewPayloadUpdates={hasLivePayloadPreviewEntitlement} creatorSignatureCardAlt={creatorSignatureCardAlt} />
+        <ArtDirectionPanel noScrollVariant={noScrollVariant} livePreviewPayloadUpdates={hasLivePayloadPreviewEntitlement} creatorSignatureCardAlt />
 
         {showSecondaryWorkflow && <section aria-labelledby="finish-title" className="space-y-3 border-t border-slate-900 pt-4">
           <div>
