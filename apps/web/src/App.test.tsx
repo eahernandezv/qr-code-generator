@@ -30,7 +30,7 @@ describe('App integration', () => {
     expect(screen.getAllByRole('textbox')).toHaveLength(1)
     expect(screen.getByRole('textbox', { name: 'Line 1' })).toHaveValue('')
     expect(screen.queryByRole('textbox', { name: /Line 3|CTA/i })).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Placement' })).toHaveAttribute('aria-expanded', 'false')
+    expect(screen.getByRole('tab', { name: /Placement/ })).toHaveAttribute('aria-selected', 'false')
 
     await user.type(screen.getByRole('textbox', { name: 'Line 1' }), 'Studio signature')
     await user.click(screen.getByRole('button', { name: 'Line 1 handwritten font' }))
@@ -41,7 +41,7 @@ describe('App integration', () => {
     await user.click(screen.getByRole('button', { name: 'Line 2 extra large size' }))
     await user.click(screen.getByRole('tab', { name: /Colour/ }))
     await user.click(screen.getByRole('button', { name: 'Line 2 accent' }))
-    await user.click(screen.getByRole('button', { name: 'Placement' }))
+    await user.click(screen.getByRole('tab', { name: /Placement/ }))
     await user.click(screen.getByRole('radio', { name: 'Top left corner' }))
     await user.click(screen.getByRole('radio', { name: '3mm boundary offset' }))
 

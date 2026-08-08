@@ -134,8 +134,7 @@ export default function TemplateArtControls({ compact = false, inspectorVariant 
   const selectedPosition = fields.signaturePosition ?? 'bottom-right-outside'
   const selectedOffset = fields.boundaryOffsetMm ?? 0
   const [activeLine, setActiveLine] = useState<1 | 2>(1)
-  const [activeStyleRow, setActiveStyleRow] = useState<'font' | 'size' | 'colour'>('font')
-  const [showPlacement, setShowPlacement] = useState(false)
+  const [activeStyleRow, setActiveStyleRow] = useState<'font' | 'size' | 'colour' | 'placement'>('font')
   const activeFont = (activeLine === 1 ? fields.line1Font : fields.line2Font) ?? 'sans'
   const activeSize = (activeLine === 1 ? fields.line1Size : fields.line2Size) ?? 'medium'
   const activeColour = (activeLine === 1 ? fields.line1Color : fields.line2Color) ?? (activeLine === 1 ? 'dark-ink' : 'secondary')
@@ -146,6 +145,7 @@ export default function TemplateArtControls({ compact = false, inspectorVariant 
       { value: 'font' as const, label: 'Font', glyph: 'Aa' },
       { value: 'size' as const, label: 'Size', glyph: 'T↕' },
       { value: 'colour' as const, label: 'Colour', glyph: '●' },
+      { value: 'placement' as const, label: 'Placement', glyph: '▦' },
     ]
     return <section aria-labelledby="creator-signature-card-alt-title" className={`${panelClass} ${compact ? 'p-1.5' : 'p-3'}`} data-template-id="creator-signature" data-template-controls-tray="creator-signature" data-signature-inspector="card-alt" data-ui-panel="harmony">
       <h3 id="creator-signature-card-alt-title" className="sr-only">Creator Signature</h3>
@@ -172,7 +172,7 @@ export default function TemplateArtControls({ compact = false, inspectorVariant 
             className={`h-9 w-full rounded-xl border border-white/10 bg-white/[.045] px-3 text-xs text-slate-100 outline-none placeholder:text-slate-500 ${HARMONY_FOCUS_INPUT}`} />
         </label>
 
-        <div role="tablist" aria-label={`Line ${activeLine} style controls`} className="mt-1.5 grid grid-cols-3 gap-1 rounded-xl bg-black/20 p-1">
+        <div role="tablist" aria-label={`Line ${activeLine} style controls`} className="mt-1.5 grid grid-cols-4 gap-1 rounded-xl bg-black/20 p-1">
           {styleRows.map((row) => {
             const selected = activeStyleRow === row.value
             return <button key={row.value} id={`signature-style-tab-${row.value}`} type="button" role="tab" aria-selected={selected} tabIndex={selected ? 0 : -1} onClick={() => setActiveStyleRow(row.value)}
@@ -193,20 +193,15 @@ export default function TemplateArtControls({ compact = false, inspectorVariant 
           {activeStyleRow === 'colour' && <div role="group" aria-label={`Line ${activeLine} colour`} className="grid grid-cols-4 gap-1 rounded-xl bg-black/20 p-1">
             {CREATOR_SIGNATURE_COLORS.map((option) => <IconButton key={option.value} selected={activeColour === option.value} label={`Line ${activeLine} ${option.label.toLowerCase()}`} onClick={() => update(linePatch(activeLine, 'line1Color', 'line2Color', option.value))} className="h-9"><ColourIcon colour={colours[option.value]} /></IconButton>)}
           </div>}
+          {activeStyleRow === 'placement' && <div className="grid gap-1" data-testid="signature-card-placement">
+            <div role="radiogroup" aria-label="Fixed signature position" className="grid grid-cols-5 gap-1 rounded-xl bg-black/20 p-1">
+              {POSITIONS.map((option, index) => { const selected = selectedPosition === option.value; return <IconButton key={option.value} id={`signature-position-${option.value}`} role="radio" selected={selected} checked={selected} tabIndex={selected ? 0 : -1} label={option.label} onClick={() => update({ signaturePosition: option.value })} onKeyDown={(event) => moveRadio(event, POSITIONS, index, (next) => update({ signaturePosition: next.value }), (next) => `signature-position-${next.value}`)} className="h-9"><PositionIcon value={option.value} /></IconButton> })}
+            </div>
+            <div role="radiogroup" aria-label="Signature boundary offset" className="grid grid-cols-4 gap-1 rounded-xl bg-black/20 p-1">
+              {CREATOR_SIGNATURE_OFFSETS.map((offset, index) => { const selected = selectedOffset === offset; return <IconButton key={offset} id={`signature-offset-${offset}`} role="radio" selected={selected} checked={selected} tabIndex={selected ? 0 : -1} label={`${offset}mm boundary offset`} onClick={() => update({ boundaryOffsetMm: offset })} onKeyDown={(event) => moveRadio(event, CREATOR_SIGNATURE_OFFSETS, index, (next) => update({ boundaryOffsetMm: next }), (next) => `signature-offset-${next}`)} className="h-9"><OffsetIcon value={offset} /></IconButton> })}
+            </div>
+          </div>}
         </div>
-
-        <button type="button" aria-expanded={showPlacement} aria-controls="signature-card-placement" onClick={() => setShowPlacement((shown) => !shown)}
-          className={`mt-1.5 flex h-8 w-full items-center justify-between rounded-xl border px-2.5 text-[10px] font-bold focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-300 ${showPlacement ? selectedButton : idleButton}`}>
-          <span>Placement</span><span aria-hidden="true" className="text-slate-400">{showPlacement ? '−' : '+'}</span>
-        </button>
-        {showPlacement && <div id="signature-card-placement" className="mt-1 grid gap-1 sm:grid-cols-[1.3fr_1fr]">
-          <div role="radiogroup" aria-label="Fixed signature position" className="grid grid-cols-5 gap-1 rounded-xl bg-black/20 p-1">
-            {POSITIONS.map((option, index) => { const selected = selectedPosition === option.value; return <IconButton key={option.value} id={`signature-position-${option.value}`} role="radio" selected={selected} checked={selected} tabIndex={selected ? 0 : -1} label={option.label} onClick={() => update({ signaturePosition: option.value })} onKeyDown={(event) => moveRadio(event, POSITIONS, index, (next) => update({ signaturePosition: next.value }), (next) => `signature-position-${next.value}`)} className="h-9"><PositionIcon value={option.value} /></IconButton> })}
-          </div>
-          <div role="radiogroup" aria-label="Signature boundary offset" className="grid grid-cols-4 gap-1 rounded-xl bg-black/20 p-1">
-            {CREATOR_SIGNATURE_OFFSETS.map((offset, index) => { const selected = selectedOffset === offset; return <IconButton key={offset} id={`signature-offset-${offset}`} role="radio" selected={selected} checked={selected} tabIndex={selected ? 0 : -1} label={`${offset}mm boundary offset`} onClick={() => update({ boundaryOffsetMm: offset })} onKeyDown={(event) => moveRadio(event, CREATOR_SIGNATURE_OFFSETS, index, (next) => update({ boundaryOffsetMm: next }), (next) => `signature-offset-${next}`)} className="h-9"><OffsetIcon value={offset} /></IconButton> })}
-          </div>
-        </div>}
       </div>
     </section>
   }

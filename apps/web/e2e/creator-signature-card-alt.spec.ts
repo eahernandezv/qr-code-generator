@@ -20,7 +20,7 @@ test('card alternative preserves two-line editing in one mobile viewport', async
   await expect(page.getByRole('tab', { name: /Line 1/ })).toHaveAttribute('aria-selected', 'true')
   await expect(page.getByRole('textbox', { name: 'Line 1' })).toHaveValue('')
   await expect(page.getByRole('tab', { name: /Line 2/ })).toContainText('Line 2')
-  await expect(page.getByRole('button', { name: 'Placement' })).toHaveAttribute('aria-expanded', 'false')
+  await expect(page.getByRole('tab', { name: 'Placement' })).toHaveAttribute('aria-selected', 'false')
 
   await page.getByRole('textbox', { name: 'Line 1' }).fill('Studio signature')
   await page.getByRole('button', { name: 'Line 1 handwritten font' }).click()
@@ -47,7 +47,8 @@ test('card alternative preserves two-line editing in one mobile viewport', async
   fs.writeFileSync(path.join(evidenceDir, 'mobile-metrics.json'), `${JSON.stringify(collapsedMetrics, null, 2)}\n`)
   await page.screenshot({ path: path.join(evidenceDir, 'creator-signature-card-mobile.png'), fullPage: false })
 
-  await page.getByRole('button', { name: 'Placement' }).click()
+  await page.getByRole('tab', { name: 'Placement' }).click()
+  await expect(page.getByRole('tab', { name: 'Placement' })).toHaveAttribute('aria-selected', 'true')
   await expect(page.getByRole('radiogroup', { name: 'Fixed signature position' })).toBeVisible()
   await page.getByRole('radio', { name: 'Top left corner' }).click()
   await page.getByRole('radio', { name: '3mm boundary offset' }).click()
