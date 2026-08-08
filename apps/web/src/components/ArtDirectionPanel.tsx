@@ -17,6 +17,15 @@ import dFrameIcon from '../assets/b26b-icons/icon-eye-frame-d-frame.svg'
 import insetLeafFrameIcon from '../assets/b26b-icons/icon-eye-frame-inset-leaf-frame.svg'
 import starBallIcon from '../assets/b26b-icons/icon-eye-ball-star.svg'
 import diamondBallIcon from '../assets/b26b-icons/icon-eye-ball-diamond.svg'
+import {
+  HARMONY_OPTION_BASE,
+  HARMONY_OPTION_IDLE,
+  HARMONY_OPTION_SELECTED,
+  HARMONY_PANEL,
+  HARMONY_TOP_TAB_BASE,
+  HARMONY_TOP_TAB_IDLE,
+  HARMONY_TOP_TAB_SELECTED,
+} from './uiSelectionGrammar'
 
 type SolidPalette = { primary: string; secondary: string; accent: string; background: string }
 type SolidPreset = { name: string; variants: Record<ColorIntensity, SolidPalette> }
@@ -168,10 +177,10 @@ const QR_SIZES = [
   { value: 0.85, iconSize: 22, label: 'Larger QR size' },
 ] as const
 
-const SELECTOR_TILE_BASE = 'relative flex h-14 w-14 shrink-0 snap-start items-center justify-center overflow-hidden rounded-xl border-2 p-0 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white'
-const SELECTOR_TILE_SELECTED = 'border-white bg-studio-950/70 ring-2 ring-studio-500 ring-offset-2 ring-offset-slate-900'
-const SELECTOR_TILE_IDLE = 'border-slate-700 bg-slate-950/60 hover:border-slate-400'
-const SELECTOR_CHECK = 'absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-white text-[10px] font-black text-slate-950'
+const SELECTOR_TILE_BASE = `flex h-14 w-14 shrink-0 snap-start items-center justify-center overflow-hidden rounded-xl border-2 p-0 ${HARMONY_OPTION_BASE}`
+const SELECTOR_TILE_SELECTED = HARMONY_OPTION_SELECTED
+const SELECTOR_TILE_IDLE = HARMONY_OPTION_IDLE
+const SELECTOR_CHECK = 'absolute right-1.5 top-1.5 flex h-4 w-4 items-center justify-center rounded-full border border-studio-200 bg-white text-[10px] font-black text-studio-950 shadow-sm'
 const SELECTOR_SCROLL_ROW = 'selector-scroll-row flex snap-x gap-2 overflow-x-auto pb-3'
 
 type ControlFamily = 'body-color' | 'corner-color' | 'style' | 'corners' | 'eyes'
@@ -279,19 +288,22 @@ const ArtDirectionPanel: React.FC<ArtDirectionPanelProps> = ({ noScrollVariant =
   return (
     <section aria-label="Live QR design editor" className={`rounded-2xl border border-slate-800 bg-slate-900/70 shadow-2xl shadow-black/20 ${noScrollVariant ? 'p-2' : 'p-3 sm:p-4'}`}>
       <div className={`${noScrollVariant ? 'mb-1' : 'mb-2'} flex items-center justify-between gap-2`}>
-        <div role="group" aria-label="Settings panel" className="grid min-w-0 flex-1 grid-cols-3 rounded-lg bg-slate-950 p-1">
+        <div role="group" aria-label="Settings panel" className="grid min-w-0 flex-1 grid-cols-3 rounded-xl border border-slate-800 bg-slate-950 p-1">
           <button type="button" aria-pressed={activeSettingsPanel === 'basic'} onClick={() => setActiveSettingsPanel('basic')}
-            className={`rounded-md px-1 py-1 text-[9px] font-bold whitespace-nowrap ${activeSettingsPanel === 'basic' ? 'bg-slate-700 text-white' : 'text-slate-500'}`}>QR Style</button>
+            data-selection-token="primary" data-selection-state={activeSettingsPanel === 'basic' ? 'selected' : 'inactive'}
+            className={`${HARMONY_TOP_TAB_BASE} ${activeSettingsPanel === 'basic' ? HARMONY_TOP_TAB_SELECTED : HARMONY_TOP_TAB_IDLE}`}>QR Style</button>
           <button type="button" aria-pressed={activeSettingsPanel === 'creator-signature'} onClick={() => { setTemplateArtLevel('template-art'); setActiveSettingsPanel('creator-signature') }}
-            className={`rounded-md px-1 py-1 text-[9px] font-bold whitespace-nowrap ${activeSettingsPanel === 'creator-signature' ? 'bg-sky-600 text-white' : 'text-slate-400'}`}>Creator Signature</button>
+            data-selection-token="primary" data-selection-state={activeSettingsPanel === 'creator-signature' ? 'selected' : 'inactive'}
+            className={`${HARMONY_TOP_TAB_BASE} ${activeSettingsPanel === 'creator-signature' ? HARMONY_TOP_TAB_SELECTED : HARMONY_TOP_TAB_IDLE}`}>Creator Signature</button>
           <button type="button" aria-pressed={activeSettingsPanel === 'destination'} onClick={() => setActiveSettingsPanel('destination')}
-            className={`rounded-md px-1 py-1 text-[9px] font-bold whitespace-nowrap ${activeSettingsPanel === 'destination' ? 'bg-studio-600 text-white' : 'text-slate-400'}`}>Destination</button>
+            data-selection-token="primary" data-selection-state={activeSettingsPanel === 'destination' ? 'selected' : 'inactive'}
+            className={`${HARMONY_TOP_TAB_BASE} ${activeSettingsPanel === 'destination' ? HARMONY_TOP_TAB_SELECTED : HARMONY_TOP_TAB_IDLE}`}>Destination</button>
         </div>
       </div>
 
       <div className={`grid items-start lg:grid-cols-[minmax(0,1fr)_344px] ${noScrollVariant ? 'gap-1' : 'gap-3'}`}>
         <div className={`order-2 min-w-0 lg:order-1 ${noScrollVariant ? 'space-y-1' : 'space-y-2.5'}`} data-testid="lower-design-controls">
-          {activeSettingsPanel === 'destination' ? <PayloadInput key={project.projectId} livePreviewPayloadUpdates={livePreviewPayloadUpdates} compact={noScrollVariant} /> : activeSettingsPanel === 'creator-signature' ? <TemplateArtControls compact={noScrollVariant} /> : <section aria-labelledby="qr-style-title" className={`rounded-xl border border-slate-700/70 bg-slate-950/35 ${noScrollVariant ? 'p-1.5' : 'p-3'}`} data-basic-controls-tray="true">
+          {activeSettingsPanel === 'destination' ? <PayloadInput key={project.projectId} livePreviewPayloadUpdates={livePreviewPayloadUpdates} compact={noScrollVariant} /> : activeSettingsPanel === 'creator-signature' ? <TemplateArtControls compact={noScrollVariant} /> : <section aria-labelledby="qr-style-title" className={`${HARMONY_PANEL} ${noScrollVariant ? 'p-1.5' : 'p-3'}`} data-basic-controls-tray="true" data-ui-panel="harmony">
             <h3 id="qr-style-title" className={`${noScrollVariant ? 'mb-1 text-sm' : 'mb-2 text-base'} font-semibold text-white`}>QR Style</h3>
           {noScrollVariant && <div role="tablist" aria-label="Design control families" className="grid grid-cols-5 gap-1 rounded-xl bg-slate-950 p-1">
             {CONTROL_FAMILIES.map(({ family, label, glyph }) => {
@@ -308,7 +320,8 @@ const ArtDirectionPanel: React.FC<ArtDirectionPanelProps> = ({ noScrollVariant =
                 tabIndex={selected ? 0 : -1}
                 onClick={() => setActiveFamily(family)}
                 onKeyDown={(event) => moveFamilyFocus(event, family)}
-                className={`flex h-8 items-center justify-center rounded-lg text-base transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white ${selected ? 'bg-studio-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
+                data-selection-token="primary" data-selection-state={selected ? 'selected' : 'inactive'}
+                className={`flex h-8 items-center justify-center rounded-lg border text-base ${HARMONY_OPTION_BASE} ${selected ? HARMONY_OPTION_SELECTED : HARMONY_OPTION_IDLE}`}
               ><span aria-hidden="true">{glyph}</span></button>
             })}
           </div>}

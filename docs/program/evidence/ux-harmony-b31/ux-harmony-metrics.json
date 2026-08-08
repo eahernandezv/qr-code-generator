@@ -1,0 +1,89 @@
+{
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "layout": {
+    "scrollHeight": 844,
+    "clientHeight": 844,
+    "verticalScrollRequired": false
+  },
+  "selectedTabs": {
+    "QR Style": {
+      "backgroundColor": "rgb(63, 79, 216)",
+      "borderColor": "rgba(125, 150, 255, 0.7)",
+      "borderRadius": "8px",
+      "borderWidth": "1px",
+      "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(129, 140, 248, 0.16) 0px 0px 0px 1px, rgba(49, 46, 129, 0.28) 0px 5px 14px 0px",
+      "color": "rgb(255, 255, 255)",
+      "padding": "4px"
+    },
+    "Creator Signature": {
+      "backgroundColor": "rgb(63, 79, 216)",
+      "borderColor": "rgba(125, 150, 255, 0.7)",
+      "borderRadius": "8px",
+      "borderWidth": "1px",
+      "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(129, 140, 248, 0.16) 0px 0px 0px 1px, rgba(49, 46, 129, 0.28) 0px 5px 14px 0px",
+      "color": "rgb(255, 255, 255)",
+      "padding": "4px"
+    },
+    "Destination": {
+      "backgroundColor": "rgb(63, 79, 216)",
+      "borderColor": "rgba(125, 150, 255, 0.7)",
+      "borderRadius": "8px",
+      "borderWidth": "1px",
+      "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(129, 140, 248, 0.16) 0px 0px 0px 1px, rgba(49, 46, 129, 0.28) 0px 5px 14px 0px",
+      "color": "rgb(255, 255, 255)",
+      "padding": "4px"
+    }
+  },
+  "panels": {
+    "QR Style": {
+      "backgroundColor": "rgba(2, 6, 23, 0.4)",
+      "borderColor": "rgba(51, 65, 85, 0.7)",
+      "borderRadius": "12px",
+      "borderWidth": "1px",
+      "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.15) 0px 10px 15px -3px, rgba(0, 0, 0, 0.15) 0px 4px 6px -4px",
+      "color": "rgb(241, 245, 249)",
+      "padding": "6px"
+    },
+    "Creator Signature": {
+      "backgroundColor": "rgba(2, 6, 23, 0.4)",
+      "borderColor": "rgba(51, 65, 85, 0.7)",
+      "borderRadius": "12px",
+      "borderWidth": "1px",
+      "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.15) 0px 10px 15px -3px, rgba(0, 0, 0, 0.15) 0px 4px 6px -4px",
+      "color": "rgb(241, 245, 249)",
+      "padding": "6px"
+    },
+    "Destination": {
+      "backgroundColor": "rgba(2, 6, 23, 0.4)",
+      "borderColor": "rgba(51, 65, 85, 0.7)",
+      "borderRadius": "12px",
+      "borderWidth": "1px",
+      "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.15) 0px 10px 15px -3px, rgba(0, 0, 0, 0.15) 0px 4px 6px -4px",
+      "color": "rgb(241, 245, 249)",
+      "padding": "6px"
+    }
+  },
+  "previewZoneBefore": {
+    "x": 21,
+    "y": 95.5,
+    "width": 356,
+    "height": 264
+  },
+  "previewZoneAfter": {
+    "x": 21,
+    "y": 95.5,
+    "width": 356,
+    "height": 264
+  },
+  "previewZoneStable": true,
+  "disabledCtaContrastRatio": 6.974291299318095,
+  "screenshots": {
+    "QR Style": "/tmp/qr-studio-b31/docs/program/evidence/ux-harmony-b31/qr-style-mobile.png",
+    "Creator Signature": "/tmp/qr-studio-b31/docs/program/evidence/ux-harmony-b31/creator-signature-mobile.png",
+    "Destination": "/tmp/qr-studio-b31/docs/program/evidence/ux-harmony-b31/destination-mobile.png"
+  },
+  "consoleErrors": []
+}

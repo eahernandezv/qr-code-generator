@@ -15,6 +15,12 @@ import {
   CREATOR_SIGNATURE_OFFSETS,
   DEFAULT_CREATOR_SIGNATURE,
 } from '../lib/creatorSignature'
+import {
+  HARMONY_FOCUS_INPUT,
+  HARMONY_OPTION_IDLE,
+  HARMONY_OPTION_SELECTED,
+  HARMONY_PANEL,
+} from './uiSelectionGrammar'
 
 const POSITIONS: ReadonlyArray<{ value: CreatorSignaturePosition; label: string }> = [
   { value: 'bottom-left-outside', label: 'Bottom left' },
@@ -24,13 +30,13 @@ const POSITIONS: ReadonlyArray<{ value: CreatorSignaturePosition; label: string 
   { value: 'top-right-corner', label: 'Top right corner' },
 ]
 
-const panelClass = 'rounded-xl border border-sky-500/30 bg-sky-950/20'
-const iconButton = 'relative flex min-w-0 items-center justify-center rounded-xl border transition duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300'
-const selectedButton = 'border-cyan-300/80 bg-cyan-300/15 text-cyan-100 shadow-[0_0_0_1px_rgba(103,232,249,.16),0_8px_22px_rgba(8,145,178,.16)]'
-const idleButton = 'border-white/10 bg-white/[.035] text-slate-400 hover:border-white/25 hover:bg-white/[.07] hover:text-slate-200'
+const panelClass = HARMONY_PANEL
+const iconButton = 'relative flex min-w-0 items-center justify-center rounded-xl border transition duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-300 focus-visible:ring-offset-1 focus-visible:ring-offset-slate-950'
+const selectedButton = HARMONY_OPTION_SELECTED
+const idleButton = HARMONY_OPTION_IDLE
 
 function SelectedDot() {
-  return <span aria-hidden="true" className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-cyan-300 shadow-[0_0_8px_rgba(103,232,249,.9)]" />
+  return <span aria-hidden="true" className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-studio-200 shadow-[0_0_8px_rgba(165,180,252,.8)]" />
 }
 
 function FontIcon({ value }: { value: CreatorSignatureFont }) {
@@ -132,7 +138,7 @@ export default function TemplateArtControls({ compact = false, inspectorVariant 
   const activeSize = (activeLine === 1 ? fields.line1Size : fields.line2Size) ?? 'medium'
   const activeColour = (activeLine === 1 ? fields.line1Color : fields.line2Color) ?? (activeLine === 1 ? 'dark-ink' : 'secondary')
 
-  if (inspectorVariant === 'shared-active-line') return <section aria-labelledby="creator-signature-title" className={`${panelClass} ${compact ? 'p-2' : 'p-3'}`} data-template-id="creator-signature" data-template-controls-tray="creator-signature" data-signature-inspector="shared-active-line">
+  if (inspectorVariant === 'shared-active-line') return <section aria-labelledby="creator-signature-title" className={`${panelClass} ${compact ? 'p-1.5' : 'p-3'}`} data-template-id="creator-signature" data-template-controls-tray="creator-signature" data-signature-inspector="shared-active-line" data-ui-panel="harmony">
     <h3 id="creator-signature-title" className="sr-only">Creator Signature</h3>
     <div className={`grid ${compact ? 'gap-2' : 'gap-3'}`}>
       <div role="group" aria-label="Signature lines" className="grid grid-cols-2 gap-1.5">
@@ -159,7 +165,7 @@ export default function TemplateArtControls({ compact = false, inspectorVariant 
               onFocus={() => setActiveLine(line)}
               onChange={(event) => update(line === 1 ? { line1Text: event.target.value } : { line2Text: event.target.value })}
               placeholder={line === 1 ? 'Signature line 1' : '@handle · line 2'}
-              className="h-9 w-full rounded-lg border border-white/10 bg-white/[.045] px-2 text-xs text-slate-100 outline-none placeholder:text-slate-500 focus:border-cyan-300/70 focus:ring-2 focus:ring-cyan-300/15" />
+              className={`h-9 w-full rounded-lg border border-white/10 bg-white/[.045] px-2 text-xs text-slate-100 outline-none placeholder:text-slate-500 ${HARMONY_FOCUS_INPUT}`} />
           </section>
         })}
       </div>
@@ -216,7 +222,7 @@ export default function TemplateArtControls({ compact = false, inspectorVariant 
     </div>
   </section>
 
-  return <section aria-labelledby="creator-signature-title" className={`${panelClass} ${compact ? 'p-2' : 'p-3'}`} data-template-id="creator-signature" data-template-controls-tray="creator-signature">
+  return <section aria-labelledby="creator-signature-title" className={`${panelClass} ${compact ? 'p-1.5' : 'p-3'}`} data-template-id="creator-signature" data-template-controls-tray="creator-signature" data-ui-panel="harmony">
     <h3 id="creator-signature-title" className="sr-only">Creator Signature</h3>
     <div className={`grid ${compact ? 'gap-2' : 'gap-3'}`}>
       {([1, 2] as const).map((line) => {
