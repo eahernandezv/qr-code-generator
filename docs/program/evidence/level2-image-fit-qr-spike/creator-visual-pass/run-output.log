@@ -1,0 +1,47 @@
+progress 96/768
+progress 192/768
+progress 288/768
+progress 384/768
+progress 480/768
+progress 576/768
+progress 672/768
+progress 768/768
+{
+  "totalCandidates": 768,
+  "scanPassed": 760,
+  "scanFailed": 8,
+  "selected": 6,
+  "fixtures": [
+    "bold-diamond",
+    "medium-fox"
+  ],
+  "treatments": [
+    "central-logo-pixel",
+    "background-silhouette",
+    "module-recolor"
+  ],
+  "budgets": [
+    0.02,
+    0.04,
+    0.06,
+    0.08
+  ],
+  "versions": [
+    7,
+    10
+  ],
+  "eccLevels": [
+    "Q",
+    "H"
+  ],
+  "masks": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+  ]
+}
