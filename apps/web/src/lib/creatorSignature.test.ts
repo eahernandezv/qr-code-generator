@@ -7,7 +7,6 @@ import {
   CREATOR_SIGNATURE_POSITIONS,
   CREATOR_SIGNATURE_PX_PER_MM,
   BOTTOM_SIGNATURE_LINE1_BASE_OFFSET_MM,
-  LINE_GAP_REDUCTION_MM,
   DEFAULT_CREATOR_SIGNATURE,
 } from './creatorSignature'
 
@@ -132,7 +131,7 @@ describe('Creator Signature template contract', () => {
 
     expect(right.labelSlot.x + right.labelSlot.width).toBe(right.qrContent.x + right.qrContent.width)
     expect(left.labelSlot.x).toBe(left.qrContent.x)
-    const defaultLineGap = 22 + CREATOR_SIGNATURE_PX_PER_MM - LINE_GAP_REDUCTION_MM * CREATOR_SIGNATURE_PX_PER_MM
+    const defaultLineGap = 18
     const topTextY = right.qrContent.y - 22 - defaultLineGap
     const topLine2Baseline = topTextY + defaultLineGap
     expect(right.qrContent.y - (right.labelSlot.y + right.labelSlot.height)).toBeLessThanOrEqual(12)
@@ -191,18 +190,18 @@ describe('Creator Signature template contract', () => {
     expect(three).toContain('data-signature-offset-mm="3"')
   })
 
-  it('adds a stronger built-in 4mm bottom baseline at visible 0mm and tightens the two-line gap by 3mm', () => {
+  it('adds a stronger built-in 4mm bottom baseline at visible 0mm and keeps the enlarged line 2 readable', () => {
     const bottom = composeCreatorSignatureSvg(qr, { line1Text: 'Creator', line2Text: 'Handle', signaturePosition: 'bottom-right-outside', boundaryOffsetMm: 0 })
     const top = composeCreatorSignatureSvg(qr, { line1Text: 'Creator', line2Text: 'Handle', signaturePosition: 'top-right-corner', boundaryOffsetMm: 0 })
     const lineYs = (svg: string) => [...svg.matchAll(/data-signature-line="([12])"[^>]*y="([0-9.]+)"/g)].map((match) => Number(match[2]))
     const bottomGeometry = creatorSignatureGeometry('bottom-right-outside')
     const topGeometry = creatorSignatureGeometry('top-right-corner')
-    const tightenedGap = 22 + CREATOR_SIGNATURE_PX_PER_MM - LINE_GAP_REDUCTION_MM * CREATOR_SIGNATURE_PX_PER_MM
+    const readableGap = 18
 
     expect(lineYs(bottom)[0]).toBe(bottomGeometry.qrContent.y + bottomGeometry.qrContent.height + 22 + BOTTOM_SIGNATURE_LINE1_BASE_OFFSET_MM * CREATOR_SIGNATURE_PX_PER_MM)
-    expect(lineYs(bottom)[1] - lineYs(bottom)[0]).toBe(tightenedGap)
-    expect(lineYs(top)[1] - lineYs(top)[0]).toBe(tightenedGap)
-    expect(lineYs(top)[0]).toBe(topGeometry.qrContent.y - 22 - tightenedGap)
+    expect(lineYs(bottom)[1] - lineYs(bottom)[0]).toBe(readableGap)
+    expect(lineYs(top)[1] - lineYs(top)[0]).toBe(readableGap)
+    expect(lineYs(top)[0]).toBe(topGeometry.qrContent.y - 22 - readableGap)
   })
 
   it('renders all six contracted fonts, four sizes, and keeps position-independent type metrics', () => {
@@ -221,7 +220,7 @@ describe('Creator Signature template contract', () => {
     const extraSmallLines = positions(extraSmall)
 
     expect(mediumLines.map((line) => line.size)).toEqual([22, 15])
-    expect(mediumLines[1].y - mediumLines[0].y).toBe(22 + CREATOR_SIGNATURE_PX_PER_MM - LINE_GAP_REDUCTION_MM * CREATOR_SIGNATURE_PX_PER_MM)
+    expect(mediumLines[1].y - mediumLines[0].y).toBe(18)
     expect(extraSmallLines.map((line) => line.size)).toEqual([30, 13])
     for (const [size, expectedPx] of [['small', 13], ['medium', 15], ['large', 17], ['extra-large', 19]] as const) {
       const rendered = composeCreatorSignatureSvg(qr, { line2Text: 'Subtitle', line2Size: size })
