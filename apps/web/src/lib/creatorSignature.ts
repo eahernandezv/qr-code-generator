@@ -227,7 +227,7 @@ function selectedFont(value: CreatorSignatureFont | undefined): CreatorSignature
 function selectedFontSize(value: CreatorSignatureFontSize | undefined, line: 1 | 2): number {
   const selected = CREATOR_SIGNATURE_FONT_SIZES.some((option) => option.value === value) ? value! : 'medium'
   if (line === 1) return selected === 'small' ? 18 : selected === 'large' ? 26 : selected === 'extra-large' ? 30 : 22
-  return selected === 'small' ? 9 : selected === 'large' ? 13 : selected === 'extra-large' ? 15 : 11
+  return selected === 'small' ? 13 : selected === 'large' ? 17 : selected === 'extra-large' ? 19 : 15
 }
 
 function selectedOffset(value: CreatorSignatureBoundaryOffsetMm | undefined): CreatorSignatureBoundaryOffsetMm {

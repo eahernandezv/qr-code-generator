@@ -220,9 +220,15 @@ describe('Creator Signature template contract', () => {
     const mediumLines = positions(medium)
     const extraSmallLines = positions(extraSmall)
 
-    expect(mediumLines.map((line) => line.size)).toEqual([22, 11])
+    expect(mediumLines.map((line) => line.size)).toEqual([22, 15])
     expect(mediumLines[1].y - mediumLines[0].y).toBe(22 + CREATOR_SIGNATURE_PX_PER_MM - LINE_GAP_REDUCTION_MM * CREATOR_SIGNATURE_PX_PER_MM)
-    expect(extraSmallLines.map((line) => line.size)).toEqual([30, 9])
+    expect(extraSmallLines.map((line) => line.size)).toEqual([30, 13])
+    for (const [size, expectedPx] of [['small', 13], ['medium', 15], ['large', 17], ['extra-large', 19]] as const) {
+      const rendered = composeCreatorSignatureSvg(qr, { line2Text: 'Subtitle', line2Size: size })
+      expect(rendered).toContain(`data-signature-line="2"`)
+      expect(rendered).toContain(`data-signature-size="${size}"`)
+      expect(rendered).toContain(`font-size="${expectedPx}"`)
+    }
     expect(extraSmall).toContain('data-signature-size="extra-large"')
     expect(extraSmall).toContain('data-signature-size="small"')
     expect(extraSmall).not.toContain('textLength=')
