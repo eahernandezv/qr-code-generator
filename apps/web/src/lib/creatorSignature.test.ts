@@ -212,6 +212,12 @@ describe('Creator Signature template contract', () => {
       const svg = composeCreatorSignatureSvg(qr, { line1Text: 'Creator', line1Font: font.value })
       expect(svg).toContain(`data-signature-font="${font.value}"`)
     }
+    const renderedTypeStyles = CREATOR_SIGNATURE_FONTS.map(({ value }) => {
+      const svg = composeCreatorSignatureSvg(qr, { line1Text: 'Creator', line1Font: value })
+      return svg.match(/<text data-signature-line="1"[^>]*>/)![0]
+        .match(/font-family="[^"]+" font-size="22"(?: font-style="[^"]+")? font-weight="[^"]+" letter-spacing="[^"]+"/)![0]
+    })
+    expect(new Set(renderedTypeStyles).size).toBe(CREATOR_SIGNATURE_FONTS.length)
 
     const medium = composeCreatorSignatureSvg(qr, { line1Text: 'Creator', line2Text: 'Subtitle' })
     const extraSmall = composeCreatorSignatureSvg(qr, { line1Text: 'Creator', line2Text: 'Subtitle', line1Size: 'extra-large', line2Size: 'small' })

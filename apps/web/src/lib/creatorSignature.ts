@@ -197,7 +197,16 @@ const FONT_FAMILIES: Record<CreatorSignatureFont, string> = {
   mono: 'ui-monospace,SFMono-Regular,Menlo,monospace',
   cursive: 'Brush Script MT,Segoe Script,cursive',
   handwritten: 'Segoe Print,Bradley Hand,cursive',
-  display: 'Impact,Arial Black,sans-serif',
+  display: 'Impact,Arial Black,fantasy,sans-serif',
+}
+
+const FONT_VISUAL_ATTRIBUTES: Record<CreatorSignatureFont, { style?: string; weight1: number; weight2: number; letterSpacing1: string; letterSpacing2: string }> = {
+  sans: { weight1: 750, weight2: 550, letterSpacing1: '-0.5', letterSpacing2: '0' },
+  serif: { weight1: 700, weight2: 520, letterSpacing1: '0', letterSpacing2: '0' },
+  mono: { weight1: 650, weight2: 520, letterSpacing1: '-0.2', letterSpacing2: '0.2' },
+  cursive: { style: 'italic', weight1: 650, weight2: 500, letterSpacing1: '0.2', letterSpacing2: '0.1' },
+  handwritten: { style: 'italic', weight1: 520, weight2: 460, letterSpacing1: '0.7', letterSpacing2: '0.5' },
+  display: { weight1: 900, weight2: 800, letterSpacing1: '0.6', letterSpacing2: '0.45' },
 }
 
 const DEFAULT_COLORS: Record<CreatorSignatureColor, string> = {
@@ -222,6 +231,14 @@ function selectedColor(value: CreatorSignatureColor | undefined, palette: Creato
 
 function selectedFont(value: CreatorSignatureFont | undefined): CreatorSignatureFont {
   return CREATOR_SIGNATURE_FONTS.some((option) => option.value === value) ? value! : 'sans'
+}
+
+function fontVisualAttributes(font: CreatorSignatureFont, line: 1 | 2, size: number): string {
+  const attributes = FONT_VISUAL_ATTRIBUTES[font]
+  const style = attributes.style ? ` font-style="${attributes.style}"` : ''
+  const weight = line === 1 ? attributes.weight1 : attributes.weight2
+  const letterSpacing = line === 1 ? attributes.letterSpacing1 : attributes.letterSpacing2
+  return `font-family="${FONT_FAMILIES[font]}" font-size="${size}"${style} font-weight="${weight}" letter-spacing="${letterSpacing}"`
 }
 
 function selectedFontSize(value: CreatorSignatureFontSize | undefined, line: 1 | 2): number {
@@ -249,8 +266,8 @@ function textLayer(fields: CreatorSignatureTemplateFields, geometry: CreatorSign
     x: number,
     y: number,
   ) => {
-    const renderedLine1 = line1 ? `<text data-signature-line="1" data-signature-font="${line1Font}" data-signature-size="${fields.line1Size ?? 'medium'}" x="${x}" y="${y}" text-anchor="${anchor}" fill="${selectedColor(fields.line1Color, palette)}" font-family="${FONT_FAMILIES[line1Font]}" font-size="${line1Size}" font-weight="750" letter-spacing="-0.5">${line1}</text>` : ''
-    const renderedLine2 = line2 ? `<text data-signature-line="2" data-signature-font="${line2Font}" data-signature-size="${fields.line2Size ?? 'medium'}" x="${x}" y="${y + lineGap}" text-anchor="${anchor}" fill="${selectedColor(fields.line2Color ?? 'secondary', palette)}" font-family="${FONT_FAMILIES[line2Font]}" font-size="${line2Size}" font-weight="550">${line2}</text>` : ''
+    const renderedLine1 = line1 ? `<text data-signature-line="1" data-signature-font="${line1Font}" data-signature-size="${fields.line1Size ?? 'medium'}" x="${x}" y="${y}" text-anchor="${anchor}" fill="${selectedColor(fields.line1Color, palette)}" ${fontVisualAttributes(line1Font, 1, line1Size)}>${line1}</text>` : ''
+    const renderedLine2 = line2 ? `<text data-signature-line="2" data-signature-font="${line2Font}" data-signature-size="${fields.line2Size ?? 'medium'}" x="${x}" y="${y + lineGap}" text-anchor="${anchor}" fill="${selectedColor(fields.line2Color ?? 'secondary', palette)}" ${fontVisualAttributes(line2Font, 2, line2Size)}>${line2}</text>` : ''
     return `\n    ${renderedLine1}\n    ${renderedLine2}`
   }
   const reservedShelf = `<rect data-signature-reserved-shelf="true" x="${labelSlot.x}" y="${labelSlot.y}" width="${labelSlot.width}" height="${labelSlot.height}" fill="none" stroke="none" aria-hidden="true"/>`
