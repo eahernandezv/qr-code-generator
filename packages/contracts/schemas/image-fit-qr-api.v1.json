@@ -1,0 +1,736 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://qr.ernesto.dev/schemas/image-fit-qr-api.v1.json",
+  "title": "Image-Fit QR API v1",
+  "description": "Frozen Level 2 Image-Fit QR request/candidate/export authority contract.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "request",
+    "candidates",
+    "selection_policy",
+    "fallback"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "image-fit-qr-api.v1"
+    },
+    "request": {
+      "$ref": "#/definitions/ImageFitQrRequestV1"
+    },
+    "candidates": {
+      "type": "array",
+      "minItems": 0,
+      "maxItems": 12,
+      "items": {
+        "$ref": "#/definitions/ImageFitQrCandidateV1"
+      }
+    },
+    "selection_policy": {
+      "type": "object",
+      "required": [
+        "default_mode",
+        "export_requires_entitlement",
+        "image_first_default_export_allowed"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "default_mode": {
+          "enum": [
+            "balanced"
+          ]
+        },
+        "export_requires_entitlement": {
+          "const": true
+        },
+        "image_first_default_export_allowed": {
+          "const": false
+        }
+      }
+    },
+    "fallback": {
+      "$ref": "#/definitions/FallbackV1"
+    }
+  },
+  "definitions": {
+    "ImageFitQrRequestV1": {
+      "type": "object",
+      "required": [
+        "request_id",
+        "destination",
+        "target_image",
+        "user_controls",
+        "constraints",
+        "entitlement_context"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "request_id": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9._:-]{8,128}$"
+        },
+        "destination": {
+          "$ref": "#/definitions/DestinationV1"
+        },
+        "target_image": {
+          "$ref": "#/definitions/TargetImageV1"
+        },
+        "user_controls": {
+          "$ref": "#/definitions/UserControlsV1"
+        },
+        "constraints": {
+          "$ref": "#/definitions/SearchConstraintsV1"
+        },
+        "entitlement_context": {
+          "$ref": "#/definitions/EntitlementContextV1"
+        }
+      }
+    },
+    "DestinationV1": {
+      "type": "object",
+      "required": [
+        "kind",
+        "normalized_url",
+        "display_url",
+        "safety"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "url"
+          ]
+        },
+        "normalized_url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "display_url": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "safety": {
+          "type": "object",
+          "required": [
+            "verdict",
+            "policy_version"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "verdict": {
+              "enum": [
+                "pass",
+                "fail"
+              ]
+            },
+            "policy_version": {
+              "type": "string"
+            },
+            "blocked_reason": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "TargetImageV1": {
+      "type": "object",
+      "required": [
+        "image_ref",
+        "mime_type",
+        "width_px",
+        "height_px",
+        "sha256",
+        "complexity"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "image_ref": {
+          "type": "string"
+        },
+        "mime_type": {
+          "enum": [
+            "image/png",
+            "image/jpeg",
+            "image/webp",
+            "image/svg+xml"
+          ]
+        },
+        "width_px": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "height_px": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "complexity": {
+          "enum": [
+            "simple_mark",
+            "medium_logo",
+            "complex_photo_like",
+            "high_risk_thin_detail"
+          ]
+        }
+      }
+    },
+    "UserControlsV1": {
+      "type": "object",
+      "required": [
+        "treatment",
+        "strength",
+        "detail",
+        "link_mode"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "treatment": {
+          "enum": [
+            "logo",
+            "pixel_blend",
+            "background_image",
+            "cutout_perforated"
+          ]
+        },
+        "strength": {
+          "enum": [
+            "readable",
+            "balanced",
+            "image_first"
+          ]
+        },
+        "detail": {
+          "enum": [
+            "simple",
+            "detailed",
+            "maximum"
+          ]
+        },
+        "link_mode": {
+          "enum": [
+            "optimized_short_link",
+            "original_url"
+          ]
+        }
+      }
+    },
+    "SearchConstraintsV1": {
+      "type": "object",
+      "required": [
+        "max_candidates",
+        "max_search_ms",
+        "allowed_ecc",
+        "allowed_masks",
+        "allowed_versions"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "max_candidates": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 12
+        },
+        "max_search_ms": {
+          "type": "integer",
+          "minimum": 1000,
+          "maximum": 60000
+        },
+        "allowed_ecc": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "Q",
+              "H"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "allowed_masks": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 7
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "allowed_versions": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 40
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      }
+    },
+    "EntitlementContextV1": {
+      "type": "object",
+      "required": [
+        "mode",
+        "export_entitled"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "enum": [
+            "preview",
+            "paid_project",
+            "internal"
+          ]
+        },
+        "export_entitled": {
+          "type": "boolean"
+        },
+        "project_ref": {
+          "type": "string"
+        }
+      }
+    },
+    "ImageFitQrCandidateV1": {
+      "type": "object",
+      "required": [
+        "candidate_id",
+        "mode",
+        "status",
+        "qr_settings",
+        "image_treatment",
+        "protected_regions",
+        "scan_evidence",
+        "image_fit_evidence",
+        "export_authority",
+        "artifacts",
+        "warnings"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "candidate_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9._:-]{6,128}$"
+        },
+        "mode": {
+          "enum": [
+            "readable",
+            "balanced",
+            "image_first"
+          ]
+        },
+        "status": {
+          "enum": [
+            "generated",
+            "validated",
+            "failed",
+            "experimental"
+          ]
+        },
+        "qr_settings": {
+          "$ref": "#/definitions/QrSettingsV1"
+        },
+        "image_treatment": {
+          "$ref": "#/definitions/ImageTreatmentV1"
+        },
+        "protected_regions": {
+          "$ref": "#/definitions/ProtectedRegionsV1"
+        },
+        "scan_evidence": {
+          "$ref": "#/definitions/ScanEvidenceV1"
+        },
+        "image_fit_evidence": {
+          "$ref": "#/definitions/ImageFitEvidenceV1"
+        },
+        "export_authority": {
+          "$ref": "#/definitions/ExportAuthorityV1"
+        },
+        "artifacts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ArtifactRefV1"
+          }
+        },
+        "warnings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/WarningV1"
+          }
+        }
+      }
+    },
+    "QrSettingsV1": {
+      "type": "object",
+      "required": [
+        "payload_mode",
+        "encoded_payload_display",
+        "version",
+        "module_count",
+        "ecc",
+        "mask"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "payload_mode": {
+          "enum": [
+            "optimized_short_link",
+            "original_url"
+          ]
+        },
+        "short_link": {
+          "$ref": "#/definitions/ShortLinkV1"
+        },
+        "encoded_payload_display": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "payload_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 40
+        },
+        "module_count": {
+          "type": "integer",
+          "minimum": 21,
+          "maximum": 177
+        },
+        "ecc": {
+          "enum": [
+            "Q",
+            "H"
+          ]
+        },
+        "mask": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 7
+        }
+      }
+    },
+    "ShortLinkV1": {
+      "type": "object",
+      "required": [
+        "slug",
+        "state",
+        "route"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "slug": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{4,32}$"
+        },
+        "state": {
+          "enum": [
+            "reserved",
+            "committed",
+            "expired",
+            "disabled"
+          ]
+        },
+        "route": {
+          "type": "string",
+          "pattern": "^/r/[A-Za-z0-9_-]{4,32}$"
+        }
+      }
+    },
+    "ImageTreatmentV1": {
+      "type": "object",
+      "required": [
+        "kind",
+        "modified_modules",
+        "modified_fraction"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "central_logo_pixel",
+            "module_recolor",
+            "background_silhouette",
+            "cutout_perforated",
+            "fallback_level1"
+          ]
+        },
+        "modified_modules": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "modified_fraction": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "luminance_policy_version": {
+          "type": "string"
+        },
+        "color_profile": {
+          "type": "string"
+        }
+      }
+    },
+    "ProtectedRegionsV1": {
+      "type": "object",
+      "required": [
+        "quiet_zone",
+        "finder",
+        "separator",
+        "timing",
+        "alignment",
+        "format",
+        "version_info",
+        "immutable_modules_policy_version",
+        "violations"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "quiet_zone": {
+          "const": true
+        },
+        "finder": {
+          "const": true
+        },
+        "separator": {
+          "const": true
+        },
+        "timing": {
+          "const": true
+        },
+        "alignment": {
+          "const": true
+        },
+        "format": {
+          "const": true
+        },
+        "version_info": {
+          "type": "boolean"
+        },
+        "immutable_modules_policy_version": {
+          "type": "string"
+        },
+        "violations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ScanEvidenceV1": {
+      "type": "object",
+      "required": [
+        "verdict",
+        "decoder_suite_version",
+        "checks_passed",
+        "checks_total",
+        "decoders",
+        "physical_scan",
+        "print_scan",
+        "disclaimer"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "verdict": {
+          "enum": [
+            "pass",
+            "fail",
+            "not_run"
+          ]
+        },
+        "decoder_suite_version": {
+          "type": "string"
+        },
+        "checks_passed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "checks_total": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "decoders": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "version",
+              "pass"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "version": {
+                "type": "string"
+              },
+              "pass": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "physical_scan": {
+          "enum": [
+            "not_performed",
+            "pass",
+            "fail"
+          ]
+        },
+        "print_scan": {
+          "enum": [
+            "not_performed",
+            "pass",
+            "fail"
+          ]
+        },
+        "disclaimer": {
+          "type": "string"
+        }
+      }
+    },
+    "ImageFitEvidenceV1": {
+      "type": "object",
+      "required": [
+        "fit_label",
+        "score_version",
+        "recognition_score",
+        "protected_zone_conflict_score"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "fit_label": {
+          "enum": [
+            "readable",
+            "balanced",
+            "experimental",
+            "failed"
+          ]
+        },
+        "score_version": {
+          "type": "string"
+        },
+        "recognition_score": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "protected_zone_conflict_score": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "ExportAuthorityV1": {
+      "type": "object",
+      "required": [
+        "export_allowed",
+        "blockers",
+        "requires_payment_or_internal_entitlement",
+        "preview_export_parity"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "export_allowed": {
+          "type": "boolean"
+        },
+        "blockers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "requires_payment_or_internal_entitlement": {
+          "const": true
+        },
+        "preview_export_parity": {
+          "enum": [
+            "proven",
+            "not_proven",
+            "not_applicable"
+          ]
+        }
+      }
+    },
+    "ArtifactRefV1": {
+      "type": "object",
+      "required": [
+        "kind",
+        "uri",
+        "sha256"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "preview_png",
+            "export_png",
+            "export_svg",
+            "metadata_json"
+          ]
+        },
+        "uri": {
+          "type": "string"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "WarningV1": {
+      "type": "object",
+      "required": [
+        "code",
+        "message",
+        "block_export"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "block_export": {
+          "type": "boolean"
+        }
+      }
+    },
+    "FallbackV1": {
+      "type": "object",
+      "required": [
+        "available",
+        "kind",
+        "reason"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "available": {
+          "type": "boolean"
+        },
+        "kind": {
+          "enum": [
+            "level1_styled_qr",
+            "none"
+          ]
+        },
+        "reason": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,147 @@
+{
+  "schema_version": "image-fit-qr-api.v1",
+  "request": {
+    "request_id": "l2req-demo-0001",
+    "destination": {
+      "kind": "url",
+      "normalized_url": "https://example.com/products/summer-collection?source=printed-menu",
+      "display_url": "https://example.com/products/summer-collection?...",
+      "safety": {
+        "verdict": "pass",
+        "policy_version": "destination-safety-v1"
+      }
+    },
+    "target_image": {
+      "image_ref": "fixtures/bold-diamond.png",
+      "mime_type": "image/png",
+      "width_px": 512,
+      "height_px": 512,
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "complexity": "simple_mark"
+    },
+    "user_controls": {
+      "treatment": "pixel_blend",
+      "strength": "balanced",
+      "detail": "detailed",
+      "link_mode": "optimized_short_link"
+    },
+    "constraints": {
+      "max_candidates": 12,
+      "max_search_ms": 45000,
+      "allowed_ecc": [
+        "Q",
+        "H"
+      ],
+      "allowed_masks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "allowed_versions": [
+        8,
+        9,
+        10,
+        11,
+        12
+      ]
+    },
+    "entitlement_context": {
+      "mode": "preview",
+      "export_entitled": false
+    }
+  },
+  "candidates": [
+    {
+      "candidate_id": "balanced-demo-v10-q-m1",
+      "mode": "balanced",
+      "status": "validated",
+      "qr_settings": {
+        "payload_mode": "optimized_short_link",
+        "short_link": {
+          "slug": "bD7xQ2",
+          "state": "reserved",
+          "route": "/r/bD7xQ2"
+        },
+        "encoded_payload_display": "https://placeholder-online.com/r/bD7xQ2",
+        "payload_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "version": 10,
+        "module_count": 57,
+        "ecc": "Q",
+        "mask": 1
+      },
+      "image_treatment": {
+        "kind": "module_recolor",
+        "modified_modules": 156,
+        "modified_fraction": 0.0564,
+        "luminance_policy_version": "luma-v1",
+        "color_profile": "srgb"
+      },
+      "protected_regions": {
+        "quiet_zone": true,
+        "finder": true,
+        "separator": true,
+        "timing": true,
+        "alignment": true,
+        "format": true,
+        "version_info": false,
+        "immutable_modules_policy_version": "qr-functional-regions-v1",
+        "violations": []
+      },
+      "scan_evidence": {
+        "verdict": "pass",
+        "decoder_suite_version": "scan-v1-real-75pct",
+        "checks_passed": 8,
+        "checks_total": 8,
+        "decoders": [
+          {
+            "name": "jsQR",
+            "version": "1.4.0",
+            "pass": true
+          }
+        ],
+        "physical_scan": "not_performed",
+        "print_scan": "not_performed",
+        "disclaimer": "Controlled decoder checks are not a universal scan guarantee."
+      },
+      "image_fit_evidence": {
+        "fit_label": "balanced",
+        "score_version": "image-fit-score-v1",
+        "recognition_score": 0.71,
+        "protected_zone_conflict_score": 0
+      },
+      "export_authority": {
+        "export_allowed": false,
+        "blockers": [
+          "preview_not_paid",
+          "short_link_not_committed",
+          "preview_export_parity_not_proven"
+        ],
+        "requires_payment_or_internal_entitlement": true,
+        "preview_export_parity": "not_proven"
+      },
+      "artifacts": [
+        {
+          "kind": "preview_png",
+          "uri": "docs/program/evidence/level2-image-fit-qr-spike/creator-visual-pass/selected/bold-diamond__module-recolor__v10-Q-m1-b8.png",
+          "sha256": "6f9b0ba69475d860d3e22ad4e030e59e44b170c9ec3cdee4658f909c03f08940"
+        }
+      ],
+      "warnings": []
+    }
+  ],
+  "selection_policy": {
+    "default_mode": "balanced",
+    "export_requires_entitlement": true,
+    "image_first_default_export_allowed": false
+  },
+  "fallback": {
+    "available": true,
+    "kind": "level1_styled_qr",
+    "reason": "Use if no image-fit candidate passes scan gates."
+  }
+}

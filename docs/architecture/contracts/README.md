@@ -7,6 +7,7 @@ Status: **Not frozen.** This document defines ownership and required machine-rea
 | Contract | Owner | Consumers |
 |---|---|---|
 | `qr-core-api.v1`, `artistic-qr-api.v1` | WS-03 Static/Artistic QR Core | WS-10 Bulk (deterministic QR API only), WS-12 provider adapter, WS-13 Integrator |
+| `image-fit-qr-api.v1`, `image-fit-qr-errors.v1` | QR Product Architect for contract boundary; QR Creator owns core implementation; QR Studio owns resolver/UI consumption | QR Creator, QR Studio, WS-13 Integrator |
 | `design-tokens.v1` and feature-module shell API | WS-02 Design System | All UI-producing workstreams |
 | `identity-claims.v1`, `entitlements.v1` | WS-04 Identity & Entitlements | WS-05, WS-06, WS-08, WS-09, WS-10, WS-13 |
 | `commerce-events.v1` | WS-05 Commerce | WS-04, WS-13 |

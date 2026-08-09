@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://qr.ernesto.dev/schemas/image-fit-qr-errors.v1.json",
+  "title": "Image-Fit QR Error Taxonomy v1",
+  "type": "string",
+  "enum": [
+    "image_fit_destination_unsafe",
+    "image_fit_target_unsupported",
+    "image_fit_target_too_complex",
+    "image_fit_no_scan_safe_candidate",
+    "image_fit_optimizer_timeout",
+    "image_fit_short_link_unavailable",
+    "image_fit_short_link_commit_failed",
+    "image_fit_export_not_authorized",
+    "image_fit_preview_export_mismatch",
+    "image_fit_physical_scan_not_performed"
+  ]
+}

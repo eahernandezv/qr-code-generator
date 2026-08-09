@@ -1,0 +1,69 @@
+{
+  "schema_version": "image-fit-qr-api.v1",
+  "request": {
+    "request_id": "l2req-demo-0001",
+    "destination": {
+      "kind": "url",
+      "normalized_url": "https://example.com/products/summer-collection?source=printed-menu",
+      "display_url": "https://example.com/products/summer-collection?...",
+      "safety": {
+        "verdict": "pass",
+        "policy_version": "destination-safety-v1"
+      }
+    },
+    "target_image": {
+      "image_ref": "fixtures/bold-diamond.png",
+      "mime_type": "image/png",
+      "width_px": 512,
+      "height_px": 512,
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "complexity": "simple_mark"
+    },
+    "user_controls": {
+      "treatment": "pixel_blend",
+      "strength": "balanced",
+      "detail": "detailed",
+      "link_mode": "optimized_short_link"
+    },
+    "constraints": {
+      "max_candidates": 12,
+      "max_search_ms": 45000,
+      "allowed_ecc": [
+        "Q",
+        "H"
+      ],
+      "allowed_masks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "allowed_versions": [
+        8,
+        9,
+        10,
+        11,
+        12
+      ]
+    },
+    "entitlement_context": {
+      "mode": "preview",
+      "export_entitled": false
+    }
+  },
+  "candidates": [],
+  "selection_policy": {
+    "default_mode": "balanced",
+    "export_requires_entitlement": true,
+    "image_first_default_export_allowed": false
+  },
+  "fallback": {
+    "available": true,
+    "kind": "level1_styled_qr",
+    "reason": "No scan-safe image-fit candidate produced within constraints."
+  }
+}
