@@ -11,6 +11,15 @@ export {
 } from './api/index.js';
 export { InMemoryCandidateAuthorityStore, setCandidateAuthorityStore } from './candidate-context.js';
 export { PATTERNED_PALETTE_PRESETS, resolveArtisticRenderIntent } from './render-intent.js';
+export { optimizeImageFitQr } from './image-fit.js';
+export type {
+  ImageFitArtifact,
+  ImageFitCandidateV1,
+  ImageFitOptimizationResult,
+  ImageFitOptimizerInput,
+  ImageFitOptimizerOptions,
+  ImageFitQrRequestV1,
+} from './image-fit.js';
 
 export type {
   ArtDirection,

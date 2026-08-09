@@ -1,0 +1,112 @@
+{
+  "decoder_scope": "Automated jsQR 1.4.0 only; no physical-device or printed scan performed.",
+  "candidates": [
+    {
+      "candidate_id": "readable-767dfb22f336e040c704",
+      "mode": "readable",
+      "scan_evidence": {
+        "verdict": "pass",
+        "decoder_suite_version": "scan-v1-real-75pct",
+        "checks_passed": 8,
+        "checks_total": 8,
+        "decoders": [
+          {
+            "name": "jsQR",
+            "version": "1.4.0",
+            "pass": true
+          }
+        ],
+        "physical_scan": "not_performed",
+        "print_scan": "not_performed",
+        "disclaimer": "Controlled decoder checks are not a universal scan guarantee. No physical-device or print scan was performed."
+      },
+      "export_authority": {
+        "export_allowed": false,
+        "blockers": [
+          "preview_export_parity_not_proven",
+          "preview_not_paid",
+          "short_link_not_committed"
+        ],
+        "requires_payment_or_internal_entitlement": true,
+        "preview_export_parity": "not_proven"
+      }
+    },
+    {
+      "candidate_id": "balanced-38d1d42054e297be0a9a",
+      "mode": "balanced",
+      "scan_evidence": {
+        "verdict": "pass",
+        "decoder_suite_version": "scan-v1-real-75pct",
+        "checks_passed": 8,
+        "checks_total": 8,
+        "decoders": [
+          {
+            "name": "jsQR",
+            "version": "1.4.0",
+            "pass": true
+          }
+        ],
+        "physical_scan": "not_performed",
+        "print_scan": "not_performed",
+        "disclaimer": "Controlled decoder checks are not a universal scan guarantee. No physical-device or print scan was performed."
+      },
+      "export_authority": {
+        "export_allowed": false,
+        "blockers": [
+          "preview_export_parity_not_proven",
+          "preview_not_paid",
+          "short_link_not_committed"
+        ],
+        "requires_payment_or_internal_entitlement": true,
+        "preview_export_parity": "not_proven"
+      }
+    },
+    {
+      "candidate_id": "image-first-b3d3125d2689d6d28d88",
+      "mode": "image_first",
+      "scan_evidence": {
+        "verdict": "pass",
+        "decoder_suite_version": "scan-v1-real-75pct",
+        "checks_passed": 8,
+        "checks_total": 8,
+        "decoders": [
+          {
+            "name": "jsQR",
+            "version": "1.4.0",
+            "pass": true
+          }
+        ],
+        "physical_scan": "not_performed",
+        "print_scan": "not_performed",
+        "disclaimer": "Controlled decoder checks are not a universal scan guarantee. No physical-device or print scan was performed."
+      },
+      "export_authority": {
+        "export_allowed": false,
+        "blockers": [
+          "preview_export_parity_not_proven",
+          "preview_not_paid",
+          "short_link_not_committed",
+          "image_first_experimental"
+        ],
+        "requires_payment_or_internal_entitlement": true,
+        "preview_export_parity": "not_proven"
+      }
+    }
+  ],
+  "fallback": {
+    "verdict": "pass",
+    "decoder_suite_version": "scan-v1-real-75pct",
+    "checks_passed": 8,
+    "checks_total": 8,
+    "decoders": [
+      {
+        "name": "jsQR",
+        "version": "1.4.0",
+        "pass": true
+      }
+    ],
+    "physical_scan": "not_performed",
+    "print_scan": "not_performed",
+    "disclaimer": "Controlled decoder checks are not a universal scan guarantee. No physical-device or print scan was performed."
+  }
+}
