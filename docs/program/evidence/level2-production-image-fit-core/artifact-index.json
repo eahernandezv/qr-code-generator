@@ -1,0 +1,46 @@
+{
+  "target_image": {
+    "path": "docs/program/evidence/level2-image-fit-qr-spike/creator-visual-pass/fixtures/bold-diamond.png",
+    "sha256": "8cc54ea4a15b165eb5f9092722cff1b89cf47eff86e295fc129beb590df1a49b"
+  },
+  "candidates": {
+    "readable-767dfb22f336e040c704": {
+      "kind": "export_svg",
+      "uri": "docs/program/evidence/level2-production-image-fit-core/artifacts/readable.svg",
+      "sha256": "23c9c86e554be9ad57ccafb19953064471d5cb14b091112044e6e1f0bd62f440",
+      "mode": "readable"
+    },
+    "balanced-38d1d42054e297be0a9a": {
+      "kind": "export_svg",
+      "uri": "docs/program/evidence/level2-production-image-fit-core/artifacts/balanced.svg",
+      "sha256": "254746f6e441dc7ed2fe1c43029c825030a3e7a0ec8c9242b33d27d9a8c37b98",
+      "mode": "balanced"
+    },
+    "image-first-b3d3125d2689d6d28d88": {
+      "kind": "export_svg",
+      "uri": "docs/program/evidence/level2-production-image-fit-core/artifacts/image-first.svg",
+      "sha256": "344d8be0a7304b72c87deafa26dbe4bd400ba670d11fa00530ec83bd2e1ee322",
+      "mode": "image_first"
+    }
+  },
+  "fallback": {
+    "uri": "docs/program/evidence/level2-production-image-fit-core/artifacts/fallback-level1.svg",
+    "sha256": "6c3329552f8ec5e5bea4c78d96fe7bfb136ca3b7768d17dfaf6ea72361f25150",
+    "scan_evidence": {
+      "verdict": "pass",
+      "decoder_suite_version": "scan-v1-real-75pct",
+      "checks_passed": 8,
+      "checks_total": 8,
+      "decoders": [
+        {
+          "name": "jsQR",
+          "version": "1.4.0",
+          "pass": true
+        }
+      ],
+      "physical_scan": "not_performed",
+      "print_scan": "not_performed",
+      "disclaimer": "Controlled decoder checks are not a universal scan guarantee. No physical-device or print scan was performed."
+    }
+  }
+}
