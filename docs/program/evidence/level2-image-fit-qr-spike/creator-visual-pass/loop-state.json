@@ -1,0 +1,27 @@
+{
+  "schemaVersion": "observable-work-loop.v2",
+  "loopId": "level2-image-fit-visual-recognition-pass-2026-08-08",
+  "objective": "Produce at least one visibly recognizable simple-logo QR candidate that passes automated decoder validation while testing three treatments across 2/4/6/8 percent budgets.",
+  "status": "COMPLETE",
+  "startedAt": "2026-08-08T22:40:17.582Z",
+  "updatedAt": "2026-08-08T22:47:01Z",
+  "criteria": [
+    { "id": "recognition", "status": "PASS", "evidence": "Diamond background-silhouette and module-recolor candidates visibly recognizable in visual-contact-sheet.png." },
+    { "id": "scan", "status": "PASS", "evidence": "Both strongest diamond candidates passed 8/8 jsQR perturbation cases." },
+    { "id": "budgets", "status": "PASS", "evidence": "2%, 4%, 6%, and 8% ceilings tested across 768 candidates." },
+    { "id": "treatments", "status": "PASS", "evidence": "Central logo-pixel, background silhouette, and module recolor tested." },
+    { "id": "physical-honesty", "status": "PASS", "evidence": "No physical scan performed or claimed." }
+  ],
+  "iterations": [
+    { "id": 1, "hypothesis": "Concentrated and non-destructive treatments can outperform global 12% binary perforation.", "outcome": "SUPPORTED" },
+    { "id": 2, "hypothesis": "Color-based target composition can preserve the binary QR matrix and improve recognition.", "outcome": "SUPPORTED" },
+    { "id": 3, "hypothesis": "Binary central mutation remains safe through all 6–8% settings.", "outcome": "REJECTED", "evidence": "8 medium-fox v7/Q candidates failed raw decode at 6–8%." }
+  ],
+  "summary": {
+    "candidates": 768,
+    "scanPassed": 760,
+    "scanFailed": 8,
+    "strongestCandidate": "bold-diamond__background-silhouette__v10-Q-m3-b8",
+    "verdict": "VALIDATED_FOR_SPIKE_NOT_EXPORT"
+  }
+}

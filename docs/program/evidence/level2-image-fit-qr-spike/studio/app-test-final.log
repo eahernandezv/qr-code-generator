@@ -1,0 +1,22 @@
+
+> @qr/web@0.1.0 test /tmp/qr-studio-level2-spike/apps/web
+> vitest run "src/App.test.tsx"
+
+
+ RUN  v3.2.6 /tmp/qr-studio-level2-spike/apps/web
+
+ ✓ src/App.test.tsx (12 tests) 4256ms
+   ✓ App integration > isolates the Level 2 Image-Fit QR UX spike and keeps optimizer evidence truthful  344ms
+   ✓ App integration > uses the QR-Style Creator Signature card as the default Level 1 editor and preserves two independent lines  892ms
+   ✓ App integration > uses one shared style toolbar for two independently editable lines on the space-efficient concept route  388ms
+   ✓ App integration > renders the independent icon-first Creator Signature concept only on its child route  363ms
+   ✓ App integration > edits exactly two independently styled Creator Signature lines with fixed offset choices  578ms
+   ✓ App integration > uses accessible Core-backed Body Color, Corner Color, Style, Corners, and Eyes choices  643ms
+   ✓ App integration > keeps public typing draft-only while internal entitlement can live-update  303ms
+
+ Test Files  1 passed (1)
+      Tests  12 passed (12)
+   Start at  21:50:46
+   Duration  7.07s (transform 613ms, setup 564ms, collect 756ms, tests 4.26s, environment 977ms, prepare 144ms)
+
+EXIT_CODE=0

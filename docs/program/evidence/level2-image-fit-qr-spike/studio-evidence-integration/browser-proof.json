@@ -1,0 +1,31 @@
+{
+  "metrics": {
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "document": {
+      "width": 390,
+      "height": 1498
+    },
+    "horizontalOverflow": false,
+    "candidateCards": 3,
+    "candidateImages": [
+      {
+        "src": "/level2-image-fit-qr/creator-visual-pass/bold-diamond__background-silhouette__v10-Q-m3-b8.png",
+        "loaded": true
+      },
+      {
+        "src": "/level2-image-fit-qr/creator-visual-pass/bold-diamond__module-recolor__v10-Q-m1-b8.png",
+        "loaded": true
+      },
+      {
+        "src": "/level2-image-fit-qr/creator-visual-pass/bold-diamond__central-logo-pixel__v10-Q-m0-b8.png",
+        "loaded": true
+      }
+    ],
+    "publicDefaultStillIsolated": true
+  },
+  "pageErrors": [],
+  "consoleErrors": []
+}

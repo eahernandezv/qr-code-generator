@@ -1,0 +1,10 @@
+
+> @qr/web@0.1.0 test:e2e /tmp/qr-studio-level2-spike/apps/web
+> FONTCONFIG_FILE=${PLAYWRIGHT_FONTCONFIG_FILE:-$HOME/.cache/ms-playwright/local-fonts.conf} LD_LIBRARY_PATH=${PLAYWRIGHT_LD_LIBRARY_PATH:-$HOME/.cache/ms-playwright/local-libs/usr/lib/x86_64-linux-gnu} playwright test "level2-image-fit-spike.spec.ts"
+
+
+Running 1 test using 1 worker
+
+[1/1] [chromium-desktop] › e2e/level2-image-fit-spike.spec.ts:9:1 › captures truthful Level 2 Image-Fit QR controls and original URL warning
+  1 passed (3.7s)
+EXIT_CODE=0
