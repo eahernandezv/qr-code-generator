@@ -80,10 +80,21 @@ writeFileSync(resolve(evidenceDir, 'scan-evidence.json'), `${JSON.stringify({
   })),
   fallback: result.fallback_scan_evidence,
 }, null, 2)}\n`);
+writeFileSync(resolve(evidenceDir, 'visual-inspection.md'), `# Visual inspection — generated bold-diamond candidates
+
+Inspection source: rasterized exact SVG artifact bytes under \`visual-preview/\`. Automated visual inspection was performed after generation; this is qualitative image-recognition evidence, not scan authorization.
+
+- **Readable:** centered bold-diamond silhouette is visible but deliberately subtle in pale gray; all three finder eyes and the white quiet-zone border are visibly intact.
+- **Balanced:** centered diamond is clearly recognizable through dark-blue/light-blue module treatment; all three finder eyes and the white quiet-zone border are visibly intact.
+- **Image-first:** centered diamond is strongly visible through dark-blue/light-blue treatment, though QR modules interrupt its contour; all three finder eyes and the white quiet-zone border are visibly intact.
+
+This inspection does not replace decoder checks. Physical-device and printed scans were not performed.
+`);
 const hashFiles = [
   'artifacts/readable.svg', 'artifacts/balanced.svg', 'artifacts/image-first.svg',
   'visual-preview/readable.png', 'visual-preview/balanced.png', 'visual-preview/image-first.png',
   'artifacts/fallback-level1.svg', 'optimizer-response.json', 'artifact-index.json', 'scan-evidence.json',
+  'visual-inspection.md',
 ];
 const hashLines = hashFiles.map((relative) => `${sha256(readFileSync(resolve(evidenceDir, relative)))}  ${relative}`);
 writeFileSync(resolve(evidenceDir, 'sha256.txt'), `${hashLines.join('\n')}\n`);

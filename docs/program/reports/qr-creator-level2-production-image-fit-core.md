@@ -59,7 +59,7 @@ No frozen contract/schema/fixture, Studio UI, commerce, analytics, campaigns, ac
 | Readable | `readable-767dfb22f336e040c704` | v8 / H / mask 3 | 8/8 pass | `23c9c86e554be9ad57ccafb19953064471d5cb14b091112044e6e1f0bd62f440` | blocked |
 | Balanced | `balanced-38d1d42054e297be0a9a` | v10 / Q / mask 1 | 8/8 pass | `254746f6e441dc7ed2fe1c43029c825030a3e7a0ec8c9242b33d27d9a8c37b98` | blocked |
 | Image-first | `image-first-b3d3125d2689d6d28d88` | v12 / Q / mask 0 | 8/8 pass; experimental | `344d8be0a7304b72c87deafa26dbe4bd400ba670d11fa00530ec83bd2e1ee322` | blocked |
-| Level 1 fallback | deterministic fallback | v8 / H / mask 3 | 8/8 pass | `6c3329552f8ec5e5bea4c78d96fe7bfb136ca3b7768d17dfaf6ea72361f25150` | internal fallback only |
+| Level 1 fallback | deterministic fallback | v8 / H / mask 3 | 8/8 pass | `f453ef42520daa427212ce61b4b697f2ba6177652ea7004aa1734a4a3f8a2e7b` | internal fallback only |
 
 All generated candidates report `protected_regions.violations: []`. Preview/export parity is deliberately reported as `not_proven`, which is an export blocker rather than an unsupported claim.
 
