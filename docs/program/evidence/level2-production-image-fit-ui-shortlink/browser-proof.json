@@ -1,0 +1,30 @@
+{
+  "currentMetrics": {
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "document": {
+      "width": 390,
+      "height": 1637
+    },
+    "horizontalOverflow": false,
+    "candidateCards": 1,
+    "candidateImages": [
+      {
+        "src": "/level2-image-fit-qr/creator-visual-pass/bold-diamond__module-recolor__v10-Q-m1-b8.png",
+        "loaded": true
+      }
+    ],
+    "publicDefaultStillIsolated": true,
+    "exportPayloadBound": "false"
+  },
+  "invalidatedMetrics": {
+    "horizontalOverflow": false,
+    "staleCandidateImages": 0,
+    "selectedArtifactPresent": false,
+    "exportPayloadBound": "false"
+  },
+  "pageErrors": [],
+  "consoleErrors": []
+}

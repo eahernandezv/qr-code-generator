@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import App from './App'
 import { useStudioStore } from './store'
@@ -14,38 +14,70 @@ function resetStore() {
 describe('App integration', () => {
   beforeEach(resetStore)
 
-  it('isolates real Level 2 visual-pass artifacts and presents truthful controlled evidence', async () => {
+  it('isolates the contract-backed Level 2 fixture and presents truthful controlled evidence', async () => {
     const user = userEvent.setup()
     window.history.replaceState({}, '', '/concepts/level2-image-fit-qr')
     render(<App />)
 
-    expect(screen.getByTestId('image-fit-qr-concept')).toBeInTheDocument()
+    expect(screen.getByTestId('image-fit-qr-concept')).toHaveAttribute('data-schema-version', 'image-fit-qr-api.v1')
+    expect(screen.getByTestId('image-fit-qr-concept')).toHaveAttribute('data-export-payload-bound', 'false')
     for (const label of ['Logo', 'Pixel blend', 'Background image', 'Cutout-perforated', 'Readable', 'Balanced', 'Image-first', 'Simple', 'Detailed', 'Maximum']) {
       expect(screen.getByRole('button', { name: label })).toBeInTheDocument()
     }
     const preview = screen.getByTestId('selected-image-fit-candidate')
     expect(preview).toHaveAttribute('src', expect.stringContaining('bold-diamond__module-recolor__v10-Q-m1-b8.png'))
     expect(preview).toHaveAttribute('data-artifact-sha256', '6f9b0ba69475d860d3e22ad4e030e59e44b170c9ec3cdee4658f909c03f08940')
-    expect(screen.getAllByRole('img', { name: /candidate thumbnail/i })).toHaveLength(3)
+    expect(screen.getAllByRole('img', { name: /candidate thumbnail/i })).toHaveLength(1)
     expect(screen.getByText('Passed 8/8')).toBeInTheDocument()
     expect(screen.getByText(/Technical evidence · v10 · 57 modules · ECC Q · mask 1/)).toBeInTheDocument()
     expect(screen.getByText(/Passed 8\/8 controlled decoder checks/)).toBeInTheDocument()
-    expect(screen.getByText(/No physical-device or printed scan was performed/)).toBeInTheDocument()
-    expect(screen.queryByText(/Awaiting Creator|universal scan guarantee achieved/i)).not.toBeInTheDocument()
+    expect(screen.getByText(/Physical-device and print scans were not performed/)).toBeInTheDocument()
+    expect(screen.getByText(/not a universal scan guarantee/)).toBeInTheDocument()
+    expect(screen.getByRole('status')).toHaveTextContent(/unpaid.*reserved—not committed.*no export payload is bound/i)
+    expect(screen.queryByText(/Awaiting Creator|Confidence:\s*\d+%|universal scan guarantee achieved|production approved/i)).not.toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: /Image-first Central binary mutation/ }))
-    expect(preview).toHaveAttribute('src', expect.stringContaining('bold-diamond__central-logo-pixel__v10-Q-m0-b8.png'))
-    expect(screen.getByText(/Technical evidence · v10 · 57 modules · ECC Q · mask 0/)).toBeInTheDocument()
-    expect(screen.getByText(/Experimental destructive treatment; not export-ready/)).toBeInTheDocument()
+    expect(screen.getByRole('article', { name: 'Balanced contract candidate' })).toHaveTextContent(/8\/8 checks · fixture response/)
 
     await user.click(screen.getByRole('button', { name: /Original URL/ }))
     expect(screen.getByRole('alert')).toHaveTextContent(/increase QR density and reduce image clarity/i)
+    expect(screen.queryByTestId('selected-image-fit-candidate')).not.toBeInTheDocument()
+    expect(screen.getAllByText('Not generated yet').length).toBeGreaterThan(0)
+    expect(screen.getByText(/Inputs changed\. Previous fixture evidence is hidden/)).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /^(Generate|Export|Create short link)$/i })).not.toBeInTheDocument()
 
     await user.upload(screen.getByLabelText('Choose target image'), new File(['fixture'], 'new-mark.png', { type: 'image/png' }))
     expect(screen.queryByTestId('selected-image-fit-candidate')).not.toBeInTheDocument()
     expect(screen.getAllByText('Not generated yet').length).toBeGreaterThan(0)
-    expect(screen.getByText(/Run the optimizer and controlled decoder checks/)).toBeInTheDocument()
+  })
+
+  it.each([
+    ['destination', 'Level 2 destination URL'],
+    ['target image', 'Choose target image'],
+    ['treatment', 'Logo'],
+    ['strength', 'Readable'],
+    ['detail', 'Maximum'],
+    ['link mode', 'Original URL'],
+  ])('invalidates and hides fixture evidence after changing %s', async (kind, controlName) => {
+    const user = userEvent.setup()
+    window.history.replaceState({}, '', '/concepts/level2-image-fit-qr')
+    render(<App />)
+    expect(screen.getByTestId('selected-image-fit-candidate')).toBeInTheDocument()
+
+    if (kind === 'destination') {
+      fireEvent.change(screen.getByRole('textbox', { name: controlName }), { target: { value: 'https://example.org/changed' } })
+    } else if (kind === 'target image') {
+      await user.upload(screen.getByLabelText(controlName), new File(['changed'], 'changed.png', { type: 'image/png' }))
+    } else if (kind === 'link mode') {
+      await user.click(screen.getByRole('button', { name: /Original URL/ }))
+    } else {
+      await user.click(screen.getByRole('button', { name: (accessibleName) => accessibleName === controlName }))
+    }
+
+    expect(screen.queryByTestId('selected-image-fit-candidate')).not.toBeInTheDocument()
+    expect(screen.getByText(/Previous fixture evidence is hidden/)).toBeInTheDocument()
+    expect(screen.getByTestId('image-fit-qr-concept')).toHaveAttribute('data-export-payload-bound', 'false')
+    expect(screen.queryByText(/Awaiting Creator|Confidence:\s*\d+%|production approved/i)).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /^(Generate|Export|Create short link)$/i })).not.toBeInTheDocument()
   })
 
   it('uses the QR-Style Creator Signature card as the default Level 1 editor and preserves two independent lines', async () => {
