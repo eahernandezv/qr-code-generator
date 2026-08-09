@@ -30,16 +30,36 @@ function fakeResponse() {
   }
 }
 
-test('reserves many candidates, commits one, and expires the unused candidates', () => {
+test('reserves multiple optimizer payloads, commits exactly one, and expires every unused slug', () => {
   let now = 1_000
   const store = createShortLinkStore({ now: () => now })
-  store.reserve({ slug: '7k9mqp', destination: 'https://example.com/final', projectId: 'project-1', expiresAt: 5_000 })
-  store.reserve({ slug: '8n4wxy', destination: 'https://example.com/final', projectId: 'project-1', expiresAt: 5_000 })
-  const committed = store.commit({ projectId: 'project-1', slug: '8n4wxy' })
+  const reserved = store.reserveMany({
+    slugs: ['7k9mqp', 'bD7xQ2', '6t3rsv'],
+    destination: 'https://example.com/final',
+    projectId: 'project-1',
+    expiresAt: 5_000,
+  })
+  assert.deepEqual(reserved.map(({ payload }) => payload), [
+    'https://placeholder-online.com/r/7k9mqp',
+    'https://placeholder-online.com/r/bD7xQ2',
+    'https://placeholder-online.com/r/6t3rsv',
+  ])
+  const committed = store.commit({ projectId: 'project-1', slug: 'bD7xQ2' })
   assert.equal(committed.state, 'committed')
   assert.equal(store.get('7k9mqp').state, 'expired')
-  assert.throws(() => store.reserve({ slug: 'admin', destination: 'https://example.com', projectId: 'project-1', expiresAt: 5_000 }), /invalid_slug/)
+  assert.equal(store.get('6t3rsv').state, 'expired')
+  assert.throws(() => store.commit({ projectId: 'project-1', slug: '7k9mqp' }), /reservation_unavailable/)
+  assert.throws(() => store.reserve({ slug: '5q7xyz', destination: 'https://example.com', projectId: 'project-1', expiresAt: 5_000 }), /project_already_committed/)
+
+  const pending = store.reserveMany({ slugs: ['4abcde', '5abcde'], destination: 'https://example.com/other', projectId: 'project-2', expiresAt: 5_000 })
+  assert.equal(pending.length, 2)
+  assert.equal(store.expireUncommitted({ projectId: 'project-2' }), 2)
+  assert.equal(store.get('4abcde').state, 'expired')
+
+  store.reserve({ slug: '6abcde', destination: 'https://example.com/timed', projectId: 'project-3', expiresAt: 5_000 })
   now = 6_000
+  assert.equal(store.get('6abcde').state, 'expired')
+  assert.throws(() => store.reserve({ slug: 'admin', destination: 'https://example.com', projectId: 'project-4', expiresAt: 7_000 }), /invalid_slug/)
 })
 
 test('blocks unsafe destinations and fails closed if a stored target becomes unsafe', () => {
@@ -90,5 +110,6 @@ test('production runtime redirects one committed slug and fails safely for unkno
 })
 
 test('committed-record loading rejects unsafe targets before the runtime starts', () => {
-  assert.throws(() => createCommittedShortLinkStore([{ slug: '7k9mqp', destination: 'https://169.254.169.254/latest', projectId: 'project-1' }]), /unsafe_destination/)
+  assert.throws(() => createCommittedShortLinkStore([{ slug: '7k9mqp', destination: 'https://169.254.169.254/latest', projectId: 'project-1', state: 'committed' }]), /unsafe_destination/)
+  assert.throws(() => createCommittedShortLinkStore([{ slug: 'bD7xQ2', destination: 'https://example.com/final', projectId: 'project-1' }]), /invalid_short_link_state/)
 })

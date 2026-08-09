@@ -1,10 +1,11 @@
 import { isIP } from 'node:net'
 
 export const SHORT_LINK_ROUTE_PREFIX = '/r/'
+export const SHORT_LINK_ORIGIN = 'https://placeholder-online.com'
 export const SHORT_LINK_REDIRECT_STATUS = 302
 export const SHORT_LINK_CACHE_CONTROL = 'private, no-store, max-age=0'
 
-const SLUG = /^[23456789abcdefghijkmnopqrstuvwxyz]{5,16}$/
+const SLUG = /^[A-Za-z0-9_-]{4,32}$/
 const RESERVED_SLUGS = new Set(['admin', 'api00', 'health', 'login', 'logout', 'static', 'support'])
 const BLOCKED_HOSTS = new Set(['localhost', 'localhost.localdomain', 'metadata.google.internal'])
 
@@ -43,29 +44,56 @@ export function normalizeSafeDestination(value) {
 }
 
 export function validateShortSlug(value) {
-  return typeof value === 'string' && SLUG.test(value) && !RESERVED_SLUGS.has(value)
+  return typeof value === 'string' && SLUG.test(value) && !RESERVED_SLUGS.has(value.toLowerCase())
 }
 
 export function createShortLinkStore({ now = () => Date.now() } = {}) {
   const records = new Map()
+  const reserve = ({ slug, destination, projectId, expiresAt }) => {
+    if (!validateShortSlug(slug)) throw new Error('invalid_slug')
+    if (typeof projectId !== 'string' || !projectId) throw new Error('invalid_project')
+    const expiry = Number(expiresAt)
+    if (!Number.isFinite(expiry) || expiry <= now()) throw new Error('invalid_expiry')
+    const normalizedDestination = normalizeSafeDestination(destination)
+    const existing = records.get(slug)
+    if (existing && existing.state !== 'expired') throw new Error('slug_unavailable')
+    if ([...records.values()].some((record) => record.projectId === projectId && record.state === 'committed')) throw new Error('project_already_committed')
+    const route = `${SHORT_LINK_ROUTE_PREFIX}${slug}`
+    const record = { slug, route, payload: `${SHORT_LINK_ORIGIN}${route}`, destination: normalizedDestination, projectId, state: 'reserved', expiresAt: expiry }
+    records.set(slug, record)
+    return { ...record }
+  }
   return {
-    reserve({ slug, destination, projectId, expiresAt }) {
-      if (!validateShortSlug(slug)) throw new Error('invalid_slug')
-      if (typeof projectId !== 'string' || !projectId) throw new Error('invalid_project')
-      const normalizedDestination = normalizeSafeDestination(destination)
-      const existing = records.get(slug)
-      if (existing && existing.state !== 'expired') throw new Error('slug_unavailable')
-      const record = { slug, destination: normalizedDestination, projectId, state: 'reserved', expiresAt: Number(expiresAt) }
-      records.set(slug, record)
-      return { ...record }
+    reserve,
+    reserveMany({ slugs, destination, projectId, expiresAt }) {
+      if (!Array.isArray(slugs) || slugs.length < 2 || new Set(slugs).size !== slugs.length) throw new Error('invalid_slug_set')
+      const reserved = []
+      try {
+        for (const slug of slugs) reserved.push(reserve({ slug, destination, projectId, expiresAt }))
+      } catch (error) {
+        for (const record of reserved) records.delete(record.slug)
+        throw error
+      }
+      return reserved
     },
     commit({ projectId, slug }) {
       const chosen = records.get(slug)
       if (!chosen || chosen.projectId !== projectId || chosen.state !== 'reserved' || chosen.expiresAt <= now()) throw new Error('reservation_unavailable')
+      if ([...records.values()].some((record) => record.projectId === projectId && record.state === 'committed')) throw new Error('project_already_committed')
       for (const record of records.values()) {
         if (record.projectId === projectId && record.state === 'reserved') record.state = record.slug === slug ? 'committed' : 'expired'
       }
       return { ...records.get(slug) }
+    },
+    expireUncommitted({ projectId }) {
+      let expired = 0
+      for (const record of records.values()) {
+        if (record.projectId === projectId && record.state === 'reserved') {
+          record.state = 'expired'
+          expired += 1
+        }
+      }
+      return expired
     },
     get(slug) {
       const record = records.get(slug)
@@ -79,11 +107,12 @@ export function createCommittedShortLinkStore(records = []) {
   const committed = new Map()
   for (const record of records) {
     if (!validateShortSlug(record.slug)) throw new Error('invalid_slug')
+    if (!['reserved', 'committed', 'expired', 'disabled'].includes(record.state)) throw new Error('invalid_short_link_state')
     committed.set(record.slug, {
       slug: record.slug,
       destination: normalizeSafeDestination(record.destination),
       projectId: record.projectId,
-      state: record.state ?? 'committed',
+      state: record.state,
     })
   }
   return { get: (slug) => committed.get(slug) }
