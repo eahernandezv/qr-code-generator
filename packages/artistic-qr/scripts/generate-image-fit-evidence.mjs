@@ -3,6 +3,7 @@ import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { PNG } from 'pngjs';
 import { optimizeImageFitQr } from '../dist/index.js';
+import { rasterizeCandidate } from '../dist/validation.js';
 
 const root = resolve(new URL('../../..', import.meta.url).pathname);
 const evidenceDir = resolve(root, 'docs/program/evidence/level2-production-image-fit-core');
@@ -42,11 +43,21 @@ const result = optimizeImageFitQr({
 
 rmSync(evidenceDir, { recursive: true, force: true });
 mkdirSync(resolve(evidenceDir, 'artifacts'), { recursive: true });
+mkdirSync(resolve(evidenceDir, 'visual-preview'), { recursive: true });
 const artifactIndex = {};
 for (const candidate of result.response.candidates) {
   const artifact = result.artifacts[candidate.candidate_id];
   const relative = `artifacts/${candidate.mode.replace('_', '-')}.svg`;
   writeFileSync(resolve(evidenceDir, relative), artifact.data);
+  const raster = rasterizeCandidate({
+    candidateId: candidate.candidate_id,
+    matrixRef: `qr:${candidate.qr_settings.version}:${candidate.qr_settings.mask}`,
+    rendered: { format: 'svg', data: artifact.data, width: 1, height: 1 },
+    scanResults: [], exportAllowed: false, artisticScore: 0,
+  });
+  const preview = new PNG({ width: raster.width, height: raster.height });
+  preview.data = Buffer.from(raster.data);
+  writeFileSync(resolve(evidenceDir, `visual-preview/${candidate.mode.replace('_', '-')}.png`), PNG.sync.write(preview));
   candidate.artifacts[0].uri = `docs/program/evidence/level2-production-image-fit-core/${relative}`;
   artifactIndex[candidate.candidate_id] = { ...candidate.artifacts[0], mode: candidate.mode };
 }
@@ -71,6 +82,7 @@ writeFileSync(resolve(evidenceDir, 'scan-evidence.json'), `${JSON.stringify({
 }, null, 2)}\n`);
 const hashFiles = [
   'artifacts/readable.svg', 'artifacts/balanced.svg', 'artifacts/image-first.svg',
+  'visual-preview/readable.png', 'visual-preview/balanced.png', 'visual-preview/image-first.png',
   'artifacts/fallback-level1.svg', 'optimizer-response.json', 'artifact-index.json', 'scan-evidence.json',
 ];
 const hashLines = hashFiles.map((relative) => `${sha256(readFileSync(resolve(evidenceDir, relative)))}  ${relative}`);
