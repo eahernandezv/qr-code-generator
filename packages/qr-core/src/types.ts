@@ -53,10 +53,19 @@ export interface TimingPattern {
   end: number;
 }
 
+export interface AlignmentPattern {
+  x: number;
+  y: number;
+  size: 5;
+  centerX: number;
+  centerY: number;
+}
+
 export interface FunctionalRegions {
   finderPatterns: FinderPattern[];
   separators: Array<{ x: number; y: number; size: number }>;
   timingPatterns: TimingPattern[];
+  alignmentPatterns: AlignmentPattern[];
   darkModule: { x: number; y: number };
   formatInfo: Array<{ x: number; y: number; isECI: boolean }>;
   versionInfo: Array<{ x: number; y: number }>;

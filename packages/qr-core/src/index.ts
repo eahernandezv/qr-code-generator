@@ -7,6 +7,7 @@ export { normalizePayload, generateMatrix, renderDeterministic, decodeMatrix } f
 export type {
   QrPayload,
   NormalizedPayload,
+  ErrorCorrectionLevel,
   QrMatrix,
   RenderOptions,
   RenderedArtifact,
@@ -14,6 +15,7 @@ export type {
   FunctionalRegions,
   FinderPattern,
   TimingPattern,
+  AlignmentPattern,
   PalettePattern,
   ModuleShape,
   EyeShape,
@@ -21,4 +23,5 @@ export type {
   EyeBallShape,
   FinderShape,
 } from './types.js';
+export { alignmentPatternCenters, getFunctionalRegions, isProtectedFunctionalModule } from './functional-regions.js';
 export { resolveModuleColor, isFunctionalModule } from './patterned-palette.js';
