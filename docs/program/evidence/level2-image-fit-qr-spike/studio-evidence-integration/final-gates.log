@@ -1,0 +1,135 @@
+=== CREATOR EVIDENCE HASHES ===
+creator-visual-report.md: OK
+fixtures/bold-diamond.png: OK
+fixtures/medium-fox.png: OK
+loop-state.json: OK
+run-output.log: OK
+run-visual-pass.mjs: OK
+selected/bold-diamond__background-silhouette__v10-Q-m3-b8.png: OK
+selected/bold-diamond__central-logo-pixel__v10-Q-m0-b8.png: OK
+selected/bold-diamond__module-recolor__v10-Q-m1-b8.png: OK
+selected/medium-fox__background-silhouette__v10-H-m2-b8.png: OK
+selected/medium-fox__central-logo-pixel__v10-Q-m0-b8.png: OK
+selected/medium-fox__module-recolor__v10-Q-m6-b8.png: OK
+visual-candidates.json: OK
+visual-contact-sheet-index.json: OK
+visual-contact-sheet.png: OK
+=== PUBLIC ARTIFACT BYTE PARITY ===
+bold-diamond__background-silhouette__v10-Q-m3-b8.png exact-byte copy OK
+bold-diamond__module-recolor__v10-Q-m1-b8.png exact-byte copy OK
+bold-diamond__central-logo-pixel__v10-Q-m0-b8.png exact-byte copy OK
+=== SHORT-LINK NODE TESTS ===
+TAP version 13
+# Subtest: reserves many candidates, commits one, and expires the unused candidates
+ok 1 - reserves many candidates, commits one, and expires the unused candidates
+  ---
+  duration_ms: 8.45187
+  ...
+# Subtest: blocks unsafe destinations and fails closed if a stored target becomes unsafe
+ok 2 - blocks unsafe destinations and fails closed if a stored target becomes unsafe
+  ---
+  duration_ms: 0.796463
+  ...
+# Subtest: production runtime redirects one committed slug and fails safely for unknown/disabled slugs
+ok 3 - production runtime redirects one committed slug and fails safely for unknown/disabled slugs
+  ---
+  duration_ms: 128.592056
+  ...
+# Subtest: committed-record loading rejects unsafe targets before the runtime starts
+ok 4 - committed-record loading rejects unsafe targets before the runtime starts
+  ---
+  duration_ms: 0.482414
+  ...
+1..4
+# tests 4
+# suites 0
+# pass 4
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 337.464429
+=== WEB TESTS ===
+
+> @qr/web@0.1.0 test /tmp/qr-studio-level2-evidence/apps/web
+> vitest run
+
+
+ RUN  v3.2.6 /tmp/qr-studio-level2-evidence/apps/web
+
+ ✓ src/components/RecoveryPanel.test.tsx (3 tests) 2213ms
+   ✓ RecoveryPanel > recovers paid guest access and rotates the one-time code  537ms
+   ✓ RecoveryPanel > rejects invalid, expired, and replayed recovery capabilities  1577ms
+ ✓ src/components/ArtDirectionPanel.test.tsx (3 tests) 2241ms
+   ✓ ArtDirectionPanel B18 controls > combines twelve solids and ten patterns in Body Color and offers Match body plus twelve corner colors  2053ms
+ ✓ src/lib/commerceClient.test.ts (4 tests) 770ms
+ ✓ src/components/CheckoutPanel.test.tsx (6 tests) 1228ms
+   ✓ CheckoutPanel > runs $12 test checkout through pending to authoritative paid unlock  419ms
+   ✓ CheckoutPanel > grants exactly +8 candidates and +1 artwork for the $5 add-on  608ms
+ ✓ src/App.test.tsx (12 tests) 4748ms
+   ✓ App integration > isolates real Level 2 visual-pass artifacts and presents truthful controlled evidence  486ms
+   ✓ App integration > uses the QR-Style Creator Signature card as the default Level 1 editor and preserves two independent lines  906ms
+   ✓ App integration > uses one shared style toolbar for two independently editable lines on the space-efficient concept route  390ms
+   ✓ App integration > renders the independent icon-first Creator Signature concept only on its child route  514ms
+   ✓ App integration > toggles between Basic QR settings and Creator Signature settings while keeping one shared QR canvas  300ms
+   ✓ App integration > edits exactly two independently styled Creator Signature lines with fixed offset choices  556ms
+   ✓ App integration > uses accessible Core-backed Body Color, Corner Color, Style, Corners, and Eyes choices  627ms
+   ✓ App integration > keeps public typing draft-only while internal entitlement can live-update  417ms
+ ✓ src/components/ExportPanel.test.tsx (12 tests) 750ms
+stderr | src/components/CandidateBoard.test.tsx > CandidateBoard > updates art direction prompt on successful refinement
+Warning: The current testing environment is not configured to support act(...)
+
+stderr | src/components/CandidateBoard.test.tsx > CandidateBoard > updates art direction prompt on successful refinement
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+
+ ✓ src/components/CandidateBoard.test.tsx (13 tests) 494ms
+ ✓ src/components/PayloadInput.test.tsx (5 tests) 659ms
+ ✓ src/lib/studioGenerationRequest.test.ts (13 tests) 195ms
+ ✓ src/accessibility.test.tsx (4 tests) 333ms
+ ✓ src/components/QRPreview.test.tsx (3 tests) 78ms
+ ✓ src/lib/creatorSignature.test.ts (30 tests) 23ms
+ ✓ src/lib/exportFormats.test.ts (2 tests) 11ms
+ ✓ src/store.test.ts (12 tests) 11ms
+
+ Test Files  14 passed (14)
+      Tests  122 passed (122)
+   Start at  00:32:41
+   Duration  10.63s (transform 815ms, setup 3.18s, collect 2.15s, tests 13.76s, environment 7.54s, prepare 1.53s)
+
+=== WEB BUILD ===
+
+> @qr/web@0.1.0 build /tmp/qr-studio-level2-evidence/apps/web
+> tsc && vite build
+
+vite v6.4.3 building for production...
+transforming...
+✓ 129 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                                                0.43 kB │ gzip:  0.30 kB
+dist/assets/icon-eye-frame-d-frame-r8G2irT-.svg                4.51 kB │ gzip:  0.46 kB
+dist/assets/icon-eye-frame-leaf-frame-Df2t5M-N.svg             4.64 kB │ gzip:  0.44 kB
+dist/assets/icon-eye-frame-hex-CLqh2H6M.svg                    4.74 kB │ gzip:  0.44 kB
+dist/assets/icon-eye-frame-inset-leaf-frame-BQeTsYzU.svg       4.91 kB │ gzip:  0.46 kB
+dist/assets/icon-eye-frame-diamond-C8cIeFz9.svg                4.91 kB │ gzip:  0.48 kB
+dist/assets/icon-eye-frame-opposing-leaf-frame-C_8ktXhk.svg    5.04 kB │ gzip:  0.48 kB
+dist/assets/index-R05QvwYm.css                                37.77 kB │ gzip:  7.26 kB
+dist/assets/index-Dse4QBOt.js                                346.09 kB │ gzip: 99.85 kB │ map: 944.97 kB
+✓ built in 2.85s
+=== WEB LINT ===
+
+> @qr/web@0.1.0 lint /tmp/qr-studio-level2-evidence/apps/web
+> eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0
+
+=== MOBILE PLAYWRIGHT ===
+
+> @qr/web@0.1.0 test:e2e /tmp/qr-studio-level2-evidence/apps/web
+> FONTCONFIG_FILE=${PLAYWRIGHT_FONTCONFIG_FILE:-$HOME/.cache/ms-playwright/local-fonts.conf} LD_LIBRARY_PATH=${PLAYWRIGHT_LD_LIBRARY_PATH:-$HOME/.cache/ms-playwright/local-libs/usr/lib/x86_64-linux-gnu} playwright test "level2-image-fit-spike.spec.ts"
+
+
+Running 1 test using 1 worker
+
+[1/1] [chromium-desktop] › e2e/level2-image-fit-spike.spec.ts:9:1 › captures real Readable, Balanced, and Image-first evidence without runtime errors
+  1 passed (4.0s)
+ALL_FINAL_GATES_OK

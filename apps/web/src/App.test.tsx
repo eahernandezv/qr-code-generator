@@ -14,7 +14,7 @@ function resetStore() {
 describe('App integration', () => {
   beforeEach(resetStore)
 
-  it('isolates the Level 2 Image-Fit QR UX spike and keeps optimizer evidence truthful', async () => {
+  it('isolates real Level 2 visual-pass artifacts and presents truthful controlled evidence', async () => {
     const user = userEvent.setup()
     window.history.replaceState({}, '', '/concepts/level2-image-fit-qr')
     render(<App />)
@@ -23,18 +23,29 @@ describe('App integration', () => {
     for (const label of ['Logo', 'Pixel blend', 'Background image', 'Cutout-perforated', 'Readable', 'Balanced', 'Image-first', 'Simple', 'Detailed', 'Maximum']) {
       expect(screen.getByRole('button', { name: label })).toBeInTheDocument()
     }
-    expect(screen.getByRole('button', { name: /Optimized short link/ })).toHaveAttribute('aria-pressed', 'true')
-    expect(screen.getByText(/shorter owned payload gives the optimizer more freedom/i)).toBeInTheDocument()
-    expect(screen.getAllByText('Not run')).toHaveLength(4)
-    expect(screen.getAllByText('— modules')).toHaveLength(4)
-    expect(screen.getAllByText(/Awaiting (optimizer|Creator)/)).toHaveLength(4)
-    expect(screen.queryByText(/scan-safe/i)).toBeInTheDocument()
-    expect(screen.queryByText(/analytics|campaign|custom domain|account/i)).not.toBeInTheDocument()
+    const preview = screen.getByTestId('selected-image-fit-candidate')
+    expect(preview).toHaveAttribute('src', expect.stringContaining('bold-diamond__module-recolor__v10-Q-m1-b8.png'))
+    expect(preview).toHaveAttribute('data-artifact-sha256', '6f9b0ba69475d860d3e22ad4e030e59e44b170c9ec3cdee4658f909c03f08940')
+    expect(screen.getAllByRole('img', { name: /candidate thumbnail/i })).toHaveLength(3)
+    expect(screen.getByText('Passed 8/8')).toBeInTheDocument()
+    expect(screen.getByText(/Technical evidence · v10 · 57 modules · ECC Q · mask 1/)).toBeInTheDocument()
+    expect(screen.getByText(/Passed 8\/8 controlled decoder checks/)).toBeInTheDocument()
+    expect(screen.getByText(/No physical-device or printed scan was performed/)).toBeInTheDocument()
+    expect(screen.queryByText(/Awaiting Creator|universal scan guarantee achieved/i)).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: /Image-first Central binary mutation/ }))
+    expect(preview).toHaveAttribute('src', expect.stringContaining('bold-diamond__central-logo-pixel__v10-Q-m0-b8.png'))
+    expect(screen.getByText(/Technical evidence · v10 · 57 modules · ECC Q · mask 0/)).toBeInTheDocument()
+    expect(screen.getByText(/Experimental destructive treatment; not export-ready/)).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: /Original URL/ }))
-    expect(screen.getByRole('button', { name: /Original URL/ })).toHaveAttribute('aria-pressed', 'true')
     expect(screen.getByRole('alert')).toHaveTextContent(/increase QR density and reduce image clarity/i)
-    expect(screen.queryByRole('button', { name: /Generate|Export|Create short link/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /^(Generate|Export|Create short link)$/i })).not.toBeInTheDocument()
+
+    await user.upload(screen.getByLabelText('Choose target image'), new File(['fixture'], 'new-mark.png', { type: 'image/png' }))
+    expect(screen.queryByTestId('selected-image-fit-candidate')).not.toBeInTheDocument()
+    expect(screen.getAllByText('Not generated yet').length).toBeGreaterThan(0)
+    expect(screen.getByText(/Run the optimizer and controlled decoder checks/)).toBeInTheDocument()
   })
 
   it('uses the QR-Style Creator Signature card as the default Level 1 editor and preserves two independent lines', async () => {
