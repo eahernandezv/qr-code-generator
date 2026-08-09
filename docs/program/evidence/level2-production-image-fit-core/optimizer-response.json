@@ -117,11 +117,12 @@
       "export_authority": {
         "export_allowed": false,
         "blockers": [
+          "preview_export_parity_not_proven",
           "preview_not_paid",
           "short_link_not_committed"
         ],
         "requires_payment_or_internal_entitlement": true,
-        "preview_export_parity": "proven"
+        "preview_export_parity": "not_proven"
       },
       "artifacts": [
         {
@@ -193,11 +194,12 @@
       "export_authority": {
         "export_allowed": false,
         "blockers": [
+          "preview_export_parity_not_proven",
           "preview_not_paid",
           "short_link_not_committed"
         ],
         "requires_payment_or_internal_entitlement": true,
-        "preview_export_parity": "proven"
+        "preview_export_parity": "not_proven"
       },
       "artifacts": [
         {
@@ -269,12 +271,13 @@
       "export_authority": {
         "export_allowed": false,
         "blockers": [
+          "preview_export_parity_not_proven",
           "preview_not_paid",
           "short_link_not_committed",
           "image_first_experimental"
         ],
         "requires_payment_or_internal_entitlement": true,
-        "preview_export_parity": "proven"
+        "preview_export_parity": "not_proven"
       },
       "artifacts": [
         {

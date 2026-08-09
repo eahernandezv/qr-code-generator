@@ -55,6 +55,8 @@ describe('Level 2 Image-Fit optimizer', () => {
     expect(result.response.candidates.every((candidate) => candidate.scan_evidence.print_scan === 'not_performed')).toBe(true);
     expect(result.response.candidates.every((candidate) => candidate.qr_settings.payload_sha256.length === 64)).toBe(true);
     expect(result.response.candidates.every((candidate) => candidate.export_authority.blockers.includes('preview_not_paid'))).toBe(true);
+    expect(result.response.candidates.every((candidate) => candidate.export_authority.blockers.includes('preview_export_parity_not_proven'))).toBe(true);
+    expect(result.response.candidates.every((candidate) => candidate.export_authority.preview_export_parity === 'not_proven')).toBe(true);
     expect(result.fallback_scan_evidence.verdict).toBe('pass');
   }, 30_000);
 
@@ -101,6 +103,22 @@ describe('Level 2 Image-Fit optimizer', () => {
     expect(result.fallback_scan_evidence.verdict).toBe('pass');
     expect(result.fallback_artifact.sha256).toMatch(/^[a-f0-9]{64}$/);
   }, 30_000);
+
+  it('searches later allowed versions when a preferred setting cannot encode the payload', () => {
+    const constrained = input();
+    constrained.request.constraints.allowed_versions = [1, 8];
+    constrained.request.constraints.allowed_masks = [3];
+    constrained.request.constraints.max_candidates = 2;
+    const pass = (): ScanValidationResult => ({
+      pass: true, decoder: 'search-test-decoder', version: '1', thresholdVersion: 'search-test-v1',
+      scannedPayload: constrained.encoded_payload, overallConfidence: 'high',
+      tests: [{ name: 'search', pass: true, scale: 1, perturbation: 'none' }],
+    });
+    const result = optimizeImageFitQr(constrained, { validationRunner: pass });
+    expect(result.response.candidates).toHaveLength(2);
+    expect(result.response.candidates.every((candidate) => candidate.qr_settings.version === 8)).toBe(true);
+    expect(result.fallback_scan_evidence.verdict).toBe('pass');
+  });
 
   it('fails closed when optimized payload bytes do not match the reserved route', () => {
     const malformed = input();

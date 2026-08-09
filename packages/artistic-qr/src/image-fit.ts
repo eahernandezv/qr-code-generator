@@ -3,7 +3,6 @@ import {
   generateMatrix,
   isProtectedFunctionalModule,
   renderDeterministic,
-  type ErrorCorrectionLevel,
   type NormalizedPayload,
   type QrMatrix,
 } from '@qr/qr-core';
@@ -211,7 +210,7 @@ export function optimizeImageFitQr(
         export_allowed: blockers.length === 0,
         blockers,
         requires_payment_or_internal_entitlement: true,
-        preview_export_parity: 'proven',
+        preview_export_parity: 'not_proven',
       },
       artifacts: [{ kind: artifact.kind, uri: artifact.uri, sha256: artifact.sha256 }],
       warnings: mode === 'image_first' ? [{
@@ -364,6 +363,7 @@ function exportBlockers(
   if (input.request.destination.safety.verdict !== 'pass') blockers.push('destination_safety_failed');
   if (!scanPass) blockers.push('automated_decoder_threshold_failed');
   if (protectedViolations.length > 0) blockers.push('protected_region_violation');
+  blockers.push('preview_export_parity_not_proven');
   if (!input.request.entitlement_context.export_entitled) blockers.push('preview_not_paid');
   if (input.request.user_controls.link_mode === 'optimized_short_link' && input.short_link?.state !== 'committed') {
     blockers.push('short_link_not_committed');
@@ -376,20 +376,32 @@ function buildFallback(
   input: ImageFitOptimizerInput,
   validate: (candidate: Candidate, expectedPayload: string) => ScanValidationResult,
 ): { artifact: ImageFitArtifact; scan: ImageFitCandidateV1['scan_evidence'] } {
-  const version = [...input.request.constraints.allowed_versions].sort((a, b) => a - b)[0];
-  const ecc: ErrorCorrectionLevel = input.request.constraints.allowed_ecc.includes('H') ? 'H' : input.request.constraints.allowed_ecc[0];
-  const mask = input.request.constraints.allowed_masks[0];
-  const matrix = generateMatrix({
-    canonical: input.encoded_payload, mode: 'url', byteLength: Buffer.byteLength(input.encoded_payload),
-    version, errorCorrectionLevel: ecc, maskPattern: mask,
-  });
+  let matrix: QrMatrix | undefined;
+  let selected: QrSearchSettings | undefined;
+  for (const settings of settingsCandidatesForMode(input.request, 'readable')) {
+    try {
+      matrix = generateMatrix({
+        canonical: input.encoded_payload,
+        mode: 'url',
+        byteLength: Buffer.byteLength(input.encoded_payload),
+        version: settings.version,
+        errorCorrectionLevel: settings.ecc,
+        maskPattern: settings.mask,
+      });
+      selected = settings;
+      break;
+    } catch {
+      // Continue through the frozen allowed search space before declaring fallback unavailable.
+    }
+  }
+  if (!matrix || !selected) throw new Error('No allowed QR settings can encode the deterministic Level 1 fallback');
   const rendered = renderDeterministic(matrix, {
     format: 'svg', moduleSize: 8, margin: 4, colorDark: '#111827', colorLight: '#ffffff', shape: 'square',
   });
   const artifact = makeArtifact('fallback', rendered.data);
   artifact.uri = `artifact://image-fit/fallback-${artifact.sha256.slice(0, 16)}.svg`;
   const candidate: Candidate = {
-    candidateId: 'level1-fallback-validation', matrixRef: `qr:${version}:${mask}`,
+    candidateId: 'level1-fallback-validation', matrixRef: `qr:${matrix.version}:${matrix.maskPattern}`,
     rendered: { format: 'svg', data: rendered.data, width: rendered.width, height: rendered.height },
     scanResults: [], exportAllowed: false, artisticScore: 0,
   };

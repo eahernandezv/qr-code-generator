@@ -25,7 +25,7 @@
   },
   "fallback": {
     "uri": "docs/program/evidence/level2-production-image-fit-core/artifacts/fallback-level1.svg",
-    "sha256": "6c3329552f8ec5e5bea4c78d96fe7bfb136ca3b7768d17dfaf6ea72361f25150",
+    "sha256": "f453ef42520daa427212ce61b4b697f2ba6177652ea7004aa1734a4a3f8a2e7b",
     "scan_evidence": {
       "verdict": "pass",
       "decoder_suite_version": "scan-v1-real-75pct",
