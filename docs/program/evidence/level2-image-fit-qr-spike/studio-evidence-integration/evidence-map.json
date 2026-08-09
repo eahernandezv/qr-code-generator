@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "sourceCommit": "252580570086e21fd0bf3e1dfcab730f9c64c24b",
+  "sourceEvidence": "docs/program/evidence/level2-image-fit-qr-spike/creator-visual-pass/visual-contact-sheet-index.json",
+  "verdict": "VALIDATED FOR SPIKE / NOT PRODUCTION EXPORT",
+  "physicalScanTested": false,
+  "candidates": [
+    {
+      "productMode": "Readable",
+      "treatment": "background-silhouette",
+      "candidateId": "bold-diamond__background-silhouette__v10-Q-m3-b8",
+      "sourceSha256": "282dc4cc5dcd074f338c9fe264ca99f268c9a566ff8f173fbe448a9842d84fe0",
+      "version": 10,
+      "moduleCount": 57,
+      "ecc": "Q",
+      "mask": 3,
+      "controlledDecoderPasses": 8,
+      "controlledDecoderTests": 8,
+      "experimental": false
+    },
+    {
+      "productMode": "Balanced",
+      "treatment": "module-recolor",
+      "candidateId": "bold-diamond__module-recolor__v10-Q-m1-b8",
+      "sourceSha256": "6f9b0ba69475d860d3e22ad4e030e59e44b170c9ec3cdee4658f909c03f08940",
+      "version": 10,
+      "moduleCount": 57,
+      "ecc": "Q",
+      "mask": 1,
+      "controlledDecoderPasses": 8,
+      "controlledDecoderTests": 8,
+      "experimental": false
+    },
+    {
+      "productMode": "Image-first",
+      "treatment": "central-logo-pixel",
+      "candidateId": "bold-diamond__central-logo-pixel__v10-Q-m0-b8",
+      "sourceSha256": "71263c9f5d6d12dcfd3457c6197f151a72e20b5206e75dd143f67cf6cc49f448",
+      "version": 10,
+      "moduleCount": 57,
+      "ecc": "Q",
+      "mask": 0,
+      "controlledDecoderPasses": 8,
+      "controlledDecoderTests": 8,
+      "experimental": true,
+      "exportReady": false
+    }
+  ]
+}

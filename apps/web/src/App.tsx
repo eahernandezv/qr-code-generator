@@ -7,15 +7,18 @@ import RecoveryPanel from './components/RecoveryPanel'
 import CheckoutPanel from './components/CheckoutPanel'
 import CreatorSignatureIconConcept from './components/CreatorSignatureIconConcept'
 import CreatorSignatureSpaceConcept from './components/CreatorSignatureSpaceConcept'
+import ImageFitQrConcept from './components/ImageFitQrConcept'
 
 const CREATOR_SIGNATURE_CONCEPT_PATH = '/concepts/creator-signature-ux/creator'
 const CREATOR_SIGNATURE_SPACE_CONCEPT_PATH = '/concepts/creator-signature-ux/space-creator'
+const IMAGE_FIT_QR_CONCEPT_PATH = '/concepts/level2-image-fit-qr'
 
 const App: React.FC = () => {
   const { project, resetProject } = useStudioStore()
   const pathname = typeof window !== 'undefined' ? window.location.pathname : '/'
   const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams()
   const showSecondaryWorkflow = searchParams.get('workflow') === 'internal'
+  if (pathname === IMAGE_FIT_QR_CONCEPT_PATH) return <ImageFitQrConcept />
   if (pathname === CREATOR_SIGNATURE_CONCEPT_PATH) {
     return <CreatorSignatureIconConcept />
   }

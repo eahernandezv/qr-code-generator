@@ -1,16 +1,19 @@
 import { createReadStream, promises as fs } from 'node:fs'
 import { createServer } from 'node:http'
 import { extname, resolve, sep } from 'node:path'
+import { createCommittedShortLinkStore, resolveShortLinkRequest } from './short-link-resolver.mjs'
 
 const host = process.env.WEB_HOST ?? '127.0.0.1'
 const port = parsePort(process.env.WEB_PORT ?? '4175', 'WEB_PORT')
 const staticRoot = resolve(process.env.WEB_STATIC_ROOT ?? new URL('../dist', import.meta.url).pathname)
 const coreUpstream = upstream(process.env.ARTISTIC_QR_UPSTREAM ?? 'http://127.0.0.1:8787')
 const commerceUpstream = upstream(process.env.COMMERCE_UPSTREAM ?? 'http://127.0.0.1:4174/api/commerce')
+const shortLinks = createCommittedShortLinkStore(parseShortLinkRecords(process.env.SHORT_LINK_RECORDS_JSON))
 
 const server = createServer(async (request, response) => {
   try {
     const url = new URL(request.url ?? '/', `http://${request.headers.host ?? 'localhost'}`)
+    if (resolveShortLinkRequest(request, response, url.pathname, shortLinks)) return
     if (url.pathname === '/api/artistic-qr' || url.pathname.startsWith('/api/artistic-qr/')) {
       await proxy(request, response, coreUpstream, url.pathname.slice('/api/artistic-qr'.length) || '/', url.search)
       return
@@ -119,6 +122,14 @@ function upstream(value) {
 function parsePort(value, name) {
   const parsed = Number(value)
   if (!Number.isInteger(parsed) || parsed < 1 || parsed > 65535) throw new Error(`${name} must be an integer from 1 to 65535`)
+  return parsed
+}
+
+function parseShortLinkRecords(value) {
+  if (!value) return []
+  let parsed
+  try { parsed = JSON.parse(value) } catch { throw new Error('SHORT_LINK_RECORDS_JSON must be valid JSON') }
+  if (!Array.isArray(parsed)) throw new Error('SHORT_LINK_RECORDS_JSON must be an array')
   return parsed
 }
 

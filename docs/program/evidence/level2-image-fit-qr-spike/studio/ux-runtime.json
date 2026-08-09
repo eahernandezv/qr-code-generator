@@ -1,0 +1,16 @@
+{
+  "metrics": {
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "document": {
+      "width": 390,
+      "height": 1439
+    },
+    "horizontalOverflow": false,
+    "candidateCards": 3
+  },
+  "pageErrors": [],
+  "consoleErrors": []
+}
