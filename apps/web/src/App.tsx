@@ -40,7 +40,15 @@ const App: React.FC = () => {
             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-studio-600 text-xs font-bold text-white">QR</div>
             <h1 className="text-sm font-semibold tracking-tight text-slate-100">Artistic QR Studio</h1>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <a
+              href={IMAGE_FIT_QR_CONCEPT_PATH}
+              aria-label="Open Level 2 Image-Fit QR concept — validated fixture, export locked"
+              className="flex min-h-7 flex-col justify-center rounded-md border border-studio-700/70 bg-studio-950/50 px-2 text-left leading-none text-studio-200 transition-colors hover:border-studio-500 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-studio-400"
+            >
+              <span className="text-[10px] font-semibold">Image-Fit QR</span>
+              <span className="mt-0.5 text-[8px] text-slate-500">Level 2 · export locked</span>
+            </a>
             <span className="hidden text-xs text-slate-500 sm:inline">
               Project: <code className="text-slate-400">{project.projectId.slice(0, 8)}</code>
             </span>
