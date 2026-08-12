@@ -220,6 +220,18 @@ describe('App integration', () => {
     expect(screen.queryByText(/1200|2400|3600/)).not.toBeInTheDocument()
   })
 
+  it('offers a compact, non-commerce path from the Level 1 apex to the isolated Level 2 concept', () => {
+    render(<App />)
+
+    expect(screen.getByTestId('studio-app')).toBeInTheDocument()
+    expect(screen.queryByTestId('image-fit-qr-concept')).not.toBeInTheDocument()
+    const conceptLink = screen.getByRole('link', { name: /Open Level 2 Image-Fit QR concept/i })
+    expect(conceptLink).toHaveAttribute('href', '/concepts/level2-image-fit-qr')
+    expect(conceptLink).toHaveTextContent('Image-Fit QR')
+    expect(conceptLink).toHaveTextContent('Level 2 · export locked')
+    expect(conceptLink).not.toHaveTextContent(/checkout|price|payment|unlock/i)
+  })
+
   it('uses the no-scroll comparison layout as the default public route and keeps scrollable Version A behind an explicit query', async () => {
     const user = userEvent.setup()
     render(<App />)

@@ -1,0 +1,32 @@
+{
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "apex": {
+    "pathname": "/",
+    "href": "/concepts/level2-image-fit-qr",
+    "visibleText": "Image-Fit QRLevel 2 · export locked",
+    "levelOnePresent": true,
+    "levelTwoPresent": false,
+    "horizontalOverflow": false,
+    "viewportWidth": 390,
+    "documentWidth": 390,
+    "forbiddenVisibleActions": []
+  },
+  "initialConcept": {
+    "pathname": "/concepts/level2-image-fit-qr",
+    "exportPayloadBound": "false",
+    "horizontalOverflow": false,
+    "generateButtons": 0,
+    "checkoutText": false,
+    "selectedEvidencePresent": true
+  },
+  "invalidatedConcept": {
+    "exportPayloadBound": "false",
+    "selectedEvidencePresent": false,
+    "horizontalOverflow": false
+  },
+  "pageErrors": [],
+  "consoleErrors": []
+}
