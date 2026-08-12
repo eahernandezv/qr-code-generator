@@ -41,7 +41,7 @@ export interface Palette {
   background?: string;
 }
 
-export type PaletteFamily = 'rainbow' | 'pride' | 'trans' | 'bi' | 'berry' | 'forest';
+export type PaletteFamily = 'rainbow' | 'pride' | 'trans' | 'bi' | 'berry' | 'forest' | 'dora';
 export type PalettePattern =
   | 'solid'
   | 'horizontalGradient'

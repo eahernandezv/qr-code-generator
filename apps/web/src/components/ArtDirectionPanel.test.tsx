@@ -23,10 +23,10 @@ function contrastRatio(foreground: string, background: string): number {
 describe('ArtDirectionPanel B18 controls', () => {
   beforeEach(resetStore)
 
-  it('keeps all thirty-six solid foreground variants dark against their backgrounds', () => {
+  it('keeps all fifty-one solid foreground variants dark against their backgrounds', () => {
     const variants = SOLID_PRESETS.flatMap((preset) => Object.entries(preset.variants)
       .map(([intensity, palette]) => ({ name: preset.name, intensity, palette })))
-    expect(variants).toHaveLength(36)
+    expect(variants).toHaveLength(51)
     for (const variant of variants) {
       expect(
         contrastRatio(variant.palette.primary, variant.palette.background),
@@ -35,14 +35,14 @@ describe('ArtDirectionPanel B18 controls', () => {
     }
   })
 
-  it('combines twelve solids and ten patterns in Body Color and offers Match body plus twelve corner colors', async () => {
+  it('combines seventeen solids and eleven patterns in Body Color and offers Match body plus seventeen corner colors', async () => {
     const user = userEvent.setup()
     render(<ArtDirectionPanel />)
 
     const bodyColors = screen.getByRole('listbox', { name: 'Body Color' })
-    expect(bodyColors.querySelectorAll('[role="option"]')).toHaveLength(22)
-    expect(SOLID_PRESETS).toHaveLength(12)
-    expect(PATTERNED_PRESETS).toHaveLength(10)
+    expect(bodyColors.querySelectorAll('[role="option"]')).toHaveLength(28)
+    expect(SOLID_PRESETS).toHaveLength(17)
+    expect(PATTERNED_PRESETS).toHaveLength(11)
     expect(bodyColors.querySelector('[data-body-color-separator="true"]')).toBeInTheDocument()
 
     const purple = screen.getByRole('option', { name: 'Electric Purple' })
@@ -53,13 +53,24 @@ describe('ArtDirectionPanel B18 controls', () => {
       paletteFamily: 'rainbow',
       palettePattern: 'horizontalGradient',
     })
+    await user.click(screen.getByRole('option', { name: 'Dora Pink' }))
+    expect(useStudioStore.getState().project.artDirection).toMatchObject({
+      paletteFamily: undefined,
+      palettePattern: 'solid',
+      palette: { primary: '#c01978', secondary: '#80104f', accent: '#ff7bb8', background: '#fff0f8' },
+    })
+    await user.click(screen.getByRole('option', { name: 'Dora mixed diagonal' }))
+    expect(useStudioStore.getState().project.artDirection).toMatchObject({
+      paletteFamily: 'dora',
+      palettePattern: 'diagonalGradient',
+    })
 
     const cornerColors = screen.getByRole('listbox', { name: 'Corner Color' })
-    expect(CORNER_COLOR_OPTIONS).toHaveLength(12)
-    expect(cornerColors.querySelectorAll('[role="option"]')).toHaveLength(13)
+    expect(CORNER_COLOR_OPTIONS).toHaveLength(17)
+    expect(cornerColors.querySelectorAll('[role="option"]')).toHaveLength(18)
     expect(screen.getByRole('option', { name: 'Match body selected' })).toHaveAttribute('data-setting', 'match-body')
-    await user.click(screen.getByRole('option', { name: 'Crimson Red corner color' }))
-    expect(useStudioStore.getState().project.artDirection.cornerColor).toBe('#a51d31')
+    await user.click(screen.getByRole('option', { name: 'Dora Navy corner color' }))
+    expect(useStudioStore.getState().project.artDirection.cornerColor).toBe('#071258')
     await user.click(screen.getByRole('option', { name: 'Match body' }))
     expect(useStudioStore.getState().project.artDirection.cornerColor).toBeUndefined()
     expect(JSON.stringify(useStudioStore.getState().project.artDirection)).not.toContain('cornerColor')
