@@ -72,6 +72,15 @@ export default function ImageFitQrConcept() {
   const [evidenceCurrent, setEvidenceCurrent] = React.useState(true)
   const selected = candidates[0]
   const invalidateEvidence = () => setEvidenceCurrent(false)
+  const resetFixture = () => {
+    setTreatment(request.user_controls.treatment)
+    setStrength(request.user_controls.strength)
+    setDetail(request.user_controls.detail)
+    setLinkMode(request.user_controls.link_mode)
+    setDestination(request.destination.normalized_url)
+    setImageName(request.target_image.image_ref)
+    setEvidenceCurrent(true)
+  }
   const checksPassed = fixtureCandidate.scan_evidence.checks_passed
   const checksTotal = fixtureCandidate.scan_evidence.checks_total
 
@@ -79,20 +88,23 @@ export default function ImageFitQrConcept() {
     <header className="border-b border-white/10 bg-slate-950/90 px-4 py-3">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-3">
         <div><p className="text-[10px] font-black uppercase tracking-[.2em] text-indigo-300">Level 2 isolated concept</p><h1 className="text-base font-bold">Image-Fit QR</h1></div>
-        <span className="rounded-full border border-amber-300/30 bg-amber-300/10 px-2.5 py-1 text-[10px] font-bold text-amber-200">Fixture preview · export locked</span>
+        <span className="rounded-full border border-amber-300/30 bg-amber-300/10 px-2.5 py-1 text-[10px] font-bold text-amber-200">One validated fixture · generation locked</span>
       </div>
     </header>
 
     <div className="mx-auto grid max-w-6xl gap-3 p-3 lg:grid-cols-[minmax(0,.9fr)_minmax(360px,1.1fr)]">
+      <section aria-label="Level 2 test boundary" className="lg:col-span-2 rounded-2xl border border-indigo-300/20 bg-indigo-500/10 px-3 py-2 text-[10px] leading-relaxed text-indigo-100">
+        <strong className="text-white">What you can test now:</strong> this page shows one server-validated fixture only. Editing controls hides that fixture because live Level 2 generation is not enabled yet. Use <span className="font-bold text-white">Reset to validated fixture</span> to restore the proven output.
+      </section>
       <section aria-label="Image-Fit QR preview" className="rounded-2xl border border-white/10 bg-slate-900/60 p-3 shadow-2xl shadow-black/30">
         <div className="relative mx-auto aspect-square max-w-[430px] overflow-hidden rounded-2xl border border-indigo-400/20 bg-slate-100 p-3">
           {evidenceCurrent
             ? <img data-testid="selected-image-fit-candidate" data-artifact-sha256={selected.sha256} data-candidate-id={selected.candidateId} src={selected.image} alt={`${labels[selected.mode]} ${selected.treatment} candidate`} className="h-full w-full rounded-xl object-contain" />
-            : <div className="flex h-full items-center justify-center rounded-xl border border-dashed border-slate-400 bg-slate-200 px-8 text-center text-sm font-bold text-slate-600">Not generated yet</div>}
+            : <div className="flex h-full items-center justify-center rounded-xl border border-dashed border-slate-400 bg-slate-200 px-8 text-center text-sm font-bold text-slate-600">Generation locked · reset to view fixture</div>}
           <span className="absolute bottom-4 left-4 rounded-full bg-slate-950/85 px-2 py-1 text-[9px] font-bold text-slate-100">{evidenceCurrent ? `${labels[selected.mode]} · fixture evidence` : 'Evidence invalidated'}</span>
         </div>
         <div className="mt-3 grid grid-cols-3 gap-2 text-center text-[10px]">
-          <div className="rounded-xl border border-white/10 bg-black/20 p-2"><span className="block text-slate-500">Scan status</span><strong className={evidenceCurrent ? 'text-emerald-300' : 'text-slate-300'}>{evidenceCurrent ? `Passed ${checksPassed}/${checksTotal}` : 'Not generated yet'}</strong></div>
+          <div className="rounded-xl border border-white/10 bg-black/20 p-2"><span className="block text-slate-500">Scan status</span><strong className={evidenceCurrent ? 'text-emerald-300' : 'text-slate-300'}>{evidenceCurrent ? `Passed ${checksPassed}/${checksTotal}` : 'Fixture hidden'}</strong></div>
           <div className="rounded-xl border border-white/10 bg-black/20 p-2"><span className="block text-slate-500">Density</span><strong>{evidenceCurrent ? `${selected.moduleCount} modules` : '—'}</strong></div>
           <div className="rounded-xl border border-white/10 bg-black/20 p-2"><span className="block text-slate-500">Image fit</span><strong className={selected.experimental ? 'text-amber-200' : 'text-indigo-200'}>{evidenceCurrent ? (selected.experimental ? 'Experimental' : labels[selected.mode]) : 'Not evaluated'}</strong></div>
         </div>
@@ -100,7 +112,7 @@ export default function ImageFitQrConcept() {
           <summary className="cursor-pointer px-3 py-2 font-bold text-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300">Technical evidence · v{selected.version} · {selected.moduleCount} modules · ECC {selected.ecc} · mask {selected.mask}</summary>
           <dl className="grid grid-cols-2 gap-x-3 gap-y-1 border-t border-white/10 px-3 py-2"><dt className="text-slate-500">Treatment</dt><dd>{selected.treatment}</dd><dt className="text-slate-500">Changed modules</dt><dd>{selected.modifiedModules} ({selected.actualFraction})</dd><dt className="text-slate-500">Decoder</dt><dd>{fixtureCandidate.scan_evidence.decoders[0].name} {fixtureCandidate.scan_evidence.decoders[0].version}</dd><dt className="text-slate-500">Threshold</dt><dd>{fixtureCandidate.scan_evidence.decoder_suite_version}</dd><dt className="text-slate-500">Physical / print</dt><dd>Not tested</dd></dl>
         </details>}
-        <p className="mt-2 text-[9px] leading-relaxed text-slate-500">{evidenceCurrent ? `Passed ${checksPassed}/${checksTotal} controlled decoder checks. Physical-device and print scans were not performed. ${fixtureCandidate.scan_evidence.disclaimer}` : 'Inputs changed. Previous fixture evidence is hidden; a server-authoritative optimizer run and controlled decoder checks are required.'}</p>
+        <p className="mt-2 text-[9px] leading-relaxed text-slate-500">{evidenceCurrent ? `Passed ${checksPassed}/${checksTotal} controlled decoder checks. Physical-device and print scans were not performed. ${fixtureCandidate.scan_evidence.disclaimer}` : 'Inputs changed. Previous fixture evidence is hidden; live generation is not enabled on this concept route. Reset to the validated fixture to view the proven output again.'}</p>
         <div role="status" className="mt-2 rounded-xl border border-amber-300/25 bg-amber-300/10 px-3 py-2 text-[10px] leading-relaxed text-amber-100">
           Export unavailable. This preview is unpaid, its short link is reserved—not committed—and no export payload is bound. Server-authoritative selection, entitlement, committed short link, and preview/export parity are required.
         </div>
@@ -124,12 +136,14 @@ export default function ImageFitQrConcept() {
           ? <p className="rounded-xl border border-indigo-300/20 bg-indigo-500/10 px-3 py-2 text-[10px] leading-relaxed text-indigo-100">Optimized short links can help the QR matrix fit the image more cleanly. Only one entitled, server-selected project slug may be committed.</p>
           : <p role="alert" className="rounded-xl border border-amber-300/30 bg-amber-300/10 px-3 py-2 text-[10px] leading-relaxed text-amber-100">Original URLs can increase QR density and reduce image clarity. New candidate evidence is required before selection.</p>}
 
+        {!evidenceCurrent && <button type="button" onClick={resetFixture} className="rounded-xl border border-emerald-300/40 bg-emerald-400/15 px-3 py-2 text-[10px] font-black uppercase tracking-[.12em] text-emerald-100 transition hover:bg-emerald-400/25 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-200">Reset to validated fixture</button>}
+
         <section aria-label="Candidate evidence" className="grid grid-cols-1 gap-1.5">
           {candidates.map((candidate) => <article key={candidate.mode} aria-label={`${labels[candidate.mode]} contract candidate`} className={`min-w-0 rounded-xl border p-1.5 text-left ${evidenceCurrent ? 'border-indigo-300/70 bg-indigo-500/15' : 'border-white/10 bg-slate-950/55 opacity-60'}`}>
-            {evidenceCurrent ? <div className="mb-1.5 mx-auto max-w-32 overflow-hidden rounded-lg bg-white p-0.5"><img src={candidate.image} alt={`${labels[candidate.mode]} candidate thumbnail`} className="aspect-square w-full object-contain" /></div> : <div className="mb-1.5 mx-auto flex aspect-square max-w-32 items-center justify-center rounded-lg border border-dashed border-slate-600 text-[8px] text-slate-500">Regenerate</div>}
+            {evidenceCurrent ? <div className="mb-1.5 mx-auto max-w-32 overflow-hidden rounded-lg bg-white p-0.5"><img src={candidate.image} alt={`${labels[candidate.mode]} candidate thumbnail`} className="aspect-square w-full object-contain" /></div> : <div className="mb-1.5 mx-auto flex aspect-square max-w-32 items-center justify-center rounded-lg border border-dashed border-slate-600 px-2 text-center text-[8px] text-slate-500">Generation locked</div>}
             <span className="block text-center text-[9px] font-bold">{labels[candidate.mode]}</span>
             <span className="block text-center text-[8px] text-slate-400">{evidenceCurrent ? candidate.treatment : 'Evidence invalidated'}</span>
-            <span className="mt-1 block text-center text-[8px] font-bold text-slate-300">{evidenceCurrent ? `${checksPassed}/${checksTotal} checks · fixture response` : 'Not generated'}</span>
+            <span className="mt-1 block text-center text-[8px] font-bold text-slate-300">{evidenceCurrent ? `${checksPassed}/${checksTotal} checks · fixture response` : 'Reset to view fixture'}</span>
           </article>)}
         </section>
         {evidenceCurrent && <p className={`rounded-lg border px-2.5 py-2 text-[9px] leading-snug ${selected.experimental ? 'border-amber-300/20 bg-amber-300/10 text-amber-100' : 'border-white/10 bg-slate-950/55 text-slate-300'}`}>{selected.recommendation}</p>}

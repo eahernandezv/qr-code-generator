@@ -41,13 +41,19 @@ describe('App integration', () => {
     await user.click(screen.getByRole('button', { name: /Original URL/ }))
     expect(screen.getByRole('alert')).toHaveTextContent(/increase QR density and reduce image clarity/i)
     expect(screen.queryByTestId('selected-image-fit-candidate')).not.toBeInTheDocument()
-    expect(screen.getAllByText('Not generated yet').length).toBeGreaterThan(0)
+    expect(screen.getByText('Generation locked · reset to view fixture')).toBeInTheDocument()
     expect(screen.getByText(/Inputs changed\. Previous fixture evidence is hidden/)).toBeInTheDocument()
+    expect(screen.getByText('Generation locked')).toBeInTheDocument()
+    expect(screen.queryByText('Regenerate')).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /^(Generate|Export|Create short link)$/i })).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Reset to validated fixture' }))
+    expect(screen.getByTestId('selected-image-fit-candidate')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Optimized short link/ })).toHaveAttribute('aria-pressed', 'true')
 
     await user.upload(screen.getByLabelText('Choose target image'), new File(['fixture'], 'new-mark.png', { type: 'image/png' }))
     expect(screen.queryByTestId('selected-image-fit-candidate')).not.toBeInTheDocument()
-    expect(screen.getAllByText('Not generated yet').length).toBeGreaterThan(0)
+    expect(screen.getByText('Fixture hidden')).toBeInTheDocument()
   })
 
   it.each([
@@ -75,6 +81,8 @@ describe('App integration', () => {
 
     expect(screen.queryByTestId('selected-image-fit-candidate')).not.toBeInTheDocument()
     expect(screen.getByText(/Previous fixture evidence is hidden/)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Reset to validated fixture' })).toBeInTheDocument()
+    expect(screen.queryByText('Regenerate')).not.toBeInTheDocument()
     expect(screen.getByTestId('image-fit-qr-concept')).toHaveAttribute('data-export-payload-bound', 'false')
     expect(screen.queryByText(/Awaiting Creator|Confidence:\s*\d+%|production approved/i)).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /^(Generate|Export|Create short link)$/i })).not.toBeInTheDocument()
