@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach } from 'vitest'
-import { fireEvent, render, screen } from '@testing-library/react'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import App from './App'
 import { useStudioStore } from './store'
@@ -14,78 +14,52 @@ function resetStore() {
 describe('App integration', () => {
   beforeEach(resetStore)
 
-  it('isolates the contract-backed Level 2 fixture and presents truthful controlled evidence', async () => {
+  it('builds a real request, renders Creator candidates, then invalidates them on edits', async () => {
     const user = userEvent.setup()
     window.history.replaceState({}, '', '/concepts/level2-image-fit-qr')
+    const response = structuredClone((await import('../../../packages/contracts/fixtures/image-fit-qr/valid-balanced-response.v1.json')).default)
+    vi.stubGlobal('fetch', vi.fn().mockImplementation(async (_url, init) => {
+      const request = JSON.parse(String(init?.body))
+      return { ok: true, json: async () => ({ ...response, request: { ...response.request, request_id: request.request_id } }) }
+    }))
     render(<App />)
 
-    expect(screen.getByTestId('image-fit-qr-concept')).toHaveAttribute('data-schema-version', 'image-fit-qr-api.v1')
-    expect(screen.getByTestId('image-fit-qr-concept')).toHaveAttribute('data-export-payload-bound', 'false')
-    for (const label of ['Logo', 'Pixel blend', 'Background image', 'Cutout-perforated', 'Readable', 'Balanced', 'Image-first', 'Simple', 'Detailed', 'Maximum']) {
-      expect(screen.getByRole('button', { name: label })).toBeInTheDocument()
-    }
-    const preview = screen.getByTestId('selected-image-fit-candidate')
-    expect(preview).toHaveAttribute('src', expect.stringContaining('bold-diamond__module-recolor__v10-Q-m1-b8.png'))
+    const concept = screen.getByTestId('image-fit-qr-concept')
+    expect(concept).toHaveAttribute('data-export-payload-bound', 'false')
+    expect(concept).toHaveAttribute('data-checkout-bound', 'false')
+    expect(screen.queryByTestId('selected-image-fit-candidate')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Generate candidates' })).toBeEnabled()
+
+    await user.click(screen.getByRole('button', { name: 'Generate candidates' }))
+    const preview = await screen.findByTestId('selected-image-fit-candidate')
     expect(preview).toHaveAttribute('data-artifact-sha256', '6f9b0ba69475d860d3e22ad4e030e59e44b170c9ec3cdee4658f909c03f08940')
-    expect(screen.getAllByRole('img', { name: /candidate thumbnail/i })).toHaveLength(1)
-    expect(screen.getByText('Passed 8/8')).toBeInTheDocument()
-    expect(screen.getByText(/Technical evidence · v10 · 57 modules · ECC Q · mask 1/)).toBeInTheDocument()
-    expect(screen.getByText(/Passed 8\/8 controlled decoder checks/)).toBeInTheDocument()
-    expect(screen.getByText(/Physical-device and print scans were not performed/)).toBeInTheDocument()
-    expect(screen.getByText(/not a universal scan guarantee/)).toBeInTheDocument()
-    expect(screen.getByRole('status')).toHaveTextContent(/unpaid.*reserved—not committed.*no export payload is bound/i)
-    expect(screen.queryByText(/Awaiting Creator|Confidence:\s*\d+%|universal scan guarantee achieved|production approved/i)).not.toBeInTheDocument()
+    expect(screen.getByRole('article', { name: 'Balanced generated candidate' })).toHaveTextContent(/8\/8 checks/)
+    expect(screen.getByRole('status')).toHaveTextContent(/Export and Checkout remain unavailable/)
 
-    expect(screen.getByRole('article', { name: 'Balanced contract candidate' })).toHaveTextContent(/8\/8 checks · fixture response/)
-
-    await user.click(screen.getByRole('button', { name: /Original URL/ }))
-    expect(screen.getByRole('alert')).toHaveTextContent(/increase QR density and reduce image clarity/i)
+    await user.click(screen.getByRole('button', { name: 'Original URL' }))
     expect(screen.queryByTestId('selected-image-fit-candidate')).not.toBeInTheDocument()
-    expect(screen.getByText('Generation locked · reset to view fixture')).toBeInTheDocument()
-    expect(screen.getByText(/Inputs changed\. Previous fixture evidence is hidden/)).toBeInTheDocument()
-    expect(screen.getByText('Generation locked')).toBeInTheDocument()
-    expect(screen.queryByText('Regenerate')).not.toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: /^(Generate|Export|Create short link)$/i })).not.toBeInTheDocument()
-
-    await user.click(screen.getByRole('button', { name: 'Reset to validated fixture' }))
-    expect(screen.getByTestId('selected-image-fit-candidate')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Optimized short link/ })).toHaveAttribute('aria-pressed', 'true')
-
-    await user.upload(screen.getByLabelText('Choose target image'), new File(['fixture'], 'new-mark.png', { type: 'image/png' }))
-    expect(screen.queryByTestId('selected-image-fit-candidate')).not.toBeInTheDocument()
-    expect(screen.getByText('Fixture hidden')).toBeInTheDocument()
+    expect(screen.getByText('Ready for real generation')).toBeInTheDocument()
   })
 
-  it.each([
-    ['destination', 'Level 2 destination URL'],
-    ['target image', 'Choose target image'],
-    ['treatment', 'Logo'],
-    ['strength', 'Readable'],
-    ['detail', 'Maximum'],
-    ['link mode', 'Original URL'],
-  ])('invalidates and hides fixture evidence after changing %s', async (kind, controlName) => {
+  it('fails closed when Creator generation is unavailable and never shows fixture evidence', async () => {
+    const user = userEvent.setup()
+    window.history.replaceState({}, '', '/concepts/level2-image-fit-qr')
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('offline')))
+    render(<App />)
+    await user.click(screen.getByRole('button', { name: 'Generate candidates' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent(/Generation failed closed.*service is unavailable/i)
+    expect(screen.queryByTestId('selected-image-fit-candidate')).not.toBeInTheDocument()
+    expect(screen.queryByRole('article')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Export|Checkout|Create short link/i })).not.toBeInTheDocument()
+  })
+
+  it('disables generation for invalid input', async () => {
     const user = userEvent.setup()
     window.history.replaceState({}, '', '/concepts/level2-image-fit-qr')
     render(<App />)
-    expect(screen.getByTestId('selected-image-fit-candidate')).toBeInTheDocument()
-
-    if (kind === 'destination') {
-      fireEvent.change(screen.getByRole('textbox', { name: controlName }), { target: { value: 'https://example.org/changed' } })
-    } else if (kind === 'target image') {
-      await user.upload(screen.getByLabelText(controlName), new File(['changed'], 'changed.png', { type: 'image/png' }))
-    } else if (kind === 'link mode') {
-      await user.click(screen.getByRole('button', { name: /Original URL/ }))
-    } else {
-      await user.click(screen.getByRole('button', { name: (accessibleName) => accessibleName === controlName }))
-    }
-
-    expect(screen.queryByTestId('selected-image-fit-candidate')).not.toBeInTheDocument()
-    expect(screen.getByText(/Previous fixture evidence is hidden/)).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Reset to validated fixture' })).toBeInTheDocument()
-    expect(screen.queryByText('Regenerate')).not.toBeInTheDocument()
-    expect(screen.getByTestId('image-fit-qr-concept')).toHaveAttribute('data-export-payload-bound', 'false')
-    expect(screen.queryByText(/Awaiting Creator|Confidence:\s*\d+%|production approved/i)).not.toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: /^(Generate|Export|Create short link)$/i })).not.toBeInTheDocument()
+    await user.clear(screen.getByRole('textbox', { name: 'Level 2 destination URL' }))
+    expect(screen.getByRole('button', { name: 'Generate candidates' })).toBeDisabled()
+    expect(screen.getByRole('textbox', { name: 'Level 2 destination URL' })).toHaveAttribute('aria-invalid', 'true')
   })
 
   it('uses the QR-Style Creator Signature card as the default Level 1 editor and preserves two independent lines', async () => {
