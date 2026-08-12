@@ -64,7 +64,7 @@ export const PATTERNED_PALETTE_PRESETS = [
   ['rainbow', 'horizontalGradient'], ['rainbow', 'verticalGradient'], ['rainbow', 'diagonalGradient'],
   ['pride', 'flagRows'], ['pride', 'diagonalGradient'], ['bi', 'verticalGradient'],
   ['berry', 'spiral'], ['forest', 'diagonalGradient'], ['rainbow', 'radialRings'],
-  ['trans', 'diagonalGradient'],
+  ['trans', 'diagonalGradient'], ['dora', 'diagonalGradient'],
 ] as const satisfies readonly (readonly [PaletteFamily, PalettePattern])[];
 
 const CURATED_PALETTES: Record<PaletteFamily, Record<ColorIntensity, readonly string[]>> = {
@@ -91,6 +91,11 @@ const CURATED_PALETTES: Record<PaletteFamily, Record<ColorIntensity, readonly st
   },
   forest: {
     mellow: ['#355f4c', '#486a3e', '#676423', '#345e68'], balanced: ['#126b43', '#3a721d', '#756400', '#006477'], punchy: ['#00713d', '#277900', '#806400', '#00647f'],
+  },
+  dora: {
+    mellow: ['#263066', '#3e5f92', '#604a91', '#8c3f70', '#8c4b55'],
+    balanced: ['#071258', '#2f66d8', '#6d35c8', '#c01978', '#bf2f46'],
+    punchy: ['#050d6b', '#1f62ff', '#7b22e6', '#d60080', '#d62246'],
   },
 };
 

@@ -44,7 +44,7 @@ describe('artistic render intent', () => {
       return first;
     });
     expect(new Set(outputs)).toHaveLength(patterns.length);
-    expect(PATTERNED_PALETTE_PRESETS).toHaveLength(10);
+    expect(PATTERNED_PALETTE_PRESETS).toHaveLength(11);
   });
 
   it('makes every intensity distinct and keeps functional modules high-contrast', () => {
@@ -60,6 +60,18 @@ describe('artistic render intent', () => {
       });
       expect(new Set(outputs)).toHaveLength(3);
     }
+  });
+
+  it('resolves the Dora logo mixed palette as scan-safe active module colors', () => {
+    const intent = resolveArtisticRenderIntent({ ...berry, palette: undefined, paletteFamily: 'dora', palettePattern: 'diagonalGradient', colorIntensity: 'balanced' });
+    expect(intent.palette).toMatchObject({
+      family: 'dora',
+      pattern: 'diagonalGradient',
+      primary: '#071258',
+      functionalColor: '#111827',
+    });
+    expect(intent.palette.moduleColors).toEqual(['#071258', '#2f66d8', '#6d35c8', '#c01978', '#bf2f46']);
+    expect(intent.palette.moduleColors.every((color) => contrastRatio(color, intent.palette.background) >= 4.5)).toBe(true);
   });
 
   it('adapts Pride/Trans pale identity bands away from active modules without muting all color', () => {

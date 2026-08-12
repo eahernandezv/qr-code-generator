@@ -91,6 +91,31 @@ export const SOLID_PRESETS: readonly SolidPreset[] = [
     balanced: { primary: '#55372a', secondary: '#392319', accent: '#b58b75', background: '#faf5f0' },
     punchy: { primary: '#492718', secondary: '#2e160d', accent: '#c27a57', background: '#faf5f0' },
   } },
+  { name: 'Dora Navy', variants: {
+    mellow: { primary: '#263066', secondary: '#181f46', accent: '#7f8bd8', background: '#f3f4ff' },
+    balanced: { primary: '#071258', secondary: '#040a35', accent: '#6978d9', background: '#f3f4ff' },
+    punchy: { primary: '#050d6b', secondary: '#02062e', accent: '#5368ff', background: '#f3f4ff' },
+  } },
+  { name: 'Dora Pink', variants: {
+    mellow: { primary: '#8c3f70', secondary: '#643052', accent: '#d996bf', background: '#fff0f8' },
+    balanced: { primary: '#c01978', secondary: '#80104f', accent: '#ff7bb8', background: '#fff0f8' },
+    punchy: { primary: '#d60080', secondary: '#97005d', accent: '#ff4caf', background: '#fff0f8' },
+  } },
+  { name: 'Dora Violet', variants: {
+    mellow: { primary: '#604a91', secondary: '#413066', accent: '#b59fe8', background: '#f7f1ff' },
+    balanced: { primary: '#6d35c8', secondary: '#472188', accent: '#b582ff', background: '#f7f1ff' },
+    punchy: { primary: '#7b22e6', secondary: '#4b0fa0', accent: '#bc62ff', background: '#f7f1ff' },
+  } },
+  { name: 'Dora Blue', variants: {
+    mellow: { primary: '#3e5f92', secondary: '#294472', accent: '#95b4e7', background: '#eef5ff' },
+    balanced: { primary: '#2f66d8', secondary: '#1c4295', accent: '#82aaff', background: '#eef5ff' },
+    punchy: { primary: '#1f62ff', secondary: '#113a9c', accent: '#6ea2ff', background: '#eef5ff' },
+  } },
+  { name: 'Dora Coral', variants: {
+    mellow: { primary: '#8c4b55', secondary: '#66333d', accent: '#dd9ca7', background: '#fff1f2' },
+    balanced: { primary: '#bf2f46', secondary: '#80202f', accent: '#ff8795', background: '#fff1f2' },
+    punchy: { primary: '#d62246', secondary: '#99122b', accent: '#ff6076', background: '#fff1f2' },
+  } },
 ]
 
 export const PATTERNED_PRESETS: Array<{
@@ -109,6 +134,7 @@ export const PATTERNED_PRESETS: Array<{
   { name: 'Forest diagonal', family: 'forest', pattern: 'diagonalGradient', swatch: 'linear-gradient(135deg, #00713d, #277900, #806400, #00647f)' },
   { name: 'Rainbow rings', family: 'rainbow', pattern: 'radialRings', swatch: 'radial-gradient(circle, #b00035 0 18%, #a83b00 18% 34%, #806400 34% 50%, #00733d 50% 66%, #004fc4 66% 82%, #7020a8 82%)' },
   { name: 'Trans safe diagonal', family: 'trans', pattern: 'diagonalGradient', swatch: 'linear-gradient(135deg, #006c91, #b00059, #6546a8, #b00059, #006c91)' },
+  { name: 'Dora mixed diagonal', family: 'dora', pattern: 'diagonalGradient', swatch: 'linear-gradient(135deg, #071258 0%, #2f66d8 26%, #7b22e6 50%, #d60080 74%, #d62246 100%)' },
 ]
 
 export const CORNER_COLOR_OPTIONS: ReadonlyArray<{ name: string; value: string }> = SOLID_PRESETS.map((preset) => ({

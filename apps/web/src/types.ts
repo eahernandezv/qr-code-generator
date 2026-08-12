@@ -23,7 +23,7 @@ export type ModuleStyle = 'square' | 'rounded' | 'circle' | 'vertical-bars' | 'h
 
 export type CompositionType = 'centered' | 'offset' | 'integrated' | 'surround'
 
-export type PaletteFamily = 'rainbow' | 'pride' | 'trans' | 'bi' | 'berry' | 'forest'
+export type PaletteFamily = 'rainbow' | 'pride' | 'trans' | 'bi' | 'berry' | 'forest' | 'dora'
 
 export type PalettePattern =
   | 'solid'
