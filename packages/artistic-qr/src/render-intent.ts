@@ -186,7 +186,7 @@ function resolvePalette(
     return {
       primary: moduleColors[0],
       background: palette?.background ?? DEFAULT_BACKGROUND,
-      family, pattern, intensity, moduleColors, functionalColor: '#111827',
+      family, pattern, intensity, moduleColors, functionalColor: resolvePatternedFunctionalColor(moduleColors),
     };
   }
   const primary = palette?.primary ?? palette?.secondary ?? palette?.accent ?? DEFAULT_PRIMARY;
@@ -194,6 +194,11 @@ function resolvePalette(
     primary, background: palette?.background ?? DEFAULT_BACKGROUND,
     pattern: 'solid', intensity, moduleColors: [primary], functionalColor: primary,
   };
+}
+
+function resolvePatternedFunctionalColor(moduleColors: readonly string[]): string {
+  const preferred = moduleColors[0];
+  return contrastRatio(preferred, DEFAULT_BACKGROUND) >= 7 ? preferred : '#111827';
 }
 
 const MINIMUM_CORNER_CONTRAST = 4.5 as const;

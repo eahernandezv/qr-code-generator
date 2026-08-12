@@ -66,9 +66,11 @@ describe('ArtDirectionPanel B18 controls', () => {
     })
 
     const cornerColors = screen.getByRole('listbox', { name: 'Corner Color' })
+    const matchBody = screen.getByRole('option', { name: 'Match body selected' })
+    expect(matchBody).toHaveStyle({ background: 'linear-gradient(135deg, #071258 0%, #2f66d8 26%, #7b22e6 50%, #d60080 74%, #d62246 100%)' })
     expect(CORNER_COLOR_OPTIONS).toHaveLength(17)
     expect(cornerColors.querySelectorAll('[role="option"]')).toHaveLength(18)
-    expect(screen.getByRole('option', { name: 'Match body selected' })).toHaveAttribute('data-setting', 'match-body')
+    expect(matchBody).toHaveAttribute('data-setting', 'match-body')
     await user.click(screen.getByRole('option', { name: 'Dora Navy corner color' }))
     expect(useStudioStore.getState().project.artDirection.cornerColor).toBe('#071258')
     await user.click(screen.getByRole('option', { name: 'Match body' }))
