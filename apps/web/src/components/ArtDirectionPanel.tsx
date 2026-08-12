@@ -219,6 +219,17 @@ const CONTROL_FAMILIES: ReadonlyArray<{ family: ControlFamily; label: string; gl
   { family: 'eyes', label: 'Eyes', glyph: '⊙' },
 ]
 
+function currentBodySwatch(art: ArtDirection, intensity: ColorIntensity): string {
+  const patterned = PATTERNED_PRESETS.find((preset) => art.paletteFamily === preset.family && art.palettePattern === preset.pattern)
+  if (patterned) return patterned.swatch
+  const solid = SOLID_PRESETS.find((preset) => !art.paletteFamily
+    && Object.values(preset.variants).some((variant) => variant.primary === art.palette?.primary))
+  const palette = solid?.variants[intensity] ?? art.palette
+  const primary = palette?.primary ?? '#5162da'
+  const accent = palette?.accent ?? palette?.secondary ?? primary
+  return `linear-gradient(135deg, ${primary} 0 58%, ${accent} 58%)`
+}
+
 function primitiveStyle(shape: ModuleStyle | EyePrimitiveStyle): React.CSSProperties {
   if (shape === 'circle') return { borderRadius: '9999px' }
   if (shape === 'rounded') return { borderRadius: '2px' }
@@ -294,6 +305,7 @@ const ArtDirectionPanel: React.FC<ArtDirectionPanelProps> = ({ noScrollVariant =
   const selectedSolid = SOLID_PRESETS.find((preset) => !art.paletteFamily
     && Object.values(preset.variants).some((variant) => variant.primary === art.palette?.primary))
   const selectedPatterned = PATTERNED_PRESETS.find((preset) => art.paletteFamily === preset.family && art.palettePattern === preset.pattern)
+  const matchBodySwatch = currentBodySwatch(art, intensity)
   const selectedStyle = STYLE_OPTIONS.find((style) => style.moduleStyle === (art.moduleStyle ?? 'rounded')) ?? STYLE_OPTIONS[1]
   const selectedCorner = EYE_FRAME_OPTIONS.find((option) => option.style === (art.eyeFrameStyle ?? art.eyeStyle ?? 'rounded')) ?? EYE_FRAME_OPTIONS[1]
   const selectedEye = EYE_BALL_OPTIONS.find((option) => option.style === (art.eyeBallStyle ?? art.eyeStyle ?? 'rounded')) ?? EYE_BALL_OPTIONS[1]
@@ -414,7 +426,7 @@ const ArtDirectionPanel: React.FC<ArtDirectionPanelProps> = ({ noScrollVariant =
                 data-setting="match-body"
                 data-selector-family="corner-color"
                 className={`${SELECTOR_TILE_BASE} ${!art.cornerColor ? SELECTOR_TILE_SELECTED : SELECTOR_TILE_IDLE}`}
-                style={{ background: 'linear-gradient(135deg, #5162da 0 50%, #c9184a 50%)' }}
+                style={{ background: matchBodySwatch }}
               >
                 <span aria-hidden="true" className="rounded bg-slate-950/75 px-1 text-[9px] font-bold text-white">MATCH</span>
                 {!art.cornerColor && <span aria-hidden="true" className={SELECTOR_CHECK}>✓</span>}

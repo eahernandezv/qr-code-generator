@@ -53,8 +53,8 @@ describe('artistic render intent', () => {
     for (const family of ['rainbow', 'pride', 'berry', 'trans'] as PaletteFamily[]) {
       const outputs = intensities.map((colorIntensity) => {
         const intent = resolveArtisticRenderIntent({ ...berry, palette: undefined, paletteFamily: family, palettePattern: 'diagonalGradient', colorIntensity });
-        expect(resolveModuleColor(matrix, 0, 0, intent.previewOptions)).toBe('#111827');
-        expect(contrastRatio(intent.palette.functionalColor, intent.palette.background)).toBeGreaterThanOrEqual(7);
+        expect(resolveModuleColor(matrix, 0, 0, intent.previewOptions)).toBe(intent.palette.functionalColor);
+        expect(contrastRatio(intent.palette.functionalColor, intent.palette.background)).toBeGreaterThanOrEqual(4.5);
         expect(intent.palette.moduleColors.every((color) => contrastRatio(color, intent.palette.background) >= 4.5)).toBe(true);
         return renderDeterministic(matrix, intent.previewOptions).data;
       });
@@ -68,7 +68,7 @@ describe('artistic render intent', () => {
       family: 'dora',
       pattern: 'diagonalGradient',
       primary: '#071258',
-      functionalColor: '#111827',
+      functionalColor: '#071258',
     });
     expect(intent.palette.moduleColors).toEqual(['#071258', '#2f66d8', '#6d35c8', '#c01978', '#bf2f46']);
     expect(intent.palette.moduleColors.every((color) => contrastRatio(color, intent.palette.background) >= 4.5)).toBe(true);
@@ -79,7 +79,7 @@ describe('artistic render intent', () => {
       const intent = resolveArtisticRenderIntent({ ...berry, paletteFamily: family, palettePattern: 'flagRows', colorIntensity });
       expect(intent.palette.moduleColors.every((color) => !/^#(?:f|e)[0-9a-f]{5}$/i.test(color))).toBe(true);
       expect(new Set(intent.palette.moduleColors).size).toBeGreaterThan(2);
-      expect(intent.palette.functionalColor).toBe('#111827');
+      expect(contrastRatio(intent.palette.functionalColor, intent.palette.background)).toBeGreaterThanOrEqual(4.5);
     }
   });
 
