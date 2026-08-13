@@ -50,7 +50,7 @@ export type ImageFitRequestControls = {
 }
 
 const SHA256 = /^[a-f0-9]{64}$/
-const ID = /^[a-z0-9._:-]{6,128}$/
+const CANDIDATE_ID = /^[a-z0-9._:-]{6,128}$/
 const ARTIFACT_KINDS = new Set(['preview_png', 'export_png', 'export_svg', 'metadata_json'])
 const MODES = new Set(IMAGE_FIT_CONTRACT.controls.strengths)
 
@@ -141,14 +141,14 @@ export function isGenerationResponse(value: unknown, requestId: string): value i
 function isCandidate(value: unknown): value is ImageFitCandidateV1 {
   if (!value || typeof value !== 'object') return false
   const candidate = value as Partial<ImageFitCandidateV1>
-  const preview = candidate.artifacts?.find((artifact) => artifact.kind === 'preview_png')
-  return typeof candidate.candidate_id === 'string' && ID.test(candidate.candidate_id)
+  const preview = candidate.artifacts?.find((artifact) => artifact.kind === 'preview_png' || artifact.kind === 'export_svg')
+  return typeof candidate.candidate_id === 'string' && CANDIDATE_ID.test(candidate.candidate_id)
     && typeof candidate.mode === 'string' && MODES.has(candidate.mode)
     && ['generated', 'validated', 'failed', 'experimental'].includes(candidate.status ?? '')
     && !!candidate.qr_settings && Number.isInteger(candidate.qr_settings.version) && Number.isInteger(candidate.qr_settings.module_count) && ['Q', 'H'].includes(candidate.qr_settings.ecc) && Number.isInteger(candidate.qr_settings.mask)
     && !!candidate.protected_regions && candidate.protected_regions.quiet_zone === true && candidate.protected_regions.finder === true && candidate.protected_regions.separator === true && candidate.protected_regions.timing === true && candidate.protected_regions.alignment === true && candidate.protected_regions.format === true && Array.isArray(candidate.protected_regions.violations)
     && !!candidate.scan_evidence && ['pass', 'fail', 'not_run'].includes(candidate.scan_evidence.verdict) && Number.isInteger(candidate.scan_evidence.checks_passed) && Number.isInteger(candidate.scan_evidence.checks_total) && Array.isArray(candidate.scan_evidence.decoders)
-    && !!candidate.image_fit_evidence && Number.isFinite(candidate.image_fit_evidence.recognition_score)
+    && !!candidate.image_fit_evidence && Number.isFinite(candidate.image_fit_evidence.recognition_score) && Number.isFinite(candidate.image_fit_evidence.protected_zone_conflict_score)
     && candidate.export_authority?.requires_payment_or_internal_entitlement === true && Array.isArray(candidate.export_authority.blockers)
     && Array.isArray(candidate.artifacts) && candidate.artifacts.every((artifact) => ARTIFACT_KINDS.has(artifact.kind) && typeof artifact.uri === 'string' && SHA256.test(artifact.sha256))
     && !!preview
