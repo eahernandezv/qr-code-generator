@@ -1,0 +1,107 @@
+{
+  "generation_timestamp": "2026-08-12T20:29:31.915Z",
+  "schema_version": "image-fit-qr-api.v1",
+  "fixture": {
+    "path": "docs/program/evidence/level2-image-fit-qr-spike/creator-visual-pass/fixtures/bold-diamond.png",
+    "sha256": "8cc54ea4a15b165eb5f9092722cff1b89cf47eff86e295fc129beb590df1a49b",
+    "width_px": 128,
+    "height_px": 128
+  },
+  "payload_comparison": {
+    "original_url": "https://example.com/products/summer-collection?source=printed-menu",
+    "original_byte_length": 66,
+    "optimized_short_link": "https://placeholder-online.com/r/bD7xQ2",
+    "optimized_byte_length": 39,
+    "byte_savings": 27,
+    "savings_percent": 40.9
+  },
+  "optimized_short_link_results": {
+    "candidates_count": 3,
+    "candidates": [
+      {
+        "mode": "readable",
+        "status": "validated",
+        "version": 8,
+        "module_count": 49,
+        "ecc": "H",
+        "mask": 3,
+        "scan_verdict": "pass",
+        "fit_label": "readable",
+        "recognition_score": 0.449775,
+        "modified_fraction": 0.124948
+      },
+      {
+        "mode": "balanced",
+        "status": "validated",
+        "version": 10,
+        "module_count": 57,
+        "ecc": "Q",
+        "mask": 1,
+        "scan_verdict": "pass",
+        "fit_label": "balanced",
+        "recognition_score": 0.914063,
+        "modified_fraction": 0.252078
+      },
+      {
+        "mode": "image_first",
+        "status": "experimental",
+        "version": 12,
+        "module_count": 65,
+        "ecc": "Q",
+        "mask": 0,
+        "scan_verdict": "pass",
+        "fit_label": "experimental",
+        "recognition_score": 0.947415,
+        "modified_fraction": 0.251598
+      }
+    ],
+    "fallback_available": true
+  },
+  "original_url_results": {
+    "candidates_count": 3,
+    "candidates": [
+      {
+        "mode": "readable",
+        "status": "validated",
+        "version": 8,
+        "module_count": 49,
+        "ecc": "H",
+        "mask": 3,
+        "scan_verdict": "pass",
+        "fit_label": "readable",
+        "recognition_score": 0.445277,
+        "modified_fraction": 0.123698
+      },
+      {
+        "mode": "balanced",
+        "status": "validated",
+        "version": 10,
+        "module_count": 57,
+        "ecc": "Q",
+        "mask": 1,
+        "scan_verdict": "pass",
+        "fit_label": "balanced",
+        "recognition_score": 0.914063,
+        "modified_fraction": 0.252078
+      },
+      {
+        "mode": "image_first",
+        "status": "experimental",
+        "version": 12,
+        "module_count": 65,
+        "ecc": "Q",
+        "mask": 0,
+        "scan_verdict": "pass",
+        "fit_label": "experimental",
+        "recognition_score": 0.947415,
+        "modified_fraction": 0.251598
+      }
+    ],
+    "fallback_available": true
+  },
+  "conclusion": {
+    "short_link_wins_on_payload_density": true,
+    "both_produce_valid_candidates": true,
+    "image_fit_tradeoff_noted": "Original URL uses same QR versions but with denser payload; image-fit scores may differ due to mask/payload interaction."
+  }
+}
