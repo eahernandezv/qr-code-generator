@@ -129,8 +129,12 @@ function computeTargetLuma(targetImage: ImageFitQrRequestV1['target_image']): Im
     throw new ServiceError(400, 'VALIDATION_FAILED', 'target_image.image_ref is not in an MVP-safe controlled path');
   }
 
-  // Resolve strictly under repo root
-  const rawPath = resolve(imageRef);
+  // Resolve strictly under repo root. Historical Level 2 fixtures use the public
+  // contract path `fixtures/...`, while the package-owned fixture files live under
+  // `packages/artistic-qr/fixtures/...` in the built service worktree.
+  const rawPath = imageRef.startsWith('fixtures/')
+    ? resolve(REPO_ROOT, 'packages/artistic-qr', imageRef)
+    : resolve(REPO_ROOT, imageRef);
   if (!rawPath.startsWith(REPO_ROOT + '/') && rawPath !== REPO_ROOT) {
     throw new ServiceError(400, 'VALIDATION_FAILED', 'target_image.image_ref resolves outside repo');
   }
