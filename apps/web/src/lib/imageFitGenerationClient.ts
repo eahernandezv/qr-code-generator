@@ -1,0 +1,150 @@
+import { IMAGE_FIT_CONTRACT, type ImageFitDetail, type ImageFitLinkMode, type ImageFitStrength, type ImageFitTreatment } from '../imageFitContract'
+
+export type ImageFitRequestV1 = {
+  request_id: string
+  destination: { kind: 'url'; normalized_url: string; display_url: string; safety: { verdict: 'pass'; policy_version: string } }
+  target_image: { image_ref: string; mime_type: 'image/png' | 'image/jpeg' | 'image/webp' | 'image/svg+xml'; width_px: number; height_px: number; sha256: string; complexity: 'simple_mark' | 'medium_logo' | 'complex_photo_like' | 'high_risk_thin_detail' }
+  user_controls: { treatment: ImageFitTreatment; strength: ImageFitStrength; detail: ImageFitDetail; link_mode: ImageFitLinkMode }
+  constraints: { max_candidates: number; max_search_ms: number; allowed_ecc: ('Q' | 'H')[]; allowed_masks: number[]; allowed_versions: number[] }
+  entitlement_context: { mode: 'preview'; export_entitled: false }
+}
+
+export type ImageFitCandidateV1 = {
+  candidate_id: string
+  mode: ImageFitStrength
+  status: 'generated' | 'validated' | 'failed' | 'experimental'
+  qr_settings: {
+    payload_mode: ImageFitLinkMode
+    short_link?: { slug: string; state: 'reserved' | 'committed' | 'expired' | 'disabled'; route: string }
+    encoded_payload_display: string
+    payload_sha256?: string
+    version: number
+    module_count: number
+    ecc: 'Q' | 'H'
+    mask: number
+  }
+  image_treatment: { kind: string; modified_modules: number; modified_fraction: number }
+  protected_regions: { quiet_zone: true; finder: true; separator: true; timing: true; alignment: true; format: true; version_info: boolean; immutable_modules_policy_version: string; violations: string[] }
+  scan_evidence: { verdict: 'pass' | 'fail' | 'not_run'; decoder_suite_version: string; checks_passed: number; checks_total: number; decoders: Array<{ name: string; version: string; pass: boolean }>; physical_scan: 'not_performed' | 'pass' | 'fail'; print_scan: 'not_performed' | 'pass' | 'fail'; disclaimer: string }
+  image_fit_evidence: { fit_label: 'readable' | 'balanced' | 'experimental' | 'failed'; score_version: string; recognition_score: number; protected_zone_conflict_score: number }
+  export_authority: { export_allowed: boolean; blockers: string[]; requires_payment_or_internal_entitlement: true; preview_export_parity: 'proven' | 'not_proven' | 'not_applicable' }
+  artifacts: Array<{ kind: 'preview_png' | 'export_png' | 'export_svg' | 'metadata_json'; uri: string; sha256: string }>
+  warnings: Array<{ code: string; message: string; block_export: boolean }>
+}
+
+export type ImageFitGenerationResponseV1 = {
+  schema_version: 'image-fit-qr-api.v1'
+  request: ImageFitRequestV1
+  candidates: ImageFitCandidateV1[]
+  selection_policy: { default_mode: 'balanced'; export_requires_entitlement: true; image_first_default_export_allowed: false }
+  fallback: { available: boolean; kind: 'level1_styled_qr' | 'none'; reason: string }
+}
+
+export type ImageFitRequestControls = {
+  destination: string
+  treatment: ImageFitTreatment
+  strength: ImageFitStrength
+  detail: ImageFitDetail
+  linkMode: ImageFitLinkMode
+  targetImage: ImageFitRequestV1['target_image']
+}
+
+const SHA256 = /^[a-f0-9]{64}$/
+const ID = /^[a-z0-9._:-]{6,128}$/
+const ARTIFACT_KINDS = new Set(['preview_png', 'export_png', 'export_svg', 'metadata_json'])
+const MODES = new Set(IMAGE_FIT_CONTRACT.controls.strengths)
+
+export function buildImageFitRequest(controls: ImageFitRequestControls, requestId = createRequestId()): ImageFitRequestV1 {
+  const url = normalizePublicHttpsUrl(controls.destination)
+  return {
+    request_id: requestId,
+    destination: {
+      kind: 'url',
+      normalized_url: url.toString(),
+      display_url: redactDisplayUrl(url),
+      safety: { verdict: 'pass', policy_version: 'studio-public-https-input-v1' },
+    },
+    target_image: { ...controls.targetImage },
+    user_controls: { treatment: controls.treatment, strength: controls.strength, detail: controls.detail, link_mode: controls.linkMode },
+    constraints: { max_candidates: 12, max_search_ms: 45_000, allowed_ecc: ['Q', 'H'], allowed_masks: [0, 1, 2, 3, 4, 5, 6, 7], allowed_versions: [8, 9, 10, 11, 12] },
+    entitlement_context: { mode: 'preview', export_entitled: false },
+  }
+}
+
+function createRequestId() {
+  const random = globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`
+  return `l2req-${random}`.slice(0, 128)
+}
+
+function normalizePublicHttpsUrl(value: string) {
+  let url: URL
+  try { url = new URL(value) } catch { throw new Error('Enter a complete HTTPS destination URL.') }
+  const hasControlCharacter = [...value].some((character) => {
+    const code = character.charCodeAt(0)
+    return code <= 31 || code === 127
+  })
+  if (url.protocol !== 'https:' || url.username || url.password || url.port || hasControlCharacter) throw new Error('Enter a public HTTPS destination without credentials, a port, or control characters.')
+  const host = url.hostname.toLowerCase().replace(/\.$/, '')
+  if (!host.includes('.') || host === 'localhost' || host.endsWith('.localhost') || host.endsWith('.local') || host.endsWith('.internal') || /^(127\.|10\.|192\.168\.|169\.254\.)/.test(host)) throw new Error('Enter a public HTTPS destination.')
+  url.hash = ''
+  return url
+}
+
+function redactDisplayUrl(url: URL) {
+  const value = `${url.origin}${url.pathname}`
+  return value.length <= 220 ? value : `${value.slice(0, 217)}...`
+}
+
+export class ImageFitGenerationClient {
+  constructor(private readonly endpoint = import.meta.env.VITE_IMAGE_FIT_QR_API_URL || '/api/artistic-qr/image-fit/candidates') {}
+
+  async generate(request: ImageFitRequestV1, signal?: AbortSignal): Promise<ImageFitGenerationResponseV1> {
+    let response: Response
+    try {
+      response = await fetch(this.endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(request), signal })
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') throw error
+      throw new Error('Real Image-Fit generation service is unavailable. No candidate evidence was accepted.')
+    }
+    const body = await response.json().catch(() => undefined) as unknown
+    if (!response.ok) {
+      const serverError = body as { code?: unknown; message?: unknown } | undefined
+      const message = typeof serverError?.message === 'string' ? serverError.message : 'Real Image-Fit generation could not be completed.'
+      throw new Error(message)
+    }
+    if (!isGenerationResponse(body, request.request_id)) throw new Error('Creator returned an invalid Image-Fit response. No candidate evidence was accepted.')
+    return body
+  }
+}
+
+export function isGenerationResponse(value: unknown, requestId: string): value is ImageFitGenerationResponseV1 {
+  if (!value || typeof value !== 'object') return false
+  const response = value as Partial<ImageFitGenerationResponseV1>
+  return response.schema_version === 'image-fit-qr-api.v1'
+    && response.request?.request_id === requestId
+    && response.selection_policy?.export_requires_entitlement === true
+    && response.selection_policy?.image_first_default_export_allowed === false
+    && Array.isArray(response.candidates)
+    && response.candidates.length > 0
+    && response.candidates.length <= 12
+    && response.candidates.every(isCandidate)
+}
+
+function isCandidate(value: unknown): value is ImageFitCandidateV1 {
+  if (!value || typeof value !== 'object') return false
+  const candidate = value as Partial<ImageFitCandidateV1>
+  const preview = candidate.artifacts?.find((artifact) => artifact.kind === 'preview_png')
+  return typeof candidate.candidate_id === 'string' && ID.test(candidate.candidate_id)
+    && typeof candidate.mode === 'string' && MODES.has(candidate.mode)
+    && ['generated', 'validated', 'failed', 'experimental'].includes(candidate.status ?? '')
+    && !!candidate.qr_settings && Number.isInteger(candidate.qr_settings.version) && Number.isInteger(candidate.qr_settings.module_count) && ['Q', 'H'].includes(candidate.qr_settings.ecc) && Number.isInteger(candidate.qr_settings.mask)
+    && !!candidate.protected_regions && candidate.protected_regions.quiet_zone === true && candidate.protected_regions.finder === true && candidate.protected_regions.separator === true && candidate.protected_regions.timing === true && candidate.protected_regions.alignment === true && candidate.protected_regions.format === true && Array.isArray(candidate.protected_regions.violations)
+    && !!candidate.scan_evidence && ['pass', 'fail', 'not_run'].includes(candidate.scan_evidence.verdict) && Number.isInteger(candidate.scan_evidence.checks_passed) && Number.isInteger(candidate.scan_evidence.checks_total) && Array.isArray(candidate.scan_evidence.decoders)
+    && !!candidate.image_fit_evidence && Number.isFinite(candidate.image_fit_evidence.recognition_score)
+    && candidate.export_authority?.requires_payment_or_internal_entitlement === true && Array.isArray(candidate.export_authority.blockers)
+    && Array.isArray(candidate.artifacts) && candidate.artifacts.every((artifact) => ARTIFACT_KINDS.has(artifact.kind) && typeof artifact.uri === 'string' && SHA256.test(artifact.sha256))
+    && !!preview
+    && Array.isArray(candidate.warnings)
+}
+
+export const imageFitGenerationClient = new ImageFitGenerationClient()
