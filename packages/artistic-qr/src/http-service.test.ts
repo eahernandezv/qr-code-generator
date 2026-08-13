@@ -5,10 +5,23 @@ import { InMemoryCandidateAuthorityStore, type CandidateAuthorityRecord } from '
 import { createArtisticQrHttpService, type ArtisticQrHttpService } from './http-service.js';
 import type { Candidate, ExportArtifact, GenerationBoard, GenerationRequest } from './types.js';
 import { runValidation } from './validation.js';
+import * as AjvModule from 'ajv';
+import * as formatsModule from 'ajv-formats';
+import { readFileSync } from 'node:fs';
 
 const services: ArtisticQrHttpService[] = [];
 const normalized = normalizePayload({ mode: 'url', content: 'https://example.com/b1c-authority', errorCorrectionLevel: 'H' });
 const request: GenerationRequest = { normalizedPayload: normalized, mode: 'deterministic_template', seed: 41 };
+
+// Schema validator for image-fit-qr-api.v1
+const schemaPath = new URL('../../contracts/schemas/image-fit-qr-api.v1.json', import.meta.url);
+const schema = JSON.parse(readFileSync(schemaPath, 'utf8'));
+type AjvConstructor = new (options?: import('ajv').Options) => import('ajv').default;
+const Ajv = ((AjvModule as unknown as { default?: AjvConstructor }).default ?? AjvModule) as AjvConstructor;
+const addFormats = ((formatsModule as unknown as { default?: typeof import('ajv-formats').default }).default ?? formatsModule) as typeof import('ajv-formats').default;
+const ajv = new Ajv({ allErrors: true, strict: false });
+addFormats(ajv);
+const validateResponse = ajv.compile(schema);
 
 afterEach(async () => {
   while (services.length) await close(services.pop()!);
@@ -107,6 +120,106 @@ describe('B1C Core export HTTP authority boundary', () => {
   });
 });
 
+describe('POST /image-fit/candidates', () => {
+  const TEST_IMAGE_REF = 'fixtures/test-target.png';
+  const TEST_IMAGE_SHA = 'db41519156394cb47b94569d402c7bddd1d867c39e1c3e2c7abff28ea29e90b0';
+
+  it('succeeds for a valid controlled fixture and returns contract-valid image-fit-qr-api.v1', async () => {
+    const running = await start();
+    const response = await post(running.url, '/image-fit/candidates', buildImageFitRequest(TEST_IMAGE_REF, TEST_IMAGE_SHA));
+    expect(response.status).toBe(200);
+    const payload = await response.json() as { success: true; result: Record<string, unknown> };
+    expect(payload.success).toBe(true);
+    // Validate against frozen schema
+    expect(validateResponse(payload.result)).toBe(true);
+    // Assert expected contract fields
+    const result = payload.result;
+    expect(result.schema_version).toBe('image-fit-qr-api.v1');
+    const candidates = result.candidates as Array<Record<string, unknown>>;
+    expect(candidates.length).toBeGreaterThan(0);
+    // All candidates must be locked for preview
+    for (const candidate of candidates) {
+      const authority = (candidate as Record<string, unknown>).export_authority as Record<string, unknown>;
+      expect(authority.export_allowed).toBe(false);
+      expect(authority.preview_export_parity).toBe('not_proven');
+    }
+  }, 30_000);
+
+  it('fails closed for a missing target image with structured error', async () => {
+    const running = await start();
+    const bad = buildImageFitRequest('fixtures/nonexistent.png', 'a'.repeat(64)) as Record<string, unknown>;
+    delete (bad as Record<string, unknown>).target_image;
+    const response = await post(running.url, '/image-fit/candidates', bad);
+    expect(response.status).toBe(400);
+    const body = await response.json() as { success: false; code: string; message: string };
+    expect(body.success).toBe(false);
+    expect(body.code).toBe('VALIDATION_FAILED');
+    expect(body.message).toContain('target_image');
+  });
+
+  it('fails closed for path traversal in image_ref', async () => {
+    const running = await start();
+    const bad = buildImageFitRequest('../etc/passwd', TEST_IMAGE_SHA);
+    const response = await post(running.url, '/image-fit/candidates', bad);
+    expect(response.status).toBe(400);
+    const body = await response.json() as { success: false; code: string; message: string };
+    expect(body.success).toBe(false);
+    expect(body.code).toBe('VALIDATION_FAILED');
+    expect(body.message).toContain('traversal');
+  });
+
+  it('fails closed for image_ref outside MVP-safe controlled paths', async () => {
+    const running = await start();
+    const bad = buildImageFitRequest('/etc/passwd', TEST_IMAGE_SHA);
+    const response = await post(running.url, '/image-fit/candidates', bad);
+    expect(response.status).toBe(400);
+    const body = await response.json() as { success: false; code: string; message: string };
+    expect(body.success).toBe(false);
+    expect(body.code).toBe('VALIDATION_FAILED');
+    expect(body.message).toContain('controlled path');
+  });
+
+  it('reserves a deterministic short-link slug in optimized_short_link mode without committing it', async () => {
+    const running = await start();
+    const req = buildImageFitRequest(TEST_IMAGE_REF, TEST_IMAGE_SHA) as Record<string, unknown>;
+    (req.user_controls as Record<string, unknown>).link_mode = 'optimized_short_link';
+    const response = await post(running.url, '/image-fit/candidates', req);
+    expect(response.status).toBe(200);
+    const payload = await response.json() as { success: true; result: Record<string, unknown> };
+    expect(payload.success).toBe(true);
+    const candidates = payload.result.candidates as Array<Record<string, unknown>>;
+    expect(candidates.length).toBeGreaterThan(0);
+    for (const candidate of candidates) {
+      const qrSettings = candidate.qr_settings as Record<string, unknown>;
+      expect(qrSettings.payload_mode).toBe('optimized_short_link');
+      const shortLink = qrSettings.short_link as Record<string, unknown> | undefined;
+      expect(shortLink).toBeDefined();
+      expect(shortLink!.state).toBe('reserved');
+      expect(typeof shortLink!.slug).toBe('string');
+      expect(typeof shortLink!.route).toBe('string');
+    }
+  }, 30_000);
+
+  it('preserves export_authority locked for public preview (export_allowed = false)', async () => {
+    const running = await start();
+    const response = await post(running.url, '/image-fit/candidates', buildImageFitRequest(TEST_IMAGE_REF, TEST_IMAGE_SHA));
+    expect(response.status).toBe(200);
+    const payload = await response.json() as { success: true; result: Record<string, unknown> };
+    const result = payload.result;
+    expect(result.selection_policy).toEqual({
+      default_mode: 'balanced',
+      export_requires_entitlement: true,
+      image_first_default_export_allowed: false,
+    });
+    const candidates = result.candidates as Array<Record<string, unknown>>;
+    for (const candidate of candidates) {
+      const authority = candidate.export_authority as Record<string, unknown>;
+      expect(authority.export_allowed).toBe(false);
+      expect(authority.requires_payment_or_internal_entitlement).toBe(true);
+    }
+  }, 30_000);
+});
+
 class MutableAuthorityStore extends InMemoryCandidateAuthorityStore {
   deny(candidateId: string): void {
     const record = this.get(candidateId);
@@ -139,4 +252,42 @@ async function generateOne(url: string): Promise<Candidate> {
   const candidate = payload.board.candidates.find((item) => item.exportAllowed);
   if (!candidate) throw new Error('No validated candidate generated');
   return candidate;
+}
+
+// Helper to build a minimal valid image-fit request
+function buildImageFitRequest(imageRef: string, sha256: string): unknown {
+  return {
+    request_id: 'l2req-test-0001',
+    destination: {
+      kind: 'url',
+      normalized_url: 'https://example.com/products/summer-collection?source=printed-menu',
+      display_url: 'https://example.com/products/summer-collection?...',
+      safety: { verdict: 'pass', policy_version: 'destination-safety-v1' },
+    },
+    target_image: {
+      image_ref: imageRef,
+      mime_type: 'image/png',
+      width_px: 4,
+      height_px: 4,
+      sha256,
+      complexity: 'simple_mark',
+    },
+    user_controls: {
+      treatment: 'pixel_blend',
+      strength: 'balanced',
+      detail: 'detailed',
+      link_mode: 'original_url',
+    },
+    constraints: {
+      max_candidates: 12,
+      max_search_ms: 45000,
+      allowed_ecc: ['Q', 'H'],
+      allowed_masks: [0, 1, 2, 3, 4, 5, 6, 7],
+      allowed_versions: [8, 9, 10, 11, 12],
+    },
+    entitlement_context: {
+      mode: 'preview',
+      export_entitled: false,
+    },
+  };
 }

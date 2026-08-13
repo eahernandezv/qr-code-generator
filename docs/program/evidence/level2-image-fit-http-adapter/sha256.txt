@@ -1,0 +1,2 @@
+762699c3edf99a0a2f734f9863b0e388c9168f5e2414a97ce9df02ad6a457a6b  evidence.json
+db41519156394cb47b94569d402c7bddd1d867c39e1c3e2c7abff28ea29e90b0  packages/artistic-qr/fixtures/test-target.png

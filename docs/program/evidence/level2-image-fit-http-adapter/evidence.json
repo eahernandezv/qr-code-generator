@@ -1,0 +1,58 @@
+{
+  "evidence_type": "level2-image-fit-http-adapter",
+  "generated_at": "2026-08-13T16:36:01.086Z",
+  "schema_version": "image-fit-qr-api.v1",
+  "candidates": [
+    {
+      "candidate_id": "readable-18bf5821e57b09b0eb1f",
+      "mode": "readable",
+      "status": "validated",
+      "payload_mode": "original_url",
+      "scan_verdict": "pass",
+      "checks": "8/8",
+      "export_allowed": false,
+      "blockers": [
+        "preview_export_parity_not_proven",
+        "preview_not_paid"
+      ]
+    },
+    {
+      "candidate_id": "balanced-bd292febbbd0a721c600",
+      "mode": "balanced",
+      "status": "validated",
+      "payload_mode": "original_url",
+      "scan_verdict": "pass",
+      "checks": "8/8",
+      "export_allowed": false,
+      "blockers": [
+        "preview_export_parity_not_proven",
+        "preview_not_paid"
+      ]
+    },
+    {
+      "candidate_id": "image-first-3360d6fc8367d713c988",
+      "mode": "image_first",
+      "status": "experimental",
+      "payload_mode": "original_url",
+      "scan_verdict": "pass",
+      "checks": "8/8",
+      "export_allowed": false,
+      "blockers": [
+        "preview_export_parity_not_proven",
+        "preview_not_paid",
+        "image_first_experimental"
+      ]
+    }
+  ],
+  "selection_policy": {
+    "default_mode": "balanced",
+    "export_requires_entitlement": true,
+    "image_first_default_export_allowed": false
+  },
+  "fallback": {
+    "available": true,
+    "kind": "level1_styled_qr",
+    "reason": "Deterministic Level 1 artifact is retained as a safe fallback."
+  },
+  "fallback_scan": "pass"
+}
