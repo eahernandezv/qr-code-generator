@@ -20,6 +20,7 @@ function ChoiceRow<T extends string>({ label, value, values, onChange }: { label
 
 function artifactFor(candidate: ImageFitCandidateV1) {
   return candidate.artifacts.find((artifact) => artifact.kind === 'preview_png')
+    ?? candidate.artifacts.find((artifact) => artifact.kind === 'export_svg')
 }
 
 function previewSource(uri: string) {
