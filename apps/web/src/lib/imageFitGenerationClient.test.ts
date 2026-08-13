@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import fixture from '../../../../packages/contracts/fixtures/image-fit-qr/valid-balanced-response.v1.json'
-import { buildImageFitRequest, ImageFitGenerationClient, isGenerationResponse } from './imageFitGenerationClient'
+import { buildImageFitRequest, ImageFitGenerationClient, isGenerationResponse, unwrapGenerationResponse } from './imageFitGenerationClient'
 
 const controls = {
   destination: 'https://example.com/a?source=test#fragment',
@@ -34,6 +34,16 @@ describe('Image-Fit real generation boundary', () => {
     const response = await new ImageFitGenerationClient('/api/artistic-qr/image-fit/candidates').generate(request)
     expect(response.candidates).toHaveLength(1)
     expect(fetchMock).toHaveBeenCalledWith('/api/artistic-qr/image-fit/candidates', expect.objectContaining({ method: 'POST', body: JSON.stringify(request) }))
+  })
+
+  it('unwraps the live Core HTTP success envelope before contract validation', async () => {
+    const request = buildImageFitRequest(controls, fixture.request.request_id)
+    const envelope = { success: true, result: fixture }
+    expect(unwrapGenerationResponse(envelope)).toBe(fixture)
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => envelope }))
+    const response = await new ImageFitGenerationClient('/api/artistic-qr/image-fit/candidates').generate(request)
+    expect(response.schema_version).toBe('image-fit-qr-api.v1')
+    expect(response.candidates).toHaveLength(1)
   })
 
   it('fails closed for malformed or cross-request responses', async () => {
