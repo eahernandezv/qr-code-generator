@@ -29,6 +29,8 @@ describe('App integration', () => {
     expect(concept).toHaveAttribute('data-checkout-bound', 'false')
     expect(screen.queryByTestId('selected-image-fit-candidate')).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Generate candidates' })).toBeEnabled()
+    expect(screen.queryByLabelText('Choose target image')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Upload locked' })).toBeDisabled()
 
     await user.click(screen.getByRole('button', { name: 'Generate candidates' }))
     const preview = await screen.findByTestId('selected-image-fit-candidate')
