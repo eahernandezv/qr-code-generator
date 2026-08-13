@@ -1,8 +1,8 @@
 # QR Creator — Level 2 Real Generation Core Report
 
-Owner: QR Creator (@QRCodeGenerator_CreatorBot)  
-Date: 2026-08-12  
-Branch: `creator/level2-real-generation-core`  
+Owner: QR Creator (@QRCodeGenerator_CreatorBot)<br>
+Date: 2026-08-12<br>
+Branch: `creator/level2-real-generation-core`<br>
 Baseline: `origin/main 95849018d75c01a8a76343728905d6e4ed34aa32`
 
 ---
