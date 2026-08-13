@@ -112,9 +112,17 @@ export class ImageFitGenerationClient {
       const message = typeof serverError?.message === 'string' ? serverError.message : 'Real Image-Fit generation could not be completed.'
       throw new Error(message)
     }
-    if (!isGenerationResponse(body, request.request_id)) throw new Error('Creator returned an invalid Image-Fit response. No candidate evidence was accepted.')
-    return body
+    const result = unwrapGenerationResponse(body)
+    if (!isGenerationResponse(result, request.request_id)) throw new Error('Creator returned an invalid Image-Fit response. No candidate evidence was accepted.')
+    return result
   }
+}
+
+export function unwrapGenerationResponse(value: unknown): unknown {
+  if (value && typeof value === 'object' && (value as { success?: unknown }).success === true && 'result' in value) {
+    return (value as { result?: unknown }).result
+  }
+  return value
 }
 
 export function isGenerationResponse(value: unknown, requestId: string): value is ImageFitGenerationResponseV1 {
