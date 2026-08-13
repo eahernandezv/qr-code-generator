@@ -1,7 +1,8 @@
 /** Core-owned HTTP authority boundary for candidate generation and export. */
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
-import { createHash, randomUUID } from 'node:crypto';
+import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { authoritativeCandidate, candidateAuthority, InMemoryCandidateAuthorityStore, setCandidateAuthorityStore, type CandidateAuthorityStore } from './candidate-context.js';
@@ -14,6 +15,7 @@ import type { GenerationEngineOptions } from './engine.js';
 const JSON_TYPE = 'application/json; charset=utf-8';
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const REPO_ROOT = resolve(fileURLToPath(import.meta.url), '../../../..');
+const requireFromPackage = createRequire(import.meta.url);
 
 export interface ArtisticQrHttpServiceOptions {
   authorityStore?: CandidateAuthorityStore;
@@ -163,7 +165,7 @@ function loadPng(imagePath: string) {
     const buf = readFileSync(imagePath);
     // We import pngjs at the builder boundary rather than from the optimizer proper.
     // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const { PNG } = require('pngjs') as typeof import('pngjs');
+    const { PNG } = requireFromPackage('pngjs') as typeof import('pngjs');
     return PNG.sync.read(buf);
   } catch {
     return undefined;
