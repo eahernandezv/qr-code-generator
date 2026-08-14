@@ -85,9 +85,20 @@ packages/artistic-qr/scripts/generate-quality-evidence.mjs (new: evidence genera
 docs/program/evidence/level2-image-fit-quality/*          (new: 50+ evidence files)
 ```
 
+## Quality Classification
+
+**Verdict: intermediate Core quality spike; not sponsor-ready.**
+
+Product Architect visual review is accepted as the release framing:
+- `square-center` and `gradient-diagonal` are directionally and materially improved;
+- `dual-spots` and `circle-ring` remain fragmented at module scale;
+- decoder success proves scan robustness under the automated suite, not recognizable image composition or sponsor readiness.
+
+A second sponsor-quality pass should add composition-level region consolidation or provider-generative integration and must repeat protected-region and perturbation validation.
+
 ## Handoff
 
-This branch is ready for Product Architect independent verification. No PR should be opened by QR Creator. Deliverables:
+This intermediate branch is ready for Product Architect independent verification. Deliverables:
 - Branch `creator/level2-image-fit-quality-spike` with clean history from `origin/main`
 - All evidence under `docs/program/evidence/level2-image-fit-quality/`
 - Source changes localized to Core Engine (`packages/artistic-qr/src/image-fit.ts` + tests)
