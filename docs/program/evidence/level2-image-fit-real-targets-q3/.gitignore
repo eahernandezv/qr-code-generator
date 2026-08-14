@@ -1,0 +1,8 @@
+# User-provided real-target evidence policy
+
+# This repository is public. Do not commit user-provided or rights-unverified source images,
+# source-bearing contact sheets, or derived visual artifacts. They remain local review evidence.
+inputs/
+artifacts/
+visual-preview/
+contact-sheet/

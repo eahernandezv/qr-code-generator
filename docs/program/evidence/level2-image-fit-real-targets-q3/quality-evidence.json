@@ -1,0 +1,423 @@
+{
+  "reproducibility": "deterministic from committed user-provided JPEG bytes",
+  "pipeline_version": "image-fit-real-target-foreground-q3",
+  "rights": "user-provided evaluation references; rights not independently verified; internal quality evaluation only",
+  "targets": [
+    {
+      "target": "burger-brand-reference",
+      "source_sha256": "59841a2eacd0e8dfbf0dd878fc323e8ea526f8e14fa620e148338d1d83df9532",
+      "source_dimensions": [
+        160,
+        118
+      ],
+      "candidates": [
+        {
+          "mode": "readable",
+          "q2": {
+            "sha256": "b381944660a64f7f2abefbb4477d9ee12a240de266387b3a1e45539cbcf795e9",
+            "modified_fraction": 0.065389,
+            "recognition_score": 0.503205
+          },
+          "q3": {
+            "sha256": "38211cae5320fb981a0b38df5bfaef740b2af431e17607b103af33bf809bd041",
+            "modified_fraction": 0.064973,
+            "recognition_score": 0.5,
+            "protected_conflicts": 0
+          }
+        },
+        {
+          "mode": "balanced",
+          "q2": {
+            "sha256": "62d13a5132a185c8545767419155440033b0794d75f26832a8071c1a6abec382",
+            "modified_fraction": 0.239766,
+            "recognition_score": 1
+          },
+          "q3": {
+            "sha256": "b12c956b06921feff82cb162335da767c0dd9b651763206b0407e50474f3d4ac",
+            "modified_fraction": 0.239766,
+            "recognition_score": 1,
+            "protected_conflicts": 0
+          }
+        },
+        {
+          "mode": "image_first",
+          "q2": {
+            "sha256": "2214e1eaa70dd8d3de316804a845269660235583b106e0bd1a10892d059b8607",
+            "modified_fraction": 0.390296,
+            "recognition_score": 1
+          },
+          "q3": {
+            "sha256": "7f657f15773d716129eabe200941d542deab45002a0b11044de44c294042fa04",
+            "modified_fraction": 0.320237,
+            "recognition_score": 1,
+            "protected_conflicts": 0
+          }
+        }
+      ]
+    },
+    {
+      "target": "calligraphic-j-heart",
+      "source_sha256": "e7fae9c5974a3a6badbab6430ae1f918b9742984f839c580b26e2fa48831f12b",
+      "source_dimensions": [
+        160,
+        103
+      ],
+      "candidates": [
+        {
+          "mode": "readable",
+          "q2": {
+            "sha256": "8ac22f3a44cbe8e90a801067fefa67259f198efaf746d1d8501c1c8b3ca645ba",
+            "modified_fraction": 0.029571,
+            "recognition_score": 0.44375
+          },
+          "q3": {
+            "sha256": "b0a3ce0e2e490b27ff9b3f21e8bea0404dfc6f07c3a87c3affe94801477a9706",
+            "modified_fraction": 0.049563,
+            "recognition_score": 0.468504,
+            "protected_conflicts": 0
+          }
+        },
+        {
+          "mode": "balanced",
+          "q2": {
+            "sha256": "4ebaff3336ff6b217174f8e5bb92f566813783d2a92629f2fcdbd4c2d5e5b8ff",
+            "modified_fraction": 0.069868,
+            "recognition_score": 1
+          },
+          "q3": {
+            "sha256": "c4eb0284039b7d98a9e675a0ff0907b62794025e1f48629a63c03dce31ffd320",
+            "modified_fraction": 0.10434,
+            "recognition_score": 1,
+            "protected_conflicts": 0
+          }
+        },
+        {
+          "mode": "image_first",
+          "q2": {
+            "sha256": "55a2a0b5e87e940cc6ee2558f0a316b3ba2acf049e92f8359e309593bd3f060e",
+            "modified_fraction": 0.092308,
+            "recognition_score": 1
+          },
+          "q3": {
+            "sha256": "6758674caa738be6dc6001b6997f0de6e9bce7b0e2aa3b85d7997c1b18f673f2",
+            "modified_fraction": 0.112189,
+            "recognition_score": 1,
+            "protected_conflicts": 0
+          }
+        }
+      ]
+    },
+    {
+      "target": "geometric-media-mark",
+      "source_sha256": "5ec433e1fef9bf2e2d96927460c7fa859b8c0c0ef56fd7f3a6fbfff6d4221d90",
+      "source_dimensions": [
+        160,
+        107
+      ],
+      "candidates": [
+        {
+          "mode": "readable",
+          "q2": {
+            "sha256": "5a75217f5075a9e601b53e335b47e74f7da89203f5ca5af2e652c620d25a6522",
+            "modified_fraction": 0.024573,
+            "recognition_score": 0.437037
+          },
+          "q3": {
+            "sha256": "2a5a0090f449e1d2ed8c893961f3988de3520b34a18c54f1348ec14c1e27c9fc",
+            "modified_fraction": 0.064556,
+            "recognition_score": 0.496795,
+            "protected_conflicts": 0
+          }
+        },
+        {
+          "mode": "balanced",
+          "q2": {
+            "sha256": "6c790a9a21cc8ac54c40e6c4bf7e6fe260b0bbff21cfb4c6d05c1e8018ed00c5",
+            "modified_fraction": 0.057248,
+            "recognition_score": 1
+          },
+          "q3": {
+            "sha256": "c04a4f40a594d7efa353a0ed17c172759734988d288b2de20ad25601211d7e51",
+            "modified_fraction": 0.239766,
+            "recognition_score": 1,
+            "protected_conflicts": 0
+          }
+        },
+        {
+          "mode": "image_first",
+          "q2": {
+            "sha256": "4621c011a2570c8424c3e14b40bad21f21ceb145bfaca52e1557d8d650a531bd",
+            "modified_fraction": 0.062722,
+            "recognition_score": 1
+          },
+          "q3": {
+            "sha256": "9fffa6e25a1c340903b27524cbe4cfd7c1f8cfe7efe739295c971625c65a9161",
+            "modified_fraction": 0.253018,
+            "recognition_score": 1,
+            "protected_conflicts": 0
+          }
+        }
+      ]
+    },
+    {
+      "target": "gradient-m-mark",
+      "source_sha256": "cb3b4fecbd0547cd2dfb62daeecfc0116e4dd49fb653ac602025a77b00badaec",
+      "source_dimensions": [
+        160,
+        120
+      ],
+      "candidates": [
+        {
+          "mode": "readable",
+          "q2": {
+            "sha256": "3ce137938410ceba4d1c3cbf15f55aaeefa64898e9eaf7a0a182c5156c1763a9",
+            "modified_fraction": 0.065806,
+            "recognition_score": 0.50641
+          },
+          "q3": {
+            "sha256": "2707e19d83f0d20ae91db33d9ec1b4ccad384596add6393d8e844e2ed83a3095",
+            "modified_fraction": 0.069971,
+            "recognition_score": 0.538462,
+            "protected_conflicts": 0
+          }
+        },
+        {
+          "mode": "balanced",
+          "q2": {
+            "sha256": "c95398d92f718e6ac07a03ffda3e0bd7116d0cf29afb6ad7e86b17a7f6ddd66e",
+            "modified_fraction": 0.239766,
+            "recognition_score": 1
+          },
+          "q3": {
+            "sha256": "03e60305df4dc2297013afaa5b56a911ded64a0e3087af87a754e149fe7d394b",
+            "modified_fraction": 0.185596,
+            "recognition_score": 1,
+            "protected_conflicts": 0
+          }
+        },
+        {
+          "mode": "image_first",
+          "q2": {
+            "sha256": "8b615d1e3431f3a6c5d7f440576dd6c332d90e9e70742017544918b9759bc05f",
+            "modified_fraction": 0.4,
+            "recognition_score": 1
+          },
+          "q3": {
+            "sha256": "d5f29cb748e9a16810b4b9ef585bcbfed68f46707728e43254e09c3a7deab2ac",
+            "modified_fraction": 0.203077,
+            "recognition_score": 1,
+            "protected_conflicts": 0
+          }
+        }
+      ]
+    },
+    {
+      "target": "letter-j-gradient",
+      "source_sha256": "a4ec985c43400d55684dad6e75546e15b4fce211f87f9da0b8802f5935021782",
+      "source_dimensions": [
+        160,
+        160
+      ],
+      "candidates": [
+        {
+          "mode": "readable",
+          "q2": {
+            "sha256": "0c5e2cda92e30feb2e3c8b617a779abda407167070ec7f16a5751bae499c225b",
+            "modified_fraction": 0.061224,
+            "recognition_score": 0.471154
+          },
+          "q3": {
+            "sha256": "bd2e522af48c9b0612ebc4fcb98bc6efbe4f551d932af1b393e036e1118b1673",
+            "modified_fraction": 0.062057,
+            "recognition_score": 0.4791,
+            "protected_conflicts": 0
+          }
+        },
+        {
+          "mode": "balanced",
+          "q2": {
+            "sha256": "24020362400cc8d497eed032db0a0dabcd9c2251e26c9054e7f40c57eb04680b",
+            "modified_fraction": 0.158818,
+            "recognition_score": 1
+          },
+          "q3": {
+            "sha256": "2ebcf16742eab66391a2abd9209d69c4685db809947dccc8b532e7fcb9b1706f",
+            "modified_fraction": 0.146814,
+            "recognition_score": 1,
+            "protected_conflicts": 0
+          }
+        },
+        {
+          "mode": "image_first",
+          "q2": {
+            "sha256": "80555e4c5e6cd87bac6eee43d741a9228708647eb4c498e445c139df5e4a8e95",
+            "modified_fraction": 0.179408,
+            "recognition_score": 1
+          },
+          "q3": {
+            "sha256": "1f6c06cfc863fd911bd6dcef242a5192df3327196cc44e7079fb3c0cb183c384",
+            "modified_fraction": 0.146509,
+            "recognition_score": 1,
+            "protected_conflicts": 0
+          }
+        }
+      ]
+    },
+    {
+      "target": "red-wolf-front",
+      "source_sha256": "04e66b062e147e40abf1b35f0735494e5b4711a3263869741bdccb91d39698a8",
+      "source_dimensions": [
+        160,
+        160
+      ],
+      "candidates": [
+        {
+          "mode": "readable",
+          "q2": {
+            "sha256": "fd1a20214177095a41afef8e814c3e451c9c387d857f9e422cc97320aa37967a",
+            "modified_fraction": 0.066639,
+            "recognition_score": 0.512821
+          },
+          "q3": {
+            "sha256": "24db5f7efc3fef184b946fa4fb7b849c839c4d8671a2216e057506fca80f00ad",
+            "modified_fraction": 0.067472,
+            "recognition_score": 0.519231,
+            "protected_conflicts": 0
+          }
+        },
+        {
+          "mode": "balanced",
+          "q2": {
+            "sha256": "eec4f1e6010819e32e64d478ec54939bb338cde65d496b2648297b9b767760c9",
+            "modified_fraction": 0.239766,
+            "recognition_score": 1
+          },
+          "q3": {
+            "sha256": "dda20c16f85481f8f4bcd9d1f1d1432d204fadd7c3bcb39d41b987a9c9d31506",
+            "modified_fraction": 0.239766,
+            "recognition_score": 1,
+            "protected_conflicts": 0
+          }
+        },
+        {
+          "mode": "image_first",
+          "q2": {
+            "sha256": "4cf1079f5148610919c00c6482c90efbed5ec6be465333458e5c5837954238d2",
+            "modified_fraction": 0.4,
+            "recognition_score": 1
+          },
+          "q3": {
+            "sha256": "42c11702945f3548016095f1b88500162b6760ad6cd4e2f41cc1da27a2a7e829",
+            "modified_fraction": 0.4,
+            "recognition_score": 1,
+            "protected_conflicts": 0
+          }
+        }
+      ]
+    },
+    {
+      "target": "wolf-black-white",
+      "source_sha256": "19bd5a92ea6b89fddf128f8be4af1c21f09c4e5869a7848e4a152d38286ab88a",
+      "source_dimensions": [
+        160,
+        160
+      ],
+      "candidates": [
+        {
+          "mode": "readable",
+          "q2": {
+            "sha256": "3b31afac0d6d9cc1450917db05c60d254f48f976dbf217d8b2af65a7b9f6d895",
+            "modified_fraction": 0.062057,
+            "recognition_score": 0.477564
+          },
+          "q3": {
+            "sha256": "a521ec2d18aacb13a3ffa5a1d08130022371dce6e25c67295f1447904fb0c1bc",
+            "modified_fraction": 0.060808,
+            "recognition_score": 0.467949,
+            "protected_conflicts": 0
+          }
+        },
+        {
+          "mode": "balanced",
+          "q2": {
+            "sha256": "45a1845c3a91be5a7cd79ada4513e810d367ff4124715b42f4aaedf71aeaa65f",
+            "modified_fraction": 0.239766,
+            "recognition_score": 1
+          },
+          "q3": {
+            "sha256": "83d62a85a2d3f74a970b473b52940a6b1003264e014f37d8809d56aa7882675f",
+            "modified_fraction": 0.239766,
+            "recognition_score": 1,
+            "protected_conflicts": 0
+          }
+        },
+        {
+          "mode": "image_first",
+          "q2": {
+            "sha256": "7838b1603743c41f23680263b490a960d5c81dd1dc7afda6e5c54a6e0fad85b8",
+            "modified_fraction": 0.4,
+            "recognition_score": 1
+          },
+          "q3": {
+            "sha256": "54d48d938cb17f9f81316752abceccf4a3072b20384bc4311a84f3f52a5b42ec",
+            "modified_fraction": 0.4,
+            "recognition_score": 1,
+            "protected_conflicts": 0
+          }
+        }
+      ]
+    },
+    {
+      "target": "wolf-profile-watermarked",
+      "source_sha256": "139e12b26f4728ba5737e0307c12ddb43bcabaa0f0eb3c4fac19b030d1ab82c3",
+      "source_dimensions": [
+        148,
+        160
+      ],
+      "candidates": [
+        {
+          "mode": "readable",
+          "q2": {
+            "sha256": "39fc4e432200a959a920972d165a310dd9074e386c316cd4c72ad933dd201186",
+            "modified_fraction": 0.065806,
+            "recognition_score": 0.50641
+          },
+          "q3": {
+            "sha256": "b0fbe6cbe56eb3e43e36bc916af5d230a92a1d44d4c20d7d21ad1e8db6d18815",
+            "modified_fraction": 0.066222,
+            "recognition_score": 0.509615,
+            "protected_conflicts": 0
+          }
+        },
+        {
+          "mode": "balanced",
+          "q2": {
+            "sha256": "8a853007b360de363eeca93f6cbdc57be8230dd76868a109fb425a730219bf73",
+            "modified_fraction": 0.239766,
+            "recognition_score": 1
+          },
+          "q3": {
+            "sha256": "df8a96bae61d53b84797f5e488062154eefec9c8b308e80e210efca5fe061050",
+            "modified_fraction": 0.239766,
+            "recognition_score": 1,
+            "protected_conflicts": 0
+          }
+        },
+        {
+          "mode": "image_first",
+          "q2": {
+            "sha256": "643037d17ed273a30cb3bf869d1d19e42d3f0a58ce6b12578a81fb3295cb886d",
+            "modified_fraction": 0.4,
+            "recognition_score": 1
+          },
+          "q3": {
+            "sha256": "2757309ee96f582fffdf2d54def4ee7a677a70573e3443ba4a685ee1599ee31e",
+            "modified_fraction": 0.299172,
+            "recognition_score": 1,
+            "protected_conflicts": 0
+          }
+        }
+      ]
+    }
+  ]
+}

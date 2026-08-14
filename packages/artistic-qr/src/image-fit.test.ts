@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import * as AjvModule from 'ajv';
 import * as formatsModule from 'ajv-formats';
 import { describe, expect, it } from 'vitest';
-import { optimizeImageFitQr, type ImageFitOptimizerInput, preprocessTarget } from './image-fit.js';
+import { foregroundAwareCrop, optimizeImageFitQr, type ImageFitOptimizerInput, preprocessTarget } from './image-fit.js';
 import { runValidation } from './validation.js';
 import type { ScanValidationResult } from './types.js';
 
@@ -251,6 +251,38 @@ describe('Image-fit preprocessing pipeline', () => {
     expect(q2.mask[center][center]).toBe(false);
     const ringSamples = [q2.mask[center][center - 15], q2.mask[center][center + 15], q2.mask[center - 15][center], q2.mask[center + 15][center]];
     expect(ringSamples.filter(Boolean).length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('Q3 foreground crop removes detached lower captions while retaining the dominant mark', () => {
+    const width = 80, height = 100;
+    const values = Array(width * height).fill(255);
+    for (let y = 15; y < 65; y++) for (let x = 25; x < 55; x++) values[y * width + x] = 25;
+    for (let y = 88; y < 91; y++) for (let x = 10; x < 70; x += 5) values[y * width + x] = 0;
+    const crop = foregroundAwareCrop({ width, height, values });
+    expect(crop.height).toBeLessThan(90);
+    expect(crop.width).toBeGreaterThanOrEqual(30);
+    expect(crop.values.some((value) => value < 50)).toBe(true);
+  });
+
+  it('Q3 foreground crop removes a full-width bottom watermark band', () => {
+    const width = 80, height = 100;
+    const values = Array(width * height).fill(180);
+    for (let y = 20; y < 75; y++) for (let x = 18; x < 62; x++) values[y * width + x] = 35;
+    for (let y = 90; y < 100; y++) for (let x = 0; x < width; x++) values[y * width + x] = 0;
+    const crop = foregroundAwareCrop({ width, height, values });
+    expect(crop.height).toBeLessThan(90);
+    expect(crop.values.filter((value) => value === 0).length).toBe(0);
+  });
+
+  it('Q3 policy is deterministic and retains a detached heart above a thin calligraphic mark', () => {
+    const width = 64, height = 80;
+    const values = Array(width * height).fill(255);
+    for (let y = 8; y < 18; y++) for (let x = 26; x < 38; x++) values[y * width + x] = 30;
+    for (let y = 28; y < 68; y++) for (let x = 29; x < 35; x++) values[y * width + x] = 20;
+    const crop1 = foregroundAwareCrop({ width, height, values });
+    const crop2 = foregroundAwareCrop({ width, height, values });
+    expect(crop1).toEqual(crop2);
+    expect(crop1.height).toBeGreaterThan(50);
   });
 });
 

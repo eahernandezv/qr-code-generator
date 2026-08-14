@@ -121,8 +121,8 @@ export interface ImageFitOptimizerOptions {
    * Used for A/B evidence generation only.
    */
   _legacyNaiveRender?: boolean;
-  /** Evidence-only switch retaining the Q1 edge-saliency mask before Q2 composition repair. */
-  _compositionPolicy?: 'q1' | 'q2';
+  /** Evidence switch for exact Q1/Q2/Q3 preprocessing comparisons. */
+  _compositionPolicy?: 'q1' | 'q2' | 'q3';
 }
 
 const MODE_ORDER: readonly ImageFitMode[] = ['readable', 'balanced', 'image_first'];
@@ -135,6 +135,7 @@ export function optimizeImageFitQr(
 ): ImageFitOptimizationResult {
   validateInput(input);
   const validate = options.validationRunner ?? runValidation;
+  const compositionPolicy = options._compositionPolicy ?? 'q3';
   const started = performance.now();
   const artifacts: Record<string, ImageFitArtifact> = {};
   const candidates: ImageFitCandidateV1[] = [];
@@ -165,7 +166,7 @@ export function optimizeImageFitQr(
         continue;
       }
       const useLegacy = options._legacyNaiveRender === true;
-      const preprocessed = preprocessTarget(input, matrix, mode, options._compositionPolicy ?? 'q2');
+      const preprocessed = preprocessTarget(input, matrix, mode, compositionPolicy);
       const rendered = renderImageFitSvg(matrix, preprocessed.mask, mode, { useLegacy, edgeScore: preprocessed.edgeScore, componentCount: preprocessed.componentCount });
       const artifact = makeArtifact(mode, rendered.svg);
       const validation = validate(validationCandidate(artifact, rendered.width, settings, mode), input.encoded_payload);
@@ -198,7 +199,9 @@ export function optimizeImageFitQr(
         kind: treatmentForMode(mode),
         modified_modules: rendered.modifiedModules,
         modified_fraction: round(rendered.modifiedModules / (matrix.size * matrix.size), 6),
-        luminance_policy_version: 'image-fit-composition-q2-morphology-v1',
+        luminance_policy_version: compositionPolicy === 'q3'
+          ? 'image-fit-real-target-foreground-q3'
+          : 'image-fit-composition-q2-morphology-v1',
         color_profile: 'srgb',
       },
       protected_regions: {
@@ -210,7 +213,9 @@ export function optimizeImageFitQr(
       scan_evidence: scanEvidence,
       image_fit_evidence: {
         fit_label: fitLabel,
-        score_version: 'image-fit-composition-coverage-q2',
+        score_version: compositionPolicy === 'q3'
+          ? 'image-fit-real-target-coverage-q3'
+          : 'image-fit-composition-coverage-q2',
         recognition_score: rendered.recognitionScore,
         protected_zone_conflict_score: rendered.protectedConflictScore,
       },
@@ -285,6 +290,110 @@ export interface PreprocessedTarget {
   componentCount: number;
 }
 
+interface LumaPlane {
+  width: number;
+  height: number;
+  values: readonly number[];
+}
+
+/** Deterministically crops margins and detached captions while retaining dominant central marks. */
+export function foregroundAwareCrop(source: LumaPlane): LumaPlane {
+  if (source.width < 8 || source.height < 8) return source;
+  const border: number[] = [];
+  for (let x = 0; x < source.width; x++) border.push(source.values[x], source.values[(source.height - 1) * source.width + x]);
+  for (let y = 1; y < source.height - 1; y++) border.push(source.values[y * source.width], source.values[y * source.width + source.width - 1]);
+  border.sort((a, b) => a - b);
+  const background = border[Math.floor(border.length / 2)] ?? 255;
+  const deviations = border.map((value) => Math.abs(value - background)).sort((a, b) => a - b);
+  const noise = deviations[Math.floor(deviations.length * 0.6)] ?? 0;
+  const threshold = Math.max(24, noise * 2.5);
+  const foreground = new Uint8Array(source.width * source.height);
+  for (let i = 0; i < foreground.length; i++) if (Math.abs(source.values[i] - background) >= threshold) foreground[i] = 1;
+
+  type Component = { minX: number; minY: number; maxX: number; maxY: number; area: number; score: number };
+  const visited = new Uint8Array(foreground.length);
+  let components: Component[] = [];
+  const centerX = (source.width - 1) / 2, centerY = (source.height - 1) / 2;
+  const diagonal = Math.hypot(source.width, source.height);
+  for (let y = 0; y < source.height; y++) for (let x = 0; x < source.width; x++) {
+    const start = y * source.width + x;
+    if (!foreground[start] || visited[start]) continue;
+    const stack = [start]; visited[start] = 1;
+    let minX = x, minY = y, maxX = x, maxY = y, area = 0;
+    while (stack.length > 0) {
+      const index = stack.pop()!; area++;
+      const px = index % source.width, py = Math.floor(index / source.width);
+      minX = Math.min(minX, px); minY = Math.min(minY, py); maxX = Math.max(maxX, px); maxY = Math.max(maxY, py);
+      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+        if (dx === 0 && dy === 0) continue;
+        const nx = px + dx, ny = py + dy;
+        if (nx < 0 || ny < 0 || nx >= source.width || ny >= source.height) continue;
+        const next = ny * source.width + nx;
+        if (foreground[next] && !visited[next]) { visited[next] = 1; stack.push(next); }
+      }
+    }
+    const touchesBorder = minX === 0 || minY === 0 || maxX === source.width - 1 || maxY === source.height - 1;
+    if ((touchesBorder && (maxX - minX + 1) / source.width > 0.60) || area < Math.max(6, source.width * source.height * 0.00008)) continue;
+    const cx = (minX + maxX) / 2, cy = (minY + maxY) / 2;
+    const centrality = 1 - Math.min(1, Math.hypot(cx - centerX, cy - centerY) / (diagonal * 0.55));
+    components.push({ minX, minY, maxX, maxY, area, score: area * (0.55 + 0.45 * centrality) });
+  }
+  if (components.length === 0) return source;
+
+  // Merge pieces separated only by narrow design cuts (faceted marks, outlined animals) before
+  // ranking. Caption glyphs usually remain farther apart and therefore do not outrank the mark.
+  const mergeGap = Math.max(1, Math.round(Math.min(source.width, source.height) * 0.015));
+  const parent = components.map((_, index) => index);
+  const root = (index: number): number => parent[index] === index ? index : (parent[index] = root(parent[index]));
+  const unite = (a: number, b: number): void => { const ra = root(a), rb = root(b); if (ra !== rb) parent[rb] = ra; };
+  for (let a = 0; a < components.length; a++) for (let b = a + 1; b < components.length; b++) {
+    const left = components[a], right = components[b];
+    const gapX = Math.max(0, left.minX - right.maxX - 1, right.minX - left.maxX - 1);
+    const gapY = Math.max(0, left.minY - right.maxY - 1, right.minY - left.maxY - 1);
+    if (gapX <= mergeGap && gapY <= mergeGap) unite(a, b);
+  }
+  const clusters = new Map<number, Component>();
+  for (let index = 0; index < components.length; index++) {
+    const component = components[index], key = root(index), existing = clusters.get(key);
+    if (!existing) clusters.set(key, { ...component });
+    else {
+      existing.minX = Math.min(existing.minX, component.minX); existing.minY = Math.min(existing.minY, component.minY);
+      existing.maxX = Math.max(existing.maxX, component.maxX); existing.maxY = Math.max(existing.maxY, component.maxY);
+      existing.area += component.area;
+    }
+  }
+  components = [...clusters.values()].map((component) => {
+    const cx = (component.minX + component.maxX) / 2, cy = (component.minY + component.maxY) / 2;
+    const centrality = 1 - Math.min(1, Math.hypot(cx - centerX, cy - centerY) / (diagonal * 0.55));
+    return { ...component, score: component.area * (0.55 + 0.45 * centrality) };
+  });
+  components.sort((a, b) => b.score - a.score || a.minY - b.minY || a.minX - b.minX);
+  const best = components[0].score;
+  // Detached caption glyphs are typically individually much smaller than the primary mark.
+  // Keep a bounded set of material components so intentional satellites (for example a heart)
+  // survive while slogan/caption noise does not determine the crop.
+  const selected = components.filter((component, index) => index < 8 && component.score >= best * 0.10);
+  let minX = source.width - 1, minY = source.height - 1, maxX = 0, maxY = 0;
+  for (const component of selected) {
+    minX = Math.min(minX, component.minX); minY = Math.min(minY, component.minY);
+    maxX = Math.max(maxX, component.maxX); maxY = Math.max(maxY, component.maxY);
+  }
+  // Deliberate breathing room keeps the mark away from finder/timing regions after square fit.
+  const span = Math.max(maxX - minX + 1, maxY - minY + 1), padding = Math.max(3, Math.round(span * 0.30));
+  minX = Math.max(0, minX - padding); minY = Math.max(0, minY - padding);
+  maxX = Math.min(source.width - 1, maxX + padding); maxY = Math.min(source.height - 1, maxY + padding);
+  const width = maxX - minX + 1, height = maxY - minY + 1;
+  const values = new Array<number>(width * height);
+  for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
+    const sourceX = minX + x, sourceY = minY + y;
+    const insideSelected = selected.some((component) => sourceX >= component.minX && sourceX <= component.maxX && sourceY >= component.minY && sourceY <= component.maxY);
+    const value = source.values[sourceY * source.width + sourceX];
+    // Normalize uniform source backgrounds to white and erase rejected caption/watermark components.
+    values[y * width + x] = insideSelected && Math.abs(value - background) >= threshold ? value : 255;
+  }
+  return { width, height, values };
+}
+
 /**
  * Produce a square-cropped, edge/saliency-aware target mask aligned to QR modules.
  * When a matrix is supplied, protected regions are excluded during preprocessing as well as rendering,
@@ -294,7 +403,7 @@ export function preprocessTarget(
   input: ImageFitOptimizerInput,
   matrixOrSize: QrMatrix | number,
   mode: ImageFitMode,
-  compositionPolicy: 'q1' | 'q2' = 'q2',
+  compositionPolicy: 'q1' | 'q2' | 'q3' = 'q3',
 ): PreprocessedTarget {
   const matrixSize = typeof matrixOrSize === 'number' ? matrixOrSize : matrixOrSize.size;
   const drawableMask = Array.from({ length: matrixSize }, (_, y) =>
@@ -302,7 +411,7 @@ export function preprocessTarget(
       typeof matrixOrSize === 'number' || !isProtectedFunctionalModule(matrixOrSize.functionalRegions, x, y),
     ),
   );
-  const source = input.target_luma;
+  const source = compositionPolicy === 'q3' ? foregroundAwareCrop(input.target_luma) : input.target_luma;
   const scale = 2;
 
   // 1. Square crop / center pad with white
@@ -444,7 +553,7 @@ export function preprocessTarget(
   // 9. Q2 composition repair: bridge single-module breaks, close narrow gaps, and remove isolated fragments.
   // Morphology is constrained again by drawableMask before budget enforcement; render-time functional-region
   // exclusion remains a second independent safety net.
-  if (compositionPolicy === 'q2') {
+  if (compositionPolicy !== 'q1') {
     const bridged = bridgeSingleModuleGaps(moduleMask);
     const closed = morphologicalClose(bridged, mode === 'image_first' ? 2 : 1);
     const withoutSpecks = removeSmallMaskComponents(closed, mode === 'readable' ? 2 : 4);
