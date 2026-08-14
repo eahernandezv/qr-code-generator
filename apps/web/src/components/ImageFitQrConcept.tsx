@@ -9,6 +9,7 @@ const labels: Record<string, string> = {
 }
 
 type RunState = 'idle' | 'loading' | 'success' | 'error'
+type UploadState = 'idle' | 'uploading' | 'error'
 
 function ChoiceRow<T extends string>({ label, value, values, onChange }: { label: string; value: T; values: readonly T[]; onChange: (value: T) => void }) {
   return <fieldset><legend className="mb-1.5 text-[10px] font-black uppercase tracking-[.16em] text-slate-400">{label}</legend>
@@ -30,6 +31,26 @@ function previewSource(uri: string) {
     : uri
 }
 
+async function imageFileToPngDataUrl(file: File): Promise<string> {
+  if (!file.type.startsWith('image/')) throw new Error('Choose a PNG, JPG, or WebP image.')
+  const bitmap = await createImageBitmap(file).catch(() => undefined)
+  if (!bitmap) throw new Error('The selected image could not be decoded.')
+  try {
+    const scale = Math.min(1, 1024 / Math.max(bitmap.width, bitmap.height))
+    const width = Math.max(2, Math.round(bitmap.width * scale))
+    const height = Math.max(2, Math.round(bitmap.height * scale))
+    const canvas = document.createElement('canvas')
+    canvas.width = width
+    canvas.height = height
+    const context = canvas.getContext('2d')
+    if (!context) throw new Error('Browser image conversion is unavailable.')
+    context.drawImage(bitmap, 0, 0, width, height)
+    return canvas.toDataURL('image/png')
+  } finally {
+    bitmap.close()
+  }
+}
+
 function CandidateCard({ candidate, selected, onSelect }: { candidate: ImageFitCandidateV1; selected: boolean; onSelect: () => void }) {
   const artifact = artifactFor(candidate)!
   const eligible = candidate.status === 'validated' && candidate.scan_evidence.verdict === 'pass'
@@ -49,18 +70,40 @@ export default function ImageFitQrConcept() {
   const [detail, setDetail] = React.useState<ImageFitDetail>(fixtureRequest.user_controls.detail)
   const [linkMode, setLinkMode] = React.useState<ImageFitLinkMode>(fixtureRequest.user_controls.link_mode)
   const [destination, setDestination] = React.useState(fixtureRequest.destination.normalized_url)
-  const [targetImage] = React.useState<ImageFitRequestV1['target_image']>(fixtureRequest.target_image as ImageFitRequestV1['target_image'])
+  const [targetImage, setTargetImage] = React.useState<ImageFitRequestV1['target_image']>(fixtureRequest.target_image as ImageFitRequestV1['target_image'])
   const [runState, setRunState] = React.useState<RunState>('idle')
+  const [uploadState, setUploadState] = React.useState<UploadState>('idle')
   const [error, setError] = React.useState('')
+  const [uploadError, setUploadError] = React.useState('')
   const [candidates, setCandidates] = React.useState<ImageFitCandidateV1[]>([])
   const [selectedId, setSelectedId] = React.useState<string>()
   const abortRef = React.useRef<AbortController>()
+  const uploadAbortRef = React.useRef<AbortController>()
 
   const selected = candidates.find((candidate) => candidate.candidate_id === selectedId) ?? candidates[0]
   const destinationValid = /^https:\/\/.+\..+/i.test(destination)
-  const canGenerate = destinationValid && Boolean(targetImage.image_ref) && runState !== 'loading'
+  const canGenerate = destinationValid && Boolean(targetImage.image_ref) && runState !== 'loading' && uploadState !== 'uploading'
   const invalidate = () => { abortRef.current?.abort(); setCandidates([]); setSelectedId(undefined); setError(''); setRunState('idle') }
   const change = <T,>(setter: React.Dispatch<React.SetStateAction<T>>, value: T) => { setter(value); invalidate() }
+
+  const uploadTarget = async (file: File) => {
+    uploadAbortRef.current?.abort()
+    const controller = new AbortController()
+    uploadAbortRef.current = controller
+    setUploadState('uploading')
+    setUploadError('')
+    invalidate()
+    try {
+      const dataUrl = await imageFileToPngDataUrl(file)
+      const uploadedTarget = await imageFitGenerationClient.uploadTargetImage(dataUrl, controller.signal)
+      setTargetImage(uploadedTarget)
+      setUploadState('idle')
+    } catch (caught) {
+      if (caught instanceof DOMException && caught.name === 'AbortError') return
+      setUploadError(caught instanceof Error ? caught.message : 'Image upload failed.')
+      setUploadState('error')
+    }
+  }
 
   const generate = async () => {
     invalidate()
@@ -82,7 +125,7 @@ export default function ImageFitQrConcept() {
     }
   }
 
-  React.useEffect(() => () => abortRef.current?.abort(), [])
+  React.useEffect(() => () => { abortRef.current?.abort(); uploadAbortRef.current?.abort() }, [])
 
   return <main data-testid="image-fit-qr-concept" data-schema-version="image-fit-qr-api.v1" data-export-payload-bound="false" data-checkout-bound="false" className="min-h-[100dvh] bg-[#070b16] text-white">
     <header className="border-b border-white/10 bg-slate-950/90 px-4 py-3"><div className="mx-auto flex max-w-6xl items-center justify-between gap-3"><div><p className="text-[10px] font-black uppercase tracking-[.2em] text-indigo-300">Level 2 controlled generation</p><h1 className="text-base font-bold">Image-Fit QR</h1></div><span className="rounded-full border border-amber-300/30 bg-amber-300/10 px-2.5 py-1 text-[10px] font-bold text-amber-200">Export / Checkout locked</span></div></header>
@@ -99,7 +142,8 @@ export default function ImageFitQrConcept() {
       </section>
 
       <section aria-label="Image-Fit QR controls" className="grid content-start gap-2.5 rounded-2xl border border-white/10 bg-slate-900/65 p-3">
-        <div className="grid grid-cols-[1fr_auto] items-end gap-2 rounded-xl border border-white/10 bg-slate-950/60 p-2.5"><label className="min-w-0"><span className="mb-1 block text-[10px] font-black uppercase tracking-[.16em] text-slate-400">Controlled target image</span><span className="block truncate text-xs">{targetImage.image_ref}</span><span className="mt-1 block text-[9px] text-slate-500">Uploads are not enabled in this controlled public demo.</span></label><button type="button" disabled className="cursor-not-allowed rounded-lg border border-white/10 bg-slate-800 px-3 py-2 text-[10px] font-bold text-slate-500">Upload locked</button></div>
+        <div className="grid grid-cols-[1fr_auto] items-end gap-2 rounded-xl border border-white/10 bg-slate-950/60 p-2.5"><label className="min-w-0"><span className="mb-1 block text-[10px] font-black uppercase tracking-[.16em] text-slate-400">Target image</span><span className="block truncate text-xs">{targetImage.image_ref}</span><span className="mt-1 block text-[9px] text-slate-500">Upload a PNG, JPG, or WebP; Studio converts it to a bounded PNG target for Creator generation.</span></label><label className={`rounded-lg border px-3 py-2 text-center text-[10px] font-bold focus-within:ring-2 focus-within:ring-indigo-300 ${uploadState === 'uploading' ? 'cursor-wait border-white/10 bg-slate-800 text-slate-400' : 'cursor-pointer border-indigo-300/40 bg-indigo-500/20 text-indigo-100'}`}><span>{uploadState === 'uploading' ? 'Uploading…' : 'Choose image'}</span><input aria-label="Choose target image" type="file" accept="image/png,image/jpeg,image/webp" disabled={uploadState === 'uploading'} onChange={(event) => { const file = event.currentTarget.files?.[0]; if (file) void uploadTarget(file); event.currentTarget.value = '' }} className="sr-only" /></label></div>
+        {uploadError && <div role="alert" className="rounded-xl border border-rose-300/30 bg-rose-400/10 px-3 py-2 text-xs text-rose-100"><strong>Upload failed.</strong> {uploadError}</div>}
         <label><span className="mb-1 block text-[10px] font-black uppercase tracking-[.16em] text-slate-400">Destination</span><input aria-label="Level 2 destination URL" value={destination} aria-invalid={!destinationValid} onChange={(event) => change(setDestination, event.target.value)} className="h-11 w-full rounded-xl border border-white/10 bg-slate-950 px-3 text-xs outline-none focus:ring-2 focus:ring-indigo-300" /></label>
         <ChoiceRow label="Treatment" value={treatment} values={IMAGE_FIT_CONTRACT.controls.treatments} onChange={(value) => change(setTreatment, value)} />
         <ChoiceRow label="Strength" value={strength} values={IMAGE_FIT_CONTRACT.controls.strengths} onChange={(value) => change(setStrength, value)} />

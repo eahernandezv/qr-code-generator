@@ -54,6 +54,11 @@ const CANDIDATE_ID = /^[a-z0-9._:-]{6,128}$/
 const ARTIFACT_KINDS = new Set(['preview_png', 'export_png', 'export_svg', 'metadata_json'])
 const MODES = new Set(IMAGE_FIT_CONTRACT.controls.strengths)
 
+export type ImageFitUploadResponseV1 = {
+  success: true
+  target_image: ImageFitRequestV1['target_image']
+}
+
 export function buildImageFitRequest(controls: ImageFitRequestControls, requestId = createRequestId()): ImageFitRequestV1 {
   const url = normalizePublicHttpsUrl(controls.destination)
   return {
@@ -98,6 +103,24 @@ function redactDisplayUrl(url: URL) {
 export class ImageFitGenerationClient {
   constructor(private readonly endpoint = import.meta.env.VITE_IMAGE_FIT_QR_API_URL || '/api/artistic-qr/image-fit/candidates') {}
 
+  async uploadTargetImage(dataUrl: string, signal?: AbortSignal): Promise<ImageFitRequestV1['target_image']> {
+    let response: Response
+    try {
+      response = await fetch('/api/artistic-qr/image-fit/uploads', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ data_url: dataUrl }), signal })
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') throw error
+      throw new Error('Image upload service is unavailable. Keep the controlled target or retry.')
+    }
+    const body = await response.json().catch(() => undefined) as unknown
+    if (!response.ok) {
+      const serverError = body as { message?: unknown } | undefined
+      throw new Error(typeof serverError?.message === 'string' ? serverError.message : 'Image upload could not be accepted.')
+    }
+    const targetImage = (body as ImageFitUploadResponseV1 | undefined)?.target_image
+    if (!isTargetImage(targetImage)) throw new Error('Image upload returned an invalid target image.')
+    return targetImage
+  }
+
   async generate(request: ImageFitRequestV1, signal?: AbortSignal): Promise<ImageFitGenerationResponseV1> {
     let response: Response
     try {
@@ -136,6 +159,16 @@ export function isGenerationResponse(value: unknown, requestId: string): value i
     && response.candidates.length > 0
     && response.candidates.length <= 12
     && response.candidates.every(isCandidate)
+}
+
+function isTargetImage(value: unknown): value is ImageFitRequestV1['target_image'] {
+  if (!value || typeof value !== 'object') return false
+  const target = value as Partial<ImageFitRequestV1['target_image']>
+  return typeof target.image_ref === 'string'
+    && ['image/png', 'image/jpeg', 'image/webp', 'image/svg+xml'].includes(target.mime_type ?? '')
+    && Number.isInteger(target.width_px) && Number.isInteger(target.height_px)
+    && SHA256.test(target.sha256 ?? '')
+    && ['simple_mark', 'medium_logo', 'complex_photo_like', 'high_risk_thin_detail'].includes(target.complexity ?? '')
 }
 
 function isCandidate(value: unknown): value is ImageFitCandidateV1 {

@@ -1,9 +1,9 @@
 /** Core-owned HTTP authority boundary for candidate generation and export. */
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
 import { createHash } from 'node:crypto';
-import { readFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
-import { resolve } from 'node:path';
+import { basename, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { authoritativeCandidate, candidateAuthority, InMemoryCandidateAuthorityStore, setCandidateAuthorityStore, type CandidateAuthorityStore } from './candidate-context.js';
 import { exportArtifact, generateCandidates } from './api/index.js';
@@ -21,6 +21,7 @@ export interface ArtisticQrHttpServiceOptions {
   authorityStore?: CandidateAuthorityStore;
   generation?: GenerationEngineOptions;
   maxBodyBytes?: number;
+  uploadDir?: string;
   allowedOrigin?: string;
 }
 
@@ -31,12 +32,14 @@ export interface ArtisticQrHttpService {
 
 export function createArtisticQrHttpService(options: ArtisticQrHttpServiceOptions = {}): ArtisticQrHttpService {
   const authorityStore = options.authorityStore ?? new InMemoryCandidateAuthorityStore();
-  const maxBodyBytes = options.maxBodyBytes ?? 1_000_000;
+  const maxBodyBytes = options.maxBodyBytes ?? 3_000_000;
+  const uploadDir = resolve(options.uploadDir ?? process.env.IMAGE_FIT_UPLOAD_DIR ?? '/tmp/qr-image-fit-uploads');
   const server = createServer(async (request, response) => {
     const route = request.url === '/candidates' ? 'candidates'
       : request.url === '/exports' ? 'exports'
         : request.url === '/image-fit/candidates' ? 'image-fit/candidates'
-          : 'other';
+          : request.url === '/image-fit/uploads' ? 'image-fit/uploads'
+            : 'other';
     applyCors(response, options.allowedOrigin);
     if (request.method === 'OPTIONS') {
       response.writeHead(204).end();
@@ -53,9 +56,15 @@ export function createArtisticQrHttpService(options: ArtisticQrHttpServiceOption
         sendJson(response, 200, { success: true, board });
         return;
       }
+      if (request.method === 'POST' && request.url === '/image-fit/uploads') {
+        const body = await readJson(request, maxBodyBytes);
+        const targetImage = storeImageFitUpload(body, uploadDir);
+        sendJson(response, 200, { success: true, target_image: targetImage });
+        return;
+      }
       if (request.method === 'POST' && request.url === '/image-fit/candidates') {
         const body = await readJson(request, maxBodyBytes) as ImageFitQrRequestV1;
-        const result = handleImageFitCandidates(body);
+        const result = handleImageFitCandidates(body, uploadDir);
         sendJson(response, 200, { success: true, result: result.response });
         return;
       }
@@ -76,7 +85,59 @@ export function createArtisticQrHttpService(options: ArtisticQrHttpServiceOption
   return { server, authorityStore };
 }
 
-function handleImageFitCandidates(request: ImageFitQrRequestV1) {
+
+function storeImageFitUpload(value: unknown, uploadDir: string): ImageFitQrRequestV1['target_image'] {
+  const body = requireRecord(value);
+  if (Object.keys(body).some((key) => key !== 'data_url' && key !== 'complexity')) {
+    throw new ServiceError(400, 'VALIDATION_FAILED', 'Upload request contains an unknown field');
+  }
+  if (typeof body.data_url !== 'string') {
+    throw new ServiceError(400, 'VALIDATION_FAILED', 'Upload requires a PNG data_url');
+  }
+  const match = /^data:image\/png;base64,([a-zA-Z0-9+/=]+)$/.exec(body.data_url);
+  if (!match) {
+    throw new ServiceError(400, 'VALIDATION_FAILED', 'Upload must be a PNG data_url');
+  }
+  const bytes = Buffer.from(match[1], 'base64');
+  if (bytes.length < 16 || bytes.length > 1_500_000) {
+    throw new ServiceError(413, 'VALIDATION_FAILED', 'Uploaded PNG must be between 16 bytes and 1.5 MB');
+  }
+  const png = readPngBytes(bytes);
+  if (!png || png.width < 2 || png.height < 2 || png.width > 1600 || png.height > 1600) {
+    throw new ServiceError(400, 'VALIDATION_FAILED', 'Uploaded PNG dimensions must be 2–1600 px');
+  }
+  const hash = sha256(bytes);
+  mkdirSync(uploadDir, { recursive: true, mode: 0o700 });
+  writeFileSync(resolve(uploadDir, `${hash}.png`), bytes, { mode: 0o600 });
+  return {
+    image_ref: `uploads/${hash}.png`,
+    mime_type: 'image/png',
+    width_px: png.width,
+    height_px: png.height,
+    sha256: hash,
+    complexity: typeof body.complexity === 'string' && ['simple_mark', 'medium_logo', 'complex_photo_like', 'high_risk_thin_detail'].includes(body.complexity)
+      ? body.complexity as ImageFitQrRequestV1['target_image']['complexity']
+      : classifyTargetComplexity(png.width, png.height),
+  };
+}
+
+function classifyTargetComplexity(width: number, height: number): ImageFitQrRequestV1['target_image']['complexity'] {
+  const pixels = width * height;
+  if (pixels <= 96 * 96) return 'simple_mark';
+  if (pixels <= 512 * 512) return 'medium_logo';
+  return 'complex_photo_like';
+}
+
+function readPngBytes(bytes: Buffer) {
+  try {
+    const { PNG } = requireFromPackage('pngjs') as typeof import('pngjs');
+    return PNG.sync.read(bytes);
+  } catch {
+    return undefined;
+  }
+}
+
+function handleImageFitCandidates(request: ImageFitQrRequestV1, uploadDir: string) {
   // Build encoded_payload
   const linkMode = request.user_controls.link_mode;
   let encoded_payload: string;
@@ -97,7 +158,7 @@ function handleImageFitCandidates(request: ImageFitQrRequestV1) {
   }
 
   // Compute candidate target_luma from the fixture path
-  const targetLuma = computeTargetLuma(request.target_image);
+  const targetLuma = computeTargetLuma(request.target_image, uploadDir);
 
   const input: ImageFitOptimizerInput = {
     schema_version: 'image-fit-qr-api.v1',
@@ -111,10 +172,10 @@ function handleImageFitCandidates(request: ImageFitQrRequestV1) {
   return result;
 }
 
-const ALLOWED_FIXTURE_PATHS = ['fixtures/', 'docs/program/evidence/'];
+const ALLOWED_FIXTURE_PATHS = ['fixtures/', 'docs/program/evidence/', 'uploads/'];
 const TRAVERSAL_RE = /\.\.\//;
 
-function computeTargetLuma(targetImage: ImageFitQrRequestV1['target_image']): ImageFitOptimizerInput['target_luma'] {
+function computeTargetLuma(targetImage: ImageFitQrRequestV1['target_image'], uploadDir: string): ImageFitOptimizerInput['target_luma'] {
   // Resolve only within the repo under MVP-safe controlled paths.
   const imageRef = targetImage.image_ref;
 
@@ -134,8 +195,17 @@ function computeTargetLuma(targetImage: ImageFitQrRequestV1['target_image']): Im
   // `packages/artistic-qr/fixtures/...` in the built service worktree.
   const rawPath = imageRef.startsWith('fixtures/')
     ? resolve(REPO_ROOT, 'packages/artistic-qr', imageRef)
-    : resolve(REPO_ROOT, imageRef);
-  if (!rawPath.startsWith(REPO_ROOT + '/') && rawPath !== REPO_ROOT) {
+    : imageRef.startsWith('uploads/')
+      ? resolve(uploadDir, basename(imageRef))
+      : resolve(REPO_ROOT, imageRef);
+  if (imageRef.startsWith('uploads/')) {
+    if (!rawPath.startsWith(uploadDir + sep) && rawPath !== uploadDir) {
+      throw new ServiceError(400, 'VALIDATION_FAILED', 'target_image.image_ref resolves outside upload storage');
+    }
+    if (basename(imageRef) !== `${targetImage.sha256}.png`) {
+      throw new ServiceError(400, 'VALIDATION_FAILED', 'uploaded target_image.image_ref must match target_image.sha256');
+    }
+  } else if (!rawPath.startsWith(REPO_ROOT + '/') && rawPath !== REPO_ROOT) {
     throw new ServiceError(400, 'VALIDATION_FAILED', 'target_image.image_ref resolves outside repo');
   }
 
@@ -249,7 +319,7 @@ function exportFailure(message: string): ServiceError {
   return new ServiceError(400, 'EXPORT_FAILED', message);
 }
 
-function sendServiceError(response: ServerResponse, error: unknown, route: 'candidates' | 'exports' | 'image-fit/candidates' | 'other'): void {
+function sendServiceError(response: ServerResponse, error: unknown, route: 'candidates' | 'exports' | 'image-fit/candidates' | 'image-fit/uploads' | 'other'): void {
   if (error instanceof ServiceError) {
     const code = route === 'exports' && error.code === 'VALIDATION_FAILED' ? 'EXPORT_FAILED' : error.code;
     sendErrorJson(response, error.status, route, code, error.message);
@@ -269,8 +339,8 @@ function sendServiceError(response: ServerResponse, error: unknown, route: 'cand
   sendErrorJson(response, 500, route, 'INTERNAL_ERROR', 'The Core export service could not complete the request');
 }
 
-function sendErrorJson(response: ServerResponse, status: number, route: 'candidates' | 'exports' | 'image-fit/candidates' | 'other', code: string, message: string): void {
-  sendJson(response, status, route === 'candidates' || route === 'image-fit/candidates'
+function sendErrorJson(response: ServerResponse, status: number, route: 'candidates' | 'exports' | 'image-fit/candidates' | 'image-fit/uploads' | 'other', code: string, message: string): void {
+  sendJson(response, status, route === 'candidates' || route === 'image-fit/candidates' || route === 'image-fit/uploads'
     ? { success: false, code, message }
     : { code, message });
 }
