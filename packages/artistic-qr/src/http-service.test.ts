@@ -144,6 +144,9 @@ describe('POST /image-fit/candidates', () => {
       const authority = (candidate as Record<string, unknown>).export_authority as Record<string, unknown>;
       expect(authority.export_allowed).toBe(false);
       expect(authority.preview_export_parity).toBe('not_proven');
+      const artifacts = (candidate as Record<string, unknown>).artifacts as Array<Record<string, unknown>>;
+      expect(artifacts[0].uri).toMatch(/^data:image\/svg\+xml;base64,/);
+      expect(artifacts[0].uri).not.toContain('artifact://');
     }
   }, 30_000);
 
