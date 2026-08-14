@@ -116,6 +116,11 @@ export interface ImageFitOptimizationResult {
 
 export interface ImageFitOptimizerOptions {
   validationRunner?: (candidate: Candidate, expectedPayload: string) => ScanValidationResult;
+  /**
+   * When true, use the legacy naive per-module target recolor (luma threshold 160).
+   * Used for A/B evidence generation only.
+   */
+  _legacyNaiveRender?: boolean;
 }
 
 const MODE_ORDER: readonly ImageFitMode[] = ['readable', 'balanced', 'image_first'];
@@ -157,8 +162,9 @@ export function optimizeImageFitQr(
       } catch {
         continue;
       }
-      const target = targetMap(input, matrix.size);
-      const rendered = renderImageFitSvg(matrix, target, mode);
+      const useLegacy = options._legacyNaiveRender === true;
+      const preprocessed = preprocessTarget(input, matrix.size, mode);
+      const rendered = renderImageFitSvg(matrix, preprocessed.mask, mode, { useLegacy, edgeScore: preprocessed.edgeScore, componentCount: preprocessed.componentCount });
       const artifact = makeArtifact(mode, rendered.svg);
       const validation = validate(validationCandidate(artifact, rendered.width, settings, mode), input.encoded_payload);
       selected = { settings, matrix, rendered, artifact, validation };
@@ -190,7 +196,7 @@ export function optimizeImageFitQr(
         kind: treatmentForMode(mode),
         modified_modules: rendered.modifiedModules,
         modified_fraction: round(rendered.modifiedModules / (matrix.size * matrix.size), 6),
-        luminance_policy_version: 'image-fit-luma-v1-dark<=64-light>=218',
+        luminance_policy_version: 'image-fit-luma-v2-preprocess-edge-saliency',
         color_profile: 'srgb',
       },
       protected_regions: {
@@ -202,7 +208,7 @@ export function optimizeImageFitQr(
       scan_evidence: scanEvidence,
       image_fit_evidence: {
         fit_label: fitLabel,
-        score_version: 'image-fit-target-coverage-v1',
+        score_version: 'image-fit-target-coverage-v2',
         recognition_score: rendered.recognitionScore,
         protected_zone_conflict_score: rendered.protectedConflictScore,
       },
@@ -266,18 +272,230 @@ function settingsCandidatesForMode(request: ImageFitQrRequestV1, mode: ImageFitM
   return result;
 }
 
-function targetMap(input: ImageFitOptimizerInput, size: number): boolean[][] {
-  const result = Array.from({ length: size }, () => Array<boolean>(size).fill(false));
-  const source = input.target_luma;
-  for (let y = 0; y < size; y += 1) for (let x = 0; x < size; x += 1) {
-    const sx = Math.min(source.width - 1, Math.floor((x + 0.5) * source.width / size));
-    const sy = Math.min(source.height - 1, Math.floor((y + 0.5) * source.height / size));
-    result[y][x] = source.values[sy * source.width + sx] < 160;
-  }
-  return result;
+/* ================================================================
+   Image preprocessing pipeline: square crop → edge/saliency mask
+   → connected-component filtering → protected-region exclusion
+   ================================================================ */
+
+export interface PreprocessedTarget {
+  mask: boolean[][];
+  edgeScore: number;
+  componentCount: number;
 }
 
-function renderImageFitSvg(matrix: QrMatrix, target: boolean[][], mode: ImageFitMode): {
+/**
+ * Produce a square-cropped, edge/saliency-aware target mask aligned to QR modules.
+ * Protected regions are *not* excluded here; the render loop excludes them.
+ */
+export function preprocessTarget(input: ImageFitOptimizerInput, matrixSize: number, mode: ImageFitMode): PreprocessedTarget {
+  const source = input.target_luma;
+  const scale = 2;
+
+  // 1. Square crop / center pad with white
+  const squareDim = Math.max(source.width, source.height);
+  const lumaSquare = new Float32Array(squareDim * squareDim);
+  lumaSquare.fill(255);
+  const offX = Math.floor((squareDim - source.width) / 2);
+  const offY = Math.floor((squareDim - source.height) / 2);
+  for (let y = 0; y < source.height; y++) {
+    for (let x = 0; x < source.width; x++) {
+      lumaSquare[(y + offY) * squareDim + (x + offX)] = source.values[y * source.width + x];
+    }
+  }
+
+  // 2. Resize to (matrixSize * scale) for anti-aliased edge work
+  const scaledSize = matrixSize * scale;
+  const scaled = new Float32Array(scaledSize * scaledSize);
+  for (let y = 0; y < scaledSize; y++) {
+    for (let x = 0; x < scaledSize; x++) {
+      const sx = Math.min(squareDim - 1, Math.floor(x * squareDim / scaledSize));
+      const sy = Math.min(squareDim - 1, Math.floor(y * squareDim / scaledSize));
+      scaled[y * scaledSize + x] = lumaSquare[sy * squareDim + sx];
+    }
+  }
+
+  // 3. Edge magnitude (Sobel-like) + local contrast + dark-region coherence
+  const edgeMag = new Float32Array(scaledSize * scaledSize);
+  const localContrast = new Float32Array(scaledSize * scaledSize);
+  const darkCoherence = new Float32Array(scaledSize * scaledSize);
+  let maxEdge = 0;
+  let maxContrast = 0;
+  let maxDC = 0;
+  for (let y = 1; y < scaledSize - 1; y++) {
+    for (let x = 1; x < scaledSize - 1; x++) {
+      const i = y * scaledSize + x;
+      const dx = (scaled[i + 1] - scaled[i - 1]) / 2;
+      const dy = (scaled[i + scaledSize] - scaled[i - scaledSize]) / 2;
+      const mag = Math.sqrt(dx * dx + dy * dy);
+      edgeMag[i] = mag;
+      if (mag > maxEdge) maxEdge = mag;
+
+      // local contrast (range)
+      let minV = 255, maxV = 0;
+      for (let dy2 = -1; dy2 <= 1; dy2++) {
+        for (let dx2 = -1; dx2 <= 1; dx2++) {
+          const v = scaled[i + dy2 * scaledSize + dx2];
+          if (v < minV) minV = v;
+          if (v > maxV) maxV = v;
+        }
+      }
+      const c = maxV - minV;
+      localContrast[i] = c;
+      if (c > maxContrast) maxContrast = c;
+
+      // dark-region coherence: high for dark, flat interiors (spots, solid shapes)
+      const invNorm = (255 - scaled[i]) / 255;        // 1 = black, 0 = white
+      const flatness = 1 - Math.min(c / 128, 1);       // 1 = flat, 0 = high contrast
+      const dc = invNorm * flatness;
+      darkCoherence[i] = dc;
+      if (dc > maxDC) maxDC = dc;
+    }
+  }
+
+  // 4. Saliency = weighted blend (edge + contrast + dark coherence)
+  const saliency = new Float32Array(scaledSize * scaledSize);
+  for (let i = 0; i < saliency.length; i++) {
+    const e = maxEdge > 0 ? edgeMag[i] / maxEdge : 0;
+    const c = maxContrast > 0 ? localContrast[i] / maxContrast : 0;
+    const dc = maxDC > 0 ? darkCoherence[i] / maxDC : 0;
+    saliency[i] = e * 0.35 + c * 0.15 + dc * 0.50;
+  }
+
+  // 5. Adaptive percentile threshold per mode (fraction of modules that become mask)
+  const targetFraction = mode === 'readable' ? 0.13 : mode === 'balanced' ? 0.24 : 0.40;
+  const sorted = Array.from(saliency).filter((v) => v > 0).sort((a, b) => a - b);
+  const pixelTargetPercentile = mode === 'readable' ? 0.50 : mode === 'balanced' ? 0.55 : 0.60;
+  const threshIdx = Math.max(0, Math.floor(sorted.length * (1 - pixelTargetPercentile)) - 1);
+  const threshold = sorted.length > 0 ? sorted[Math.min(threshIdx, sorted.length - 1)] : 0.5;
+
+  // 6. Initial binary mask at subpixel level
+  const binaryMask = new Uint8Array(scaledSize * scaledSize);
+  for (let i = 0; i < saliency.length; i++) {
+    if (saliency[i] >= threshold) binaryMask[i] = 1;
+  }
+
+  // 7. 8-connected flood-fill: remove tiny specks (fewer than 4 pixels ≈ 1 module at 2×)
+  const visited = new Uint8Array(scaledSize * scaledSize);
+  const minComponentSize = 4;
+  for (let y = 0; y < scaledSize; y++) {
+    for (let x = 0; x < scaledSize; x++) {
+      const idx = y * scaledSize + x;
+      if (!binaryMask[idx] || visited[idx]) continue;
+      const component: Array<{ x: number; y: number }> = [];
+      const stack = [{ x, y }];
+      visited[idx] = 1;
+      while (stack.length > 0) {
+        const p = stack.pop()!;
+        component.push(p);
+        for (let dy = -1; dy <= 1; dy++) {
+          for (let dx = -1; dx <= 1; dx++) {
+            if (dx === 0 && dy === 0) continue;
+            const nx = p.x + dx, ny = p.y + dy;
+            if (nx >= 0 && nx < scaledSize && ny >= 0 && ny < scaledSize) {
+              const nidx = ny * scaledSize + nx;
+              if (binaryMask[nidx] && !visited[nidx]) {
+                visited[nidx] = 1;
+                stack.push({ x: nx, y: ny });
+              }
+            }
+          }
+        }
+      }
+      if (component.length < minComponentSize) {
+        for (const p of component) binaryMask[p.y * scaledSize + p.x] = 0;
+      }
+    }
+  }
+
+  // 8. Downsample to module grid
+  const moduleMask: boolean[][] = Array.from({ length: matrixSize }, () => Array(matrixSize).fill(false));
+  for (let my = 0; my < matrixSize; my++) {
+    for (let mx = 0; mx < matrixSize; mx++) {
+      let hasImage = false;
+      for (let sy = 0; sy < scale; sy++) {
+        for (let sx = 0; sx < scale; sx++) {
+          const px = mx * scale + sx;
+          const py = my * scale + sy;
+          if (binaryMask[py * scaledSize + px]) {
+            hasImage = true;
+            break;
+          }
+        }
+        if (hasImage) break;
+      }
+      moduleMask[my][mx] = hasImage;
+    }
+  }
+
+  // 9. Module-level cap enforcement: if overshooting the target fraction, drop weakest-scoring modules
+  const currentFraction = moduleMask.flat().filter(Boolean).length / (matrixSize * matrixSize);
+  if (currentFraction > targetFraction) {
+    // Build module-level scores from saliency
+    const moduleScores = Array.from({ length: matrixSize }, (_, my) =>
+      Array.from({ length: matrixSize }, (_, mx) => {
+        let sum = 0;
+        for (let sy = 0; sy < scale; sy++) {
+          for (let sx = 0; sx < scale; sx++) {
+            const px = mx * scale + sx;
+            const py = my * scale + sy;
+            sum += saliency[py * scaledSize + px];
+          }
+        }
+        return sum / (scale * scale);
+      })
+    );
+    const maskedModules: Array<{ x: number; y: number; score: number }> = [];
+    for (let y = 0; y < matrixSize; y++) {
+      for (let x = 0; x < matrixSize; x++) {
+        if (moduleMask[y][x]) maskedModules.push({ x, y, score: moduleScores[y][x] });
+      }
+    }
+    maskedModules.sort((a, b) => a.score - b.score);
+    const target = Math.floor(matrixSize * matrixSize * targetFraction);
+    for (let k = 0; k < maskedModules.length - target; k++) {
+      const m = maskedModules[k];
+      moduleMask[m.y][m.x] = false;
+    }
+  }
+
+  // Count connected components at module level (for diagnostics)
+  const moduleVisited = Array.from({ length: matrixSize }, () => Array(matrixSize).fill(false));
+  let componentCount = 0;
+  for (let y = 0; y < matrixSize; y++) {
+    for (let x = 0; x < matrixSize; x++) {
+      if (!moduleMask[y][x] || moduleVisited[y][x]) continue;
+      componentCount++;
+      const stack = [{ x, y }];
+      moduleVisited[y][x] = true;
+      while (stack.length > 0) {
+        const p = stack.pop()!;
+        for (let dy = -1; dy <= 1; dy++) {
+          for (let dx = -1; dx <= 1; dx++) {
+            if (dx === 0 && dy === 0) continue;
+            const nx = p.x + dx, ny = p.y + dy;
+            if (nx >= 0 && nx < matrixSize && ny >= 0 && ny < matrixSize && moduleMask[ny][nx] && !moduleVisited[ny][nx]) {
+              moduleVisited[ny][nx] = true;
+              stack.push({ x: nx, y: ny });
+            }
+          }
+        }
+      }
+    }
+  }
+
+  return { mask: moduleMask, edgeScore: round(maxEdge, 2), componentCount };
+}
+
+/* ================================================================
+   Coherent grouped rendering
+   ================================================================ */
+
+function renderImageFitSvg(
+  matrix: QrMatrix,
+  mask: boolean[][],
+  mode: ImageFitMode,
+  meta: { useLegacy?: boolean; edgeScore?: number; componentCount?: number },
+): {
   svg: string; width: number; modifiedModules: number; recognitionScore: number;
   protectedConflictScore: number; protectedViolations: string[];
 } {
@@ -285,37 +503,111 @@ function renderImageFitSvg(matrix: QrMatrix, target: boolean[][], mode: ImageFit
   const margin = 4;
   const width = (matrix.size + margin * 2) * moduleSize;
   const offset = margin * moduleSize;
-  let svg = `<?xml version="1.0" encoding="UTF-8"?><svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${width}" viewBox="0 0 ${width} ${width}"><rect width="${width}" height="${width}" fill="#ffffff"/>`;
+
+  const svgHeader = `<?xml version="1.0" encoding="UTF-8"?><svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${width}" viewBox="0 0 ${width} ${width}"><rect width="${width}" height="${width}" fill="#ffffff"/>`;
+
   let modifiedModules = 0;
   let targetCount = 0;
   let representedTargetCount = 0;
   let protectedTargetCount = 0;
   const protectedViolations: string[] = [];
-  for (let y = 0; y < matrix.size; y += 1) for (let x = 0; x < matrix.size; x += 1) {
-    const active = matrix.modules[y][x] === 1;
-    const targetCell = target[y]?.[x] === true;
-    const protectedCell = isProtectedFunctionalModule(matrix.functionalRegions, x, y);
-    if (targetCell) targetCount += 1;
-    if (targetCell && protectedCell) protectedTargetCount += 1;
-    let fill = active ? '#000000' : '#ffffff';
-    if (targetCell && !protectedCell) {
-      const next = treatmentColor(mode, active);
-      if (next !== fill) modifiedModules += 1;
-      fill = next;
-      if (mode !== 'readable' || !active) representedTargetCount += 1;
-    }
-    if (protectedCell && fill !== (active ? '#000000' : '#ffffff')) protectedViolations.push(`${x},${y}`);
-    if (active || fill !== '#ffffff') {
-      svg += `<rect x="${offset + x * moduleSize}" y="${offset + y * moduleSize}" width="${moduleSize}" height="${moduleSize}" fill="${fill}"/>`;
+
+  // Compute fill for every module
+  const fills: string[][] = Array.from({ length: matrix.size }, () => Array(matrix.size).fill('#ffffff'));
+  for (let y = 0; y < matrix.size; y++) {
+    for (let x = 0; x < matrix.size; x++) {
+      const active = matrix.modules[y][x] === 1;
+      const maskCell = mask[y]?.[x] === true;
+      const protectedCell = isProtectedFunctionalModule(matrix.functionalRegions, x, y);
+      const baseFill = active ? '#000000' : '#ffffff';
+
+      if (maskCell) targetCount += 1;
+      if (maskCell && protectedCell) protectedTargetCount += 1;
+
+      let fill = baseFill;
+      if (maskCell && !protectedCell) {
+        if (meta.useLegacy) {
+          fill = treatmentColor(mode, active);
+          if (fill !== baseFill) modifiedModules += 1;
+        } else {
+          // Coherent mode-aware coloring
+          fill = modeAwareFill(mode, active, x, y, matrix, mask);
+          if (fill !== baseFill) modifiedModules += 1;
+          if (mode !== 'readable' || !active) representedTargetCount += 1;
+        }
+      }
+
+      if (protectedCell && fill !== baseFill) protectedViolations.push(`${x},${y}`);
+      fills[y][x] = fill;
     }
   }
-  svg += '</svg>';
-  return {
-    svg, width, modifiedModules,
-    recognitionScore: targetCount === 0 ? 0 : round(representedTargetCount / targetCount, 6),
-    protectedConflictScore: targetCount === 0 ? 0 : round(protectedTargetCount / targetCount, 6),
-    protectedViolations,
-  };
+
+  // Build SVG using coherent horizontal-run grouping (fewer elements = cleaner visual)
+  let svgBody = '';
+  for (let y = 0; y < matrix.size; y++) {
+    let runStart = -1;
+    let runFill = '';
+    for (let x = 0; x <= matrix.size; x++) {
+      const fill = x < matrix.size ? fills[y][x] : '';
+      if (x < matrix.size && fill === runFill) continue;
+      if (runStart >= 0 && runFill !== '#ffffff') {
+        const runLength = x - runStart;
+        svgBody += `<rect x="${offset + runStart * moduleSize}" y="${offset + y * moduleSize}" width="${runLength * moduleSize}" height="${moduleSize}" fill="${runFill}"/>`;
+      }
+      runStart = x;
+      runFill = fill;
+    }
+  }
+
+  const svg = `${svgHeader}${svgBody}</svg>`;
+
+  const recognitionScore = targetCount === 0 ? 0 : round(representedTargetCount / targetCount, 6);
+  const protectedConflictScore = targetCount === 0 ? 0 : round(protectedTargetCount / targetCount, 6);
+
+  return { svg, width, modifiedModules, recognitionScore, protectedConflictScore, protectedViolations };
+}
+
+/**
+ * Mode-aware fill considering whether the QR module is dark and local coherence.
+ *
+ * - readable:   image only on light QR modules. Dark modules stay black.
+ * - balanced:   image on both, with tinted darks and mid-tones.
+ * - image_first: stronger image everywhere, dark stays dark-blue.
+ */
+function modeAwareFill(mode: ImageFitMode, active: boolean, x: number, y: number, matrix: QrMatrix, mask: boolean[][]): string {
+  // Local coherence: are neighboring image-mask modules mostly on dark or light QR modules?
+  let darkNeighbors = 0;
+  let lightNeighbors = 0;
+  for (let dy = -1; dy <= 1; dy++) {
+    for (let dx = -1; dx <= 1; dx++) {
+      const nx = x + dx, ny = y + dy;
+      if (nx >= 0 && nx < matrix.size && ny >= 0 && ny < matrix.size && mask[ny][nx]) {
+        if (matrix.modules[ny][nx] === 1) darkNeighbors++; else lightNeighbors++;
+      }
+    }
+  }
+  const mostlyDarkBackground = darkNeighbors >= lightNeighbors;
+
+  if (mode === 'readable') {
+    if (active) return '#000000';
+    // Subtle tint on light background, stronger if surrounded by image
+    const tintStrength = darkNeighbors + lightNeighbors >= 3 ? '#b8c8d8' : '#d0dce8';
+    return tintStrength;
+  }
+
+  if (mode === 'balanced') {
+    if (active) {
+      // Dark module: keep dark but shift toward cohesive blue to avoid pure-black voids
+      return mostlyDarkBackground ? '#1a3a5a' : '#142e48';
+    }
+    return mostlyDarkBackground ? '#8ab4d8' : '#a8c8e8';
+  }
+
+  // image_first
+  if (active) {
+    return mostlyDarkBackground ? '#3a6a9e' : '#2a5884';
+  }
+  return mostlyDarkBackground ? '#9ec8ec' : '#b8daf4';
 }
 
 function treatmentColor(mode: ImageFitMode, active: boolean): string {
@@ -329,6 +621,10 @@ function treatmentForMode(mode: ImageFitMode): ImageFitCandidateV1['image_treatm
   if (mode === 'balanced') return 'module_recolor';
   return 'central_logo_pixel';
 }
+
+/* ================================================================
+   Validation, fallback, artifact, utility (unchanged contracts)
+   ================================================================ */
 
 function validationCandidate(
   artifact: ImageFitArtifact, width: number,
