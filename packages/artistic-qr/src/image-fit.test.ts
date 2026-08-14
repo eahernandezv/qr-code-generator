@@ -70,6 +70,29 @@ function realisticInput(): ImageFitOptimizerInput {
   };
 }
 
+function compositionInput(kind: 'ring' | 'spots'): ImageFitOptimizerInput {
+  const size = 64;
+  const values: number[] = [];
+  for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
+    if (kind === 'ring') {
+      const radius = Math.hypot(x - size / 2, y - size / 2);
+      values.push(radius > size * 0.20 && radius < size * 0.33 ? 40 : 235);
+    } else {
+      const first = Math.hypot(x - size * 0.30, y - size * 0.30);
+      const second = Math.hypot(x - size * 0.70, y - size * 0.70);
+      values.push(Math.min(first, second) < size * 0.12 ? 40 : 235);
+    }
+  }
+  const result = realisticInput();
+  const hash = kind === 'ring' ? '6'.repeat(64) : '7'.repeat(64);
+  result.request.target_image = {
+    ...result.request.target_image,
+    image_ref: `fixtures/${kind}.png`, width_px: size, height_px: size, sha256: hash,
+  };
+  result.target_luma = { width: size, height: size, values, source_image_sha256: hash };
+  return result;
+}
+
 function forcedFailure(): ScanValidationResult {
   return {
     pass: false, decoder: 'forced-test-decoder', version: '1', thresholdVersion: 'forced-fail-v1',
@@ -211,6 +234,23 @@ describe('Image-fit preprocessing pipeline', () => {
     const ic = i.mask.flat().filter(Boolean).length;
     expect(rc).toBeLessThanOrEqual(bc);
     expect(bc).toBeLessThanOrEqual(ic);
+  });
+
+  it.each(['ring', 'spots'] as const)('Q2 consolidates %s composition without increasing fragmentation', (kind) => {
+    const inp = compositionInput(kind);
+    const q1 = preprocessTarget(inp, 57, 'balanced', 'q1');
+    const q2 = preprocessTarget(inp, 57, 'balanced', 'q2');
+    expect(q2.componentCount).toBeLessThanOrEqual(q1.componentCount);
+    expect(q2.componentCount).toBeGreaterThanOrEqual(1);
+    expect(q2.mask.flat().filter(Boolean).length).toBeLessThanOrEqual(Math.floor(57 * 57 * 0.24));
+  });
+
+  it('Q2 preserves the open center of a ring instead of filling it as a solid disk', () => {
+    const q2 = preprocessTarget(compositionInput('ring'), 57, 'balanced', 'q2');
+    const center = Math.floor(q2.mask.length / 2);
+    expect(q2.mask[center][center]).toBe(false);
+    const ringSamples = [q2.mask[center][center - 15], q2.mask[center][center + 15], q2.mask[center - 15][center], q2.mask[center + 15][center]];
+    expect(ringSamples.filter(Boolean).length).toBeGreaterThanOrEqual(2);
   });
 });
 

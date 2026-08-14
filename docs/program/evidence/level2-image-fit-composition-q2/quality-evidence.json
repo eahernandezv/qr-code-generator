@@ -1,0 +1,312 @@
+{
+  "reproducibility": "deterministic inputs and pipeline; no wall-clock value embedded",
+  "pipeline_version": "image-fit-composition-q2-morphology-v1",
+  "targets": [
+    {
+      "target": "square-center",
+      "matrix_size": 49,
+      "candidates": [
+        {
+          "mode": "readable",
+          "q1": {
+            "sha256": "9bdf6bfe4ebf215633c393c0d6324d53ed2450a878f92f91f5da4e6bb3cd8f5f",
+            "modified_fraction": 0.058309,
+            "recognition_score": 0.448718,
+            "protected_conflicts": 0.080128
+          },
+          "q2": {
+            "sha256": "9bdf6bfe4ebf215633c393c0d6324d53ed2450a878f92f91f5da4e6bb3cd8f5f",
+            "modified_fraction": 0.058309,
+            "recognition_score": 0.448718,
+            "protected_conflicts": 0.080128
+          }
+        },
+        {
+          "mode": "balanced",
+          "q1": {
+            "sha256": "8cc42f3a6072f17d615a354cb94d69885bf2a02b08322f1b6d5c113679e22a4a",
+            "modified_fraction": 0.232071,
+            "recognition_score": 0.967908,
+            "protected_conflicts": 0.032092
+          },
+          "q2": {
+            "sha256": "8cc42f3a6072f17d615a354cb94d69885bf2a02b08322f1b6d5c113679e22a4a",
+            "modified_fraction": 0.232071,
+            "recognition_score": 0.967908,
+            "protected_conflicts": 0.032092
+          }
+        },
+        {
+          "mode": "image_first",
+          "q1": {
+            "sha256": "f8b44754054c3b35e4c020ac2733b0cf43b6f12238f15ff0bfaab812db21d2ee",
+            "modified_fraction": 0.366154,
+            "recognition_score": 0.915385,
+            "protected_conflicts": 0.084615
+          },
+          "q2": {
+            "sha256": "f8b44754054c3b35e4c020ac2733b0cf43b6f12238f15ff0bfaab812db21d2ee",
+            "modified_fraction": 0.366154,
+            "recognition_score": 0.915385,
+            "protected_conflicts": 0.084615
+          }
+        }
+      ]
+    },
+    {
+      "target": "gradient-diagonal",
+      "matrix_size": 49,
+      "candidates": [
+        {
+          "mode": "readable",
+          "q1": {
+            "sha256": "698edc304aa63e6bddbb5ba789fd27deeef6e09b24655311f0e13a090572fa47",
+            "modified_fraction": 0.051645,
+            "recognition_score": 0.397436,
+            "protected_conflicts": 0.125
+          },
+          "q2": {
+            "sha256": "b14a615c38be38276e148a0c77bf51babceb79ceac8332279d9881299afab617",
+            "modified_fraction": 0.052062,
+            "recognition_score": 0.400641,
+            "protected_conflicts": 0.125
+          }
+        },
+        {
+          "mode": "balanced",
+          "q1": {
+            "sha256": "68def1e2c9c311f320c2c76db2140b51698c9a5d03f335e6da173bde59c12ecc",
+            "modified_fraction": 0.220376,
+            "recognition_score": 0.919127,
+            "protected_conflicts": 0.080873
+          },
+          "q2": {
+            "sha256": "3609fae05e383086ed1aaaa5f6b2a2380ed48ca21e0da46f518af2c40b19458c",
+            "modified_fraction": 0.220376,
+            "recognition_score": 0.919127,
+            "protected_conflicts": 0.080873
+          }
+        },
+        {
+          "mode": "image_first",
+          "q1": {
+            "sha256": "b839559fc00cc5427843135d06554f1147f47f0b6387f676151c40b299897b98",
+            "modified_fraction": 0.377278,
+            "recognition_score": 0.943195,
+            "protected_conflicts": 0.056805
+          },
+          "q2": {
+            "sha256": "9916c2363d42e19abbd5100eff4827f84ec8762f3e78939f14fafe17ccc1c8ae",
+            "modified_fraction": 0.369704,
+            "recognition_score": 0.92426,
+            "protected_conflicts": 0.07574
+          }
+        }
+      ]
+    },
+    {
+      "target": "dual-spots",
+      "matrix_size": 49,
+      "candidates": [
+        {
+          "mode": "readable",
+          "q1": {
+            "sha256": "aae2854a19deecb260bcf35b6c39ceee6e7a70db7cb47dda0f8c8c9b569a8503",
+            "modified_fraction": 0.067888,
+            "recognition_score": 0.522436,
+            "protected_conflicts": 0
+          },
+          "q2": {
+            "sha256": "aae2854a19deecb260bcf35b6c39ceee6e7a70db7cb47dda0f8c8c9b569a8503",
+            "modified_fraction": 0.067888,
+            "recognition_score": 0.522436,
+            "protected_conflicts": 0
+          }
+        },
+        {
+          "mode": "balanced",
+          "q1": {
+            "sha256": "7e9a7d1b0590b5dbbbbf69a88c1e882f315a97c42959713001468e8554523438",
+            "modified_fraction": 0.20868,
+            "recognition_score": 0.870347,
+            "protected_conflicts": 0.129653
+          },
+          "q2": {
+            "sha256": "7e9a7d1b0590b5dbbbbf69a88c1e882f315a97c42959713001468e8554523438",
+            "modified_fraction": 0.20868,
+            "recognition_score": 0.870347,
+            "protected_conflicts": 0.129653
+          }
+        },
+        {
+          "mode": "image_first",
+          "q1": {
+            "sha256": "46212a990dbfa331ab75019b38a75e8fc1de1cd67d1e74feb4a3e3655ff056e2",
+            "modified_fraction": 0.367811,
+            "recognition_score": 0.919527,
+            "protected_conflicts": 0.080473
+          },
+          "q2": {
+            "sha256": "46212a990dbfa331ab75019b38a75e8fc1de1cd67d1e74feb4a3e3655ff056e2",
+            "modified_fraction": 0.367811,
+            "recognition_score": 0.919527,
+            "protected_conflicts": 0.080473
+          }
+        }
+      ]
+    },
+    {
+      "target": "circle-ring",
+      "matrix_size": 49,
+      "candidates": [
+        {
+          "mode": "readable",
+          "q1": {
+            "sha256": "5253730ec90d0d5bdfc9e5fabd0816587a5d220b9eb703e085c14a10425ee4e9",
+            "modified_fraction": 0.066639,
+            "recognition_score": 0.512821,
+            "protected_conflicts": 0.025641
+          },
+          "q2": {
+            "sha256": "5253730ec90d0d5bdfc9e5fabd0816587a5d220b9eb703e085c14a10425ee4e9",
+            "modified_fraction": 0.066639,
+            "recognition_score": 0.512821,
+            "protected_conflicts": 0.025641
+          }
+        },
+        {
+          "mode": "balanced",
+          "q1": {
+            "sha256": "e95e34987acfa83756bab57e4961f0054003b032daa57c6be925cd65fa03873c",
+            "modified_fraction": 0.236688,
+            "recognition_score": 0.987163,
+            "protected_conflicts": 0.012837
+          },
+          "q2": {
+            "sha256": "e95e34987acfa83756bab57e4961f0054003b032daa57c6be925cd65fa03873c",
+            "modified_fraction": 0.236688,
+            "recognition_score": 0.987163,
+            "protected_conflicts": 0.012837
+          }
+        },
+        {
+          "mode": "image_first",
+          "q1": {
+            "sha256": "2ab6f76bcf0ce95d6abd7ea5ea77be44ace61eef2ff822bd7f6231218e7d4f8a",
+            "modified_fraction": 0.373491,
+            "recognition_score": 0.933728,
+            "protected_conflicts": 0.066272
+          },
+          "q2": {
+            "sha256": "2ab6f76bcf0ce95d6abd7ea5ea77be44ace61eef2ff822bd7f6231218e7d4f8a",
+            "modified_fraction": 0.373491,
+            "recognition_score": 0.933728,
+            "protected_conflicts": 0.066272
+          }
+        }
+      ]
+    },
+    {
+      "target": "heart-silhouette",
+      "matrix_size": 49,
+      "candidates": [
+        {
+          "mode": "readable",
+          "q1": {
+            "sha256": "d826348fba491978bed57dee1114af4440a38238c11b77806965d0849f6768a5",
+            "modified_fraction": 0.05706,
+            "recognition_score": 0.439103,
+            "protected_conflicts": 0.080128
+          },
+          "q2": {
+            "sha256": "d826348fba491978bed57dee1114af4440a38238c11b77806965d0849f6768a5",
+            "modified_fraction": 0.05706,
+            "recognition_score": 0.439103,
+            "protected_conflicts": 0.080128
+          }
+        },
+        {
+          "mode": "balanced",
+          "q1": {
+            "sha256": "09684c8f7c1939e676c87952ef36d6c7c0a718fe490d701bcdc6af4217f9ff3e",
+            "modified_fraction": 0.232071,
+            "recognition_score": 0.967908,
+            "protected_conflicts": 0.032092
+          },
+          "q2": {
+            "sha256": "09684c8f7c1939e676c87952ef36d6c7c0a718fe490d701bcdc6af4217f9ff3e",
+            "modified_fraction": 0.232071,
+            "recognition_score": 0.967908,
+            "protected_conflicts": 0.032092
+          }
+        },
+        {
+          "mode": "image_first",
+          "q1": {
+            "sha256": "255be7401cec324e356a1609a417a0cbfb86b17e6a10da8e2bbbe818dae0d6cb",
+            "modified_fraction": 0.377515,
+            "recognition_score": 0.943787,
+            "protected_conflicts": 0.056213
+          },
+          "q2": {
+            "sha256": "255be7401cec324e356a1609a417a0cbfb86b17e6a10da8e2bbbe818dae0d6cb",
+            "modified_fraction": 0.377515,
+            "recognition_score": 0.943787,
+            "protected_conflicts": 0.056213
+          }
+        }
+      ]
+    },
+    {
+      "target": "house-silhouette",
+      "matrix_size": 49,
+      "candidates": [
+        {
+          "mode": "readable",
+          "q1": {
+            "sha256": "c8189bcda73b81068a73fb8a39154efb35a13dbfcb858b247baf2032104813cb",
+            "modified_fraction": 0.060808,
+            "recognition_score": 0.467949,
+            "protected_conflicts": 0.080128
+          },
+          "q2": {
+            "sha256": "c8189bcda73b81068a73fb8a39154efb35a13dbfcb858b247baf2032104813cb",
+            "modified_fraction": 0.060808,
+            "recognition_score": 0.467949,
+            "protected_conflicts": 0.080128
+          }
+        },
+        {
+          "mode": "balanced",
+          "q1": {
+            "sha256": "202aec50441232807c272c59986230da8e1f9e4947d36233861fee4bf6d57f36",
+            "modified_fraction": 0.231764,
+            "recognition_score": 0.966624,
+            "protected_conflicts": 0.033376
+          },
+          "q2": {
+            "sha256": "202aec50441232807c272c59986230da8e1f9e4947d36233861fee4bf6d57f36",
+            "modified_fraction": 0.231764,
+            "recognition_score": 0.966624,
+            "protected_conflicts": 0.033376
+          }
+        },
+        {
+          "mode": "image_first",
+          "q1": {
+            "sha256": "2afe9c9600f5b5877337eecada90ecba54027fad1c68b40a5cbee45e9c3bc9df",
+            "modified_fraction": 0.367574,
+            "recognition_score": 0.918935,
+            "protected_conflicts": 0.081065
+          },
+          "q2": {
+            "sha256": "2afe9c9600f5b5877337eecada90ecba54027fad1c68b40a5cbee45e9c3bc9df",
+            "modified_fraction": 0.367574,
+            "recognition_score": 0.918935,
+            "protected_conflicts": 0.081065
+          }
+        }
+      ]
+    }
+  ]
+}

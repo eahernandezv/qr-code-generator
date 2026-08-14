@@ -121,6 +121,8 @@ export interface ImageFitOptimizerOptions {
    * Used for A/B evidence generation only.
    */
   _legacyNaiveRender?: boolean;
+  /** Evidence-only switch retaining the Q1 edge-saliency mask before Q2 composition repair. */
+  _compositionPolicy?: 'q1' | 'q2';
 }
 
 const MODE_ORDER: readonly ImageFitMode[] = ['readable', 'balanced', 'image_first'];
@@ -163,7 +165,7 @@ export function optimizeImageFitQr(
         continue;
       }
       const useLegacy = options._legacyNaiveRender === true;
-      const preprocessed = preprocessTarget(input, matrix.size, mode);
+      const preprocessed = preprocessTarget(input, matrix.size, mode, options._compositionPolicy ?? 'q2');
       const rendered = renderImageFitSvg(matrix, preprocessed.mask, mode, { useLegacy, edgeScore: preprocessed.edgeScore, componentCount: preprocessed.componentCount });
       const artifact = makeArtifact(mode, rendered.svg);
       const validation = validate(validationCandidate(artifact, rendered.width, settings, mode), input.encoded_payload);
@@ -196,7 +198,7 @@ export function optimizeImageFitQr(
         kind: treatmentForMode(mode),
         modified_modules: rendered.modifiedModules,
         modified_fraction: round(rendered.modifiedModules / (matrix.size * matrix.size), 6),
-        luminance_policy_version: 'image-fit-luma-v2-preprocess-edge-saliency',
+        luminance_policy_version: 'image-fit-composition-q2-morphology-v1',
         color_profile: 'srgb',
       },
       protected_regions: {
@@ -208,7 +210,7 @@ export function optimizeImageFitQr(
       scan_evidence: scanEvidence,
       image_fit_evidence: {
         fit_label: fitLabel,
-        score_version: 'image-fit-target-coverage-v2',
+        score_version: 'image-fit-composition-coverage-q2',
         recognition_score: rendered.recognitionScore,
         protected_zone_conflict_score: rendered.protectedConflictScore,
       },
@@ -287,7 +289,12 @@ export interface PreprocessedTarget {
  * Produce a square-cropped, edge/saliency-aware target mask aligned to QR modules.
  * Protected regions are *not* excluded here; the render loop excludes them.
  */
-export function preprocessTarget(input: ImageFitOptimizerInput, matrixSize: number, mode: ImageFitMode): PreprocessedTarget {
+export function preprocessTarget(
+  input: ImageFitOptimizerInput,
+  matrixSize: number,
+  mode: ImageFitMode,
+  compositionPolicy: 'q1' | 'q2' = 'q2',
+): PreprocessedTarget {
   const source = input.target_luma;
   const scale = 2;
 
@@ -427,7 +434,22 @@ export function preprocessTarget(input: ImageFitOptimizerInput, matrixSize: numb
     }
   }
 
-  // 9. Module-level cap enforcement: if overshooting the target fraction, drop weakest-scoring modules
+  // 9. Q2 composition repair: bridge single-module breaks, close narrow gaps, and remove isolated fragments.
+  // The operation is deterministic and works on the target mask only; protected QR modules are still
+  // excluded later by renderImageFitSvg and therefore cannot be mutated by this repair.
+  if (compositionPolicy === 'q2') {
+    const bridged = bridgeSingleModuleGaps(moduleMask);
+    const closed = morphologicalClose(bridged, mode === 'image_first' ? 2 : 1);
+    const withoutSpecks = removeSmallMaskComponents(closed, mode === 'readable' ? 2 : 4);
+    const consolidated = retainDominantMaskComponents(withoutSpecks, mode === 'readable' ? 3 : 5);
+    for (let y = 0; y < matrixSize; y++) {
+      for (let x = 0; x < matrixSize; x++) moduleMask[y][x] = consolidated[y][x];
+    }
+  }
+
+  // 10. Module-level cap enforcement: if overshooting the target fraction, remove weakest
+  // boundary modules first. Interior modules receive a coherence bonus so circles, spots,
+  // and solid silhouettes are not shredded into edge-only fragments.
   const currentFraction = moduleMask.flat().filter(Boolean).length / (matrixSize * matrixSize);
   if (currentFraction > targetFraction) {
     // Build module-level scores from saliency
@@ -441,7 +463,13 @@ export function preprocessTarget(input: ImageFitOptimizerInput, matrixSize: numb
             sum += saliency[py * scaledSize + px];
           }
         }
-        return sum / (scale * scale);
+        let coherentNeighbors = 0;
+        for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+          if (dx === 0 && dy === 0) continue;
+          const nx = mx + dx; const ny = my + dy;
+          if (nx >= 0 && nx < matrixSize && ny >= 0 && ny < matrixSize && moduleMask[ny][nx]) coherentNeighbors += 1;
+        }
+        return sum / (scale * scale) + coherentNeighbors * 0.08;
       })
     );
     const maskedModules: Array<{ x: number; y: number; score: number }> = [];
@@ -484,6 +512,91 @@ export function preprocessTarget(input: ImageFitOptimizerInput, matrixSize: numb
   }
 
   return { mask: moduleMask, edgeScore: round(maxEdge, 2), componentCount };
+}
+
+function cloneMask(mask: readonly boolean[][]): boolean[][] {
+  return mask.map((row) => [...row]);
+}
+
+function bridgeSingleModuleGaps(mask: readonly boolean[][]): boolean[][] {
+  const height = mask.length; const width = mask[0]?.length ?? 0;
+  const result = cloneMask(mask);
+  for (let y = 1; y < height - 1; y++) for (let x = 1; x < width - 1; x++) {
+    if (mask[y][x]) continue;
+    const horizontal = mask[y][x - 1] && mask[y][x + 1];
+    const vertical = mask[y - 1][x] && mask[y + 1][x];
+    const diagonalA = mask[y - 1][x - 1] && mask[y + 1][x + 1];
+    const diagonalB = mask[y - 1][x + 1] && mask[y + 1][x - 1];
+    let neighbors = 0;
+    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+      if ((dx !== 0 || dy !== 0) && mask[y + dy][x + dx]) neighbors += 1;
+    }
+    if (horizontal || vertical || diagonalA || diagonalB || neighbors >= 5) result[y][x] = true;
+  }
+  return result;
+}
+
+function morphologicalClose(mask: readonly boolean[][], iterations: number): boolean[][] {
+  let current = cloneMask(mask);
+  const height = current.length; const width = current[0]?.length ?? 0;
+  for (let iteration = 0; iteration < iterations; iteration++) {
+    const dilated = cloneMask(current);
+    for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
+      if (!current[y][x]) continue;
+      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+        const nx = x + dx; const ny = y + dy;
+        if (nx >= 0 && nx < width && ny >= 0 && ny < height) dilated[ny][nx] = true;
+      }
+    }
+    const eroded = cloneMask(dilated);
+    for (let y = 1; y < height - 1; y++) for (let x = 1; x < width - 1; x++) {
+      if (!dilated[y][x]) continue;
+      eroded[y][x] = dilated[y - 1][x] && dilated[y + 1][x] && dilated[y][x - 1] && dilated[y][x + 1];
+    }
+    current = eroded;
+  }
+  return current;
+}
+
+type MaskComponent = Array<{ x: number; y: number }>;
+
+function maskComponents(mask: readonly boolean[][]): MaskComponent[] {
+  const height = mask.length; const width = mask[0]?.length ?? 0;
+  const visited = Array.from({ length: height }, () => Array(width).fill(false));
+  const components: MaskComponent[] = [];
+  for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
+    if (!mask[y][x] || visited[y][x]) continue;
+    const component: MaskComponent = [];
+    const stack = [{ x, y }]; visited[y][x] = true;
+    while (stack.length > 0) {
+      const point = stack.pop()!; component.push(point);
+      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+        if (dx === 0 && dy === 0) continue;
+        const nx = point.x + dx; const ny = point.y + dy;
+        if (nx >= 0 && nx < width && ny >= 0 && ny < height && mask[ny][nx] && !visited[ny][nx]) {
+          visited[ny][nx] = true; stack.push({ x: nx, y: ny });
+        }
+      }
+    }
+    components.push(component);
+  }
+  return components;
+}
+
+function removeSmallMaskComponents(mask: readonly boolean[][], minimumArea: number): boolean[][] {
+  const result = Array.from({ length: mask.length }, () => Array(mask[0]?.length ?? 0).fill(false));
+  for (const component of maskComponents(mask)) {
+    if (component.length < minimumArea) continue;
+    for (const point of component) result[point.y][point.x] = true;
+  }
+  return result;
+}
+
+function retainDominantMaskComponents(mask: readonly boolean[][], maximumComponents: number): boolean[][] {
+  const components = maskComponents(mask).sort((a, b) => b.length - a.length).slice(0, maximumComponents);
+  const result = Array.from({ length: mask.length }, () => Array(mask[0]?.length ?? 0).fill(false));
+  for (const component of components) for (const point of component) result[point.y][point.x] = true;
+  return result;
 }
 
 /* ================================================================
