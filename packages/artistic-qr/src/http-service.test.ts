@@ -7,7 +7,9 @@ import type { Candidate, ExportArtifact, GenerationBoard, GenerationRequest } fr
 import { runValidation } from './validation.js';
 import * as AjvModule from 'ajv';
 import * as formatsModule from 'ajv-formats';
-import { readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 
 const services: ArtisticQrHttpService[] = [];
 const normalized = normalizePayload({ mode: 'url', content: 'https://example.com/b1c-authority', errorCorrectionLevel: 'H' });
@@ -178,6 +180,31 @@ describe('POST /image-fit/candidates', () => {
     expect(body.code).toBe('VALIDATION_FAILED');
     expect(body.message).toContain('controlled path');
   });
+
+  it('accepts a browser-uploaded PNG target and uses it for candidate generation', async () => {
+    const uploadDir = mkdtempSync(join(tmpdir(), 'qr-image-fit-upload-test-'));
+    const service = createArtisticQrHttpService({ uploadDir });
+    services.push(service);
+    await new Promise<void>((resolve) => service.server.listen(0, '127.0.0.1', resolve));
+    const address = service.server.address() as AddressInfo;
+    const url = `http://127.0.0.1:${address.port}`;
+    try {
+      const bytes = readFileSync(new URL('../fixtures/test-target.png', import.meta.url));
+      const uploaded = await post(url, '/image-fit/uploads', { data_url: `data:image/png;base64,${bytes.toString('base64')}` });
+      expect(uploaded.status).toBe(200);
+      const uploadPayload = await uploaded.json() as { success: true; target_image: { image_ref: string; sha256: string } };
+      expect(uploadPayload.success).toBe(true);
+      expect(uploadPayload.target_image.image_ref).toBe(`uploads/${uploadPayload.target_image.sha256}.png`);
+
+      const generated = await post(url, '/image-fit/candidates', buildImageFitRequest(uploadPayload.target_image.image_ref, uploadPayload.target_image.sha256));
+      expect(generated.status).toBe(200);
+      const payload = await generated.json() as { success: true; result: Record<string, unknown> };
+      expect(payload.success).toBe(true);
+      expect(validateResponse(payload.result)).toBe(true);
+    } finally {
+      rmSync(uploadDir, { recursive: true, force: true });
+    }
+  }, 30_000);
 
   it('reserves a deterministic short-link slug in optimized_short_link mode without committing it', async () => {
     const running = await start();
