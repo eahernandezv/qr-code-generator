@@ -212,7 +212,7 @@ export function optimizeImageFitQr(
         requires_payment_or_internal_entitlement: true,
         preview_export_parity: 'not_proven',
       },
-      artifacts: [{ kind: artifact.kind, uri: artifact.uri, sha256: artifact.sha256 }],
+      artifacts: [{ kind: artifact.kind, uri: svgDataUri(artifact.data), sha256: artifact.sha256 }],
       warnings: mode === 'image_first' ? [{
         code: 'image_fit_image_first_experimental',
         message: 'Image-first remains experimental until stricter launch gates and Product Architect promotion.',
@@ -406,6 +406,11 @@ function buildFallback(
     scanResults: [], exportAllowed: false, artisticScore: 0,
   };
   return { artifact, scan: mapScanEvidence(validate(candidate, input.encoded_payload)) };
+}
+
+
+function svgDataUri(svg: string): string {
+  return `data:image/svg+xml;base64,${Buffer.from(svg, 'utf8').toString('base64')}`;
 }
 
 function makeArtifact(label: string, data: string): ImageFitArtifact {
