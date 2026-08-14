@@ -31,6 +31,16 @@ function previewSource(uri: string) {
     : uri
 }
 
+function recognitionScore(candidate: ImageFitCandidateV1) {
+  return `${Math.round(candidate.image_fit_evidence.recognition_score * 100)}%`
+}
+
+function scanVerdict(candidate: ImageFitCandidateV1) {
+  if (candidate.scan_evidence.verdict === 'pass') return 'Pass'
+  if (candidate.scan_evidence.verdict === 'fail') return 'Fail'
+  return 'Not run'
+}
+
 async function imageFileToPngDataUrl(file: File): Promise<string> {
   if (!file.type.startsWith('image/')) throw new Error('Choose a PNG, JPG, or WebP image.')
   const bitmap = await createImageBitmap(file).catch(() => undefined)
@@ -53,12 +63,15 @@ async function imageFileToPngDataUrl(file: File): Promise<string> {
 
 function CandidateCard({ candidate, selected, onSelect }: { candidate: ImageFitCandidateV1; selected: boolean; onSelect: () => void }) {
   const artifact = artifactFor(candidate)!
-  const eligible = candidate.status === 'validated' && candidate.scan_evidence.verdict === 'pass'
   return <article aria-label={`${labels[candidate.mode]} generated candidate`} className={`rounded-xl border p-2 ${selected ? 'border-indigo-300 bg-indigo-500/15' : 'border-white/10 bg-slate-950/55'}`}>
     <button type="button" onClick={onSelect} aria-pressed={selected} className="w-full rounded-lg text-left focus-visible:ring-2 focus-visible:ring-indigo-300">
       <img src={previewSource(artifact.uri)} data-artifact-sha256={artifact.sha256} alt={`${labels[candidate.mode]} candidate thumbnail`} className="mx-auto aspect-square w-full max-w-40 rounded-lg bg-white object-contain" />
-      <span className="mt-2 flex items-center justify-between gap-2 text-xs font-bold"><span>{labels[candidate.mode]}</span><span className={eligible ? 'text-emerald-300' : 'text-amber-200'}>{candidate.status}</span></span>
-      <span className="mt-1 block text-[9px] text-slate-400">{candidate.scan_evidence.checks_passed}/{candidate.scan_evidence.checks_total} checks · {candidate.qr_settings.module_count} modules · ECC {candidate.qr_settings.ecc}</span>
+      <span className="mt-2 block text-xs font-bold">{labels[candidate.mode]}</span>
+      <span className="mt-1.5 grid gap-1 text-[9px] text-slate-300">
+        <span className="flex justify-between gap-2"><span className="text-slate-500">Scan verdict</span><strong>{scanVerdict(candidate)} · {candidate.scan_evidence.checks_passed}/{candidate.scan_evidence.checks_total}</strong></span>
+        <span className="flex justify-between gap-2"><span className="text-slate-500">Image fit</span><strong>{recognitionScore(candidate)} · {labels[candidate.image_fit_evidence.fit_label]}</strong></span>
+        <span className="flex justify-between gap-2"><span className="text-slate-500">Visual acceptance</span><strong className="text-amber-200">Pending</strong></span>
+      </span>
     </button>
   </article>
 }
@@ -136,7 +149,7 @@ export default function ImageFitQrConcept() {
         <div className="relative mx-auto aspect-square max-w-[430px] overflow-hidden rounded-2xl border border-indigo-400/20 bg-slate-100 p-3">
           {selected ? <img data-testid="selected-image-fit-candidate" src={previewSource(artifactFor(selected)!.uri)} data-artifact-sha256={artifactFor(selected)?.sha256} data-candidate-id={selected.candidate_id} alt={`${labels[selected.mode]} generated candidate`} className="h-full w-full rounded-xl object-contain" /> : <div className="flex h-full items-center justify-center rounded-xl border border-dashed border-slate-400 bg-slate-200 px-8 text-center text-sm font-bold text-slate-600">{runState === 'loading' ? 'Creator is generating fresh candidates…' : runState === 'error' ? 'No candidate evidence accepted' : 'Ready for real generation'}</div>}
         </div>
-        {selected && <><div className="mt-3 grid grid-cols-3 gap-2 text-center text-[10px]"><div className="rounded-xl bg-black/20 p-2"><span className="block text-slate-500">Scan verdict</span><strong>{selected.scan_evidence.verdict}</strong></div><div className="rounded-xl bg-black/20 p-2"><span className="block text-slate-500">Density</span><strong>{selected.qr_settings.module_count} modules</strong></div><div className="rounded-xl bg-black/20 p-2"><span className="block text-slate-500">Image fit</span><strong>{selected.image_fit_evidence.fit_label}</strong></div></div><details className="mt-2 rounded-xl border border-white/10 bg-slate-950/70 text-[10px]"><summary className="cursor-pointer px-3 py-2 font-bold">Technical evidence · v{selected.qr_settings.version} · ECC {selected.qr_settings.ecc} · mask {selected.qr_settings.mask}</summary><div className="border-t border-white/10 px-3 py-2 text-slate-300">Payload: {selected.qr_settings.payload_mode} · {selected.qr_settings.encoded_payload_display}<br />Decoder suite: {selected.scan_evidence.decoder_suite_version}<br />Artifact hash: {artifactFor(selected)?.sha256}<br />Warnings: {selected.warnings.length ? selected.warnings.map((warning) => warning.message).join('; ') : 'None'}</div></details><p className="mt-2 text-[9px] text-slate-500">{selected.scan_evidence.disclaimer} Physical-device: {selected.scan_evidence.physical_scan}; print: {selected.scan_evidence.print_scan}.</p></>}
+        {selected && <><section aria-label="Selected candidate evidence" className="mt-3 rounded-xl border border-white/10 bg-black/20 p-2.5"><div className="grid gap-2 sm:grid-cols-3"><div><span className="block text-[9px] font-black uppercase tracking-[.12em] text-slate-500">Scan verdict</span><strong className="text-sm">{scanVerdict(selected)}</strong><span className="block text-[9px] text-slate-400">{selected.scan_evidence.checks_passed}/{selected.scan_evidence.checks_total} controlled checks</span></div><div><span className="block text-[9px] font-black uppercase tracking-[.12em] text-slate-500">Image recognition / fit</span><strong className="text-sm">{recognitionScore(selected)}</strong><span className="block text-[9px] text-slate-400">{labels[selected.image_fit_evidence.fit_label]} · {selected.image_fit_evidence.score_version}</span></div><div><span className="block text-[9px] font-black uppercase tracking-[.12em] text-slate-500">Visual acceptance</span><strong className="text-sm text-amber-200">Pending visual review</strong><span className="block text-[9px] text-slate-400">Not sponsor-approved</span></div></div><p className="mt-2 border-t border-white/10 pt-2 text-[10px] leading-relaxed text-slate-300"><strong className="text-white">Evidence is separate:</strong> a scan pass reports controlled decoder results only. Image-fit scoring and visual acceptance are independent; this candidate is not presented as sponsor-ready.</p></section><details className="mt-2 rounded-xl border border-white/10 bg-slate-950/70 text-[10px]"><summary className="cursor-pointer px-3 py-2 font-bold">Technical evidence · v{selected.qr_settings.version} · ECC {selected.qr_settings.ecc} · mask {selected.qr_settings.mask}</summary><div className="border-t border-white/10 px-3 py-2 text-slate-300">Producer status: {selected.status}<br />Payload: {selected.qr_settings.payload_mode} · {selected.qr_settings.encoded_payload_display}<br />Decoder suite: {selected.scan_evidence.decoder_suite_version}<br />Protected-zone conflict score: {selected.image_fit_evidence.protected_zone_conflict_score}<br />Artifact hash: {artifactFor(selected)?.sha256}<br />Warnings: {selected.warnings.length ? selected.warnings.map((warning) => warning.message).join('; ') : 'None'}</div></details><p className="mt-2 text-[9px] text-slate-500">{selected.scan_evidence.disclaimer} Physical-device: {selected.scan_evidence.physical_scan}; print: {selected.scan_evidence.print_scan}.</p></>}
         {error && <div role="alert" className="mt-3 rounded-xl border border-rose-300/30 bg-rose-400/10 px-3 py-2 text-xs text-rose-100"><strong>Generation failed closed.</strong> {error} Previous candidates remain hidden; retry when Creator generation is available.</div>}
         <div role="status" className="mt-3 rounded-xl border border-amber-300/25 bg-amber-300/10 px-3 py-2 text-[10px] text-amber-100">Export and Checkout remain unavailable. Browser state cannot authorize export, commit a reserved slug, or bind an export payload.</div>
       </section>
