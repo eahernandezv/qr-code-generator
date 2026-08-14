@@ -165,7 +165,7 @@ export function optimizeImageFitQr(
         continue;
       }
       const useLegacy = options._legacyNaiveRender === true;
-      const preprocessed = preprocessTarget(input, matrix.size, mode, options._compositionPolicy ?? 'q2');
+      const preprocessed = preprocessTarget(input, matrix, mode, options._compositionPolicy ?? 'q2');
       const rendered = renderImageFitSvg(matrix, preprocessed.mask, mode, { useLegacy, edgeScore: preprocessed.edgeScore, componentCount: preprocessed.componentCount });
       const artifact = makeArtifact(mode, rendered.svg);
       const validation = validate(validationCandidate(artifact, rendered.width, settings, mode), input.encoded_payload);
@@ -287,14 +287,21 @@ export interface PreprocessedTarget {
 
 /**
  * Produce a square-cropped, edge/saliency-aware target mask aligned to QR modules.
- * Protected regions are *not* excluded here; the render loop excludes them.
+ * When a matrix is supplied, protected regions are excluded during preprocessing as well as rendering,
+ * so morphology cannot spend the artistic module budget inside functional regions.
  */
 export function preprocessTarget(
   input: ImageFitOptimizerInput,
-  matrixSize: number,
+  matrixOrSize: QrMatrix | number,
   mode: ImageFitMode,
   compositionPolicy: 'q1' | 'q2' = 'q2',
 ): PreprocessedTarget {
+  const matrixSize = typeof matrixOrSize === 'number' ? matrixOrSize : matrixOrSize.size;
+  const drawableMask = Array.from({ length: matrixSize }, (_, y) =>
+    Array.from({ length: matrixSize }, (_, x) =>
+      typeof matrixOrSize === 'number' || !isProtectedFunctionalModule(matrixOrSize.functionalRegions, x, y),
+    ),
+  );
   const source = input.target_luma;
   const scale = 2;
 
@@ -430,20 +437,20 @@ export function preprocessTarget(
         }
         if (hasImage) break;
       }
-      moduleMask[my][mx] = hasImage;
+      moduleMask[my][mx] = hasImage && drawableMask[my][mx];
     }
   }
 
   // 9. Q2 composition repair: bridge single-module breaks, close narrow gaps, and remove isolated fragments.
-  // The operation is deterministic and works on the target mask only; protected QR modules are still
-  // excluded later by renderImageFitSvg and therefore cannot be mutated by this repair.
+  // Morphology is constrained again by drawableMask before budget enforcement; render-time functional-region
+  // exclusion remains a second independent safety net.
   if (compositionPolicy === 'q2') {
     const bridged = bridgeSingleModuleGaps(moduleMask);
     const closed = morphologicalClose(bridged, mode === 'image_first' ? 2 : 1);
     const withoutSpecks = removeSmallMaskComponents(closed, mode === 'readable' ? 2 : 4);
     const consolidated = retainDominantMaskComponents(withoutSpecks, mode === 'readable' ? 3 : 5);
     for (let y = 0; y < matrixSize; y++) {
-      for (let x = 0; x < matrixSize; x++) moduleMask[y][x] = consolidated[y][x];
+      for (let x = 0; x < matrixSize; x++) moduleMask[y][x] = consolidated[y][x] && drawableMask[y][x];
     }
   }
 
