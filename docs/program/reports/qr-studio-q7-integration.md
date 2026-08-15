@@ -3,13 +3,15 @@
 Status: **READY_FOR_PRODUCT_ARCHITECT_REVIEW**
 
 - Owner: QR Studio / Studio-Commerce
-- Reported UTC: 2026-08-15T12:54:24Z
+- Reported UTC: 2026-08-15T13:11:19Z
 - Authoritative SOW: `docs/program/handoffs/qr-studio-q7-integration.md`
 - SOW SHA-256: `b84fce32966d0d80ceb935847a1cc2a7f1c02cb757021e70ee3c84f20b5f591e`
 - Exact baseline: `e641b673d81afed6228346d305bd31f77a513e16`
 - Branch: `studio/integrate-q7-deterministic-path`
 - Implementation/evidence commit: `33d8b39ec21cffd88e834184da022863aabc6022`
-- Push state: blocked by unavailable GitHub credentials on this host; remote branch was absent before the attempt
+- Authority-hardening/evidence commit: `27adbc6e940425638c7f2b192958224757f71c70`
+- Level 1 fallback-continuity/evidence commit: `66cfe2ee56a4deb8891c62e5c6c9c0e4181f6dbf`
+- Push state: final remote tip is recorded in the external handoff after the report commit to avoid a circular commit claim
 - PR/merge: not opened; Product Architect retains both authorities
 
 ## Outcome
@@ -21,9 +23,9 @@ Studio now presents two deterministic customer paths:
 
 The integration does not expose a provider-generative model, provider selector, or provider-facing copy. Punchy remains visibly backed by Core's experimental `image_first` mode and cannot export.
 
-Studio verifies inline Core artifact bytes against the declared SHA-256 before accepting the response. It never upgrades browser state, payment state, or a candidate status into export authority. Download is enabled only when all frozen Core facts agree: scan pass, non-Image-first mode, `export_allowed`, `preview_export_parity: proven`, and an exact Core export artifact. The current accepted Q7 boundary returns parity `not_proven`, unpaid preview, and a reserved short link, so export remains visibly denied. Checkout is not bound on this route and therefore cannot rewrite QR bytes.
+Studio verifies inline Core artifact bytes against the declared SHA-256 before accepting the response and re-fetches/hash-verifies exact authorized export bytes before creating a browser download. It requires the complete echoed Core request—not only a matching request ID—so a same-ID payload substitution fails closed. It never upgrades browser state, payment state, or a candidate status into export authority. Download is enabled only when all frozen Core facts agree: validated status, complete passing scan checks, committed optimized short link where applicable, non-Image-first mode, `export_allowed`, `preview_export_parity: proven`, and an exact hash-verified Core export artifact. The current accepted Q7 boundary returns parity `not_proven`, unpaid preview, and a reserved short link, so export remains visibly denied. Checkout is not bound on this route and therefore cannot rewrite QR bytes.
 
-When Image-Fit generation fails or does not qualify, previous candidate evidence is removed and the UI explains the failure while offering the deterministic Level 1 Safe path. The Level 1 fallback artifact is reproduced directly from accepted Core code and hash-checked; its frozen authority remains `core_internal_fallback_only`, so this lane does not invent a customer download grant.
+When Image-Fit generation fails, returns an empty contract-valid board, or returns no scan-qualified candidate, previous candidate evidence is removed and the UI explains the Core fallback reason while offering the deterministic Level 1 Safe path. Continuing preserves the normalized destination in the existing persisted Level 1 project, where the established payment/scan/export gates still govern downloadable output. The Level 1 fallback artifact is reproduced directly from accepted Core code and hash-checked; its frozen authority remains `core_internal_fallback_only`, so this lane does not invent a customer download grant.
 
 ## Changed files
 
@@ -79,14 +81,14 @@ Focused integration tests:
 
 ```text
 npm exec --yes pnpm@9.0.0 -- --filter @qr/web exec vitest run src/lib/imageFitGenerationClient.test.ts src/App.test.tsx
-# 2 files passed; 27 tests passed
+# 2 files passed; 30 tests passed
 ```
 
 Touched-package gates:
 
 ```text
 npm exec --yes pnpm@9.0.0 -- --filter @qr/web test
-# 15 files passed; 137 tests passed
+# 15 files passed; 140 tests passed
 npm exec --yes pnpm@9.0.0 -- --filter @qr/web lint
 # exit 0; zero warnings
 npm exec --yes pnpm@9.0.0 -- --filter @qr/web build
@@ -108,7 +110,7 @@ PATH=<Node-20-bin>:<pnpm-9-bin>:$PATH \
 FONTCONFIG_FILE=$HOME/.cache/ms-playwright/local-fonts.conf \
 LD_LIBRARY_PATH=$HOME/.cache/ms-playwright/local-libs/root/usr/lib/x86_64-linux-gnu \
 node node_modules/@playwright/test/cli.js test --grep "mobile request binding"
-# 1 passed (4.9s); port 4173 closed after run
+# final rerun: 1 passed (4.1s); port 4173 closed after run
 ```
 
 The canonical `pnpm test:e2e` attempt was blocked before test execution because host Node is 18.19.1 while Playwright requires Node 20+. The final command uses the same repository Playwright config, web server, browser, font setup, grep, and test file under an npm-provided Node 20.20.2 runtime. An initial corrected-Node attempt also exposed the host's actual local-library path (`local-libs/root/...`); the final run used that path and passed.
@@ -128,19 +130,19 @@ Push attempt after the implementation/evidence commit:
 git ls-remote --heads origin studio/integrate-q7-deterministic-path
 # absent
 git push -u origin studio/integrate-q7-deterministic-path
-# failed before remote mutation: configured credential helper points to missing /home/hermes/.local/bin/gh;
-# HTTPS could not read a username, and SSH authentication also returned Permission denied (publickey)
+# initial QR Studio host attempt failed before remote mutation because its configured credential helper was unavailable;
+# the final external handoff records the later authenticated push/read-back result
 ```
 
 ## Failure and no-side-effect coverage
 
-- Inline artifact hash mismatch rejects the complete response.
-- Cross-request and malformed responses remain rejected.
-- Network failure removes candidate evidence and offers Level 1 Safe.
+- Inline artifact hash mismatch rejects the complete response; non-inline export bytes are fetched and hash-verified before download.
+- Cross-request, same-request-ID/different-payload, and malformed responses remain rejected.
+- Network failure, an empty Core board, or no scan-qualified candidate removes candidate evidence, presents the Core fallback reason, and offers Level 1 Safe while preserving the normalized destination in the persisted Level 1 project.
 - Input edits invalidate selected and board artifacts.
-- Scan failure, missing parity, unpaid preview, uncommitted short link, missing export artifact, and Image-first experimental state all keep download disabled.
+- Scan failure/incomplete checks, non-validated status, missing parity, unpaid preview, uncommitted short link, missing export artifact, Image-first experimental state, or fetched-byte hash mismatch all keep download disabled.
 - Browser evidence confirms no checkout or export payload was bound on failure.
-- Existing web commerce/export tests passed as part of the 137-test package suite; this integration does not alter checkout or export bytes.
+- Existing web commerce/export tests passed as part of the 140-test package suite; this integration does not alter checkout or export bytes.
 
 ## Remaining risks and Product Architect checks
 
