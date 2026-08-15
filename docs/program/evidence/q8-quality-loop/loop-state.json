@@ -1,0 +1,27 @@
+{
+  "schema_version": "observable-work-loop.v1",
+  "loop_id": "q8-visual-quality-scoring-loop",
+  "objective": "Measure and improve deterministic Level 2 Image-Fit visual quality against the Q8 weighted rubric without weakening Core safety gates.",
+  "baseline": "e150965c758ad8ba8b9b407a9e0fab5a100a11e9",
+  "branch": "creator/q8-visual-quality-scoring-loop",
+  "status": "EXECUTING",
+  "cycle": 1,
+  "current_stage": "scoring-harness-and-first-deterministic-improvement",
+  "process_outcome": "exited",
+  "artifact_decision": "accepted",
+  "criteria": [
+    {"id":"Q8-HARD-GATES","status":"OPEN","requirement":"Every leaderboard candidate passes payload equality, raw decode, >=6/8 checks, zero protected violations, contract validity, determinism, and claimed export parity."},
+    {"id":"Q8-C0","status":"PASS","requirement":"Cycle 0 scores unmodified Q7 readable, balanced, image_first, and fallback with contact sheet and report.","evidence":"Required contact-sheet.png, scores.json, objective evidence, manifest, and cycle-0 report validated; scores 51/64/67/38."},
+    {"id":"Q8-C1","status":"OPEN","requirement":"Cycle 1 adds machine-readable scoring and first deterministic improvement."},
+    {"id":"Q8-C2","status":"OPEN","requirement":"Cycle 2 improves weakest two categories without hard-gate regression."},
+    {"id":"Q8-C3","status":"OPEN","requirement":"Cycle 3 proves behavior on at least three target types."},
+    {"id":"Q8-C4","status":"OPEN","requirement":"Cycle 4 proposes freeze, continue, or block with hashes and validator evidence."}
+  ],
+  "authorization": {
+    "allowed":["deterministic Core/Image-Fit source, tests, evidence, reports, local reference processing, commit and bundle"],
+    "forbidden":["provider-generative models", "provider purchases", "threshold reduction", "protected/payload/export gate weakening", "frozen contract edits", "Studio changes", "PR creation or merge"]
+  },
+  "limits":{"cycle_minutes":45,"minimum_checks":6,"raw_decode_required":true,"maximum_cycles":5,"stagnation_limit":1},
+  "evidence_root":"docs/program/evidence/q8-quality-loop",
+  "next_transition":"Implement and validate the Cycle 1 scoring harness plus one deterministic visual candidate family; retain Cycle 0 as immutable baseline."
+}
