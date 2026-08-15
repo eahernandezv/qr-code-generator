@@ -1,7 +1,7 @@
 # QR Creator — Level 2 QR-Specific + Reference Q6
 
-**Branch:** `creator/level2-qr-specific-reference-q6`  
-**Owner:** QR Creator / Core Engine  
+**Branch:** `creator/level2-qr-specific-reference-q6`
+**Owner:** QR Creator / Core Engine
 **Verdict:** **EXISTING SOLUTIONS EXERCISED / FAILED ART+SCAN GATE**
 
 ## Objective
