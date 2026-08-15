@@ -2,8 +2,31 @@ import { test, expect } from '@playwright/test'
 import fs from 'node:fs'
 import path from 'node:path'
 
-const evidenceDir = path.resolve(process.cwd(), '../../docs/program/evidence/studio-q7-integration/browser')
+const evidenceRoot = path.resolve(process.cwd(), '../../docs/program/evidence/studio-q7-integration')
+const evidenceDir = path.join(evidenceRoot, 'browser')
 const fixture = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), '../../packages/contracts/fixtures/image-fit-qr/valid-balanced-response.v1.json'), 'utf8'))
+const q7Evidence = JSON.parse(fs.readFileSync(path.join(evidenceRoot, 'integration-evidence.json'), 'utf8'))
+const q7Balanced = q7Evidence.image_fit_modes.find((mode: { core_mode: string }) => mode.core_mode === 'balanced')
+const q7BalancedSvg = fs.readFileSync(path.join(evidenceRoot, 'artifacts/balanced.svg'), 'utf8')
+
+function q7BalancedCandidate() {
+  if (!q7Balanced) throw new Error('Missing Q7 balanced evidence')
+  return {
+    ...fixture.candidates[0],
+    status: q7Balanced.core_status,
+    image_fit_evidence: {
+      ...fixture.candidates[0].image_fit_evidence,
+      recognition_score: 0.18,
+      score_version: q7Balanced.score_version,
+    },
+    export_authority: {
+      ...fixture.candidates[0].export_authority,
+      blockers: q7Balanced.denial_blockers,
+      preview_export_parity: 'not_proven',
+    },
+    artifacts: [{ kind: 'export_svg', uri: `data:image/svg+xml;base64,${Buffer.from(q7BalancedSvg).toString('base64')}`, sha256: q7Balanced.preview_sha256 }],
+  }
+}
 
 test.use({ viewport: { width: 390, height: 844 } })
 
@@ -18,11 +41,7 @@ test('mobile request binding keeps scan, fit, and visual acceptance evidence sep
   await page.route('**/api/artistic-qr/image-fit/candidates', async (route) => {
     const request = route.request().postDataJSON()
     requests.push(request)
-    const sponsorPoorCandidate = {
-      ...fixture.candidates[0],
-      image_fit_evidence: { ...fixture.candidates[0].image_fit_evidence, recognition_score: 0.18 },
-    }
-    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ...fixture, request: { ...fixture.request, request_id: request.request_id }, candidates: [sponsorPoorCandidate] }) })
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ...fixture, request: { ...fixture.request, request_id: request.request_id }, candidates: [q7BalancedCandidate()] }) })
   })
   await page.goto('/concepts/level2-image-fit-qr')
   const concept = page.getByTestId('image-fit-qr-concept')
@@ -35,7 +54,7 @@ test('mobile request binding keeps scan, fit, and visual acceptance evidence sep
   await page.getByRole('button', { name: 'Generate candidates' }).click()
   const selected = page.getByTestId('selected-image-fit-candidate')
   await expect(selected).toBeVisible()
-  await expect(selected).toHaveAttribute('data-artifact-sha256', fixture.candidates[0].artifacts[0].sha256)
+  await expect(selected).toHaveAttribute('data-artifact-sha256', q7Balanced.preview_sha256)
   const candidateCard = page.getByRole('article', { name: 'Balanced generated candidate' })
   await expect(candidateCard).toContainText('Scan verdictPass · 8/8')
   await expect(candidateCard).toContainText('Image fit18% · Balanced')
