@@ -1,0 +1,74 @@
+{
+  "requests": [
+    {
+      "request_id": "l2req-b495537c-8ce5-48bb-b426-39242540a4f7",
+      "destination": {
+        "kind": "url",
+        "normalized_url": "https://example.com/products/summer-collection?source=printed-menu",
+        "display_url": "https://example.com/products/summer-collection",
+        "safety": {
+          "verdict": "pass",
+          "policy_version": "studio-public-https-input-v1"
+        }
+      },
+      "target_image": {
+        "image_ref": "fixtures/test-target.png",
+        "mime_type": "image/png",
+        "width_px": 4,
+        "height_px": 4,
+        "sha256": "db41519156394cb47b94569d402c7bddd1d867c39e1c3e2c7abff28ea29e90b0",
+        "complexity": "simple_mark"
+      },
+      "user_controls": {
+        "treatment": "pixel_blend",
+        "strength": "balanced",
+        "detail": "detailed",
+        "link_mode": "optimized_short_link"
+      },
+      "constraints": {
+        "max_candidates": 12,
+        "max_search_ms": 45000,
+        "allowed_ecc": [
+          "Q",
+          "H"
+        ],
+        "allowed_masks": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "allowed_versions": [
+          8,
+          9,
+          10,
+          11,
+          12
+        ]
+      },
+      "entitlement_context": {
+        "mode": "preview",
+        "export_entitled": false
+      }
+    }
+  ],
+  "metrics": {
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "documentWidth": 390,
+    "horizontalOverflow": false,
+    "exportPayloadBound": "false",
+    "checkoutBound": "false",
+    "candidateImages": 0
+  },
+  "expectedFailClosedNetworkConsoleErrors": [
+    "Failed to load resource: net::ERR_FAILED"
+  ],
+  "pageErrors": []
+}

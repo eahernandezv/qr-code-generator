@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
+import { createHash, webcrypto } from 'node:crypto'
 import fixture from '../../../../packages/contracts/fixtures/image-fit-qr/valid-balanced-response.v1.json'
-import { buildImageFitRequest, ImageFitGenerationClient, isGenerationResponse, unwrapGenerationResponse } from './imageFitGenerationClient'
+import { buildImageFitRequest, IMAGE_FIT_STRENGTHS, imageFitExportDecision, ImageFitGenerationClient, isGenerationResponse, unwrapGenerationResponse, verifyInlineArtifactHashes } from './imageFitGenerationClient'
 
 const controls = {
   destination: 'https://example.com/a?source=test#fragment',
@@ -12,6 +13,33 @@ const controls = {
 }
 
 describe('Image-Fit real generation boundary', () => {
+  it('maps customer intensity names to the frozen deterministic Core modes', () => {
+    expect(IMAGE_FIT_STRENGTHS).toEqual([
+      { label: 'Mellow', mode: 'readable' },
+      { label: 'Balanced', mode: 'balanced' },
+      { label: 'Punchy', mode: 'image_first' },
+    ])
+  })
+
+  it('keeps preview, parity, scan, and Image-first blockers authoritative', () => {
+    const balanced = fixture.candidates[0] as Parameters<typeof imageFitExportDecision>[0]
+    expect(imageFitExportDecision(balanced)).toMatchObject({ allowed: false, blockers: expect.arrayContaining(['preview_export_parity_not_proven', 'preview_not_paid', 'short_link_not_committed']) })
+    const punchy = { ...balanced, mode: 'image_first' as const, export_authority: { ...balanced.export_authority, export_allowed: true, blockers: [], preview_export_parity: 'proven' as const } }
+    expect(imageFitExportDecision(punchy)).toMatchObject({ allowed: false, blockers: expect.arrayContaining(['image_first_experimental']) })
+  })
+
+  it('verifies inline preview bytes against the Core artifact hash and rejects mismatch', async () => {
+    vi.stubGlobal('crypto', webcrypto)
+    const svg = '<svg xmlns="http://www.w3.org/2000/svg"><rect width="1" height="1"/></svg>'
+    const uri = `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`
+    const sha256 = createHash('sha256').update(svg).digest('hex')
+    const response = structuredClone(fixture) as Parameters<typeof verifyInlineArtifactHashes>[0]
+    response.candidates[0].artifacts = [{ kind: 'export_svg', uri, sha256 }]
+    await expect(verifyInlineArtifactHashes(response)).resolves.toBeUndefined()
+    response.candidates[0].artifacts[0].sha256 = '0'.repeat(64)
+    await expect(verifyInlineArtifactHashes(response)).rejects.toThrow(/did not match the authoritative hash/)
+  })
+
   it('creates the frozen contract-shaped preview request with deterministic constraints and no export entitlement', () => {
     const request = buildImageFitRequest(controls, 'l2req-test-0001')
     expect(request).toEqual(expect.objectContaining({

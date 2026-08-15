@@ -1,10 +1,10 @@
 import React from 'react'
 import { IMAGE_FIT_CONTRACT, type ImageFitDetail, type ImageFitLinkMode, type ImageFitStrength, type ImageFitTreatment } from '../imageFitContract'
-import { buildImageFitRequest, imageFitGenerationClient, type ImageFitCandidateV1, type ImageFitRequestV1 } from '../lib/imageFitGenerationClient'
+import { buildImageFitRequest, imageFitExportDecision, imageFitGenerationClient, type ImageFitCandidateV1, type ImageFitRequestV1 } from '../lib/imageFitGenerationClient'
 
 const labels: Record<string, string> = {
   logo: 'Logo', pixel_blend: 'Pixel blend', background_image: 'Background image', cutout_perforated: 'Cutout-perforated',
-  readable: 'Readable', balanced: 'Balanced', image_first: 'Image-first', simple: 'Simple', detailed: 'Detailed', maximum: 'Maximum',
+  readable: 'Mellow', balanced: 'Balanced', image_first: 'Punchy', simple: 'Simple', detailed: 'Detailed', maximum: 'Maximum',
   optimized_short_link: 'Optimized short link', original_url: 'Original URL',
 }
 
@@ -39,6 +39,17 @@ function scanVerdict(candidate: ImageFitCandidateV1) {
   if (candidate.scan_evidence.verdict === 'pass') return 'Pass'
   if (candidate.scan_evidence.verdict === 'fail') return 'Fail'
   return 'Not run'
+}
+
+function downloadAuthoritativeArtifact(candidate: ImageFitCandidateV1) {
+  const decision = imageFitExportDecision(candidate)
+  if (!decision.allowed || !decision.artifact) return
+  const anchor = document.createElement('a')
+  anchor.href = decision.artifact.uri
+  anchor.download = `artistic-qr-${candidate.mode}.${decision.artifact.kind === 'export_png' ? 'png' : 'svg'}`
+  document.body.appendChild(anchor)
+  anchor.click()
+  anchor.remove()
 }
 
 async function imageFileToPngDataUrl(file: File): Promise<string> {
@@ -94,6 +105,7 @@ export default function ImageFitQrConcept() {
   const uploadAbortRef = React.useRef<AbortController>()
 
   const selected = candidates.find((candidate) => candidate.candidate_id === selectedId) ?? candidates[0]
+  const exportDecision = selected ? imageFitExportDecision(selected) : undefined
   const destinationValid = /^https:\/\/.+\..+/i.test(destination)
   const canGenerate = destinationValid && Boolean(targetImage.image_ref) && runState !== 'loading' && uploadState !== 'uploading'
   const invalidate = () => { abortRef.current?.abort(); setCandidates([]); setSelectedId(undefined); setError(''); setRunState('idle') }
@@ -140,8 +152,8 @@ export default function ImageFitQrConcept() {
 
   React.useEffect(() => () => { abortRef.current?.abort(); uploadAbortRef.current?.abort() }, [])
 
-  return <main data-testid="image-fit-qr-concept" data-schema-version="image-fit-qr-api.v1" data-export-payload-bound="false" data-checkout-bound="false" className="min-h-[100dvh] bg-[#070b16] text-white">
-    <header className="border-b border-white/10 bg-slate-950/90 px-4 py-3"><div className="mx-auto flex max-w-6xl items-center justify-between gap-3"><div><p className="text-[10px] font-black uppercase tracking-[.2em] text-indigo-300">Level 2 controlled generation</p><h1 className="text-base font-bold">Image-Fit QR</h1></div><span className="rounded-full border border-amber-300/30 bg-amber-300/10 px-2.5 py-1 text-[10px] font-bold text-amber-200">Export / Checkout locked</span></div></header>
+  return <main data-testid="image-fit-qr-concept" data-schema-version="image-fit-qr-api.v1" data-export-payload-bound={exportDecision?.allowed ? 'true' : 'false'} data-checkout-bound="false" className="min-h-[100dvh] bg-[#070b16] text-white">
+    <header className="border-b border-white/10 bg-slate-950/90 px-4 py-3"><div className="mx-auto flex max-w-6xl items-center justify-between gap-3"><div><p className="text-[10px] font-black uppercase tracking-[.2em] text-indigo-300">Deterministic Studio</p><h1 className="text-base font-bold">Q7 Image-Fit</h1><nav aria-label="QR integration mode" className="mt-2 flex gap-2 text-[10px] font-bold"><a href="/" className="rounded-lg border border-emerald-300/40 px-2 py-1 text-emerald-200">Level 1 Safe</a><span aria-current="page" className="rounded-lg border border-indigo-300/50 bg-indigo-500/20 px-2 py-1 text-indigo-100">Q7 Image-Fit Premium</span></nav></div><span className="rounded-full border border-amber-300/30 bg-amber-300/10 px-2.5 py-1 text-[10px] font-bold text-amber-200">Core authority required</span></div></header>
     <div className="mx-auto grid max-w-6xl gap-3 p-3 lg:grid-cols-[minmax(0,.9fr)_minmax(360px,1.1fr)]">
       <section aria-label="How to test" className="lg:col-span-2 rounded-2xl border border-indigo-300/20 bg-indigo-500/10 px-3 py-2 text-[11px] leading-relaxed text-indigo-100"><strong className="text-white">Test in four steps:</strong> 1. keep the controlled target image; 2. choose or keep the destination; 3. press <strong>Generate candidates</strong>; 4. review Readable, Balanced, and Image-first evidence returned by Creator. Export is not available yet.</section>
 
@@ -150,8 +162,9 @@ export default function ImageFitQrConcept() {
           {selected ? <img data-testid="selected-image-fit-candidate" src={previewSource(artifactFor(selected)!.uri)} data-artifact-sha256={artifactFor(selected)?.sha256} data-candidate-id={selected.candidate_id} alt={`${labels[selected.mode]} generated candidate`} className="h-full w-full rounded-xl object-contain" /> : <div className="flex h-full items-center justify-center rounded-xl border border-dashed border-slate-400 bg-slate-200 px-8 text-center text-sm font-bold text-slate-600">{runState === 'loading' ? 'Creator is generating fresh candidates…' : runState === 'error' ? 'No candidate evidence accepted' : 'Ready for real generation'}</div>}
         </div>
         {selected && <><section aria-label="Selected candidate evidence" className="mt-3 rounded-xl border border-white/10 bg-black/20 p-2.5"><div className="grid gap-2 sm:grid-cols-3"><div><span className="block text-[9px] font-black uppercase tracking-[.12em] text-slate-500">Scan verdict</span><strong className="text-sm">{scanVerdict(selected)}</strong><span className="block text-[9px] text-slate-400">{selected.scan_evidence.checks_passed}/{selected.scan_evidence.checks_total} controlled checks</span></div><div><span className="block text-[9px] font-black uppercase tracking-[.12em] text-slate-500">Image recognition / fit</span><strong className="text-sm">{recognitionScore(selected)}</strong><span className="block text-[9px] text-slate-400">{labels[selected.image_fit_evidence.fit_label]} · {selected.image_fit_evidence.score_version}</span></div><div><span className="block text-[9px] font-black uppercase tracking-[.12em] text-slate-500">Visual acceptance</span><strong className="text-sm text-amber-200">Pending visual review</strong><span className="block text-[9px] text-slate-400">Not sponsor-approved</span></div></div><p className="mt-2 border-t border-white/10 pt-2 text-[10px] leading-relaxed text-slate-300"><strong className="text-white">Evidence is separate:</strong> a scan pass reports controlled decoder results only. Image-fit scoring and visual acceptance are independent; this candidate is not presented as sponsor-ready.</p></section><details className="mt-2 rounded-xl border border-white/10 bg-slate-950/70 text-[10px]"><summary className="cursor-pointer px-3 py-2 font-bold">Technical evidence · v{selected.qr_settings.version} · ECC {selected.qr_settings.ecc} · mask {selected.qr_settings.mask}</summary><div className="border-t border-white/10 px-3 py-2 text-slate-300">Producer status: {selected.status}<br />Payload: {selected.qr_settings.payload_mode} · {selected.qr_settings.encoded_payload_display}<br />Decoder suite: {selected.scan_evidence.decoder_suite_version}<br />Protected-zone conflict score: {selected.image_fit_evidence.protected_zone_conflict_score}<br />Artifact hash: {artifactFor(selected)?.sha256}<br />Warnings: {selected.warnings.length ? selected.warnings.map((warning) => warning.message).join('; ') : 'None'}</div></details><p className="mt-2 text-[9px] text-slate-500">{selected.scan_evidence.disclaimer} Physical-device: {selected.scan_evidence.physical_scan}; print: {selected.scan_evidence.print_scan}.</p></>}
-        {error && <div role="alert" className="mt-3 rounded-xl border border-rose-300/30 bg-rose-400/10 px-3 py-2 text-xs text-rose-100"><strong>Generation failed closed.</strong> {error} Previous candidates remain hidden; retry when Creator generation is available.</div>}
-        <div role="status" className="mt-3 rounded-xl border border-amber-300/25 bg-amber-300/10 px-3 py-2 text-[10px] text-amber-100">Export and Checkout remain unavailable. Browser state cannot authorize export, commit a reserved slug, or bind an export payload.</div>
+        {selected && <><button type="button" disabled={!exportDecision?.allowed} onClick={() => downloadAuthoritativeArtifact(selected)} className="mt-2 min-h-11 w-full rounded-xl bg-indigo-500 px-4 text-xs font-black text-white disabled:cursor-not-allowed disabled:bg-slate-800 disabled:text-slate-400">{exportDecision?.allowed ? 'Download Core-authorized artifact' : 'Export denied by Core gates'}</button>{!exportDecision?.allowed && <p data-testid="image-fit-export-blockers" className="mt-1 text-[10px] text-amber-200">Blocked: {exportDecision?.blockers.join(', ') || 'Core export authority unavailable'}</p>}</>}
+        {error && <div role="alert" className="mt-3 rounded-xl border border-rose-300/30 bg-rose-400/10 px-3 py-2 text-xs text-rose-100"><strong>Image-Fit did not qualify.</strong> {error} Previous candidates remain hidden. <a href="/" className="font-bold underline">Continue with deterministic Level 1 Safe</a>.</div>}
+        <div role="status" className="mt-3 rounded-xl border border-amber-300/25 bg-amber-300/10 px-3 py-2 text-[10px] text-amber-100">Only Core-authorized exact bytes can download. Payment, committed short-link, scan, parity, and Image-first experimental blockers remain visible and fail closed. <a href="/" className="font-bold underline">Level 1 Safe remains available</a>.</div>
       </section>
 
       <section aria-label="Image-Fit QR controls" className="grid content-start gap-2.5 rounded-2xl border border-white/10 bg-slate-900/65 p-3">
@@ -159,7 +172,7 @@ export default function ImageFitQrConcept() {
         {uploadError && <div role="alert" className="rounded-xl border border-rose-300/30 bg-rose-400/10 px-3 py-2 text-xs text-rose-100"><strong>Upload failed.</strong> {uploadError}</div>}
         <label><span className="mb-1 block text-[10px] font-black uppercase tracking-[.16em] text-slate-400">Destination</span><input aria-label="Level 2 destination URL" value={destination} aria-invalid={!destinationValid} onChange={(event) => change(setDestination, event.target.value)} className="h-11 w-full rounded-xl border border-white/10 bg-slate-950 px-3 text-xs outline-none focus:ring-2 focus:ring-indigo-300" /></label>
         <ChoiceRow label="Treatment" value={treatment} values={IMAGE_FIT_CONTRACT.controls.treatments} onChange={(value) => change(setTreatment, value)} />
-        <ChoiceRow label="Strength" value={strength} values={IMAGE_FIT_CONTRACT.controls.strengths} onChange={(value) => change(setStrength, value)} />
+        <ChoiceRow label="Image-Fit strength · Mellow / Balanced / Punchy" value={strength} values={IMAGE_FIT_CONTRACT.controls.strengths} onChange={(value) => change(setStrength, value)} />
         <ChoiceRow label="Detail" value={detail} values={IMAGE_FIT_CONTRACT.controls.details} onChange={(value) => change(setDetail, value)} />
         <ChoiceRow label="Link mode" value={linkMode} values={IMAGE_FIT_CONTRACT.controls.linkModes} onChange={(value) => change(setLinkMode, value)} />
         <p className={`rounded-xl border px-3 py-2 text-[10px] ${linkMode === 'optimized_short_link' ? 'border-indigo-300/20 bg-indigo-500/10 text-indigo-100' : 'border-amber-300/30 bg-amber-300/10 text-amber-100'}`}>{linkMode === 'optimized_short_link' ? 'Optimized short links can help the QR matrix fit the image more cleanly. Generation may reserve/evaluate slugs; this page cannot commit one.' : 'Original URLs can increase QR density and reduce image clarity.'}</p>
