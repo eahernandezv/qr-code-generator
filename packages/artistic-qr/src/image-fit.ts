@@ -50,6 +50,14 @@ export interface ImageFitOptimizerInput {
     /** Binds this representation to request.target_image without transporting raw bytes. */
     source_image_sha256: string;
   };
+  /** Optional internal RGB plane used by the deterministic Q8 visual-island renderer. */
+  target_rgb?: {
+    width: number;
+    height: number;
+    /** RGB triplets, 0..255, row-major. This is an engine-boundary representation, not a public contract field. */
+    values: readonly number[];
+    source_image_sha256: string;
+  };
 }
 
 export interface ImageFitArtifact {
@@ -125,6 +133,8 @@ export interface ImageFitOptimizerOptions {
   _compositionPolicy?: 'q1' | 'q2' | 'q3';
   /** Evidence switch for exact Q3 first-pass versus Q7 ranked selection comparisons. */
   _selectionPolicy?: 'q3_first_pass' | 'q7_ranked';
+  /** Evidence-gated Q8 deterministic foreground-island family. Public contracts remain unchanged. */
+  _visualPolicy?: 'q7_module_recolor' | 'q8_protected_island';
 }
 
 const MODE_ORDER: readonly ImageFitMode[] = ['readable', 'balanced', 'image_first'];
@@ -140,6 +150,7 @@ export function optimizeImageFitQr(
   const validate = options.validationRunner ?? runValidation;
   const compositionPolicy = options._compositionPolicy ?? 'q3';
   const selectionPolicy = options._selectionPolicy ?? 'q7_ranked';
+  const visualPolicy = options._visualPolicy ?? 'q7_module_recolor';
   const started = performance.now();
   const artifacts: Record<string, ImageFitArtifact> = {};
   const candidates: ImageFitCandidateV1[] = [];
@@ -156,7 +167,7 @@ export function optimizeImageFitQr(
     };
     let selected: Evaluated | undefined;
     const renderedSettings: Array<Omit<Evaluated, 'validation'>> = [];
-    const settingsCandidates = settingsCandidatesForMode(input.request, mode);
+    const settingsCandidates = settingsCandidatesForMode(input.request, mode, visualPolicy === 'q8_protected_island');
     for (let preference = 0; preference < settingsCandidates.length; preference++) {
       if (performance.now() - started > input.request.constraints.max_search_ms) break;
       const settings = settingsCandidates[preference];
@@ -176,7 +187,9 @@ export function optimizeImageFitQr(
       }
       const useLegacy = options._legacyNaiveRender === true;
       const preprocessed = preprocessTarget(input, matrix, mode, compositionPolicy);
-      const rendered = renderImageFitSvg(matrix, preprocessed.mask, mode, { useLegacy, edgeScore: preprocessed.edgeScore, componentCount: preprocessed.componentCount });
+      const rendered = visualPolicy === 'q8_protected_island' && input.target_rgb
+        ? renderProtectedVisualIslandSvg(matrix, input.target_rgb, mode)
+        : renderImageFitSvg(matrix, preprocessed.mask, mode, { useLegacy, edgeScore: preprocessed.edgeScore, componentCount: preprocessed.componentCount });
       const artifact = makeArtifact(mode, rendered.svg);
       renderedSettings.push({ settings, matrix, rendered, artifact, preference });
       if (selectionPolicy === 'q3_first_pass') {
@@ -243,7 +256,9 @@ export function optimizeImageFitQr(
         kind: treatmentForMode(mode),
         modified_modules: rendered.modifiedModules,
         modified_fraction: round(rendered.modifiedModules / (matrix.size * matrix.size), 6),
-        luminance_policy_version: compositionPolicy === 'q3'
+        luminance_policy_version: visualPolicy === 'q8_protected_island' && input.target_rgb
+          ? 'image-fit-protected-rgb-island-q8-cycle1'
+          : compositionPolicy === 'q3'
           ? 'image-fit-real-target-foreground-q3'
           : 'image-fit-composition-q2-morphology-v1',
         color_profile: 'srgb',
@@ -257,7 +272,9 @@ export function optimizeImageFitQr(
       scan_evidence: scanEvidence,
       image_fit_evidence: {
         fit_label: fitLabel,
-        score_version: compositionPolicy === 'q3'
+        score_version: visualPolicy === 'q8_protected_island' && input.target_rgb
+          ? 'image-fit-protected-rgb-island-q8-cycle1'
+          : compositionPolicy === 'q3'
           ? selectionPolicy === 'q7_ranked' ? 'image-fit-scan-first-appearance-q7' : 'image-fit-real-target-coverage-q3'
           : 'image-fit-composition-coverage-q2',
         recognition_score: rendered.recognitionScore,
@@ -321,14 +338,16 @@ function compareEvaluated(
   return 0;
 }
 
-function settingsCandidatesForMode(request: ImageFitQrRequestV1, mode: ImageFitMode): QrSearchSettings[] {
+function settingsCandidatesForMode(request: ImageFitQrRequestV1, mode: ImageFitMode, q8ProtectedIsland = false): QrSearchSettings[] {
   const versions = [...request.constraints.allowed_versions].sort((a, b) => a - b);
-  const preferredVersion = mode === 'readable' ? versions[0] : mode === 'balanced'
+  const preferredVersion = q8ProtectedIsland ? versions[0] : mode === 'readable' ? versions[0] : mode === 'balanced'
     ? versions[Math.floor((versions.length - 1) / 2)] : versions[versions.length - 1];
-  const preferredEcc: ImageFitEcc = request.constraints.allowed_ecc.includes(mode === 'readable' ? 'H' : 'Q')
-    ? (mode === 'readable' ? 'H' : 'Q') : request.constraints.allowed_ecc[0];
-  const preferredMask = request.constraints.allowed_masks.includes(mode === 'readable' ? 3 : mode === 'balanced' ? 1 : 0)
-    ? (mode === 'readable' ? 3 : mode === 'balanced' ? 1 : 0) : request.constraints.allowed_masks[0];
+  const desiredEcc: ImageFitEcc = q8ProtectedIsland ? 'H' : mode === 'readable' ? 'H' : 'Q';
+  const preferredEcc: ImageFitEcc = request.constraints.allowed_ecc.includes(desiredEcc)
+    ? desiredEcc : request.constraints.allowed_ecc[0];
+  const desiredMask = mode === 'readable' ? 3 : mode === 'balanced' ? 1 : q8ProtectedIsland ? 5 : 0;
+  const preferredMask = request.constraints.allowed_masks.includes(desiredMask)
+    ? desiredMask : request.constraints.allowed_masks[0];
   const orderedVersions = [preferredVersion, ...versions.filter((value) => value !== preferredVersion)];
   const orderedEcc = [preferredEcc, ...request.constraints.allowed_ecc.filter((value) => value !== preferredEcc)];
   const masks = [...request.constraints.allowed_masks].sort((a, b) => a - b);
@@ -777,6 +796,99 @@ function retainDominantMaskComponents(mask: readonly boolean[][], maximumCompone
 }
 
 /* ================================================================
+   Q8 deterministic protected visual island
+   ================================================================ */
+
+type RgbPlane = NonNullable<ImageFitOptimizerInput['target_rgb']>;
+
+function renderProtectedVisualIslandSvg(
+  matrix: QrMatrix,
+  target: RgbPlane,
+  mode: ImageFitMode,
+): {
+  svg: string; width: number; modifiedModules: number; recognitionScore: number;
+  protectedConflictScore: number; protectedViolations: string[];
+} {
+  const moduleSize = 8, margin = 4;
+  const base = renderDeterministic(matrix, {
+    format: 'svg', moduleSize, margin, colorDark: '#111827', colorLight: '#ffffff', shape: 'square',
+  });
+  const borderPixels: Array<[number, number, number]> = [];
+  const pixel = (x: number, y: number): [number, number, number] => {
+    const index = (y * target.width + x) * 3;
+    return [target.values[index], target.values[index + 1], target.values[index + 2]];
+  };
+  for (let x = 0; x < target.width; x++) {
+    borderPixels.push(pixel(x, 0), pixel(x, target.height - 1));
+  }
+  for (let y = 1; y < target.height - 1; y++) {
+    borderPixels.push(pixel(0, y), pixel(target.width - 1, y));
+  }
+  const medianChannel = (channel: number): number => {
+    const values = borderPixels.map((entry) => entry[channel]).sort((a, b) => a - b);
+    return values[Math.floor(values.length / 2)] ?? 255;
+  };
+  const background: [number, number, number] = [medianChannel(0), medianChannel(1), medianChannel(2)];
+  const distanceFromBackground = (rgb: readonly number[]): number => Math.hypot(
+    rgb[0] - background[0], rgb[1] - background[1], rgb[2] - background[2],
+  );
+  const borderNoise = borderPixels.map(distanceFromBackground).sort((a, b) => a - b);
+  const foregroundThreshold = Math.max(30, (borderNoise[Math.floor(borderNoise.length * 0.6)] ?? 0) * 2.5);
+
+  let minX = target.width, minY = target.height, maxX = -1, maxY = -1;
+  for (let y = 0; y < target.height; y++) for (let x = 0; x < target.width; x++) {
+    if (distanceFromBackground(pixel(x, y)) <= foregroundThreshold) continue;
+    minX = Math.min(minX, x); minY = Math.min(minY, y);
+    maxX = Math.max(maxX, x); maxY = Math.max(maxY, y);
+  }
+  if (maxX < minX || maxY < minY) {
+    return { svg: base.data, width: base.width, modifiedModules: 0, recognitionScore: 0, protectedConflictScore: 0, protectedViolations: [] };
+  }
+
+  const cropWidth = maxX - minX + 1, cropHeight = maxY - minY + 1;
+  const inner = matrix.size * moduleSize;
+  const fraction = mode === 'readable' ? 0.32 : mode === 'balanced' ? 0.42 : 0.52;
+  const drawWidth = Math.round(inner * fraction);
+  const drawHeight = Math.max(1, Math.round(drawWidth * cropHeight / cropWidth));
+  const offsetX = margin * moduleSize + (inner - drawWidth) / 2;
+  // For versions with a central alignment pattern, move the mark up just enough to let
+  // the immutable pattern sit in lower negative space rather than pierce the crossing.
+  const offsetY = margin * moduleSize + (inner - drawHeight) / 2 - (matrix.version >= 7 ? drawHeight * 0.12 : 0);
+  const sampleStep = 4;
+  const modified = new Set<string>();
+  let foregroundSamples = 0, protectedSamples = 0, body = '';
+  const quantize = (value: number): number => Math.max(0, Math.min(255, Math.round(value / 4) * 4));
+  const coordinate = (value: number): string => Number(value.toFixed(2)).toString();
+
+  for (let drawY = 0; drawY < drawHeight; drawY += sampleStep) for (let drawX = 0; drawX < drawWidth; drawX += sampleStep) {
+    const sourceX = minX + Math.min(cropWidth - 1, Math.floor(drawX * cropWidth / drawWidth));
+    const sourceY = minY + Math.min(cropHeight - 1, Math.floor(drawY * cropHeight / drawHeight));
+    const rgb = pixel(sourceX, sourceY);
+    if (distanceFromBackground(rgb) <= foregroundThreshold) continue;
+    foregroundSamples += 1;
+    const moduleX = Math.floor((offsetX + drawX - margin * moduleSize) / moduleSize);
+    const moduleY = Math.floor((offsetY + drawY - margin * moduleSize) / moduleSize);
+    if (moduleX < 0 || moduleY < 0 || moduleX >= matrix.size || moduleY >= matrix.size) continue;
+    if (isProtectedFunctionalModule(matrix.functionalRegions, moduleX, moduleY)) {
+      protectedSamples += 1;
+      continue;
+    }
+    modified.add(`${moduleX},${moduleY}`);
+    body += `<rect x="${coordinate(offsetX + drawX)}" y="${coordinate(offsetY + drawY)}" width="${sampleStep}" height="${sampleStep}" fill="rgb(${quantize(rgb[0])},${quantize(rgb[1])},${quantize(rgb[2])})"/>`;
+  }
+  const recognitionScore = foregroundSamples === 0 ? 0 : round((foregroundSamples - protectedSamples) / foregroundSamples, 6);
+  const protectedConflictScore = foregroundSamples === 0 ? 0 : round(protectedSamples / foregroundSamples, 6);
+  return {
+    svg: base.data.replace('</svg>', `${body}</svg>`),
+    width: base.width,
+    modifiedModules: modified.size,
+    recognitionScore,
+    protectedConflictScore,
+    protectedViolations: [],
+  };
+}
+
+/* ================================================================
    Coherent grouped rendering
    ================================================================ */
 
@@ -1070,6 +1182,15 @@ function validateInput(input: ImageFitOptimizerInput): void {
   if (!/^[a-f0-9]{64}$/.test(target.source_image_sha256)
     || target.source_image_sha256 !== input.request.target_image.sha256) {
     throw new Error('target_luma source hash must match request.target_image.sha256');
+  }
+  const rgb = input.target_rgb;
+  if (rgb && (!Number.isInteger(rgb.width) || !Number.isInteger(rgb.height)
+    || rgb.width !== target.width || rgb.height !== target.height
+    || rgb.values.length !== rgb.width * rgb.height * 3
+    || rgb.values.some((value) => !Number.isFinite(value) || value < 0 || value > 255)
+    || !/^[a-f0-9]{64}$/.test(rgb.source_image_sha256)
+    || rgb.source_image_sha256 !== target.source_image_sha256)) {
+    throw new Error('target_rgb dimensions, values, and source hash must match target_luma');
   }
 }
 

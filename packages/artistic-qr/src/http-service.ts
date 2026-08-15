@@ -176,14 +176,15 @@ function handleImageFitCandidates(request: ImageFitQrRequestV1, uploadDir: strin
   }
 
   // Compute candidate target_luma from the fixture path
-  const targetLuma = computeTargetLuma(request.target_image, uploadDir);
+  const targetPlanes = computeTargetPlanes(request.target_image, uploadDir);
 
   const input: ImageFitOptimizerInput = {
     schema_version: 'image-fit-qr-api.v1',
     request,
     encoded_payload,
     short_link,
-    target_luma: targetLuma,
+    target_luma: targetPlanes.luma,
+    target_rgb: targetPlanes.rgb,
   };
 
   const result = optimizeImageFitQr(input);
@@ -193,7 +194,10 @@ function handleImageFitCandidates(request: ImageFitQrRequestV1, uploadDir: strin
 const ALLOWED_FIXTURE_PATHS = ['fixtures/', 'docs/program/evidence/', 'uploads/'];
 const TRAVERSAL_RE = /\.\.\//;
 
-function computeTargetLuma(targetImage: ImageFitQrRequestV1['target_image'], uploadDir: string): ImageFitOptimizerInput['target_luma'] {
+function computeTargetPlanes(
+  targetImage: ImageFitQrRequestV1['target_image'],
+  uploadDir: string,
+): { luma: ImageFitOptimizerInput['target_luma']; rgb: NonNullable<ImageFitOptimizerInput['target_rgb']> } {
   // Resolve only within the repo under MVP-safe controlled paths.
   const imageRef = targetImage.image_ref;
 
@@ -229,9 +233,11 @@ function computeTargetLuma(targetImage: ImageFitQrRequestV1['target_image'], upl
 
   // Build grayscale luma from the image file
   let lumaValues: number[];
+  let rgbValues: number[];
   const png = loadPng(rawPath);
   if (png) {
     lumaValues = new Array(png.width * png.height);
+    rgbValues = new Array(png.width * png.height * 3);
     for (let index = 0; index < lumaValues.length; index += 1) {
       const offset = index * 4;
       const alpha = png.data[offset + 3] / 255;
@@ -239,12 +245,14 @@ function computeTargetLuma(targetImage: ImageFitQrRequestV1['target_image'], upl
       const green = png.data[offset + 1] * alpha + 255 * (1 - alpha);
       const blue = png.data[offset + 2] * alpha + 255 * (1 - alpha);
       lumaValues[index] = Math.round(0.2126 * red + 0.7152 * green + 0.0722 * blue);
+      rgbValues[index * 3] = Math.round(red);
+      rgbValues[index * 3 + 1] = Math.round(green);
+      rgbValues[index * 3 + 2] = Math.round(blue);
     }
+    const binding = { width: png.width, height: png.height, source_image_sha256: targetImage.sha256 };
     return {
-      width: png.width,
-      height: png.height,
-      values: lumaValues,
-      source_image_sha256: targetImage.sha256,
+      luma: { ...binding, values: lumaValues },
+      rgb: { ...binding, values: rgbValues },
     };
   }
 
