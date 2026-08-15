@@ -1,0 +1,12 @@
+{
+  "schema_version": "q6-visual-review.v1",
+  "method": "machine-vision review of a generated-only contact sheet; conservative, non-blinded, not a human panel",
+  "rows": [
+    {"target":"gradient-m-ribbon","batch":0,"clear_reference":1,"total":4,"qr_integration":"fragmented or conventional grid","sponsor_ready":0},
+    {"target":"gradient-m-ribbon","batch":1,"clear_reference":1,"total":4,"qr_integration":"reference mark over a conventional grid","sponsor_ready":0},
+    {"target":"wolf-black-white","batch":0,"clear_reference":3,"total":4,"qr_integration":"wolf silhouettes embedded in a dominant conventional grid","sponsor_ready":0},
+    {"target":"wolf-black-white","batch":1,"clear_reference":2,"total":4,"qr_integration":"QR-dominant with partial wolf identity","sponsor_ready":0}
+  ],
+  "summary": {"clear_reference":7,"provider_outputs":16,"sponsor_ready":0},
+  "decision": "FAILED_ART_AND_SCAN_GATE"
+}

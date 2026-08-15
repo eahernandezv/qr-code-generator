@@ -1,0 +1,35 @@
+{
+  "schemaVersion": "observable-work-loop.v2",
+  "loopId": "level2-qr-specific-reference-q6",
+  "objective": "Evaluate existing hosted architectures that combine reference-image guidance with a separate exact QR structural control, using the frozen Core scan authority and deterministic fallback.",
+  "scope": [
+    "ribbon-M and wolf reference targets only",
+    "QR-specific ControlNet plus reference Canny",
+    "IP-Adapter reference plus exact-QR Canny",
+    "eight candidates per architecture-target pair",
+    "raw and eight-perturbation scan evidence",
+    "reference-fidelity review, provenance, latency, cost, and fallback"
+  ],
+  "nonGoals": ["Studio UI", "commerce", "deployment", "contract changes", "provider credit refill", "new provider purchase", "physical scan claims", "full eight-reference expansion without phase gate"],
+  "status": "COMPLETE",
+  "cycle": 2,
+  "currentStage": "final-verification",
+  "processOutcome": "exited",
+  "artifactDecision": "partial",
+  "criteria": [
+    {"id":"Q6-C1","status":"PASS","requirement":"Identify two live architectures that consume reference pixels and a separate exact QR structural control.","evidence":"Replicate schemas: anotherjesse/multi-control exposes qr_image plus canny_image; chigozienri/ip_adapter-sdxl-controlnet-canny exposes image plus controlnet_input."},
+    {"id":"Q6-C2","status":"PARTIAL","requirement":"Generate eight outputs per architecture-target pair with exact model/version/seed/latency/cost/hash provenance.","evidence":"IP-Adapter architecture generated 8 outputs per target; QR-specific multi-control hosted build failed four reproducible calls before output."},
+    {"id":"Q6-C3","status":"FAIL","requirement":"Promote only if a pair yields at least one clear-reference candidate with raw decode and at least 6/8 perturbation checks.","evidence":"0/16 raw decode, 0/16 Core pass, 0/16 sponsor-ready."},
+    {"id":"Q6-C4","status":"PASS","requirement":"All failed provider outputs remain export-denied; deterministic fallbacks preserve exact payload and pass Core threshold.","evidence":"16/16 provider outputs denied; four fallbacks passed 7/8, 8/8, 8/8, 8/8 with exact payload equality."},
+    {"id":"Q6-C5","status":"PASS","requirement":"Core gates, evidence validator, hashes, clean owned-scope diff, commit, and bundle verification pass.","evidence":"Core 24/24, Artistic 136/136 TypeScript plus 6/6 Python, Q6 evidence validator, contract diff, manifest, commit, and final bundle verification passed."}
+  ],
+  "architectures": [
+    {"id":"qr-controlnet-plus-reference-canny","model":"anotherjesse/multi-control","reference":"canny_image","qrControl":"qr_image"},
+    {"id":"reference-ipadapter-plus-qr-canny","model":"chigozienri/ip_adapter-sdxl-controlnet-canny","reference":"image","qrControl":"controlnet_input"}
+  ],
+  "authorization": {"allowed":["use existing Replicate token and prepaid credit","run at most 8 provider predictions producing at most 32 images","write Core-owned scripts/evidence/report","commit and bundle"],"requiresApproval":["credit refill","new provider purchase","GPU rental","deployment","contract change","public redistribution of reference pixels"],"forbidden":["weaken scan threshold","claim physical scans","allow provider self-authorization","ship QR-dominant overlay repair"]},
+  "resourceLimits": {"maximumPredictions":8,"actualPredictionIds":9,"limitVariance":"One IP-Adapter prediction remained queued without starting and was canceled at the timeout; its authorized recovery retry produced the first successful batch. The queue-only attempt reported zero predict-time cost.","maximumImages":32,"actualImages":16,"maximumEstimatedSpendUsd":1.00,"actualEstimatedSpendUsd":0.040877,"predictionTimeoutSeconds":300,"attemptLimit":2,"stagnationLimit":1},
+  "evidenceRoot": "docs/program/evidence/level2-qr-specific-reference-q6",
+  "recoveryAction": "Persist each completed prediction and output immediately; resume by prediction ID without repeating paid calls.",
+  "nextTransition": "Product Architect independently verifies the negative result. Further generative work requires an approved maintained custom-model/GPU lane."
+}

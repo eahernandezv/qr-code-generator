@@ -1,0 +1,22 @@
+{
+  "review": "q3-balanced-unlabeled-grid-v1",
+  "method": "Eight Q3 Balanced outputs were placed in an unlabeled deterministic 2x4 grid and inspected without source panels or filenames.",
+  "result": {
+    "clear": 3,
+    "partial": 4,
+    "unidentifiable": 1,
+    "total": 8
+  },
+  "classification": {
+    "clear": ["wolf-black-white", "letter-j-gradient", "gradient-m-mark"],
+    "partial": ["red-wolf-front", "calligraphic-j-heart", "wolf-profile-watermarked", "burger-brand-reference"],
+    "unidentifiable": ["geometric-media-mark"]
+  },
+  "limitations": [
+    "This is an internal machine-vision inspection, not a human blinded panel.",
+    "Trademark text was not legible in the burger-brand reference.",
+    "Image-first candidates were not promoted; they remain experimental at the 75% scan threshold.",
+    "Source rights were not independently verified, so source-bearing images are excluded from the public git branch."
+  ],
+  "verdict": "not_sponsor_ready"
+}

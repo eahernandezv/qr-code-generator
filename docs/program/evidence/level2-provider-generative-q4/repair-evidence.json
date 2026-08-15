@@ -1,0 +1,2932 @@
+{
+  "policy": "provider-art-composite-repair-spike-v1",
+  "description": "Exact QR matrix composited over provider PNG; functional regions use full contrast and data modules use bounded opacity. Evidence-only until visual gate and Product Architect review.",
+  "matrix": {
+    "version": 5,
+    "mask": 2,
+    "size": 37,
+    "quiet_zone_modules": 4
+  },
+  "evidence": [
+    {
+      "target": "gradient-j",
+      "source_artifact": "local-artifacts/gradient-j--zylim--seed-4101.png",
+      "trials": [
+        {
+          "strength": 0.45,
+          "artifact": "repaired-artifacts/gradient-j--composite-0p45.png",
+          "sha256": "e66881159bfdee5171df29b740b583e986ca13dbff99d84fbf10c823fe5dadda",
+          "scan": {
+            "pass": false,
+            "decoder": "jsQR",
+            "version": "1.4.0",
+            "thresholdVersion": "scan-v1-real-75pct",
+            "scannedPayload": "",
+            "tests": [
+              {
+                "name": "decode_raw",
+                "pass": false,
+                "scale": 1,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "",
+                  "payloadMatches": false,
+                  "latencyMs": 251.46,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "decode_0.5x",
+                "pass": true,
+                "scale": 0.5,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 30.487,
+                  "width": 384,
+                  "height": 384
+                }
+              },
+              {
+                "name": "decode_2x",
+                "pass": false,
+                "scale": 2,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "",
+                  "payloadMatches": false,
+                  "latencyMs": 196.069,
+                  "width": 1536,
+                  "height": 1536
+                }
+              },
+              {
+                "name": "blur_light",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "blur",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 38.894,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "noise_light",
+                "pass": false,
+                "scale": 1,
+                "perturbation": "noise",
+                "details": {
+                  "decodedPayload": "",
+                  "payloadMatches": false,
+                  "latencyMs": 66.834,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "contrast_low",
+                "pass": false,
+                "scale": 1,
+                "perturbation": "contrast",
+                "details": {
+                  "decodedPayload": "",
+                  "payloadMatches": false,
+                  "latencyMs": 56.895,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "rotation_2deg",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "rotation",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 43.706,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "perspective_mild",
+                "pass": false,
+                "scale": 1,
+                "perturbation": "perspective",
+                "details": {
+                  "decodedPayload": "",
+                  "payloadMatches": false,
+                  "latencyMs": 61.464,
+                  "width": 768,
+                  "height": 768
+                }
+              }
+            ],
+            "overallConfidence": "failed"
+          }
+        },
+        {
+          "strength": 0.6,
+          "artifact": "repaired-artifacts/gradient-j--composite-0p6.png",
+          "sha256": "7e9b440f6e4b888927c74d9f45f64542d7a12d9947d262b03f551087d0988a9f",
+          "scan": {
+            "pass": true,
+            "decoder": "jsQR",
+            "version": "1.4.0",
+            "thresholdVersion": "scan-v1-real-75pct",
+            "scannedPayload": "https://placeholder-online.com/r/q4Art8",
+            "tests": [
+              {
+                "name": "decode_raw",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 46.67,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "decode_0.5x",
+                "pass": true,
+                "scale": 0.5,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 11.482,
+                  "width": 384,
+                  "height": 384
+                }
+              },
+              {
+                "name": "decode_2x",
+                "pass": true,
+                "scale": 2,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 109.374,
+                  "width": 1536,
+                  "height": 1536
+                }
+              },
+              {
+                "name": "blur_light",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "blur",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 29.124,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "noise_light",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "noise",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 28.707,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "contrast_low",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "contrast",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 28.079,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "rotation_2deg",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "rotation",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 30.476,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "perspective_mild",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "perspective",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 34.705,
+                  "width": 768,
+                  "height": 768
+                }
+              }
+            ],
+            "overallConfidence": "high"
+          }
+        },
+        {
+          "strength": 0.75,
+          "artifact": "repaired-artifacts/gradient-j--composite-0p75.png",
+          "sha256": "db2012f159fd7cbc8ccd71eba1f82401dbe96bb565e05bb2b4b425d6651050e7",
+          "scan": {
+            "pass": true,
+            "decoder": "jsQR",
+            "version": "1.4.0",
+            "thresholdVersion": "scan-v1-real-75pct",
+            "scannedPayload": "https://placeholder-online.com/r/q4Art8",
+            "tests": [
+              {
+                "name": "decode_raw",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 27.739,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "decode_0.5x",
+                "pass": true,
+                "scale": 0.5,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 10.886,
+                  "width": 384,
+                  "height": 384
+                }
+              },
+              {
+                "name": "decode_2x",
+                "pass": true,
+                "scale": 2,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 105.61,
+                  "width": 1536,
+                  "height": 1536
+                }
+              },
+              {
+                "name": "blur_light",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "blur",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 28.047,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "noise_light",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "noise",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 29.205,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "contrast_low",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "contrast",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 27.457,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "rotation_2deg",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "rotation",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 29.533,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "perspective_mild",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "perspective",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 27.751,
+                  "width": 768,
+                  "height": 768
+                }
+              }
+            ],
+            "overallConfidence": "high"
+          }
+        }
+      ],
+      "selected": "repaired-artifacts/gradient-j--composite-0p6.png",
+      "selected_strength": 0.6
+    },
+    {
+      "target": "faceted-helmet",
+      "source_artifact": "local-artifacts/faceted-helmet--zylim--seed-4102.png",
+      "trials": [
+        {
+          "strength": 0.45,
+          "artifact": "repaired-artifacts/faceted-helmet--composite-0p45.png",
+          "sha256": "a1389b454f5e439c53c858e4e6ac8109adce0f97b50943d66d6011ef8858c599",
+          "scan": {
+            "pass": false,
+            "decoder": "jsQR",
+            "version": "1.4.0",
+            "thresholdVersion": "scan-v1-real-75pct",
+            "scannedPayload": "",
+            "tests": [
+              {
+                "name": "decode_raw",
+                "pass": false,
+                "scale": 1,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "",
+                  "payloadMatches": false,
+                  "latencyMs": 71.221,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "decode_0.5x",
+                "pass": false,
+                "scale": 0.5,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "",
+                  "payloadMatches": false,
+                  "latencyMs": 34.576,
+                  "width": 384,
+                  "height": 384
+                }
+              },
+              {
+                "name": "decode_2x",
+                "pass": false,
+                "scale": 2,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "",
+                  "payloadMatches": false,
+                  "latencyMs": 203.973,
+                  "width": 1536,
+                  "height": 1536
+                }
+              },
+              {
+                "name": "blur_light",
+                "pass": false,
+                "scale": 1,
+                "perturbation": "blur",
+                "details": {
+                  "decodedPayload": "",
+                  "payloadMatches": false,
+                  "latencyMs": 57.054,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "noise_light",
+                "pass": false,
+                "scale": 1,
+                "perturbation": "noise",
+                "details": {
+                  "decodedPayload": "",
+                  "payloadMatches": false,
+                  "latencyMs": 96.733,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "contrast_low",
+                "pass": false,
+                "scale": 1,
+                "perturbation": "contrast",
+                "details": {
+                  "decodedPayload": "",
+                  "payloadMatches": false,
+                  "latencyMs": 82.994,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "rotation_2deg",
+                "pass": false,
+                "scale": 1,
+                "perturbation": "rotation",
+                "details": {
+                  "decodedPayload": "",
+                  "payloadMatches": false,
+                  "latencyMs": 71.233,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "perspective_mild",
+                "pass": false,
+                "scale": 1,
+                "perturbation": "perspective",
+                "details": {
+                  "decodedPayload": "",
+                  "payloadMatches": false,
+                  "latencyMs": 66.862,
+                  "width": 768,
+                  "height": 768
+                }
+              }
+            ],
+            "overallConfidence": "failed"
+          }
+        },
+        {
+          "strength": 0.6,
+          "artifact": "repaired-artifacts/faceted-helmet--composite-0p6.png",
+          "sha256": "20a92827babb36d34fbad3b3258c0b349a76e25286ea21d66b50841158fe35a5",
+          "scan": {
+            "pass": true,
+            "decoder": "jsQR",
+            "version": "1.4.0",
+            "thresholdVersion": "scan-v1-real-75pct",
+            "scannedPayload": "https://placeholder-online.com/r/q4Art8",
+            "tests": [
+              {
+                "name": "decode_raw",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 58.577,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "decode_0.5x",
+                "pass": true,
+                "scale": 0.5,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 13.242,
+                  "width": 384,
+                  "height": 384
+                }
+              },
+              {
+                "name": "decode_2x",
+                "pass": false,
+                "scale": 2,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "",
+                  "payloadMatches": false,
+                  "latencyMs": 168.912,
+                  "width": 1536,
+                  "height": 1536
+                }
+              },
+              {
+                "name": "blur_light",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "blur",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 33.644,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "noise_light",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "noise",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 31.164,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "contrast_low",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "contrast",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 30.59,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "rotation_2deg",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "rotation",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 54.392,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "perspective_mild",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "perspective",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 58.995,
+                  "width": 768,
+                  "height": 768
+                }
+              }
+            ],
+            "overallConfidence": "medium"
+          }
+        },
+        {
+          "strength": 0.75,
+          "artifact": "repaired-artifacts/faceted-helmet--composite-0p75.png",
+          "sha256": "ef09dbad7a7c8a189b5b42c447c1f43816ccb9a2a5d2e0944f84d8b614d06161",
+          "scan": {
+            "pass": true,
+            "decoder": "jsQR",
+            "version": "1.4.0",
+            "thresholdVersion": "scan-v1-real-75pct",
+            "scannedPayload": "https://placeholder-online.com/r/q4Art8",
+            "tests": [
+              {
+                "name": "decode_raw",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 48.522,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "decode_0.5x",
+                "pass": true,
+                "scale": 0.5,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 10.755,
+                  "width": 384,
+                  "height": 384
+                }
+              },
+              {
+                "name": "decode_2x",
+                "pass": true,
+                "scale": 2,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 103.458,
+                  "width": 1536,
+                  "height": 1536
+                }
+              },
+              {
+                "name": "blur_light",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "blur",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 30.399,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "noise_light",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "noise",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 28.377,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "contrast_low",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "contrast",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 27.077,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "rotation_2deg",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "rotation",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 28.343,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "perspective_mild",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "perspective",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 26.946,
+                  "width": 768,
+                  "height": 768
+                }
+              }
+            ],
+            "overallConfidence": "high"
+          }
+        }
+      ],
+      "selected": "repaired-artifacts/faceted-helmet--composite-0p6.png",
+      "selected_strength": 0.6
+    },
+    {
+      "target": "gradient-m-ribbon",
+      "source_artifact": "local-artifacts/gradient-m-ribbon--zylim--seed-4103.png",
+      "trials": [
+        {
+          "strength": 0.45,
+          "artifact": "repaired-artifacts/gradient-m-ribbon--composite-0p45.png",
+          "sha256": "b082e0ba6a44db59ff0e0080a85e30ca24a23d4216e246754be3fd5c2425e59a",
+          "scan": {
+            "pass": false,
+            "decoder": "jsQR",
+            "version": "1.4.0",
+            "thresholdVersion": "scan-v1-real-75pct",
+            "scannedPayload": "",
+            "tests": [
+              {
+                "name": "decode_raw",
+                "pass": false,
+                "scale": 1,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "",
+                  "payloadMatches": false,
+                  "latencyMs": 80.635,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "decode_0.5x",
+                "pass": true,
+                "scale": 0.5,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 11.214,
+                  "width": 384,
+                  "height": 384
+                }
+              },
+              {
+                "name": "decode_2x",
+                "pass": false,
+                "scale": 2,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "",
+                  "payloadMatches": false,
+                  "latencyMs": 164.9,
+                  "width": 1536,
+                  "height": 1536
+                }
+              },
+              {
+                "name": "blur_light",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "blur",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 33.56,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "noise_light",
+                "pass": false,
+                "scale": 1,
+                "perturbation": "noise",
+                "details": {
+                  "decodedPayload": "",
+                  "payloadMatches": false,
+                  "latencyMs": 65.92,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "contrast_low",
+                "pass": false,
+                "scale": 1,
+                "perturbation": "contrast",
+                "details": {
+                  "decodedPayload": "",
+                  "payloadMatches": false,
+                  "latencyMs": 101.781,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "rotation_2deg",
+                "pass": false,
+                "scale": 1,
+                "perturbation": "rotation",
+                "details": {
+                  "decodedPayload": "",
+                  "payloadMatches": false,
+                  "latencyMs": 60.304,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "perspective_mild",
+                "pass": false,
+                "scale": 1,
+                "perturbation": "perspective",
+                "details": {
+                  "decodedPayload": "",
+                  "payloadMatches": false,
+                  "latencyMs": 63.091,
+                  "width": 768,
+                  "height": 768
+                }
+              }
+            ],
+            "overallConfidence": "failed"
+          }
+        },
+        {
+          "strength": 0.6,
+          "artifact": "repaired-artifacts/gradient-m-ribbon--composite-0p6.png",
+          "sha256": "28bef84194a5c8725e338a07542f9bd7fc4e8f549ce518a2b3901ac60a52355a",
+          "scan": {
+            "pass": true,
+            "decoder": "jsQR",
+            "version": "1.4.0",
+            "thresholdVersion": "scan-v1-real-75pct",
+            "scannedPayload": "https://placeholder-online.com/r/q4Art8",
+            "tests": [
+              {
+                "name": "decode_raw",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 58.652,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "decode_0.5x",
+                "pass": true,
+                "scale": 0.5,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 12.67,
+                  "width": 384,
+                  "height": 384
+                }
+              },
+              {
+                "name": "decode_2x",
+                "pass": false,
+                "scale": 2,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "",
+                  "payloadMatches": false,
+                  "latencyMs": 203.213,
+                  "width": 1536,
+                  "height": 1536
+                }
+              },
+              {
+                "name": "blur_light",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "blur",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 36.663,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "noise_light",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "noise",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 36.229,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "contrast_low",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "contrast",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 35.474,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "rotation_2deg",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "rotation",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 65.108,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "perspective_mild",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "perspective",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 50.984,
+                  "width": 768,
+                  "height": 768
+                }
+              }
+            ],
+            "overallConfidence": "medium"
+          }
+        },
+        {
+          "strength": 0.75,
+          "artifact": "repaired-artifacts/gradient-m-ribbon--composite-0p75.png",
+          "sha256": "c4bd16e04d41a06e59854a418bd0f49964e113e3c76ee319b01add28209d3f86",
+          "scan": {
+            "pass": true,
+            "decoder": "jsQR",
+            "version": "1.4.0",
+            "thresholdVersion": "scan-v1-real-75pct",
+            "scannedPayload": "https://placeholder-online.com/r/q4Art8",
+            "tests": [
+              {
+                "name": "decode_raw",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 56.882,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "decode_0.5x",
+                "pass": true,
+                "scale": 0.5,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 12.21,
+                  "width": 384,
+                  "height": 384
+                }
+              },
+              {
+                "name": "decode_2x",
+                "pass": true,
+                "scale": 2,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 125.66,
+                  "width": 1536,
+                  "height": 1536
+                }
+              },
+              {
+                "name": "blur_light",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "blur",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 36.054,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "noise_light",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "noise",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 53.687,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "contrast_low",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "contrast",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 41.477,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "rotation_2deg",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "rotation",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 39.223,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "perspective_mild",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "perspective",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 37.748,
+                  "width": 768,
+                  "height": 768
+                }
+              }
+            ],
+            "overallConfidence": "high"
+          }
+        }
+      ],
+      "selected": "repaired-artifacts/gradient-m-ribbon--composite-0p6.png",
+      "selected_strength": 0.6
+    },
+    {
+      "target": "red-wolf-front",
+      "source_artifact": "local-artifacts/red-wolf-front--zylim--seed-4104.png",
+      "trials": [
+        {
+          "strength": 0.45,
+          "artifact": "repaired-artifacts/red-wolf-front--composite-0p45.png",
+          "sha256": "3ca953bc5ee9d8d781b21bf014b209a20483f68b282e78ec2b467e7e7533ee00",
+          "scan": {
+            "pass": false,
+            "decoder": "jsQR",
+            "version": "1.4.0",
+            "thresholdVersion": "scan-v1-real-75pct",
+            "scannedPayload": "",
+            "tests": [
+              {
+                "name": "decode_raw",
+                "pass": false,
+                "scale": 1,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "",
+                  "payloadMatches": false,
+                  "latencyMs": 118.537,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "decode_0.5x",
+                "pass": false,
+                "scale": 0.5,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "",
+                  "payloadMatches": false,
+                  "latencyMs": 30.157,
+                  "width": 384,
+                  "height": 384
+                }
+              },
+              {
+                "name": "decode_2x",
+                "pass": false,
+                "scale": 2,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "",
+                  "payloadMatches": false,
+                  "latencyMs": 261.426,
+                  "width": 1536,
+                  "height": 1536
+                }
+              },
+              {
+                "name": "blur_light",
+                "pass": false,
+                "scale": 1,
+                "perturbation": "blur",
+                "details": {
+                  "decodedPayload": "",
+                  "payloadMatches": false,
+                  "latencyMs": 75.581,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "noise_light",
+                "pass": false,
+                "scale": 1,
+                "perturbation": "noise",
+                "details": {
+                  "decodedPayload": "",
+                  "payloadMatches": false,
+                  "latencyMs": 97.78,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "contrast_low",
+                "pass": false,
+                "scale": 1,
+                "perturbation": "contrast",
+                "details": {
+                  "decodedPayload": "",
+                  "payloadMatches": false,
+                  "latencyMs": 84.314,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "rotation_2deg",
+                "pass": false,
+                "scale": 1,
+                "perturbation": "rotation",
+                "details": {
+                  "decodedPayload": "",
+                  "payloadMatches": false,
+                  "latencyMs": 92.049,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "perspective_mild",
+                "pass": false,
+                "scale": 1,
+                "perturbation": "perspective",
+                "details": {
+                  "decodedPayload": "",
+                  "payloadMatches": false,
+                  "latencyMs": 91.941,
+                  "width": 768,
+                  "height": 768
+                }
+              }
+            ],
+            "overallConfidence": "failed"
+          }
+        },
+        {
+          "strength": 0.6,
+          "artifact": "repaired-artifacts/red-wolf-front--composite-0p6.png",
+          "sha256": "95bd01b270120479c6f7654d6ecb3de9d5593e90d3ed45f7a103bb722fdc7e30",
+          "scan": {
+            "pass": true,
+            "decoder": "jsQR",
+            "version": "1.4.0",
+            "thresholdVersion": "scan-v1-real-75pct",
+            "scannedPayload": "https://placeholder-online.com/r/q4Art8",
+            "tests": [
+              {
+                "name": "decode_raw",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 56.15,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "decode_0.5x",
+                "pass": true,
+                "scale": 0.5,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 12.215,
+                  "width": 384,
+                  "height": 384
+                }
+              },
+              {
+                "name": "decode_2x",
+                "pass": false,
+                "scale": 2,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "",
+                  "payloadMatches": false,
+                  "latencyMs": 276.695,
+                  "width": 1536,
+                  "height": 1536
+                }
+              },
+              {
+                "name": "blur_light",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "blur",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 43.73,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "noise_light",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "noise",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 44.962,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "contrast_low",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "contrast",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 40.882,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "rotation_2deg",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "rotation",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 41.505,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "perspective_mild",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "perspective",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 39.16,
+                  "width": 768,
+                  "height": 768
+                }
+              }
+            ],
+            "overallConfidence": "medium"
+          }
+        },
+        {
+          "strength": 0.75,
+          "artifact": "repaired-artifacts/red-wolf-front--composite-0p75.png",
+          "sha256": "7684720a8a8240a7b9404a01924a9c15e6999115233a4067c379e3a8c2644047",
+          "scan": {
+            "pass": true,
+            "decoder": "jsQR",
+            "version": "1.4.0",
+            "thresholdVersion": "scan-v1-real-75pct",
+            "scannedPayload": "https://placeholder-online.com/r/q4Art8",
+            "tests": [
+              {
+                "name": "decode_raw",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 44.309,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "decode_0.5x",
+                "pass": true,
+                "scale": 0.5,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 12.549,
+                  "width": 384,
+                  "height": 384
+                }
+              },
+              {
+                "name": "decode_2x",
+                "pass": true,
+                "scale": 2,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 134.296,
+                  "width": 1536,
+                  "height": 1536
+                }
+              },
+              {
+                "name": "blur_light",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "blur",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 34.071,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "noise_light",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "noise",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 32.974,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "contrast_low",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "contrast",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 30.882,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "rotation_2deg",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "rotation",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 33.336,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "perspective_mild",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "perspective",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 32.027,
+                  "width": 768,
+                  "height": 768
+                }
+              }
+            ],
+            "overallConfidence": "high"
+          }
+        }
+      ],
+      "selected": "repaired-artifacts/red-wolf-front--composite-0p6.png",
+      "selected_strength": 0.6
+    },
+    {
+      "target": "circular-food-emblem",
+      "source_artifact": "local-artifacts/circular-food-emblem--zylim--seed-4105.png",
+      "trials": [
+        {
+          "strength": 0.45,
+          "artifact": "repaired-artifacts/circular-food-emblem--composite-0p45.png",
+          "sha256": "f5650ddff1bb176e1049312e9c9a70d41d2a896984873c3bc7c820117570bd1a",
+          "scan": {
+            "pass": false,
+            "decoder": "jsQR",
+            "version": "1.4.0",
+            "thresholdVersion": "scan-v1-real-75pct",
+            "scannedPayload": "",
+            "tests": [
+              {
+                "name": "decode_raw",
+                "pass": false,
+                "scale": 1,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "",
+                  "payloadMatches": false,
+                  "latencyMs": 101.389,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "decode_0.5x",
+                "pass": false,
+                "scale": 0.5,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "",
+                  "payloadMatches": false,
+                  "latencyMs": 28.606,
+                  "width": 384,
+                  "height": 384
+                }
+              },
+              {
+                "name": "decode_2x",
+                "pass": false,
+                "scale": 2,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "",
+                  "payloadMatches": false,
+                  "latencyMs": 241.883,
+                  "width": 1536,
+                  "height": 1536
+                }
+              },
+              {
+                "name": "blur_light",
+                "pass": false,
+                "scale": 1,
+                "perturbation": "blur",
+                "details": {
+                  "decodedPayload": "",
+                  "payloadMatches": false,
+                  "latencyMs": 71.414,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "noise_light",
+                "pass": false,
+                "scale": 1,
+                "perturbation": "noise",
+                "details": {
+                  "decodedPayload": "",
+                  "payloadMatches": false,
+                  "latencyMs": 94.932,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "contrast_low",
+                "pass": false,
+                "scale": 1,
+                "perturbation": "contrast",
+                "details": {
+                  "decodedPayload": "",
+                  "payloadMatches": false,
+                  "latencyMs": 91.971,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "rotation_2deg",
+                "pass": false,
+                "scale": 1,
+                "perturbation": "rotation",
+                "details": {
+                  "decodedPayload": "",
+                  "payloadMatches": false,
+                  "latencyMs": 98.485,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "perspective_mild",
+                "pass": false,
+                "scale": 1,
+                "perturbation": "perspective",
+                "details": {
+                  "decodedPayload": "",
+                  "payloadMatches": false,
+                  "latencyMs": 84.218,
+                  "width": 768,
+                  "height": 768
+                }
+              }
+            ],
+            "overallConfidence": "failed"
+          }
+        },
+        {
+          "strength": 0.6,
+          "artifact": "repaired-artifacts/circular-food-emblem--composite-0p6.png",
+          "sha256": "176e331aeb830cb310b50c7991b5449d2ae5e51020ce87adaded3e43d1e62299",
+          "scan": {
+            "pass": true,
+            "decoder": "jsQR",
+            "version": "1.4.0",
+            "thresholdVersion": "scan-v1-real-75pct",
+            "scannedPayload": "https://placeholder-online.com/r/q4Art8",
+            "tests": [
+              {
+                "name": "decode_raw",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 36.953,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "decode_0.5x",
+                "pass": true,
+                "scale": 0.5,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 10.883,
+                  "width": 384,
+                  "height": 384
+                }
+              },
+              {
+                "name": "decode_2x",
+                "pass": false,
+                "scale": 2,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "",
+                  "payloadMatches": false,
+                  "latencyMs": 257.827,
+                  "width": 1536,
+                  "height": 1536
+                }
+              },
+              {
+                "name": "blur_light",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "blur",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 40.286,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "noise_light",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "noise",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 36.091,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "contrast_low",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "contrast",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 35.396,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "rotation_2deg",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "rotation",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 39.25,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "perspective_mild",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "perspective",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 35.997,
+                  "width": 768,
+                  "height": 768
+                }
+              }
+            ],
+            "overallConfidence": "medium"
+          }
+        },
+        {
+          "strength": 0.75,
+          "artifact": "repaired-artifacts/circular-food-emblem--composite-0p75.png",
+          "sha256": "4a28f420432b345f81d930e8e36ebd72dab67ec39a1ccbd82bcec145fc754c96",
+          "scan": {
+            "pass": true,
+            "decoder": "jsQR",
+            "version": "1.4.0",
+            "thresholdVersion": "scan-v1-real-75pct",
+            "scannedPayload": "https://placeholder-online.com/r/q4Art8",
+            "tests": [
+              {
+                "name": "decode_raw",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 50.774,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "decode_0.5x",
+                "pass": true,
+                "scale": 0.5,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 10.862,
+                  "width": 384,
+                  "height": 384
+                }
+              },
+              {
+                "name": "decode_2x",
+                "pass": true,
+                "scale": 2,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 116.811,
+                  "width": 1536,
+                  "height": 1536
+                }
+              },
+              {
+                "name": "blur_light",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "blur",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 33.942,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "noise_light",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "noise",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 33.769,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "contrast_low",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "contrast",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 30.131,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "rotation_2deg",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "rotation",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 63.086,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "perspective_mild",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "perspective",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 45.632,
+                  "width": 768,
+                  "height": 768
+                }
+              }
+            ],
+            "overallConfidence": "high"
+          }
+        }
+      ],
+      "selected": "repaired-artifacts/circular-food-emblem--composite-0p6.png",
+      "selected_strength": 0.6
+    },
+    {
+      "target": "wolf-black-white",
+      "source_artifact": "local-artifacts/wolf-black-white--zylim--seed-4106.png",
+      "trials": [
+        {
+          "strength": 0.45,
+          "artifact": "repaired-artifacts/wolf-black-white--composite-0p45.png",
+          "sha256": "f3c7d167d20e841543cc1fb18a20097b0d1fdef6dd8d0ff3759b73cdb35398f4",
+          "scan": {
+            "pass": false,
+            "decoder": "jsQR",
+            "version": "1.4.0",
+            "thresholdVersion": "scan-v1-real-75pct",
+            "scannedPayload": "",
+            "tests": [
+              {
+                "name": "decode_raw",
+                "pass": false,
+                "scale": 1,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "",
+                  "payloadMatches": false,
+                  "latencyMs": 157.771,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "decode_0.5x",
+                "pass": false,
+                "scale": 0.5,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "",
+                  "payloadMatches": false,
+                  "latencyMs": 65.949,
+                  "width": 384,
+                  "height": 384
+                }
+              },
+              {
+                "name": "decode_2x",
+                "pass": false,
+                "scale": 2,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "",
+                  "payloadMatches": false,
+                  "latencyMs": 311.998,
+                  "width": 1536,
+                  "height": 1536
+                }
+              },
+              {
+                "name": "blur_light",
+                "pass": false,
+                "scale": 1,
+                "perturbation": "blur",
+                "details": {
+                  "decodedPayload": "",
+                  "payloadMatches": false,
+                  "latencyMs": 116.561,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "noise_light",
+                "pass": false,
+                "scale": 1,
+                "perturbation": "noise",
+                "details": {
+                  "decodedPayload": "",
+                  "payloadMatches": false,
+                  "latencyMs": 137.801,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "contrast_low",
+                "pass": false,
+                "scale": 1,
+                "perturbation": "contrast",
+                "details": {
+                  "decodedPayload": "",
+                  "payloadMatches": false,
+                  "latencyMs": 121.552,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "rotation_2deg",
+                "pass": false,
+                "scale": 1,
+                "perturbation": "rotation",
+                "details": {
+                  "decodedPayload": "",
+                  "payloadMatches": false,
+                  "latencyMs": 127.592,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "perspective_mild",
+                "pass": false,
+                "scale": 1,
+                "perturbation": "perspective",
+                "details": {
+                  "decodedPayload": "",
+                  "payloadMatches": false,
+                  "latencyMs": 112.447,
+                  "width": 768,
+                  "height": 768
+                }
+              }
+            ],
+            "overallConfidence": "failed"
+          }
+        },
+        {
+          "strength": 0.6,
+          "artifact": "repaired-artifacts/wolf-black-white--composite-0p6.png",
+          "sha256": "296f085ae4345d89a146f1bb223164fc924960cf6a5c8bb0774bdc57b687c215",
+          "scan": {
+            "pass": false,
+            "decoder": "jsQR",
+            "version": "1.4.0",
+            "thresholdVersion": "scan-v1-real-75pct",
+            "scannedPayload": "",
+            "tests": [
+              {
+                "name": "decode_raw",
+                "pass": false,
+                "scale": 1,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "",
+                  "payloadMatches": false,
+                  "latencyMs": 109.044,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "decode_0.5x",
+                "pass": true,
+                "scale": 0.5,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 12.727,
+                  "width": 384,
+                  "height": 384
+                }
+              },
+              {
+                "name": "decode_2x",
+                "pass": false,
+                "scale": 2,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "",
+                  "payloadMatches": false,
+                  "latencyMs": 348.838,
+                  "width": 1536,
+                  "height": 1536
+                }
+              },
+              {
+                "name": "blur_light",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "blur",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 47.833,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "noise_light",
+                "pass": false,
+                "scale": 1,
+                "perturbation": "noise",
+                "details": {
+                  "decodedPayload": "",
+                  "payloadMatches": false,
+                  "latencyMs": 116.529,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "contrast_low",
+                "pass": false,
+                "scale": 1,
+                "perturbation": "contrast",
+                "details": {
+                  "decodedPayload": "",
+                  "payloadMatches": false,
+                  "latencyMs": 87.213,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "rotation_2deg",
+                "pass": false,
+                "scale": 1,
+                "perturbation": "rotation",
+                "details": {
+                  "decodedPayload": "",
+                  "payloadMatches": false,
+                  "latencyMs": 142.857,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "perspective_mild",
+                "pass": false,
+                "scale": 1,
+                "perturbation": "perspective",
+                "details": {
+                  "decodedPayload": "",
+                  "payloadMatches": false,
+                  "latencyMs": 91.649,
+                  "width": 768,
+                  "height": 768
+                }
+              }
+            ],
+            "overallConfidence": "failed"
+          }
+        },
+        {
+          "strength": 0.75,
+          "artifact": "repaired-artifacts/wolf-black-white--composite-0p75.png",
+          "sha256": "bbb07b55fccbc5b3b5f4df7c919591f3d25dbdb47405d27b4f1736586ff57584",
+          "scan": {
+            "pass": true,
+            "decoder": "jsQR",
+            "version": "1.4.0",
+            "thresholdVersion": "scan-v1-real-75pct",
+            "scannedPayload": "https://placeholder-online.com/r/q4Art8",
+            "tests": [
+              {
+                "name": "decode_raw",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 57.138,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "decode_0.5x",
+                "pass": true,
+                "scale": 0.5,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 21.945,
+                  "width": 384,
+                  "height": 384
+                }
+              },
+              {
+                "name": "decode_2x",
+                "pass": true,
+                "scale": 2,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 142.908,
+                  "width": 1536,
+                  "height": 1536
+                }
+              },
+              {
+                "name": "blur_light",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "blur",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 37.381,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "noise_light",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "noise",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 38.562,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "contrast_low",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "contrast",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 37.016,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "rotation_2deg",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "rotation",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 40.193,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "perspective_mild",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "perspective",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 36.999,
+                  "width": 768,
+                  "height": 768
+                }
+              }
+            ],
+            "overallConfidence": "high"
+          }
+        }
+      ],
+      "selected": "repaired-artifacts/wolf-black-white--composite-0p75.png",
+      "selected_strength": 0.75
+    },
+    {
+      "target": "wolf-profile",
+      "source_artifact": "local-artifacts/wolf-profile--zylim--seed-4107.png",
+      "trials": [
+        {
+          "strength": 0.45,
+          "artifact": "repaired-artifacts/wolf-profile--composite-0p45.png",
+          "sha256": "368b7a86c8261b33ca61a898eaf27b84341a81b6e0f91bb1d9c3b74486cc2ff3",
+          "scan": {
+            "pass": false,
+            "decoder": "jsQR",
+            "version": "1.4.0",
+            "thresholdVersion": "scan-v1-real-75pct",
+            "scannedPayload": "",
+            "tests": [
+              {
+                "name": "decode_raw",
+                "pass": false,
+                "scale": 1,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "",
+                  "payloadMatches": false,
+                  "latencyMs": 99.768,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "decode_0.5x",
+                "pass": true,
+                "scale": 0.5,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 14.335,
+                  "width": 384,
+                  "height": 384
+                }
+              },
+              {
+                "name": "decode_2x",
+                "pass": false,
+                "scale": 2,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "",
+                  "payloadMatches": false,
+                  "latencyMs": 256.8,
+                  "width": 1536,
+                  "height": 1536
+                }
+              },
+              {
+                "name": "blur_light",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "blur",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 42.504,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "noise_light",
+                "pass": false,
+                "scale": 1,
+                "perturbation": "noise",
+                "details": {
+                  "decodedPayload": "",
+                  "payloadMatches": false,
+                  "latencyMs": 96.874,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "contrast_low",
+                "pass": false,
+                "scale": 1,
+                "perturbation": "contrast",
+                "details": {
+                  "decodedPayload": "",
+                  "payloadMatches": false,
+                  "latencyMs": 135.406,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "rotation_2deg",
+                "pass": false,
+                "scale": 1,
+                "perturbation": "rotation",
+                "details": {
+                  "decodedPayload": "",
+                  "payloadMatches": false,
+                  "latencyMs": 90.136,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "perspective_mild",
+                "pass": false,
+                "scale": 1,
+                "perturbation": "perspective",
+                "details": {
+                  "decodedPayload": "",
+                  "payloadMatches": false,
+                  "latencyMs": 85.555,
+                  "width": 768,
+                  "height": 768
+                }
+              }
+            ],
+            "overallConfidence": "failed"
+          }
+        },
+        {
+          "strength": 0.6,
+          "artifact": "repaired-artifacts/wolf-profile--composite-0p6.png",
+          "sha256": "99d4da4383894145da919633db72ae6176c9904af0afdca87b5eabd74a598de8",
+          "scan": {
+            "pass": true,
+            "decoder": "jsQR",
+            "version": "1.4.0",
+            "thresholdVersion": "scan-v1-real-75pct",
+            "scannedPayload": "https://placeholder-online.com/r/q4Art8",
+            "tests": [
+              {
+                "name": "decode_raw",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 52.813,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "decode_0.5x",
+                "pass": true,
+                "scale": 0.5,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 11.945,
+                  "width": 384,
+                  "height": 384
+                }
+              },
+              {
+                "name": "decode_2x",
+                "pass": false,
+                "scale": 2,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "",
+                  "payloadMatches": false,
+                  "latencyMs": 223.156,
+                  "width": 1536,
+                  "height": 1536
+                }
+              },
+              {
+                "name": "blur_light",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "blur",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 36.503,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "noise_light",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "noise",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 35.418,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "contrast_low",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "contrast",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 34.539,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "rotation_2deg",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "rotation",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 48.107,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "perspective_mild",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "perspective",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 35.441,
+                  "width": 768,
+                  "height": 768
+                }
+              }
+            ],
+            "overallConfidence": "medium"
+          }
+        },
+        {
+          "strength": 0.75,
+          "artifact": "repaired-artifacts/wolf-profile--composite-0p75.png",
+          "sha256": "b67dd51a41809bd78e3dcee8ba7933f4f2fd7e294aefb95fab4f3ae5de064adc",
+          "scan": {
+            "pass": true,
+            "decoder": "jsQR",
+            "version": "1.4.0",
+            "thresholdVersion": "scan-v1-real-75pct",
+            "scannedPayload": "https://placeholder-online.com/r/q4Art8",
+            "tests": [
+              {
+                "name": "decode_raw",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 49.744,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "decode_0.5x",
+                "pass": true,
+                "scale": 0.5,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 10.923,
+                  "width": 384,
+                  "height": 384
+                }
+              },
+              {
+                "name": "decode_2x",
+                "pass": true,
+                "scale": 2,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 132.058,
+                  "width": 1536,
+                  "height": 1536
+                }
+              },
+              {
+                "name": "blur_light",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "blur",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 35.534,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "noise_light",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "noise",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 35.599,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "contrast_low",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "contrast",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 34.375,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "rotation_2deg",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "rotation",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 38.165,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "perspective_mild",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "perspective",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 35.243,
+                  "width": 768,
+                  "height": 768
+                }
+              }
+            ],
+            "overallConfidence": "high"
+          }
+        }
+      ],
+      "selected": "repaired-artifacts/wolf-profile--composite-0p6.png",
+      "selected_strength": 0.6
+    },
+    {
+      "target": "calligraphic-j-heart",
+      "source_artifact": "local-artifacts/calligraphic-j-heart--zylim--seed-4108.png",
+      "trials": [
+        {
+          "strength": 0.45,
+          "artifact": "repaired-artifacts/calligraphic-j-heart--composite-0p45.png",
+          "sha256": "8336009876ad6763ba58e5a2698235da3f563497e34d611ef4352f9318d8d8e5",
+          "scan": {
+            "pass": false,
+            "decoder": "jsQR",
+            "version": "1.4.0",
+            "thresholdVersion": "scan-v1-real-75pct",
+            "scannedPayload": "",
+            "tests": [
+              {
+                "name": "decode_raw",
+                "pass": false,
+                "scale": 1,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "",
+                  "payloadMatches": false,
+                  "latencyMs": 126.739,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "decode_0.5x",
+                "pass": false,
+                "scale": 0.5,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "",
+                  "payloadMatches": false,
+                  "latencyMs": 33.453,
+                  "width": 384,
+                  "height": 384
+                }
+              },
+              {
+                "name": "decode_2x",
+                "pass": false,
+                "scale": 2,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "",
+                  "payloadMatches": false,
+                  "latencyMs": 266.715,
+                  "width": 1536,
+                  "height": 1536
+                }
+              },
+              {
+                "name": "blur_light",
+                "pass": false,
+                "scale": 1,
+                "perturbation": "blur",
+                "details": {
+                  "decodedPayload": "",
+                  "payloadMatches": false,
+                  "latencyMs": 93.5,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "noise_light",
+                "pass": false,
+                "scale": 1,
+                "perturbation": "noise",
+                "details": {
+                  "decodedPayload": "",
+                  "payloadMatches": false,
+                  "latencyMs": 103.759,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "contrast_low",
+                "pass": false,
+                "scale": 1,
+                "perturbation": "contrast",
+                "details": {
+                  "decodedPayload": "",
+                  "payloadMatches": false,
+                  "latencyMs": 97.167,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "rotation_2deg",
+                "pass": false,
+                "scale": 1,
+                "perturbation": "rotation",
+                "details": {
+                  "decodedPayload": "",
+                  "payloadMatches": false,
+                  "latencyMs": 110.015,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "perspective_mild",
+                "pass": false,
+                "scale": 1,
+                "perturbation": "perspective",
+                "details": {
+                  "decodedPayload": "",
+                  "payloadMatches": false,
+                  "latencyMs": 94.73,
+                  "width": 768,
+                  "height": 768
+                }
+              }
+            ],
+            "overallConfidence": "failed"
+          }
+        },
+        {
+          "strength": 0.6,
+          "artifact": "repaired-artifacts/calligraphic-j-heart--composite-0p6.png",
+          "sha256": "c11922701b6f53e6a304b36994f5b40c67da68ba580a7c03d3efffeac460edd5",
+          "scan": {
+            "pass": true,
+            "decoder": "jsQR",
+            "version": "1.4.0",
+            "thresholdVersion": "scan-v1-real-75pct",
+            "scannedPayload": "https://placeholder-online.com/r/q4Art8",
+            "tests": [
+              {
+                "name": "decode_raw",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 56.745,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "decode_0.5x",
+                "pass": true,
+                "scale": 0.5,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 12.16,
+                  "width": 384,
+                  "height": 384
+                }
+              },
+              {
+                "name": "decode_2x",
+                "pass": false,
+                "scale": 2,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "",
+                  "payloadMatches": false,
+                  "latencyMs": 268.102,
+                  "width": 1536,
+                  "height": 1536
+                }
+              },
+              {
+                "name": "blur_light",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "blur",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 61.548,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "noise_light",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "noise",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 43.168,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "contrast_low",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "contrast",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 36.83,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "rotation_2deg",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "rotation",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 40.793,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "perspective_mild",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "perspective",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 37.842,
+                  "width": 768,
+                  "height": 768
+                }
+              }
+            ],
+            "overallConfidence": "medium"
+          }
+        },
+        {
+          "strength": 0.75,
+          "artifact": "repaired-artifacts/calligraphic-j-heart--composite-0p75.png",
+          "sha256": "2cbe9c5e33b320c3b5c2e55973f910b1ae92a52bd3ea9b6f7348dca16b5458dc",
+          "scan": {
+            "pass": true,
+            "decoder": "jsQR",
+            "version": "1.4.0",
+            "thresholdVersion": "scan-v1-real-75pct",
+            "scannedPayload": "https://placeholder-online.com/r/q4Art8",
+            "tests": [
+              {
+                "name": "decode_raw",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 55.788,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "decode_0.5x",
+                "pass": true,
+                "scale": 0.5,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 11.542,
+                  "width": 384,
+                  "height": 384
+                }
+              },
+              {
+                "name": "decode_2x",
+                "pass": true,
+                "scale": 2,
+                "perturbation": "none",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 124.176,
+                  "width": 1536,
+                  "height": 1536
+                }
+              },
+              {
+                "name": "blur_light",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "blur",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 34.439,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "noise_light",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "noise",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 34.651,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "contrast_low",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "contrast",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 33.098,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "rotation_2deg",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "rotation",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 74.021,
+                  "width": 768,
+                  "height": 768
+                }
+              },
+              {
+                "name": "perspective_mild",
+                "pass": true,
+                "scale": 1,
+                "perturbation": "perspective",
+                "details": {
+                  "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+                  "payloadMatches": true,
+                  "latencyMs": 53.115,
+                  "width": 768,
+                  "height": 768
+                }
+              }
+            ],
+            "overallConfidence": "high"
+          }
+        }
+      ],
+      "selected": "repaired-artifacts/calligraphic-j-heart--composite-0p6.png",
+      "selected_strength": 0.6
+    }
+  ]
+}

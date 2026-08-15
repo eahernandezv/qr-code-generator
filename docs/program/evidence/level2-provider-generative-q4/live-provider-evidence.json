@@ -1,0 +1,1096 @@
+{
+  "schema_version": "provider-generative-q4-evidence.v1",
+  "payload": "https://placeholder-online.com/r/q4Art8",
+  "threshold_version": "scan-v1-real-75pct",
+  "rights": "user-supplied references bound by hash only; prompts are sanitized and do not request trademark text",
+  "results": [
+    {
+      "target": "gradient-j",
+      "source_sha256": "a4ec985c43400d55684dad6e75546e15b4fce211f87f9da0b8802f5935021782",
+      "source_dimensions": {
+        "width": 740,
+        "height": 740
+      },
+      "sanitized_prompt": "premium minimal abstract capital J ribbon sculpture, geometric block forms, electric blue cyan violet and orange gradient, centered on clean white field, no words, square modular structure",
+      "seed": 4101,
+      "artistic_strength": 0.72,
+      "status": "succeeded",
+      "model": "zylim0702/qr_code_controlnet@628e604e13cf63d8",
+      "adapter": "qr-creator-gen-v1",
+      "provider_board_id": "763baa4f-698b-40e9-a243-5e8c3e1a7655",
+      "provider_latency_ms": 33040.33,
+      "wall_latency_ms": 34857,
+      "cost_estimate_usd": 0.015,
+      "artifact": "local-artifacts/gradient-j--zylim--seed-4101.png",
+      "artifact_sha256": "67818fcffa80f53aa10dcadd77ca83e5b8d2e70fc1f7828c6258cef7ac841744",
+      "bytes": 852577,
+      "scan": {
+        "pass": false,
+        "decoder": "jsQR",
+        "version": "1.4.0",
+        "thresholdVersion": "scan-v1-real-75pct",
+        "scannedPayload": "",
+        "tests": [
+          {
+            "name": "decode_raw",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "none",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 243.834,
+              "width": 768,
+              "height": 768
+            }
+          },
+          {
+            "name": "decode_0.5x",
+            "pass": false,
+            "scale": 0.5,
+            "perturbation": "none",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 49.653,
+              "width": 384,
+              "height": 384
+            }
+          },
+          {
+            "name": "decode_2x",
+            "pass": false,
+            "scale": 2,
+            "perturbation": "none",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 337.671,
+              "width": 1536,
+              "height": 1536
+            }
+          },
+          {
+            "name": "blur_light",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "blur",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 45.107,
+              "width": 768,
+              "height": 768
+            }
+          },
+          {
+            "name": "noise_light",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "noise",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 79.807,
+              "width": 768,
+              "height": 768
+            }
+          },
+          {
+            "name": "contrast_low",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "contrast",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 67.998,
+              "width": 768,
+              "height": 768
+            }
+          },
+          {
+            "name": "rotation_2deg",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "rotation",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 92.83,
+              "width": 768,
+              "height": 768
+            }
+          },
+          {
+            "name": "perspective_mild",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "perspective",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 79.538,
+              "width": 768,
+              "height": 768
+            }
+          }
+        ],
+        "overallConfidence": "failed"
+      },
+      "export_allowed_by_core": false
+    },
+    {
+      "target": "faceted-helmet",
+      "source_sha256": "5ec433e1fef9bf2e2d96927460c7fa859b8c0c0ef56fd7f3a6fbfff6d4221d90",
+      "source_dimensions": {
+        "width": 1000,
+        "height": 667
+      },
+      "sanitized_prompt": "premium minimal faceted geometric helmet emblem, black triangular polygon mosaic, strong bilateral symmetry, centered on clean white field, no words, square modular structure",
+      "seed": 4102,
+      "artistic_strength": 0.72,
+      "status": "succeeded",
+      "model": "zylim0702/qr_code_controlnet@628e604e13cf63d8",
+      "adapter": "qr-creator-gen-v1",
+      "provider_board_id": "16ef3ee7-9ff6-4f10-b4e4-5931b4bedb20",
+      "provider_latency_ms": 6752.41,
+      "wall_latency_ms": 9092,
+      "cost_estimate_usd": 0.015,
+      "artifact": "local-artifacts/faceted-helmet--zylim--seed-4102.png",
+      "artifact_sha256": "f2df83159350ef2bad65b5f0cb139adb1314fc82a49fcc5e5026fa22391f3d2f",
+      "bytes": 1032346,
+      "scan": {
+        "pass": false,
+        "decoder": "jsQR",
+        "version": "1.4.0",
+        "thresholdVersion": "scan-v1-real-75pct",
+        "scannedPayload": "",
+        "tests": [
+          {
+            "name": "decode_raw",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "none",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 298.81,
+              "width": 768,
+              "height": 768
+            }
+          },
+          {
+            "name": "decode_0.5x",
+            "pass": false,
+            "scale": 0.5,
+            "perturbation": "none",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 66.564,
+              "width": 384,
+              "height": 384
+            }
+          },
+          {
+            "name": "decode_2x",
+            "pass": false,
+            "scale": 2,
+            "perturbation": "none",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 445.663,
+              "width": 1536,
+              "height": 1536
+            }
+          },
+          {
+            "name": "blur_light",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "blur",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 127.109,
+              "width": 768,
+              "height": 768
+            }
+          },
+          {
+            "name": "noise_light",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "noise",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 158.614,
+              "width": 768,
+              "height": 768
+            }
+          },
+          {
+            "name": "contrast_low",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "contrast",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 141.529,
+              "width": 768,
+              "height": 768
+            }
+          },
+          {
+            "name": "rotation_2deg",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "rotation",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 149.94,
+              "width": 768,
+              "height": 768
+            }
+          },
+          {
+            "name": "perspective_mild",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "perspective",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 148.392,
+              "width": 768,
+              "height": 768
+            }
+          }
+        ],
+        "overallConfidence": "failed"
+      },
+      "export_allowed_by_core": false
+    },
+    {
+      "target": "gradient-m-ribbon",
+      "source_sha256": "cb3b4fecbd0547cd2dfb62daeecfc0116e4dd49fb653ac602025a77b00badaec",
+      "source_dimensions": {
+        "width": 1280,
+        "height": 960
+      },
+      "sanitized_prompt": "premium minimal abstract capital M made from crossing rounded ribbons, cyan blue violet gradient, centered on clean white field, no words, square modular structure",
+      "seed": 4103,
+      "artistic_strength": 0.72,
+      "status": "succeeded",
+      "model": "zylim0702/qr_code_controlnet@628e604e13cf63d8",
+      "adapter": "qr-creator-gen-v1",
+      "provider_board_id": "63003911-b234-4f42-ac20-2eac98a4bd6d",
+      "provider_latency_ms": 9370.48,
+      "wall_latency_ms": 11632,
+      "cost_estimate_usd": 0.015,
+      "artifact": "local-artifacts/gradient-m-ribbon--zylim--seed-4103.png",
+      "artifact_sha256": "a87036f8f4ffddee293a95aff7e0b5b21f3c03a051f2507e8e5d3c8ce1db37fb",
+      "bytes": 996609,
+      "scan": {
+        "pass": false,
+        "decoder": "jsQR",
+        "version": "1.4.0",
+        "thresholdVersion": "scan-v1-real-75pct",
+        "scannedPayload": "",
+        "tests": [
+          {
+            "name": "decode_raw",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "none",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 177.529,
+              "width": 768,
+              "height": 768
+            }
+          },
+          {
+            "name": "decode_0.5x",
+            "pass": true,
+            "scale": 0.5,
+            "perturbation": "none",
+            "details": {
+              "decodedPayload": "https://placeholder-online.com/r/q4Art8",
+              "payloadMatches": true,
+              "latencyMs": 62.13,
+              "width": 384,
+              "height": 384
+            }
+          },
+          {
+            "name": "decode_2x",
+            "pass": false,
+            "scale": 2,
+            "perturbation": "none",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 334.334,
+              "width": 1536,
+              "height": 1536
+            }
+          },
+          {
+            "name": "blur_light",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "blur",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 104.613,
+              "width": 768,
+              "height": 768
+            }
+          },
+          {
+            "name": "noise_light",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "noise",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 176.502,
+              "width": 768,
+              "height": 768
+            }
+          },
+          {
+            "name": "contrast_low",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "contrast",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 218.371,
+              "width": 768,
+              "height": 768
+            }
+          },
+          {
+            "name": "rotation_2deg",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "rotation",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 170.037,
+              "width": 768,
+              "height": 768
+            }
+          },
+          {
+            "name": "perspective_mild",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "perspective",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 204.896,
+              "width": 768,
+              "height": 768
+            }
+          }
+        ],
+        "overallConfidence": "failed"
+      },
+      "export_allowed_by_core": false
+    },
+    {
+      "target": "red-wolf-front",
+      "source_sha256": "04e66b062e147e40abf1b35f0735494e5b4711a3263869741bdccb91d39698a8",
+      "source_dimensions": {
+        "width": 626,
+        "height": 626
+      },
+      "sanitized_prompt": "bold symmetrical front-facing wolf head emblem, angular red and black geometric facets, intense eyes, centered graphic poster, no words, square modular structure",
+      "seed": 4104,
+      "artistic_strength": 0.72,
+      "status": "succeeded",
+      "model": "zylim0702/qr_code_controlnet@628e604e13cf63d8",
+      "adapter": "qr-creator-gen-v1",
+      "provider_board_id": "216b6d65-9523-4750-aac1-8f8ac571b88b",
+      "provider_latency_ms": 9309.12,
+      "wall_latency_ms": 10873,
+      "cost_estimate_usd": 0.015,
+      "artifact": "local-artifacts/red-wolf-front--zylim--seed-4104.png",
+      "artifact_sha256": "39b2c17771e2fa9c1844de9668d5eeca0f91e666c3c9c4f694afb9500711a5f2",
+      "bytes": 917104,
+      "scan": {
+        "pass": false,
+        "decoder": "jsQR",
+        "version": "1.4.0",
+        "thresholdVersion": "scan-v1-real-75pct",
+        "scannedPayload": "",
+        "tests": [
+          {
+            "name": "decode_raw",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "none",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 84.686,
+              "width": 768,
+              "height": 768
+            }
+          },
+          {
+            "name": "decode_0.5x",
+            "pass": false,
+            "scale": 0.5,
+            "perturbation": "none",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 29.612,
+              "width": 384,
+              "height": 384
+            }
+          },
+          {
+            "name": "decode_2x",
+            "pass": false,
+            "scale": 2,
+            "perturbation": "none",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 259.348,
+              "width": 1536,
+              "height": 1536
+            }
+          },
+          {
+            "name": "blur_light",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "blur",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 66.347,
+              "width": 768,
+              "height": 768
+            }
+          },
+          {
+            "name": "noise_light",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "noise",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 116.307,
+              "width": 768,
+              "height": 768
+            }
+          },
+          {
+            "name": "contrast_low",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "contrast",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 86.147,
+              "width": 768,
+              "height": 768
+            }
+          },
+          {
+            "name": "rotation_2deg",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "rotation",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 88.978,
+              "width": 768,
+              "height": 768
+            }
+          },
+          {
+            "name": "perspective_mild",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "perspective",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 81.07,
+              "width": 768,
+              "height": 768
+            }
+          }
+        ],
+        "overallConfidence": "failed"
+      },
+      "export_allowed_by_core": false
+    },
+    {
+      "target": "circular-food-emblem",
+      "source_sha256": "59841a2eacd0e8dfbf0dd878fc323e8ea526f8e14fa620e148338d1d83df9532",
+      "source_dimensions": {
+        "width": 440,
+        "height": 325
+      },
+      "sanitized_prompt": "playful circular food emblem with a stacked burger icon, bold red yellow black cream palette, centered badge composition, no letters or words, square modular structure",
+      "seed": 4105,
+      "artistic_strength": 0.72,
+      "status": "succeeded",
+      "model": "zylim0702/qr_code_controlnet@628e604e13cf63d8",
+      "adapter": "qr-creator-gen-v1",
+      "provider_board_id": "419ecde4-2f94-4e78-8fbb-64ff42045d77",
+      "provider_latency_ms": 8909.51,
+      "wall_latency_ms": 10628,
+      "cost_estimate_usd": 0.015,
+      "artifact": "local-artifacts/circular-food-emblem--zylim--seed-4105.png",
+      "artifact_sha256": "734b82d3a1112dae920fc6d2be6d766a345770f07c24a0f4ee5d160ce02dbdb5",
+      "bytes": 935607,
+      "scan": {
+        "pass": false,
+        "decoder": "jsQR",
+        "version": "1.4.0",
+        "thresholdVersion": "scan-v1-real-75pct",
+        "scannedPayload": "",
+        "tests": [
+          {
+            "name": "decode_raw",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "none",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 110.119,
+              "width": 768,
+              "height": 768
+            }
+          },
+          {
+            "name": "decode_0.5x",
+            "pass": false,
+            "scale": 0.5,
+            "perturbation": "none",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 27.985,
+              "width": 384,
+              "height": 384
+            }
+          },
+          {
+            "name": "decode_2x",
+            "pass": false,
+            "scale": 2,
+            "perturbation": "none",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 275.086,
+              "width": 1536,
+              "height": 1536
+            }
+          },
+          {
+            "name": "blur_light",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "blur",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 99.985,
+              "width": 768,
+              "height": 768
+            }
+          },
+          {
+            "name": "noise_light",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "noise",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 98.037,
+              "width": 768,
+              "height": 768
+            }
+          },
+          {
+            "name": "contrast_low",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "contrast",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 97.115,
+              "width": 768,
+              "height": 768
+            }
+          },
+          {
+            "name": "rotation_2deg",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "rotation",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 108.607,
+              "width": 768,
+              "height": 768
+            }
+          },
+          {
+            "name": "perspective_mild",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "perspective",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 101.554,
+              "width": 768,
+              "height": 768
+            }
+          }
+        ],
+        "overallConfidence": "failed"
+      },
+      "export_allowed_by_core": false
+    },
+    {
+      "target": "wolf-black-white",
+      "source_sha256": "19bd5a92ea6b89fddf128f8be4af1c21f09c4e5869a7848e4a152d38286ab88a",
+      "source_dimensions": {
+        "width": 740,
+        "height": 740
+      },
+      "sanitized_prompt": "high contrast black and white wolf face illustration, frontal symmetry, sharp fur geometry and luminous eyes, centered square composition, no words, modular graphic style",
+      "seed": 4106,
+      "artistic_strength": 0.72,
+      "status": "succeeded",
+      "model": "zylim0702/qr_code_controlnet@628e604e13cf63d8",
+      "adapter": "qr-creator-gen-v1",
+      "provider_board_id": "e3375451-4fab-4b28-a9f7-edebc498b73d",
+      "provider_latency_ms": 9952.56,
+      "wall_latency_ms": 12460,
+      "cost_estimate_usd": 0.015,
+      "artifact": "local-artifacts/wolf-black-white--zylim--seed-4106.png",
+      "artifact_sha256": "f88dd29bc73863d17bd011de04d018f6c52e56decd44933c045fc66dc1c50a62",
+      "bytes": 1236647,
+      "scan": {
+        "pass": false,
+        "decoder": "jsQR",
+        "version": "1.4.0",
+        "thresholdVersion": "scan-v1-real-75pct",
+        "scannedPayload": "",
+        "tests": [
+          {
+            "name": "decode_raw",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "none",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 238.213,
+              "width": 768,
+              "height": 768
+            }
+          },
+          {
+            "name": "decode_0.5x",
+            "pass": false,
+            "scale": 0.5,
+            "perturbation": "none",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 84.877,
+              "width": 384,
+              "height": 384
+            }
+          },
+          {
+            "name": "decode_2x",
+            "pass": false,
+            "scale": 2,
+            "perturbation": "none",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 564.696,
+              "width": 1536,
+              "height": 1536
+            }
+          },
+          {
+            "name": "blur_light",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "blur",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 138.643,
+              "width": 768,
+              "height": 768
+            }
+          },
+          {
+            "name": "noise_light",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "noise",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 176.707,
+              "width": 768,
+              "height": 768
+            }
+          },
+          {
+            "name": "contrast_low",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "contrast",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 228.728,
+              "width": 768,
+              "height": 768
+            }
+          },
+          {
+            "name": "rotation_2deg",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "rotation",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 161.372,
+              "width": 768,
+              "height": 768
+            }
+          },
+          {
+            "name": "perspective_mild",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "perspective",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 215.792,
+              "width": 768,
+              "height": 768
+            }
+          }
+        ],
+        "overallConfidence": "failed"
+      },
+      "export_allowed_by_core": false
+    },
+    {
+      "target": "wolf-profile",
+      "source_sha256": "139e12b26f4728ba5737e0307c12ddb43bcabaa0f0eb3c4fac19b030d1ab82c3",
+      "source_dimensions": {
+        "width": 1000,
+        "height": 1080
+      },
+      "sanitized_prompt": "dramatic monochrome wolf profile portrait, detailed layered fur, strong silhouette, centered on dark neutral field, no watermark, no words, square modular composition",
+      "seed": 4107,
+      "artistic_strength": 0.72,
+      "status": "succeeded",
+      "model": "zylim0702/qr_code_controlnet@628e604e13cf63d8",
+      "adapter": "qr-creator-gen-v1",
+      "provider_board_id": "cb5129ce-fd36-4717-9d76-b39db0103bde",
+      "provider_latency_ms": 7031.7,
+      "wall_latency_ms": 9165,
+      "cost_estimate_usd": 0.015,
+      "artifact": "local-artifacts/wolf-profile--zylim--seed-4107.png",
+      "artifact_sha256": "16d0b09fdf019b609aa5a99ef1d151b0b0f56b0f57574fa080adb14b5371db36",
+      "bytes": 902678,
+      "scan": {
+        "pass": false,
+        "decoder": "jsQR",
+        "version": "1.4.0",
+        "thresholdVersion": "scan-v1-real-75pct",
+        "scannedPayload": "",
+        "tests": [
+          {
+            "name": "decode_raw",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "none",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 150.328,
+              "width": 768,
+              "height": 768
+            }
+          },
+          {
+            "name": "decode_0.5x",
+            "pass": false,
+            "scale": 0.5,
+            "perturbation": "none",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 38.971,
+              "width": 384,
+              "height": 384
+            }
+          },
+          {
+            "name": "decode_2x",
+            "pass": false,
+            "scale": 2,
+            "perturbation": "none",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 442.886,
+              "width": 1536,
+              "height": 1536
+            }
+          },
+          {
+            "name": "blur_light",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "blur",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 85.503,
+              "width": 768,
+              "height": 768
+            }
+          },
+          {
+            "name": "noise_light",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "noise",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 158.445,
+              "width": 768,
+              "height": 768
+            }
+          },
+          {
+            "name": "contrast_low",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "contrast",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 148.425,
+              "width": 768,
+              "height": 768
+            }
+          },
+          {
+            "name": "rotation_2deg",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "rotation",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 156.041,
+              "width": 768,
+              "height": 768
+            }
+          },
+          {
+            "name": "perspective_mild",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "perspective",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 168.569,
+              "width": 768,
+              "height": 768
+            }
+          }
+        ],
+        "overallConfidence": "failed"
+      },
+      "export_allowed_by_core": false
+    },
+    {
+      "target": "calligraphic-j-heart",
+      "source_sha256": "e7fae9c5974a3a6badbab6430ae1f918b9742984f839c580b26e2fa48831f12b",
+      "source_dimensions": {
+        "width": 1280,
+        "height": 827
+      },
+      "sanitized_prompt": "elegant black calligraphic capital J with sweeping brush stroke and a small detached heart, minimal white field, centered, no words, preserve thin graceful curves within modular composition",
+      "seed": 4108,
+      "artistic_strength": 0.72,
+      "status": "succeeded",
+      "model": "zylim0702/qr_code_controlnet@628e604e13cf63d8",
+      "adapter": "qr-creator-gen-v1",
+      "provider_board_id": "346a48b0-03a1-4924-8e29-3b0502a2dc92",
+      "provider_latency_ms": 9214.62,
+      "wall_latency_ms": 12130,
+      "cost_estimate_usd": 0.015,
+      "artifact": "local-artifacts/calligraphic-j-heart--zylim--seed-4108.png",
+      "artifact_sha256": "0e27e4e3d4c8bb6dc07eb7e783f250cdbeb5940758dcc6d50ade1157a5c20485",
+      "bytes": 1171032,
+      "scan": {
+        "pass": false,
+        "decoder": "jsQR",
+        "version": "1.4.0",
+        "thresholdVersion": "scan-v1-real-75pct",
+        "scannedPayload": "",
+        "tests": [
+          {
+            "name": "decode_raw",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "none",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 324.135,
+              "width": 768,
+              "height": 768
+            }
+          },
+          {
+            "name": "decode_0.5x",
+            "pass": false,
+            "scale": 0.5,
+            "perturbation": "none",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 84.601,
+              "width": 384,
+              "height": 384
+            }
+          },
+          {
+            "name": "decode_2x",
+            "pass": false,
+            "scale": 2,
+            "perturbation": "none",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 530.613,
+              "width": 1536,
+              "height": 1536
+            }
+          },
+          {
+            "name": "blur_light",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "blur",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 156.822,
+              "width": 768,
+              "height": 768
+            }
+          },
+          {
+            "name": "noise_light",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "noise",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 222.814,
+              "width": 768,
+              "height": 768
+            }
+          },
+          {
+            "name": "contrast_low",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "contrast",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 246.17,
+              "width": 768,
+              "height": 768
+            }
+          },
+          {
+            "name": "rotation_2deg",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "rotation",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 254.325,
+              "width": 768,
+              "height": 768
+            }
+          },
+          {
+            "name": "perspective_mild",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "perspective",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 274.597,
+              "width": 768,
+              "height": 768
+            }
+          }
+        ],
+        "overallConfidence": "failed"
+      },
+      "export_allowed_by_core": false
+    }
+  ]
+}

@@ -1,0 +1,391 @@
+{
+  "threshold_version": "scan-v1-real-75pct",
+  "candidates": [
+    {
+      "target": "burger-brand-reference",
+      "mode": "readable",
+      "verdict": "pass",
+      "checks": "8/8",
+      "decoder": "jsQR",
+      "export_allowed": false,
+      "blockers": [
+        "preview_export_parity_not_proven",
+        "preview_not_paid",
+        "short_link_not_committed"
+      ],
+      "protected_violations": 0
+    },
+    {
+      "target": "burger-brand-reference",
+      "mode": "balanced",
+      "verdict": "pass",
+      "checks": "8/8",
+      "decoder": "jsQR",
+      "export_allowed": false,
+      "blockers": [
+        "preview_export_parity_not_proven",
+        "preview_not_paid",
+        "short_link_not_committed"
+      ],
+      "protected_violations": 0
+    },
+    {
+      "target": "burger-brand-reference",
+      "mode": "image_first",
+      "verdict": "pass",
+      "checks": "6/8",
+      "decoder": "jsQR",
+      "export_allowed": false,
+      "blockers": [
+        "preview_export_parity_not_proven",
+        "preview_not_paid",
+        "short_link_not_committed",
+        "image_first_experimental"
+      ],
+      "protected_violations": 0
+    },
+    {
+      "target": "calligraphic-j-heart",
+      "mode": "readable",
+      "verdict": "pass",
+      "checks": "8/8",
+      "decoder": "jsQR",
+      "export_allowed": false,
+      "blockers": [
+        "preview_export_parity_not_proven",
+        "preview_not_paid",
+        "short_link_not_committed"
+      ],
+      "protected_violations": 0
+    },
+    {
+      "target": "calligraphic-j-heart",
+      "mode": "balanced",
+      "verdict": "pass",
+      "checks": "8/8",
+      "decoder": "jsQR",
+      "export_allowed": false,
+      "blockers": [
+        "preview_export_parity_not_proven",
+        "preview_not_paid",
+        "short_link_not_committed"
+      ],
+      "protected_violations": 0
+    },
+    {
+      "target": "calligraphic-j-heart",
+      "mode": "image_first",
+      "verdict": "pass",
+      "checks": "8/8",
+      "decoder": "jsQR",
+      "export_allowed": false,
+      "blockers": [
+        "preview_export_parity_not_proven",
+        "preview_not_paid",
+        "short_link_not_committed",
+        "image_first_experimental"
+      ],
+      "protected_violations": 0
+    },
+    {
+      "target": "geometric-media-mark",
+      "mode": "readable",
+      "verdict": "pass",
+      "checks": "8/8",
+      "decoder": "jsQR",
+      "export_allowed": false,
+      "blockers": [
+        "preview_export_parity_not_proven",
+        "preview_not_paid",
+        "short_link_not_committed"
+      ],
+      "protected_violations": 0
+    },
+    {
+      "target": "geometric-media-mark",
+      "mode": "balanced",
+      "verdict": "pass",
+      "checks": "8/8",
+      "decoder": "jsQR",
+      "export_allowed": false,
+      "blockers": [
+        "preview_export_parity_not_proven",
+        "preview_not_paid",
+        "short_link_not_committed"
+      ],
+      "protected_violations": 0
+    },
+    {
+      "target": "geometric-media-mark",
+      "mode": "image_first",
+      "verdict": "pass",
+      "checks": "7/8",
+      "decoder": "jsQR",
+      "export_allowed": false,
+      "blockers": [
+        "preview_export_parity_not_proven",
+        "preview_not_paid",
+        "short_link_not_committed",
+        "image_first_experimental"
+      ],
+      "protected_violations": 0
+    },
+    {
+      "target": "gradient-m-mark",
+      "mode": "readable",
+      "verdict": "pass",
+      "checks": "8/8",
+      "decoder": "jsQR",
+      "export_allowed": false,
+      "blockers": [
+        "preview_export_parity_not_proven",
+        "preview_not_paid",
+        "short_link_not_committed"
+      ],
+      "protected_violations": 0
+    },
+    {
+      "target": "gradient-m-mark",
+      "mode": "balanced",
+      "verdict": "pass",
+      "checks": "8/8",
+      "decoder": "jsQR",
+      "export_allowed": false,
+      "blockers": [
+        "preview_export_parity_not_proven",
+        "preview_not_paid",
+        "short_link_not_committed"
+      ],
+      "protected_violations": 0
+    },
+    {
+      "target": "gradient-m-mark",
+      "mode": "image_first",
+      "verdict": "pass",
+      "checks": "7/8",
+      "decoder": "jsQR",
+      "export_allowed": false,
+      "blockers": [
+        "preview_export_parity_not_proven",
+        "preview_not_paid",
+        "short_link_not_committed",
+        "image_first_experimental"
+      ],
+      "protected_violations": 0
+    },
+    {
+      "target": "letter-j-gradient",
+      "mode": "readable",
+      "verdict": "pass",
+      "checks": "8/8",
+      "decoder": "jsQR",
+      "export_allowed": false,
+      "blockers": [
+        "preview_export_parity_not_proven",
+        "preview_not_paid",
+        "short_link_not_committed"
+      ],
+      "protected_violations": 0
+    },
+    {
+      "target": "letter-j-gradient",
+      "mode": "balanced",
+      "verdict": "pass",
+      "checks": "8/8",
+      "decoder": "jsQR",
+      "export_allowed": false,
+      "blockers": [
+        "preview_export_parity_not_proven",
+        "preview_not_paid",
+        "short_link_not_committed"
+      ],
+      "protected_violations": 0
+    },
+    {
+      "target": "letter-j-gradient",
+      "mode": "image_first",
+      "verdict": "pass",
+      "checks": "8/8",
+      "decoder": "jsQR",
+      "export_allowed": false,
+      "blockers": [
+        "preview_export_parity_not_proven",
+        "preview_not_paid",
+        "short_link_not_committed",
+        "image_first_experimental"
+      ],
+      "protected_violations": 0
+    },
+    {
+      "target": "red-wolf-front",
+      "mode": "readable",
+      "verdict": "pass",
+      "checks": "8/8",
+      "decoder": "jsQR",
+      "export_allowed": false,
+      "blockers": [
+        "preview_export_parity_not_proven",
+        "preview_not_paid",
+        "short_link_not_committed"
+      ],
+      "protected_violations": 0
+    },
+    {
+      "target": "red-wolf-front",
+      "mode": "balanced",
+      "verdict": "pass",
+      "checks": "8/8",
+      "decoder": "jsQR",
+      "export_allowed": false,
+      "blockers": [
+        "preview_export_parity_not_proven",
+        "preview_not_paid",
+        "short_link_not_committed"
+      ],
+      "protected_violations": 0
+    },
+    {
+      "target": "red-wolf-front",
+      "mode": "image_first",
+      "verdict": "pass",
+      "checks": "6/8",
+      "decoder": "jsQR",
+      "export_allowed": false,
+      "blockers": [
+        "preview_export_parity_not_proven",
+        "preview_not_paid",
+        "short_link_not_committed",
+        "image_first_experimental"
+      ],
+      "protected_violations": 0
+    },
+    {
+      "target": "wolf-black-white",
+      "mode": "readable",
+      "verdict": "pass",
+      "checks": "8/8",
+      "decoder": "jsQR",
+      "export_allowed": false,
+      "blockers": [
+        "preview_export_parity_not_proven",
+        "preview_not_paid",
+        "short_link_not_committed"
+      ],
+      "protected_violations": 0
+    },
+    {
+      "target": "wolf-black-white",
+      "mode": "balanced",
+      "verdict": "pass",
+      "checks": "8/8",
+      "decoder": "jsQR",
+      "export_allowed": false,
+      "blockers": [
+        "preview_export_parity_not_proven",
+        "preview_not_paid",
+        "short_link_not_committed"
+      ],
+      "protected_violations": 0
+    },
+    {
+      "target": "wolf-black-white",
+      "mode": "image_first",
+      "verdict": "pass",
+      "checks": "6/8",
+      "decoder": "jsQR",
+      "export_allowed": false,
+      "blockers": [
+        "preview_export_parity_not_proven",
+        "preview_not_paid",
+        "short_link_not_committed",
+        "image_first_experimental"
+      ],
+      "protected_violations": 0
+    },
+    {
+      "target": "wolf-profile-watermarked",
+      "mode": "readable",
+      "verdict": "pass",
+      "checks": "8/8",
+      "decoder": "jsQR",
+      "export_allowed": false,
+      "blockers": [
+        "preview_export_parity_not_proven",
+        "preview_not_paid",
+        "short_link_not_committed"
+      ],
+      "protected_violations": 0
+    },
+    {
+      "target": "wolf-profile-watermarked",
+      "mode": "balanced",
+      "verdict": "pass",
+      "checks": "8/8",
+      "decoder": "jsQR",
+      "export_allowed": false,
+      "blockers": [
+        "preview_export_parity_not_proven",
+        "preview_not_paid",
+        "short_link_not_committed"
+      ],
+      "protected_violations": 0
+    },
+    {
+      "target": "wolf-profile-watermarked",
+      "mode": "image_first",
+      "verdict": "pass",
+      "checks": "6/8",
+      "decoder": "jsQR",
+      "export_allowed": false,
+      "blockers": [
+        "preview_export_parity_not_proven",
+        "preview_not_paid",
+        "short_link_not_committed",
+        "image_first_experimental"
+      ],
+      "protected_violations": 0
+    }
+  ],
+  "fallback_proofs": [
+    {
+      "target": "burger-brand-reference",
+      "verdict": "pass",
+      "checks": "8/8"
+    },
+    {
+      "target": "calligraphic-j-heart",
+      "verdict": "pass",
+      "checks": "8/8"
+    },
+    {
+      "target": "geometric-media-mark",
+      "verdict": "pass",
+      "checks": "8/8"
+    },
+    {
+      "target": "gradient-m-mark",
+      "verdict": "pass",
+      "checks": "8/8"
+    },
+    {
+      "target": "letter-j-gradient",
+      "verdict": "pass",
+      "checks": "8/8"
+    },
+    {
+      "target": "red-wolf-front",
+      "verdict": "pass",
+      "checks": "8/8"
+    },
+    {
+      "target": "wolf-black-white",
+      "verdict": "pass",
+      "checks": "8/8"
+    },
+    {
+      "target": "wolf-profile-watermarked",
+      "verdict": "pass",
+      "checks": "8/8"
+    }
+  ]
+}

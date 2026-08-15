@@ -1,0 +1,41 @@
+{
+  "schemaVersion": "observable-work-loop.v2",
+  "loopId": "level2-provider-generative-q4",
+  "objective": "Evaluate provider-generative QR composition against all eight supplied real-target classes under Core-owned local validation, bounded provider execution, and deterministic fallback.",
+  "scope": [
+    "Replicate QR-conditioned provider generation",
+    "prompt/reference-hash binding at the engine boundary",
+    "local jsQR perturbation validation",
+    "bounded repair if evidence identifies a narrow repair opportunity",
+    "deterministic fallback and provenance evidence"
+  ],
+  "nonGoals": [
+    "Studio UI",
+    "checkout or commerce",
+    "frozen-contract changes",
+    "physical or print scan claims",
+    "trademark recreation",
+    "Product Architect acceptance or merge"
+  ],
+  "status": "COMPLETE",
+  "cycle": 2,
+  "currentStage": "final-verification",
+  "processOutcome": "exited",
+  "artifactDecision": "partial",
+  "criteria": [
+    {"id":"Q4-C1","status":"PASS","requirement":"All eight supplied reference classes are represented by sanitized prompts and source SHA-256 bindings.","evidence":"8/8 source hashes independently matched cached inputs."},
+    {"id":"Q4-C2","status":"PASS","requirement":"Every live provider artifact is saved immediately with model, seed, conditioning, prediction latency/cost estimate, and exact local scan evidence.","evidence":"8/8 live predictions saved; estimated cost $0.12."},
+    {"id":"Q4-C3","status":"PASS","requirement":"Provider scan claims never authorize export; Core locally decodes exact bytes and requires raw plus at least 6/8 checks.","evidence":"0/8 raw provider candidates authorized; forged optimistic replay rejected."},
+    {"id":"Q4-C4","status":"PASS","requirement":"Provider failure or zero passing candidates produces a locally validated deterministic Level 1 fallback.","evidence":"4/4 fallback candidates passed 8/8 with exact payload equality."},
+    {"id":"Q4-C5","status":"FAIL","requirement":"Visual sponsor gate is separately classified; sponsor-ready requires clear identity-level recognizability on at least 6/8 target classes without labels.","evidence":"Raw clear 4/8 but unscannable; selected repairs clear 2/8 and QR-dominant; sponsor-ready 0/8."},
+    {"id":"Q4-C6","status":"PASS","requirement":"Core builds/tests, provider tests, contract parse, evidence hashes, and clean owned-scope diff pass.","evidence":"Core 24/24, Artistic 136/136 TypeScript plus 6/6 Python, schemas and evidence validator passed; contracts unchanged."}
+  ],
+  "authorization": {
+    "allowed": ["bounded paid provider predictions using existing credit", "Core implementation/tests/evidence", "local commit", "git bundle"],
+    "forbidden": ["credit refill", "frozen-contract edits", "Studio/commerce changes", "PR", "merge", "deploy"]
+  },
+  "resourceLimits": {"providerPredictions": 8, "estimatedMaximumCostUsd": 0.28, "attemptLimit": 2, "stagnationLimit": 1},
+  "evidenceRoot": "docs/program/evidence/level2-provider-generative-q4",
+  "recoveryAction": "Preserve completed prediction bytes and resume at the first missing target; never rerun successful predictions merely to recreate logs.",
+  "nextTransition": "Product Architect independently verifies evidence and decides whether a different dual-conditioned provider/model warrants a separate gate. Composite repair remains evidence-only and must not ship."
+}
