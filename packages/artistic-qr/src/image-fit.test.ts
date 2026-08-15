@@ -462,6 +462,16 @@ describe('Q8 deterministic protected visual island', () => {
     }
   }, 30_000);
 
+  it('promotes the negative-space family by default only when an RGB plane is available', () => {
+    const automatic = optimizeImageFitQr(rgbLogoInput());
+    const explicit = optimizeImageFitQr(rgbLogoInput(), { _visualPolicy: 'q8_negative_space_island' });
+    expect(automatic.response.candidates.map((candidate) => candidate.image_fit_evidence.score_version))
+      .toEqual(Array(3).fill('image-fit-negative-space-island-q8-cycle2'));
+    expect(automatic.response.candidates.map((candidate) => automatic.artifacts[candidate.candidate_id].sha256))
+      .toEqual(explicit.response.candidates.map((candidate) => explicit.artifacts[candidate.candidate_id].sha256));
+    expect(optimizeImageFitQr(realisticInput()).response.candidates.every((candidate) => candidate.image_fit_evidence.score_version.includes('q7'))).toBe(true);
+  }, 30_000);
+
   it('rejects an RGB plane that is not exactly bound to the luma plane', () => {
     const malformed = rgbLogoInput();
     malformed.target_rgb = { ...malformed.target_rgb!, values: malformed.target_rgb!.values.slice(3) };
