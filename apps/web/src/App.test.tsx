@@ -1,3 +1,6 @@
+import { webcrypto } from 'node:crypto'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
@@ -18,6 +21,18 @@ describe('App integration', () => {
     const user = userEvent.setup()
     window.history.replaceState({}, '', '/concepts/level2-image-fit-qr')
     const response = structuredClone((await import('../../../packages/contracts/fixtures/image-fit-qr/valid-balanced-response.v1.json')).default)
+    vi.stubGlobal('crypto', webcrypto)
+    const evidenceRoot = resolve(process.cwd(), '../../docs/program/evidence/studio-q7-integration')
+    const q7Evidence = JSON.parse(readFileSync(resolve(evidenceRoot, 'integration-evidence.json'), 'utf8'))
+    const q7Balanced = q7Evidence.image_fit_modes.find((mode: { core_mode: string }) => mode.core_mode === 'balanced')
+    const q7BalancedSvg = readFileSync(resolve(evidenceRoot, 'artifacts/balanced.svg'), 'utf8')
+    response.candidates[0] = {
+      ...response.candidates[0],
+      status: q7Balanced.core_status,
+      image_fit_evidence: { ...response.candidates[0].image_fit_evidence, score_version: q7Balanced.score_version },
+      export_authority: { ...response.candidates[0].export_authority, blockers: q7Balanced.denial_blockers, preview_export_parity: 'not_proven' },
+      artifacts: [{ kind: 'export_svg', uri: `data:image/svg+xml;base64,${Buffer.from(q7BalancedSvg).toString('base64')}`, sha256: q7Balanced.preview_sha256 }],
+    }
     vi.stubGlobal('fetch', vi.fn().mockImplementation(async (_url, init) => {
       const request = JSON.parse(String(init?.body))
       return { ok: true, json: async () => ({ ...response, request }) }
@@ -34,13 +49,14 @@ describe('App integration', () => {
 
     await user.click(screen.getByRole('button', { name: 'Generate candidates' }))
     const preview = await screen.findByTestId('selected-image-fit-candidate')
-    expect(preview).toHaveAttribute('data-artifact-sha256', '6f9b0ba69475d860d3e22ad4e030e59e44b170c9ec3cdee4658f909c03f08940')
+    expect(preview).toHaveAttribute('data-artifact-sha256', q7Balanced.preview_sha256)
     const candidateCard = screen.getByRole('article', { name: 'Balanced generated candidate' })
     expect(candidateCard).toHaveTextContent(/Scan verdictPass · 8\/8/)
     expect(candidateCard).toHaveTextContent(/Image fit71% · Balanced/)
     expect(candidateCard).toHaveTextContent(/Visual acceptancePending/)
     const selectedEvidence = screen.getByRole('region', { name: 'Selected candidate evidence' })
     expect(selectedEvidence).toHaveTextContent(/Pending visual review/)
+    expect(selectedEvidence).toHaveTextContent(/image-fit-scan-first-appearance-q7/)
     expect(selectedEvidence).toHaveTextContent(/Not sponsor-approved/)
     expect(screen.queryByRole('button', { name: 'Generate another set' })).not.toBeInTheDocument()
     expect(screen.getByRole('status')).toHaveTextContent(/Only Core-authorized exact bytes can download/)
