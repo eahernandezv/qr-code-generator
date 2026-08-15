@@ -49,6 +49,33 @@ export type ImageFitRequestControls = {
   targetImage: ImageFitRequestV1['target_image']
 }
 
+export const IMAGE_FIT_STRENGTHS = [
+  { label: 'Mellow', mode: 'readable' },
+  { label: 'Balanced', mode: 'balanced' },
+  { label: 'Punchy', mode: 'image_first' },
+] as const satisfies ReadonlyArray<{ label: string; mode: ImageFitStrength }>
+
+export type ImageFitExportDecision = {
+  allowed: boolean
+  blockers: string[]
+  artifact?: ImageFitCandidateV1['artifacts'][number]
+}
+
+/** Studio never upgrades preview evidence into export authority. */
+export function imageFitExportDecision(candidate: ImageFitCandidateV1): ImageFitExportDecision {
+  const artifact = candidate.artifacts.find((item) => item.kind === 'export_svg' || item.kind === 'export_png')
+  const blockers = [...candidate.export_authority.blockers]
+  if (candidate.scan_evidence.verdict !== 'pass') blockers.push('scan_not_passed')
+  if (candidate.mode === 'image_first') blockers.push('image_first_experimental')
+  if (candidate.export_authority.preview_export_parity !== 'proven') blockers.push('preview_export_parity_not_proven')
+  if (!artifact) blockers.push('authorized_export_artifact_missing')
+  return {
+    allowed: candidate.export_authority.export_allowed && blockers.length === 0,
+    blockers: [...new Set(blockers)],
+    ...(artifact ? { artifact } : {}),
+  }
+}
+
 const SHA256 = /^[a-f0-9]{64}$/
 const CANDIDATE_ID = /^[a-z0-9._:-]{6,128}$/
 const ARTIFACT_KINDS = new Set(['preview_png', 'export_png', 'export_svg', 'metadata_json'])
@@ -137,8 +164,35 @@ export class ImageFitGenerationClient {
     }
     const result = unwrapGenerationResponse(body)
     if (!isGenerationResponse(result, request.request_id)) throw new Error('Creator returned an invalid Image-Fit response. No candidate evidence was accepted.')
+    await verifyInlineArtifactHashes(result)
     return result
   }
+}
+
+/** Verify the exact bytes used by the browser whenever Core returns inline artifacts. */
+export async function verifyInlineArtifactHashes(response: ImageFitGenerationResponseV1): Promise<void> {
+  for (const candidate of response.candidates) {
+    for (const artifact of candidate.artifacts) {
+      if (!artifact.uri.startsWith('data:')) continue
+      const digest = await globalThis.crypto.subtle.digest('SHA-256', decodeDataUri(artifact.uri))
+      const actual = Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('')
+      if (actual !== artifact.sha256) {
+        throw new Error('Creator artifact bytes did not match the authoritative hash. No candidate evidence was accepted.')
+      }
+    }
+  }
+}
+
+function decodeDataUri(uri: string): Uint8Array {
+  const comma = uri.indexOf(',')
+  if (comma < 0) throw new Error('Creator returned an invalid inline artifact.')
+  const metadata = uri.slice(0, comma)
+  const payload = uri.slice(comma + 1)
+  if (metadata.endsWith(';base64')) {
+    const binary = atob(payload)
+    return Uint8Array.from(binary, (character) => character.charCodeAt(0))
+  }
+  return new TextEncoder().encode(decodeURIComponent(payload))
 }
 
 export function unwrapGenerationResponse(value: unknown): unknown {

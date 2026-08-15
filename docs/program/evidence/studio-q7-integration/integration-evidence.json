@@ -1,0 +1,82 @@
+{
+  "schema_version": "studio-q7-integration-evidence.v1",
+  "generated_from_core_commit": "e641b673d81afed6228346d305bd31f77a513e16",
+  "provider_generative_exposed": false,
+  "level1_safe": {
+    "core_mode": "deterministic_level1_fallback",
+    "artifact_uri": "docs/program/evidence/studio-q7-integration/artifacts/fallback-level1.svg",
+    "preview_sha256": "f453ef42520daa427212ce61b4b697f2ba6177652ea7004aa1734a4a3f8a2e7b",
+    "checkout_hash": null,
+    "final_export_hash": null,
+    "export_state": "core_internal_fallback_only",
+    "scan_verdict": "pass",
+    "fallback_available": true,
+    "fallback_reason": "Deterministic Level 1 artifact is retained as a safe fallback."
+  },
+  "image_fit_modes": [
+    {
+      "studio_label": "Mellow",
+      "core_mode": "readable",
+      "core_status": "validated",
+      "score_version": "image-fit-scan-first-appearance-q7",
+      "scan_verdict": "pass",
+      "artifact_uri": "docs/program/evidence/studio-q7-integration/artifacts/readable.svg",
+      "preview_sha256": "ba9517638245d6f0b7c478c8b758a87c669c8f9accc840476ee87fe54628ecd2",
+      "checkout_hash": null,
+      "final_export_hash": null,
+      "export_state": "denied",
+      "denial_blockers": [
+        "preview_export_parity_not_proven",
+        "preview_not_paid",
+        "short_link_not_committed"
+      ],
+      "image_first_experimental": false
+    },
+    {
+      "studio_label": "Balanced",
+      "core_mode": "balanced",
+      "core_status": "validated",
+      "score_version": "image-fit-scan-first-appearance-q7",
+      "scan_verdict": "pass",
+      "artifact_uri": "docs/program/evidence/studio-q7-integration/artifacts/balanced.svg",
+      "preview_sha256": "2e1aebf8e03466b5391f5b45a28d4259901ed964cc1cf3d9c5953c8fb822165c",
+      "checkout_hash": null,
+      "final_export_hash": null,
+      "export_state": "denied",
+      "denial_blockers": [
+        "preview_export_parity_not_proven",
+        "preview_not_paid",
+        "short_link_not_committed"
+      ],
+      "image_first_experimental": false
+    },
+    {
+      "studio_label": "Punchy",
+      "core_mode": "image_first",
+      "core_status": "experimental",
+      "score_version": "image-fit-scan-first-appearance-q7",
+      "scan_verdict": "pass",
+      "artifact_uri": "docs/program/evidence/studio-q7-integration/artifacts/image-first.svg",
+      "preview_sha256": "350bd24a526b474eddb545bface00b709098f7fbbc39e4e4c29404c22be38c58",
+      "checkout_hash": null,
+      "final_export_hash": null,
+      "export_state": "denied",
+      "denial_blockers": [
+        "preview_export_parity_not_proven",
+        "preview_not_paid",
+        "short_link_not_committed",
+        "image_first_experimental"
+      ],
+      "image_first_experimental": true
+    }
+  ],
+  "assertions": {
+    "q7_score_version_for_all_modes": true,
+    "all_core_artifact_hashes_verified": true,
+    "checkout_does_not_rewrite_bytes": true,
+    "checkout_hashes_absent_while_core_export_denied": true,
+    "final_export_hashes_absent_while_core_export_denied": true,
+    "image_first_export_blocked": true,
+    "fallback_hash_preserved": true
+  }
+}

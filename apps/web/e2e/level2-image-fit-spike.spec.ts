@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test'
 import fs from 'node:fs'
 import path from 'node:path'
 
-const evidenceDir = path.resolve(process.cwd(), '../../docs/program/evidence/level2-evidence-ux-cleanup')
+const evidenceDir = path.resolve(process.cwd(), '../../docs/program/evidence/studio-q7-integration/browser')
 const fixture = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), '../../packages/contracts/fixtures/image-fit-qr/valid-balanced-response.v1.json'), 'utf8'))
 
 test.use({ viewport: { width: 390, height: 844 } })
@@ -62,7 +62,7 @@ test('mobile request binding keeps scan, fit, and visual acceptance evidence sep
   await page.unroute('**/api/artistic-qr/image-fit/candidates')
   await page.route('**/api/artistic-qr/image-fit/candidates', (route) => route.abort('failed'))
   await page.getByRole('button', { name: 'Generate candidates' }).click()
-  await expect(page.getByRole('alert')).toContainText('Generation failed closed')
+  await expect(page.getByRole('alert')).toContainText('Image-Fit did not qualify')
   await expect(selected).toHaveCount(0)
   await expect(page.getByRole('article')).toHaveCount(0)
   await expect(page.getByRole('button', { name: /Export|Checkout|Create short link/i })).toHaveCount(0)
