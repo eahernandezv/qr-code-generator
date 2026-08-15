@@ -123,9 +123,12 @@ export interface ImageFitOptimizerOptions {
   _legacyNaiveRender?: boolean;
   /** Evidence switch for exact Q1/Q2/Q3 preprocessing comparisons. */
   _compositionPolicy?: 'q1' | 'q2' | 'q3';
+  /** Evidence switch for exact Q3 first-pass versus Q7 ranked selection comparisons. */
+  _selectionPolicy?: 'q3_first_pass' | 'q7_ranked';
 }
 
 const MODE_ORDER: readonly ImageFitMode[] = ['readable', 'balanced', 'image_first'];
+const MAX_VISUAL_CHALLENGERS_PER_MODE = 2;
 const DISCLAIMER = 'Controlled decoder checks are not a universal scan guarantee. No physical-device or print scan was performed.';
 
 /** Deterministic production-shaped Level 2 optimizer. It never mutates matrix bits. */
@@ -136,21 +139,27 @@ export function optimizeImageFitQr(
   validateInput(input);
   const validate = options.validationRunner ?? runValidation;
   const compositionPolicy = options._compositionPolicy ?? 'q3';
+  const selectionPolicy = options._selectionPolicy ?? 'q7_ranked';
   const started = performance.now();
   const artifacts: Record<string, ImageFitArtifact> = {};
   const candidates: ImageFitCandidateV1[] = [];
   const modes = MODE_ORDER.slice(0, Math.min(input.request.constraints.max_candidates, MODE_ORDER.length));
 
   for (const mode of modes) {
-    let selected: {
+    type Evaluated = {
       settings: QrSearchSettings;
       matrix: QrMatrix;
       rendered: ReturnType<typeof renderImageFitSvg>;
       artifact: ImageFitArtifact;
       validation: ScanValidationResult;
-    } | undefined;
-    for (const settings of settingsCandidatesForMode(input.request, mode)) {
+      preference: number;
+    };
+    let selected: Evaluated | undefined;
+    const renderedSettings: Array<Omit<Evaluated, 'validation'>> = [];
+    const settingsCandidates = settingsCandidatesForMode(input.request, mode);
+    for (let preference = 0; preference < settingsCandidates.length; preference++) {
       if (performance.now() - started > input.request.constraints.max_search_ms) break;
+      const settings = settingsCandidates[preference];
       const normalized: NormalizedPayload = {
         canonical: input.encoded_payload,
         mode: 'url',
@@ -169,9 +178,44 @@ export function optimizeImageFitQr(
       const preprocessed = preprocessTarget(input, matrix, mode, compositionPolicy);
       const rendered = renderImageFitSvg(matrix, preprocessed.mask, mode, { useLegacy, edgeScore: preprocessed.edgeScore, componentCount: preprocessed.componentCount });
       const artifact = makeArtifact(mode, rendered.svg);
-      const validation = validate(validationCandidate(artifact, rendered.width, settings, mode), input.encoded_payload);
-      selected = { settings, matrix, rendered, artifact, validation };
-      if (validation.pass) break;
+      renderedSettings.push({ settings, matrix, rendered, artifact, preference });
+      if (selectionPolicy === 'q3_first_pass') {
+        const validation = validate(validationCandidate(artifact, rendered.width, settings, mode), input.encoded_payload);
+        selected = { settings, matrix, rendered, artifact, validation, preference };
+        if (validation.pass) break;
+      }
+    }
+    if (selectionPolicy === 'q7_ranked' && renderedSettings.length > 0) {
+      const evaluated = new Set<number>();
+      // Preserve Q3's safety floor: walk deterministic preference order until the first
+      // scan-passing candidate is found. Q7 may improve on that anchor but never replace
+      // it with a visually stronger failure.
+      for (const entry of renderedSettings) {
+        if (selected?.validation.pass) break;
+        if (performance.now() - started > input.request.constraints.max_search_ms) break;
+        const validation = validate(validationCandidate(entry.artifact, entry.rendered.width, entry.settings, mode), input.encoded_payload);
+        evaluated.add(entry.preference);
+        const candidate = { ...entry, validation };
+        if (!selected || compareEvaluated(candidate, selected) > 0) selected = candidate;
+      }
+
+      // Challenge the safety anchor with at most two composition-aware alternatives.
+      // Scan verdict/check count remain the leading comparator dimensions.
+      const visualOrder = [...renderedSettings].sort((a, b) =>
+        b.rendered.recognitionScore - a.rendered.recognitionScore
+        || a.rendered.protectedConflictScore - b.rendered.protectedConflictScore
+        || a.preference - b.preference,
+      );
+      let challengers = 0;
+      for (const entry of visualOrder) {
+        if (challengers >= MAX_VISUAL_CHALLENGERS_PER_MODE) break;
+        if (evaluated.has(entry.preference)) continue;
+        if (performance.now() - started > input.request.constraints.max_search_ms) break;
+        const validation = validate(validationCandidate(entry.artifact, entry.rendered.width, entry.settings, mode), input.encoded_payload);
+        const candidate = { ...entry, validation };
+        if (!selected || compareEvaluated(candidate, selected) > 0) selected = candidate;
+        challengers += 1;
+      }
     }
     if (!selected) continue;
     const { settings, matrix, rendered, artifact, validation } = selected;
@@ -214,7 +258,7 @@ export function optimizeImageFitQr(
       image_fit_evidence: {
         fit_label: fitLabel,
         score_version: compositionPolicy === 'q3'
-          ? 'image-fit-real-target-coverage-q3'
+          ? selectionPolicy === 'q7_ranked' ? 'image-fit-scan-first-appearance-q7' : 'image-fit-real-target-coverage-q3'
           : 'image-fit-composition-coverage-q2',
         recognition_score: rendered.recognitionScore,
         protected_zone_conflict_score: rendered.protectedConflictScore,
@@ -259,6 +303,23 @@ export function optimizeImageFitQr(
 }
 
 type QrSearchSettings = { version: number; ecc: ImageFitEcc; mask: number };
+
+function compareEvaluated(
+  left: { validation: ScanValidationResult; rendered: { recognitionScore: number; protectedConflictScore: number }; preference: number },
+  right: { validation: ScanValidationResult; rendered: { recognitionScore: number; protectedConflictScore: number }; preference: number },
+): number {
+  const tuple = (entry: typeof left): number[] => [
+    entry.validation.pass ? 1 : 0,
+    entry.validation.tests.filter((test) => test.pass).length,
+    entry.validation.tests.find((test) => test.name === 'decode_raw')?.pass ? 1 : 0,
+    entry.rendered.recognitionScore,
+    -entry.rendered.protectedConflictScore,
+    -entry.preference,
+  ];
+  const a = tuple(left), b = tuple(right);
+  for (let index = 0; index < a.length; index++) if (a[index] !== b[index]) return a[index] - b[index];
+  return 0;
+}
 
 function settingsCandidatesForMode(request: ImageFitQrRequestV1, mode: ImageFitMode): QrSearchSettings[] {
   const versions = [...request.constraints.allowed_versions].sort((a, b) => a - b);
@@ -737,7 +798,7 @@ function renderImageFitSvg(
 
   let modifiedModules = 0;
   let targetCount = 0;
-  let representedTargetCount = 0;
+  let appearanceScoreSum = 0;
   let protectedTargetCount = 0;
   const protectedViolations: string[] = [];
 
@@ -762,10 +823,10 @@ function renderImageFitSvg(
           // Coherent mode-aware coloring
           fill = modeAwareFill(mode, active, x, y, matrix, mask);
           if (fill !== baseFill) modifiedModules += 1;
-          if (mode !== 'readable' || !active) representedTargetCount += 1;
         }
       }
 
+      if (maskCell && !protectedCell) appearanceScoreSum += normalizedRgbDistance(fill, baseFill);
       if (protectedCell && fill !== baseFill) protectedViolations.push(`${x},${y}`);
       fills[y][x] = fill;
     }
@@ -790,10 +851,20 @@ function renderImageFitSvg(
 
   const svg = `${svgHeader}${svgBody}</svg>`;
 
-  const recognitionScore = targetCount === 0 ? 0 : round(representedTargetCount / targetCount, 6);
+  const recognitionScore = targetCount === 0 ? 0 : round(appearanceScoreSum / targetCount, 6);
   const protectedConflictScore = targetCount === 0 ? 0 : round(protectedTargetCount / targetCount, 6);
 
   return { svg, width, modifiedModules, recognitionScore, protectedConflictScore, protectedViolations };
+}
+
+function normalizedRgbDistance(left: string, right: string): number {
+  const rgb = (hex: string): [number, number, number] => [
+    Number.parseInt(hex.slice(1, 3), 16),
+    Number.parseInt(hex.slice(3, 5), 16),
+    Number.parseInt(hex.slice(5, 7), 16),
+  ];
+  const a = rgb(left), b = rgb(right);
+  return Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]) / Math.hypot(255, 255, 255);
 }
 
 /**
@@ -860,8 +931,8 @@ function validationCandidate(
   settings: { version: number; ecc: ImageFitEcc; mask: number }, mode: ImageFitMode,
 ): Candidate {
   return {
-    candidateId: `validation-${mode}`,
-    matrixRef: `qr:${settings.version}:${settings.mask}`,
+    candidateId: `validation-${mode}-v${settings.version}-${settings.ecc.toLowerCase()}-m${settings.mask}`,
+    matrixRef: `qr:${settings.version}:${settings.ecc}:${settings.mask}`,
     rendered: { format: 'svg', data: artifact.data, width, height: width },
     scanResults: [], exportAllowed: false, artisticScore: 0,
   };

@@ -181,6 +181,76 @@ describe('Level 2 Image-Fit optimizer', () => {
     expect(result.fallback_scan_evidence.verdict).toBe('pass');
   });
 
+  it('Q7 ranks scan robustness ahead of visual appearance within its bounded shortlist', () => {
+    const ranked = realisticInput();
+    ranked.request.constraints.max_candidates = 1;
+    ranked.request.constraints.max_search_ms = 60_000;
+    const validated: string[] = [];
+    const result = optimizeImageFitQr(ranked, {
+      validationRunner(candidate, expectedPayload) {
+        if (!candidate.candidateId.startsWith('validation-')) return runValidation(candidate, expectedPayload);
+        validated.push(candidate.matrixRef);
+        const checksPassed = validated.length === 1 ? 6 : 8;
+        return {
+          pass: true, decoder: 'ranking-test-decoder', version: '1', thresholdVersion: 'ranking-test-v1',
+          scannedPayload: expectedPayload, overallConfidence: checksPassed === 8 ? 'high' : 'low',
+          tests: Array.from({ length: 8 }, (_, index) => ({
+            name: index === 0 ? 'decode_raw' : `check_${index}`,
+            pass: index < checksPassed, scale: 1, perturbation: 'none',
+          })),
+        };
+      },
+    });
+    expect(validated.length).toBeGreaterThan(1);
+    expect(validated.length).toBeLessThanOrEqual(4);
+    expect(result.response.candidates[0].scan_evidence.checks_passed).toBe(8);
+    expect(`qr:${result.response.candidates[0].qr_settings.version}:${result.response.candidates[0].qr_settings.ecc}:${result.response.candidates[0].qr_settings.mask}`).not.toBe(validated[0]);
+  }, 30_000);
+
+  it('Q7 never replaces a scan pass with a failed visual challenger', () => {
+    const ranked = realisticInput();
+    ranked.request.constraints.max_candidates = 1;
+    ranked.request.constraints.max_search_ms = 60_000;
+    const validated: string[] = [];
+    const result = optimizeImageFitQr(ranked, {
+      validationRunner(candidate, expectedPayload) {
+        if (!candidate.candidateId.startsWith('validation-')) return runValidation(candidate, expectedPayload);
+        validated.push(candidate.matrixRef);
+        const anchor = validated.length === 1;
+        return {
+          pass: anchor, decoder: 'pass-gate-test-decoder', version: '1', thresholdVersion: 'pass-gate-test-v1',
+          scannedPayload: anchor ? expectedPayload : '', overallConfidence: anchor ? 'low' : 'failed',
+          tests: Array.from({ length: 8 }, (_, index) => ({
+            name: index === 0 ? 'decode_raw' : `check_${index}`,
+            pass: anchor ? index < 6 : true, scale: 1, perturbation: 'none',
+          })),
+        };
+      },
+    });
+    const selected = result.response.candidates[0];
+    expect(selected.scan_evidence.verdict).toBe('pass');
+    expect(selected.scan_evidence.checks_passed).toBe(6);
+    expect(`qr:${selected.qr_settings.version}:${selected.qr_settings.ecc}:${selected.qr_settings.mask}`).toBe(validated[0]);
+  }, 30_000);
+
+  it('Q7 appearance score is bounded and improves on equal-scan Q3 first-pass selection', () => {
+    const ranked = realisticInput();
+    ranked.request.constraints.max_candidates = 1;
+    ranked.request.constraints.max_search_ms = 60_000;
+    const stableValidation = (): ScanValidationResult => ({
+      pass: true, decoder: 'appearance-test-decoder', version: '1', thresholdVersion: 'appearance-test-v1',
+      scannedPayload: ranked.encoded_payload, overallConfidence: 'high',
+      tests: Array.from({ length: 8 }, (_, index) => ({ name: index === 0 ? 'decode_raw' : `check_${index}`, pass: true, scale: 1, perturbation: 'none' })),
+    });
+    const q3 = optimizeImageFitQr(ranked, { validationRunner: stableValidation, _selectionPolicy: 'q3_first_pass' });
+    const q7 = optimizeImageFitQr(ranked, { validationRunner: stableValidation, _selectionPolicy: 'q7_ranked' });
+    expect(q7.response.candidates[0].image_fit_evidence.recognition_score)
+      .toBeGreaterThanOrEqual(q3.response.candidates[0].image_fit_evidence.recognition_score);
+    expect(q7.response.candidates[0].image_fit_evidence.recognition_score).toBeGreaterThan(0);
+    expect(q7.response.candidates[0].image_fit_evidence.recognition_score).toBeLessThanOrEqual(1);
+    expect(q7.response.candidates[0].image_fit_evidence.score_version).toBe('image-fit-scan-first-appearance-q7');
+  }, 30_000);
+
   it('fails closed when optimized payload bytes do not match the reserved route', () => {
     const malformed = input();
     malformed.encoded_payload = 'https://example.com/wrong';
@@ -289,7 +359,7 @@ describe('Image-fit preprocessing pipeline', () => {
 describe('Coherent rendering and protected regions', () => {
   it('never modifies modules inside protected regions', () => {
     const inp = realisticInput();
-    const result = optimizeImageFitQr(inp);
+    const result = optimizeImageFitQr(inp, { _selectionPolicy: 'q3_first_pass' });
     for (const candidate of result.response.candidates) {
       expect(candidate.protected_regions.violations).toHaveLength(0);
       expect(candidate.protected_regions.violations).toEqual([]);
@@ -298,7 +368,7 @@ describe('Coherent rendering and protected regions', () => {
 
   it('produces displayable SVG artifacts with valid XML and positive dimensions', () => {
     const inp = input();
-    const result = optimizeImageFitQr(inp);
+    const result = optimizeImageFitQr(inp, { _selectionPolicy: 'q3_first_pass' });
     expect(result.response.candidates.length).toBeGreaterThanOrEqual(1);
     for (const candidate of result.response.candidates) {
       const artifact = result.artifacts[candidate.candidate_id];
@@ -316,7 +386,7 @@ describe('Coherent rendering and protected regions', () => {
 
   it('produces coherent grouped runs instead of one rect per module', () => {
     const inp = input();
-    const result = optimizeImageFitQr(inp);
+    const result = optimizeImageFitQr(inp, { _selectionPolicy: 'q3_first_pass' });
     for (const candidate of result.response.candidates) {
       const svg = result.artifacts[candidate.candidate_id].data;
       // Count rect elements
