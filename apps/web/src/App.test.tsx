@@ -20,7 +20,7 @@ describe('App integration', () => {
     const response = structuredClone((await import('../../../packages/contracts/fixtures/image-fit-qr/valid-balanced-response.v1.json')).default)
     vi.stubGlobal('fetch', vi.fn().mockImplementation(async (_url, init) => {
       const request = JSON.parse(String(init?.body))
-      return { ok: true, json: async () => ({ ...response, request: { ...response.request, request_id: request.request_id } }) }
+      return { ok: true, json: async () => ({ ...response, request }) }
     }))
     render(<App />)
 
@@ -62,6 +62,21 @@ describe('App integration', () => {
     expect(screen.queryByTestId('selected-image-fit-candidate')).not.toBeInTheDocument()
     expect(screen.queryByRole('article')).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /Export|Checkout|Create short link/i })).not.toBeInTheDocument()
+  })
+
+  it('shows the Core fallback reason when no Image-Fit candidate qualifies', async () => {
+    const user = userEvent.setup()
+    window.history.replaceState({}, '', '/concepts/level2-image-fit-qr')
+    const fixture = structuredClone((await import('../../../packages/contracts/fixtures/image-fit-qr/valid-balanced-response.v1.json')).default)
+    vi.stubGlobal('fetch', vi.fn().mockImplementation(async (_url, init) => {
+      const request = JSON.parse(String(init?.body))
+      return { ok: true, json: async () => ({ ...fixture, request, candidates: [], fallback: { available: true, kind: 'level1_styled_qr', reason: 'No scan-safe Image-Fit candidate qualified.' } }) }
+    }))
+    render(<App />)
+    await user.click(screen.getByRole('button', { name: 'Generate candidates' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent(/Image-Fit did not qualify.*No scan-safe Image-Fit candidate qualified.*Continue with deterministic Level 1 Safe/i)
+    expect(screen.queryByTestId('selected-image-fit-candidate')).not.toBeInTheDocument()
+    expect(screen.queryByRole('article')).not.toBeInTheDocument()
   })
 
   it('disables generation for invalid input', async () => {

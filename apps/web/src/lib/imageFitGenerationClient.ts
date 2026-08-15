@@ -66,7 +66,10 @@ export function imageFitExportDecision(candidate: ImageFitCandidateV1): ImageFit
   const artifact = candidate.artifacts.find((item) => item.kind === 'export_svg' || item.kind === 'export_png')
   const blockers = [...candidate.export_authority.blockers]
   if (candidate.scan_evidence.verdict !== 'pass') blockers.push('scan_not_passed')
+  if (candidate.scan_evidence.checks_total < 1 || candidate.scan_evidence.checks_passed !== candidate.scan_evidence.checks_total || candidate.scan_evidence.decoders.some((decoder) => !decoder.pass)) blockers.push('scan_checks_incomplete')
+  if (candidate.status !== 'validated') blockers.push('candidate_not_validated')
   if (candidate.mode === 'image_first') blockers.push('image_first_experimental')
+  if (candidate.qr_settings.payload_mode === 'optimized_short_link' && candidate.qr_settings.short_link?.state !== 'committed') blockers.push('short_link_not_committed')
   if (candidate.export_authority.preview_export_parity !== 'proven') blockers.push('preview_export_parity_not_proven')
   if (!artifact) blockers.push('authorized_export_artifact_missing')
   return {
@@ -163,7 +166,7 @@ export class ImageFitGenerationClient {
       throw new Error(message)
     }
     const result = unwrapGenerationResponse(body)
-    if (!isGenerationResponse(result, request.request_id)) throw new Error('Creator returned an invalid Image-Fit response. No candidate evidence was accepted.')
+    if (!isGenerationResponse(result, request)) throw new Error('Creator returned an invalid Image-Fit response. No candidate evidence was accepted.')
     await verifyInlineArtifactHashes(result)
     return result
   }
@@ -181,6 +184,25 @@ export async function verifyInlineArtifactHashes(response: ImageFitGenerationRes
       }
     }
   }
+}
+
+/** Resolve and hash-check exact Core bytes before Studio can hand them to a download. */
+export async function fetchVerifiedArtifactBytes(
+  artifact: ImageFitCandidateV1['artifacts'][number],
+  fetcher: typeof fetch = fetch,
+): Promise<Uint8Array> {
+  let bytes: Uint8Array
+  if (artifact.uri.startsWith('data:')) {
+    bytes = decodeDataUri(artifact.uri)
+  } else {
+    const response = await fetcher(artifact.uri)
+    if (!response.ok) throw new Error('The Core-authorized artifact could not be retrieved.')
+    bytes = new Uint8Array(await response.arrayBuffer())
+  }
+  const digest = await globalThis.crypto.subtle.digest('SHA-256', bytes)
+  const actual = Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('')
+  if (actual !== artifact.sha256) throw new Error('Creator artifact bytes did not match the authoritative hash. Download was blocked.')
+  return bytes
 }
 
 function decodeDataUri(uri: string): Uint8Array {
@@ -202,17 +224,30 @@ export function unwrapGenerationResponse(value: unknown): unknown {
   return value
 }
 
-export function isGenerationResponse(value: unknown, requestId: string): value is ImageFitGenerationResponseV1 {
+export function isGenerationResponse(value: unknown, expectedRequest: string | ImageFitRequestV1): value is ImageFitGenerationResponseV1 {
   if (!value || typeof value !== 'object') return false
   const response = value as Partial<ImageFitGenerationResponseV1>
+  const requestMatches = typeof expectedRequest === 'string'
+    ? response.request?.request_id === expectedRequest
+    : canonicalJson(response.request) === canonicalJson(expectedRequest)
   return response.schema_version === 'image-fit-qr-api.v1'
-    && response.request?.request_id === requestId
+    && requestMatches
     && response.selection_policy?.export_requires_entitlement === true
     && response.selection_policy?.image_first_default_export_allowed === false
     && Array.isArray(response.candidates)
-    && response.candidates.length > 0
     && response.candidates.length <= 12
     && response.candidates.every(isCandidate)
+}
+
+function canonicalJson(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map(canonicalJson).join(',')}]`
+  if (value && typeof value === 'object') {
+    return `{${Object.entries(value as Record<string, unknown>)
+      .sort(([left], [right]) => left.localeCompare(right))
+      .map(([key, item]) => `${JSON.stringify(key)}:${canonicalJson(item)}`)
+      .join(',')}}`
+  }
+  return JSON.stringify(value)
 }
 
 function isTargetImage(value: unknown): value is ImageFitRequestV1['target_image'] {

@@ -22,7 +22,7 @@ test('mobile request binding keeps scan, fit, and visual acceptance evidence sep
       ...fixture.candidates[0],
       image_fit_evidence: { ...fixture.candidates[0].image_fit_evidence, recognition_score: 0.18 },
     }
-    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ...fixture, request: { ...fixture.request, request_id: request.request_id }, candidates: [sponsorPoorCandidate] }) })
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ...fixture, request, candidates: [sponsorPoorCandidate] }) })
   })
   await page.goto('/concepts/level2-image-fit-qr')
   const concept = page.getByTestId('image-fit-qr-concept')

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { createHash, webcrypto } from 'node:crypto'
 import fixture from '../../../../packages/contracts/fixtures/image-fit-qr/valid-balanced-response.v1.json'
-import { buildImageFitRequest, IMAGE_FIT_STRENGTHS, imageFitExportDecision, ImageFitGenerationClient, isGenerationResponse, unwrapGenerationResponse, verifyInlineArtifactHashes } from './imageFitGenerationClient'
+import { buildImageFitRequest, fetchVerifiedArtifactBytes, IMAGE_FIT_STRENGTHS, imageFitExportDecision, ImageFitGenerationClient, isGenerationResponse, unwrapGenerationResponse, verifyInlineArtifactHashes } from './imageFitGenerationClient'
 
 const controls = {
   destination: 'https://example.com/a?source=test#fragment',
@@ -26,6 +26,14 @@ describe('Image-Fit real generation boundary', () => {
     expect(imageFitExportDecision(balanced)).toMatchObject({ allowed: false, blockers: expect.arrayContaining(['preview_export_parity_not_proven', 'preview_not_paid', 'short_link_not_committed']) })
     const punchy = { ...balanced, mode: 'image_first' as const, export_authority: { ...balanced.export_authority, export_allowed: true, blockers: [], preview_export_parity: 'proven' as const } }
     expect(imageFitExportDecision(punchy)).toMatchObject({ allowed: false, blockers: expect.arrayContaining(['image_first_experimental']) })
+
+    const apparentlyAuthorized = {
+      ...balanced,
+      export_authority: { ...balanced.export_authority, export_allowed: true, blockers: [], preview_export_parity: 'proven' as const },
+      artifacts: [...balanced.artifacts, { kind: 'export_svg' as const, uri: 'data:image/svg+xml,%3Csvg/%3E', sha256: '0'.repeat(64) }],
+    }
+    expect(imageFitExportDecision(apparentlyAuthorized)).toMatchObject({ allowed: false, blockers: expect.arrayContaining(['short_link_not_committed']) })
+    expect(imageFitExportDecision({ ...apparentlyAuthorized, qr_settings: { ...apparentlyAuthorized.qr_settings, short_link: { ...apparentlyAuthorized.qr_settings.short_link!, state: 'committed' as const } }, scan_evidence: { ...apparentlyAuthorized.scan_evidence, checks_passed: 7, checks_total: 8 } })).toMatchObject({ allowed: false, blockers: expect.arrayContaining(['scan_checks_incomplete']) })
   })
 
   it('verifies inline preview bytes against the Core artifact hash and rejects mismatch', async () => {
@@ -38,6 +46,17 @@ describe('Image-Fit real generation boundary', () => {
     await expect(verifyInlineArtifactHashes(response)).resolves.toBeUndefined()
     response.candidates[0].artifacts[0].sha256 = '0'.repeat(64)
     await expect(verifyInlineArtifactHashes(response)).rejects.toThrow(/did not match the authoritative hash/)
+  })
+
+  it('hash-verifies the exact artifact bytes before a browser download can use them', async () => {
+    vi.stubGlobal('crypto', webcrypto)
+    const bytes = new TextEncoder().encode('<svg/>')
+    const sha256 = createHash('sha256').update(bytes).digest('hex')
+    const artifact = { kind: 'export_svg' as const, uri: '/core/export.svg', sha256 }
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, arrayBuffer: async () => bytes.buffer })
+    const resolved = await fetchVerifiedArtifactBytes(artifact, fetchMock)
+    expect(Array.from(resolved)).toEqual(Array.from(bytes))
+    await expect(fetchVerifiedArtifactBytes({ ...artifact, sha256: '0'.repeat(64) }, fetchMock)).rejects.toThrow(/did not match the authoritative hash/)
   })
 
   it('creates the frozen contract-shaped preview request with deterministic constraints and no export entitlement', () => {
@@ -56,7 +75,7 @@ describe('Image-Fit real generation boundary', () => {
   })
 
   it('posts the exact request and accepts only a request-bound contract response', async () => {
-    const request = buildImageFitRequest(controls, fixture.request.request_id)
+    const request = structuredClone(fixture.request) as Parameters<ImageFitGenerationClient['generate']>[0]
     const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => fixture })
     vi.stubGlobal('fetch', fetchMock)
     const response = await new ImageFitGenerationClient('/api/artistic-qr/image-fit/candidates').generate(request)
@@ -65,7 +84,7 @@ describe('Image-Fit real generation boundary', () => {
   })
 
   it('unwraps the live Core HTTP success envelope before contract validation', async () => {
-    const request = buildImageFitRequest(controls, fixture.request.request_id)
+    const request = structuredClone(fixture.request) as Parameters<ImageFitGenerationClient['generate']>[0]
     const envelope = { success: true, result: fixture }
     expect(unwrapGenerationResponse(envelope)).toBe(fixture)
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => envelope }))
@@ -79,6 +98,18 @@ describe('Image-Fit real generation boundary', () => {
     expect(isGenerationResponse(fixture, request.request_id)).toBe(false)
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({ ...fixture, request: { ...fixture.request, request_id: request.request_id }, candidates: [{ ...fixture.candidates[0], protected_regions: { ...fixture.candidates[0].protected_regions, alignment: false } }] }) }))
     await expect(new ImageFitGenerationClient('/real').generate(request)).rejects.toThrow(/invalid Image-Fit response/)
+
+    const sameIdWrongPayload = structuredClone(fixture)
+    sameIdWrongPayload.request.request_id = request.request_id
+    sameIdWrongPayload.request.destination.normalized_url = 'https://attacker.example/other'
+    expect(isGenerationResponse(sameIdWrongPayload, request)).toBe(false)
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => sameIdWrongPayload }))
+    await expect(new ImageFitGenerationClient('/real').generate(request)).rejects.toThrow(/invalid Image-Fit response/)
+  })
+
+  it('accepts a contract-valid empty board so Studio can present Core fallback messaging', () => {
+    const request = structuredClone(fixture.request) as Parameters<ImageFitGenerationClient['generate']>[0]
+    expect(isGenerationResponse({ ...fixture, request, candidates: [] }, request)).toBe(true)
   })
 
   it('does not substitute fixture evidence when Creator is unavailable', async () => {

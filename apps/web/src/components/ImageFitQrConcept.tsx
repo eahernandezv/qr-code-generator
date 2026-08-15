@@ -1,6 +1,6 @@
 import React from 'react'
 import { IMAGE_FIT_CONTRACT, type ImageFitDetail, type ImageFitLinkMode, type ImageFitStrength, type ImageFitTreatment } from '../imageFitContract'
-import { buildImageFitRequest, imageFitExportDecision, imageFitGenerationClient, type ImageFitCandidateV1, type ImageFitRequestV1 } from '../lib/imageFitGenerationClient'
+import { buildImageFitRequest, fetchVerifiedArtifactBytes, imageFitExportDecision, imageFitGenerationClient, type ImageFitCandidateV1, type ImageFitRequestV1 } from '../lib/imageFitGenerationClient'
 
 const labels: Record<string, string> = {
   logo: 'Logo', pixel_blend: 'Pixel blend', background_image: 'Background image', cutout_perforated: 'Cutout-perforated',
@@ -41,15 +41,19 @@ function scanVerdict(candidate: ImageFitCandidateV1) {
   return 'Not run'
 }
 
-function downloadAuthoritativeArtifact(candidate: ImageFitCandidateV1) {
+async function downloadAuthoritativeArtifact(candidate: ImageFitCandidateV1) {
   const decision = imageFitExportDecision(candidate)
   if (!decision.allowed || !decision.artifact) return
+  const bytes = await fetchVerifiedArtifactBytes(decision.artifact)
+  const mimeType = decision.artifact.kind === 'export_png' ? 'image/png' : 'image/svg+xml'
+  const objectUrl = URL.createObjectURL(new Blob([bytes], { type: mimeType }))
   const anchor = document.createElement('a')
-  anchor.href = decision.artifact.uri
+  anchor.href = objectUrl
   anchor.download = `artistic-qr-${candidate.mode}.${decision.artifact.kind === 'export_png' ? 'png' : 'svg'}`
   document.body.appendChild(anchor)
   anchor.click()
   anchor.remove()
+  setTimeout(() => URL.revokeObjectURL(objectUrl), 0)
 }
 
 async function imageFileToPngDataUrl(file: File): Promise<string> {
@@ -138,8 +142,14 @@ export default function ImageFitQrConcept() {
     try {
       const request = buildImageFitRequest({ destination, treatment, strength, detail, linkMode, targetImage })
       const response = await imageFitGenerationClient.generate(request, controller.signal)
+      const qualifiedCandidates = response.candidates.filter((candidate) => candidate.scan_evidence.verdict === 'pass' && (candidate.status === 'validated' || candidate.status === 'experimental'))
+      if (qualifiedCandidates.length === 0) {
+        throw new Error(response.fallback.available
+          ? response.fallback.reason
+          : 'Core returned no scan-qualified Image-Fit candidate and no fallback authority.')
+      }
       setCandidates(response.candidates)
-      setSelectedId(response.candidates.find((candidate) => candidate.mode === 'balanced')?.candidate_id ?? response.candidates[0]?.candidate_id)
+      setSelectedId(response.candidates.find((candidate) => candidate.mode === 'balanced' && qualifiedCandidates.includes(candidate))?.candidate_id ?? qualifiedCandidates[0]?.candidate_id)
       setRunState('success')
     } catch (caught) {
       if (caught instanceof DOMException && caught.name === 'AbortError') return
@@ -162,7 +172,7 @@ export default function ImageFitQrConcept() {
           {selected ? <img data-testid="selected-image-fit-candidate" src={previewSource(artifactFor(selected)!.uri)} data-artifact-sha256={artifactFor(selected)?.sha256} data-candidate-id={selected.candidate_id} alt={`${labels[selected.mode]} generated candidate`} className="h-full w-full rounded-xl object-contain" /> : <div className="flex h-full items-center justify-center rounded-xl border border-dashed border-slate-400 bg-slate-200 px-8 text-center text-sm font-bold text-slate-600">{runState === 'loading' ? 'Creator is generating fresh candidates…' : runState === 'error' ? 'No candidate evidence accepted' : 'Ready for real generation'}</div>}
         </div>
         {selected && <><section aria-label="Selected candidate evidence" className="mt-3 rounded-xl border border-white/10 bg-black/20 p-2.5"><div className="grid gap-2 sm:grid-cols-3"><div><span className="block text-[9px] font-black uppercase tracking-[.12em] text-slate-500">Scan verdict</span><strong className="text-sm">{scanVerdict(selected)}</strong><span className="block text-[9px] text-slate-400">{selected.scan_evidence.checks_passed}/{selected.scan_evidence.checks_total} controlled checks</span></div><div><span className="block text-[9px] font-black uppercase tracking-[.12em] text-slate-500">Image recognition / fit</span><strong className="text-sm">{recognitionScore(selected)}</strong><span className="block text-[9px] text-slate-400">{labels[selected.image_fit_evidence.fit_label]} · {selected.image_fit_evidence.score_version}</span></div><div><span className="block text-[9px] font-black uppercase tracking-[.12em] text-slate-500">Visual acceptance</span><strong className="text-sm text-amber-200">Pending visual review</strong><span className="block text-[9px] text-slate-400">Not sponsor-approved</span></div></div><p className="mt-2 border-t border-white/10 pt-2 text-[10px] leading-relaxed text-slate-300"><strong className="text-white">Evidence is separate:</strong> a scan pass reports controlled decoder results only. Image-fit scoring and visual acceptance are independent; this candidate is not presented as sponsor-ready.</p></section><details className="mt-2 rounded-xl border border-white/10 bg-slate-950/70 text-[10px]"><summary className="cursor-pointer px-3 py-2 font-bold">Technical evidence · v{selected.qr_settings.version} · ECC {selected.qr_settings.ecc} · mask {selected.qr_settings.mask}</summary><div className="border-t border-white/10 px-3 py-2 text-slate-300">Producer status: {selected.status}<br />Payload: {selected.qr_settings.payload_mode} · {selected.qr_settings.encoded_payload_display}<br />Decoder suite: {selected.scan_evidence.decoder_suite_version}<br />Protected-zone conflict score: {selected.image_fit_evidence.protected_zone_conflict_score}<br />Artifact hash: {artifactFor(selected)?.sha256}<br />Warnings: {selected.warnings.length ? selected.warnings.map((warning) => warning.message).join('; ') : 'None'}</div></details><p className="mt-2 text-[9px] text-slate-500">{selected.scan_evidence.disclaimer} Physical-device: {selected.scan_evidence.physical_scan}; print: {selected.scan_evidence.print_scan}.</p></>}
-        {selected && <><button type="button" disabled={!exportDecision?.allowed} onClick={() => downloadAuthoritativeArtifact(selected)} className="mt-2 min-h-11 w-full rounded-xl bg-indigo-500 px-4 text-xs font-black text-white disabled:cursor-not-allowed disabled:bg-slate-800 disabled:text-slate-400">{exportDecision?.allowed ? 'Download Core-authorized artifact' : 'Export denied by Core gates'}</button>{!exportDecision?.allowed && <p data-testid="image-fit-export-blockers" className="mt-1 text-[10px] text-amber-200">Blocked: {exportDecision?.blockers.join(', ') || 'Core export authority unavailable'}</p>}</>}
+        {selected && <><button type="button" disabled={!exportDecision?.allowed} onClick={() => { void downloadAuthoritativeArtifact(selected).catch((caught) => setError(caught instanceof Error ? caught.message : 'Core-authorized download failed closed.')) }} className="mt-2 min-h-11 w-full rounded-xl bg-indigo-500 px-4 text-xs font-black text-white disabled:cursor-not-allowed disabled:bg-slate-800 disabled:text-slate-400">{exportDecision?.allowed ? 'Download Core-authorized artifact' : 'Export denied by Core gates'}</button>{!exportDecision?.allowed && <p data-testid="image-fit-export-blockers" className="mt-1 text-[10px] text-amber-200">Blocked: {exportDecision?.blockers.join(', ') || 'Core export authority unavailable'}</p>}</>}
         {error && <div role="alert" className="mt-3 rounded-xl border border-rose-300/30 bg-rose-400/10 px-3 py-2 text-xs text-rose-100"><strong>Image-Fit did not qualify.</strong> {error} Previous candidates remain hidden. <a href="/" className="font-bold underline">Continue with deterministic Level 1 Safe</a>.</div>}
         <div role="status" className="mt-3 rounded-xl border border-amber-300/25 bg-amber-300/10 px-3 py-2 text-[10px] text-amber-100">Only Core-authorized exact bytes can download. Payment, committed short-link, scan, parity, and Image-first experimental blockers remain visible and fail closed. <a href="/" className="font-bold underline">Level 1 Safe remains available</a>.</div>
       </section>
