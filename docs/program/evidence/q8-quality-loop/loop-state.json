@@ -5,16 +5,16 @@
   "baseline": "e150965c758ad8ba8b9b407a9e0fab5a100a11e9",
   "branch": "creator/q8-visual-quality-scoring-loop",
   "status": "EXECUTING",
-  "cycle": 2,
-  "current_stage": "negative-space-harmony-refinement",
+  "cycle": 4,
+  "current_stage": "freeze-proposal-and-package",
   "process_outcome": "exited",
   "artifact_decision": "accepted",
   "criteria": [
     {"id":"Q8-HARD-GATES","status":"OPEN","requirement":"Every leaderboard candidate passes payload equality, raw decode, >=6/8 checks, zero protected violations, contract validity, determinism, and claimed export parity."},
     {"id":"Q8-C0","status":"PASS","requirement":"Cycle 0 scores unmodified Q7 readable, balanced, image_first, and fallback with contact sheet and report.","evidence":"Required contact-sheet.png, scores.json, objective evidence, manifest, and cycle-0 report validated; scores 51/64/67/38."},
     {"id":"Q8-C1","status":"PASS","requirement":"Cycle 1 adds machine-readable scoring and first deterministic improvement.","evidence":"Q8 scorer tests pass; protected RGB island scores 79/88/92 with all candidates raw-decode and 8/8."},
-    {"id":"Q8-C2","status":"OPEN","requirement":"Cycle 2 improves weakest two categories without hard-gate regression."},
-    {"id":"Q8-C3","status":"OPEN","requirement":"Cycle 3 proves behavior on at least three target types."},
+    {"id":"Q8-C2","status":"PASS","requirement":"Cycle 2 improves weakest two categories without hard-gate regression.","evidence":"Negative-space island improves best candidate 92->94; all three remain raw-decode 8/8 with zero violations."},
+    {"id":"Q8-C3","status":"PASS","requirement":"Cycle 3 proves behavior on at least three target types.","evidence":"Simple silhouette, medium logo, and textured subject exercised; 8/9 candidates pass 8/8; textured Image-first fails closed and is excluded."},
     {"id":"Q8-C4","status":"OPEN","requirement":"Cycle 4 proposes freeze, continue, or block with hashes and validator evidence."}
   ],
   "authorization": {
@@ -23,5 +23,5 @@
   },
   "limits":{"cycle_minutes":45,"minimum_checks":6,"raw_decode_required":true,"maximum_cycles":5,"stagnation_limit":1},
   "evidence_root":"docs/program/evidence/q8-quality-loop",
-  "next_transition":"Cycle 2 will preserve internal negative space to improve harmony/polish, rejecting any scan or integrity regression."
+  "next_transition":"Cycle 4 will propose freeze/continue/block, run full gates, finalize manifests, and create a verified bundle for Product Architect review."
 }

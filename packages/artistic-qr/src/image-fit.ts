@@ -134,7 +134,7 @@ export interface ImageFitOptimizerOptions {
   /** Evidence switch for exact Q3 first-pass versus Q7 ranked selection comparisons. */
   _selectionPolicy?: 'q3_first_pass' | 'q7_ranked';
   /** Evidence-gated Q8 deterministic foreground-island family. Public contracts remain unchanged. */
-  _visualPolicy?: 'q7_module_recolor' | 'q8_protected_island';
+  _visualPolicy?: 'q7_module_recolor' | 'q8_protected_island' | 'q8_negative_space_island';
 }
 
 const MODE_ORDER: readonly ImageFitMode[] = ['readable', 'balanced', 'image_first'];
@@ -167,7 +167,8 @@ export function optimizeImageFitQr(
     };
     let selected: Evaluated | undefined;
     const renderedSettings: Array<Omit<Evaluated, 'validation'>> = [];
-    const settingsCandidates = settingsCandidatesForMode(input.request, mode, visualPolicy === 'q8_protected_island');
+    const q8Island = visualPolicy === 'q8_protected_island' || visualPolicy === 'q8_negative_space_island';
+    const settingsCandidates = settingsCandidatesForMode(input.request, mode, q8Island);
     for (let preference = 0; preference < settingsCandidates.length; preference++) {
       if (performance.now() - started > input.request.constraints.max_search_ms) break;
       const settings = settingsCandidates[preference];
@@ -187,8 +188,8 @@ export function optimizeImageFitQr(
       }
       const useLegacy = options._legacyNaiveRender === true;
       const preprocessed = preprocessTarget(input, matrix, mode, compositionPolicy);
-      const rendered = visualPolicy === 'q8_protected_island' && input.target_rgb
-        ? renderProtectedVisualIslandSvg(matrix, input.target_rgb, mode)
+      const rendered = q8Island && input.target_rgb
+        ? renderProtectedVisualIslandSvg(matrix, input.target_rgb, mode, visualPolicy === 'q8_negative_space_island')
         : renderImageFitSvg(matrix, preprocessed.mask, mode, { useLegacy, edgeScore: preprocessed.edgeScore, componentCount: preprocessed.componentCount });
       const artifact = makeArtifact(mode, rendered.svg);
       renderedSettings.push({ settings, matrix, rendered, artifact, preference });
@@ -256,8 +257,10 @@ export function optimizeImageFitQr(
         kind: treatmentForMode(mode),
         modified_modules: rendered.modifiedModules,
         modified_fraction: round(rendered.modifiedModules / (matrix.size * matrix.size), 6),
-        luminance_policy_version: visualPolicy === 'q8_protected_island' && input.target_rgb
-          ? 'image-fit-protected-rgb-island-q8-cycle1'
+        luminance_policy_version: q8Island && input.target_rgb
+          ? visualPolicy === 'q8_negative_space_island'
+            ? 'image-fit-negative-space-island-q8-cycle2'
+            : 'image-fit-protected-rgb-island-q8-cycle1'
           : compositionPolicy === 'q3'
           ? 'image-fit-real-target-foreground-q3'
           : 'image-fit-composition-q2-morphology-v1',
@@ -272,8 +275,10 @@ export function optimizeImageFitQr(
       scan_evidence: scanEvidence,
       image_fit_evidence: {
         fit_label: fitLabel,
-        score_version: visualPolicy === 'q8_protected_island' && input.target_rgb
-          ? 'image-fit-protected-rgb-island-q8-cycle1'
+        score_version: q8Island && input.target_rgb
+          ? visualPolicy === 'q8_negative_space_island'
+            ? 'image-fit-negative-space-island-q8-cycle2'
+            : 'image-fit-protected-rgb-island-q8-cycle1'
           : compositionPolicy === 'q3'
           ? selectionPolicy === 'q7_ranked' ? 'image-fit-scan-first-appearance-q7' : 'image-fit-real-target-coverage-q3'
           : 'image-fit-composition-coverage-q2',
@@ -805,6 +810,7 @@ function renderProtectedVisualIslandSvg(
   matrix: QrMatrix,
   target: RgbPlane,
   mode: ImageFitMode,
+  preserveNegativeSpace = false,
 ): {
   svg: string; width: number; modifiedModules: number; recognitionScore: number;
   protectedConflictScore: number; protectedViolations: string[];
@@ -844,6 +850,12 @@ function renderProtectedVisualIslandSvg(
   if (maxX < minX || maxY < minY) {
     return { svg: base.data, width: base.width, modifiedModules: 0, recognitionScore: 0, protectedConflictScore: 0, protectedViolations: [] };
   }
+  const rowExtents = Array.from({ length: target.height }, () => ({ min: target.width, max: -1 }));
+  for (let y = minY; y <= maxY; y++) for (let x = minX; x <= maxX; x++) {
+    if (distanceFromBackground(pixel(x, y)) <= foregroundThreshold) continue;
+    rowExtents[y].min = Math.min(rowExtents[y].min, x);
+    rowExtents[y].max = Math.max(rowExtents[y].max, x);
+  }
 
   const cropWidth = maxX - minX + 1, cropHeight = maxY - minY + 1;
   const inner = matrix.size * moduleSize;
@@ -864,7 +876,11 @@ function renderProtectedVisualIslandSvg(
     const sourceX = minX + Math.min(cropWidth - 1, Math.floor(drawX * cropWidth / drawWidth));
     const sourceY = minY + Math.min(cropHeight - 1, Math.floor(drawY * cropHeight / drawHeight));
     const rgb = pixel(sourceX, sourceY);
-    if (distanceFromBackground(rgb) <= foregroundThreshold) continue;
+    const foreground = distanceFromBackground(rgb) > foregroundThreshold;
+    const extent = rowExtents[sourceY];
+    const internalNegativeSpace = preserveNegativeSpace && !foreground
+      && extent.max >= extent.min && sourceX > extent.min && sourceX < extent.max;
+    if (!foreground && !internalNegativeSpace) continue;
     foregroundSamples += 1;
     const moduleX = Math.floor((offsetX + drawX - margin * moduleSize) / moduleSize);
     const moduleY = Math.floor((offsetY + drawY - margin * moduleSize) / moduleSize);
@@ -874,7 +890,8 @@ function renderProtectedVisualIslandSvg(
       continue;
     }
     modified.add(`${moduleX},${moduleY}`);
-    body += `<rect x="${coordinate(offsetX + drawX)}" y="${coordinate(offsetY + drawY)}" width="${sampleStep}" height="${sampleStep}" fill="rgb(${quantize(rgb[0])},${quantize(rgb[1])},${quantize(rgb[2])})"/>`;
+    const fill = internalNegativeSpace ? '#ffffff' : `rgb(${quantize(rgb[0])},${quantize(rgb[1])},${quantize(rgb[2])})`;
+    body += `<rect x="${coordinate(offsetX + drawX)}" y="${coordinate(offsetY + drawY)}" width="${sampleStep}" height="${sampleStep}" fill="${fill}"/>`;
   }
   const recognitionScore = foregroundSamples === 0 ? 0 : round((foregroundSamples - protectedSamples) / foregroundSamples, 6);
   const protectedConflictScore = foregroundSamples === 0 ? 0 : round(protectedSamples / foregroundSamples, 6);

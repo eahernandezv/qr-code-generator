@@ -447,6 +447,21 @@ describe('Q8 deterministic protected visual island', () => {
     }
   }, 30_000);
 
+  it('preserves internal negative space without weakening scan or protected-region gates', () => {
+    const cycle1 = optimizeImageFitQr(rgbLogoInput(), { _visualPolicy: 'q8_protected_island' });
+    const cycle2 = optimizeImageFitQr(rgbLogoInput(), { _visualPolicy: 'q8_negative_space_island' });
+    for (const candidate of cycle2.response.candidates) {
+      const prior = cycle1.response.candidates.find((entry) => entry.mode === candidate.mode)!;
+      const artifact = cycle2.artifacts[candidate.candidate_id].data;
+      const priorArtifact = cycle1.artifacts[prior.candidate_id].data;
+      expect(candidate.image_fit_evidence.score_version).toBe('image-fit-negative-space-island-q8-cycle2');
+      expect(candidate.scan_evidence.verdict).toBe('pass');
+      expect(candidate.scan_evidence.checks_passed).toBeGreaterThanOrEqual(6);
+      expect(candidate.protected_regions.violations).toEqual([]);
+      expect((artifact.match(/#ffffff/g) ?? []).length).toBeGreaterThan((priorArtifact.match(/#ffffff/g) ?? []).length);
+    }
+  }, 30_000);
+
   it('rejects an RGB plane that is not exactly bound to the luma plane', () => {
     const malformed = rgbLogoInput();
     malformed.target_rgb = { ...malformed.target_rgb!, values: malformed.target_rgb!.values.slice(3) };

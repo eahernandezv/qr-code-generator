@@ -10,21 +10,46 @@ const dir = resolve(root, 'docs/program/evidence/q8-quality-loop', cycleDir);
 const objective = JSON.parse(readFileSync(resolve(dir, 'objective-evidence.json'), 'utf8'));
 const scores = JSON.parse(readFileSync(resolve(dir, 'scores.json'), 'utf8'));
 const hash = (bytes) => createHash('sha256').update(bytes).digest('hex');
-for (const path of ['contact-sheet.png', ...objective.candidates.flatMap((candidate) => [candidate.artifact.path, candidate.artifact.path.replace(/\.svg$/, '.png')]), 'artifacts/fallback.svg', 'artifacts/fallback.png']) readFileSync(resolve(dir, path));
+const objectiveCandidates = objective.targets
+  ? objective.targets.flatMap((target) => target.candidates.map((candidate) => ({ ...candidate, target_id: target.id })))
+  : objective.candidates;
+const scoreCandidates = scores.targets ? scores.targets.flatMap((target) => target.candidates) : scores.candidates;
+const fallbackEntries = objective.targets
+  ? objective.targets.map((target) => ({ ...target.fallback, path: `${target.id}/artifacts/fallback` }))
+  : [{ ...objective.fallback, path: 'artifacts/fallback' }];
+for (const path of [
+  'contact-sheet.png',
+  ...objectiveCandidates.flatMap((candidate) => [candidate.artifact.path, candidate.artifact.path.replace(/\.svg$/, '.png')]),
+  ...fallbackEntries.flatMap((fallback) => [`${fallback.path}.svg`, `${fallback.path}.png`]),
+]) readFileSync(resolve(dir, path));
 PNG.sync.read(readFileSync(resolve(dir, 'contact-sheet.png')));
-for (const candidate of objective.candidates) {
+for (const candidate of objectiveCandidates) {
   const evidence = candidate.independent_validation;
-  if (!evidence.pass || !evidence.payload_equal || !evidence.raw_decode || evidence.checks_passed < 6 || evidence.checks_passed / evidence.checks_total < 0.75) throw new Error(`hard scan gate failed: ${candidate.mode}`);
-  if (candidate.protected_violations.length !== 0 || !candidate.deterministic) throw new Error(`integrity gate failed: ${candidate.mode}`);
-  if (candidate.export_parity !== 'not_claimed_export_locked') throw new Error(`export parity state invalid: ${candidate.mode}`);
-  if (hash(readFileSync(resolve(dir, candidate.artifact.path))) !== candidate.artifact.sha256) throw new Error(`artifact hash mismatch: ${candidate.mode}`);
+  const hardPass = evidence.pass && evidence.payload_equal && evidence.raw_decode
+    && evidence.checks_passed >= 6 && evidence.checks_passed / evidence.checks_total >= 0.75;
+  const score = scoreCandidates.find((entry) => entry.candidate_id === candidate.candidate_id);
+  if (!score) throw new Error(`missing score evidence: ${candidate.candidate_id}`);
+  if (hardPass !== score.hardGatePass || hardPass !== score.leaderboardEligible) throw new Error(`hard-gate/leaderboard mismatch: ${candidate.candidate_id}`);
+  if (!hardPass && score.total !== null) throw new Error(`failed candidate retained a score: ${candidate.candidate_id}`);
+  if (candidate.protected_violations.length !== 0 || !candidate.deterministic) throw new Error(`integrity gate failed: ${candidate.candidate_id}`);
+  if (candidate.export_parity !== 'not_claimed_export_locked') throw new Error(`export parity state invalid: ${candidate.candidate_id}`);
+  if (hash(readFileSync(resolve(dir, candidate.artifact.path))) !== candidate.artifact.sha256) throw new Error(`artifact hash mismatch: ${candidate.candidate_id}`);
 }
-if (!objective.fallback.independent_validation.pass || !objective.fallback.independent_validation.payload_equal || !objective.fallback.independent_validation.raw_decode || !objective.fallback.deterministic) throw new Error('fallback gate failed');
-for (const candidate of scores.candidates) {
-  if (!candidate.hardGatePass || !candidate.leaderboardEligible || candidate.total === null) throw new Error(`scores include failed candidate: ${candidate.candidate}`);
+for (const fallback of fallbackEntries) {
+  if (!fallback.independent_validation.pass || !fallback.independent_validation.payload_equal
+    || !fallback.independent_validation.raw_decode || !fallback.deterministic) throw new Error(`fallback gate failed: ${fallback.path}`);
+}
+for (const candidate of scoreCandidates) {
+  if (candidate.total === null) continue;
   const total = Object.values(candidate.scores).reduce((sum, value) => sum + value, 0);
   if (total !== candidate.total) throw new Error(`score arithmetic mismatch: ${candidate.candidate}`);
 }
-const leaderboard = [...scores.candidates].sort((a,b) => b.total-a.total).map((candidate) => candidate.candidate);
-if (JSON.stringify(leaderboard) !== JSON.stringify(scores.leaderboard)) throw new Error('leaderboard order mismatch');
-console.log(JSON.stringify({ pass: true, cycle: cycleDir, candidates: scores.candidates.map((candidate) => ({ candidate: candidate.candidate, total: candidate.total })), contact_sheet: 'valid_png', fallback: 'pass' }, null, 2));
+const expected = [...scoreCandidates].filter((candidate) => candidate.leaderboardEligible)
+  .sort((a,b) => b.total-a.total).map((candidate) => candidate.candidate);
+const actual = scores.leaderboard.map((entry) => typeof entry === 'string' ? entry : entry.candidate);
+if (JSON.stringify(expected) !== JSON.stringify(actual)) throw new Error('leaderboard order mismatch');
+console.log(JSON.stringify({
+  pass: true, cycle: cycleDir,
+  candidates: scoreCandidates.map((candidate) => ({ candidate: candidate.candidate, total: candidate.total, hard_gate_pass: candidate.hardGatePass })),
+  contact_sheet: 'valid_png', fallbacks: fallbackEntries.length,
+}, null, 2));

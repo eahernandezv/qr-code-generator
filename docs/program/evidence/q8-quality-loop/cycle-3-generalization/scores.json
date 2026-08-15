@@ -1,0 +1,355 @@
+{
+  "schema_version": "q8-visual-quality-scores.v1",
+  "cycle": 3,
+  "producer": "QR Creator",
+  "scoring_engine": "scoreQ8VisualQuality",
+  "scoring_note": "Producer telemetry only; Product Architect acceptance is separate.",
+  "weights": {
+    "target_recognizability": 25,
+    "composition_placement": 15,
+    "image_qr_harmony": 15,
+    "scan_robustness_margin": 15,
+    "palette_fidelity": 10,
+    "protected_region_elegance": 10,
+    "premium_polish": 10
+  },
+  "targets": [
+    {
+      "id": "simple-silhouette",
+      "type": "simple silhouette",
+      "source": {
+        "path": "docs/program/evidence/level2-image-fit-real-targets-q3/inputs/wolf-black-white.jpg",
+        "sha256": "19bd5a92ea6b89fddf128f8be4af1c21f09c4e5869a7848e4a152d38286ab88a",
+        "width": 192,
+        "height": 192
+      },
+      "candidates": [
+        {
+          "candidate": "simple-silhouette:readable",
+          "hardGatePass": true,
+          "gateFailures": [],
+          "leaderboardEligible": true,
+          "scores": {
+            "target_recognizability": 16,
+            "composition_placement": 10,
+            "image_qr_harmony": 8,
+            "palette_fidelity": 7,
+            "protected_region_elegance": 8,
+            "premium_polish": 7,
+            "scan_robustness_margin": 15
+          },
+          "total": 71,
+          "thresholdChecks": {
+            "total75": false,
+            "recognizability18": false,
+            "scanMargin12": true,
+            "everyCategoryHalf": true
+          },
+          "verdict": "below_q8_bar",
+          "mode": "readable",
+          "candidate_id": "readable-321687d3827cb3c89e39",
+          "artifact_sha256": "e96dbf605cae8dc1c693a541a06dca88a97f29d486069ad38ab06b494a3e783d",
+          "failure_reasons": []
+        },
+        {
+          "candidate": "simple-silhouette:balanced",
+          "hardGatePass": true,
+          "gateFailures": [],
+          "leaderboardEligible": true,
+          "scores": {
+            "target_recognizability": 21,
+            "composition_placement": 12,
+            "image_qr_harmony": 10,
+            "palette_fidelity": 8,
+            "protected_region_elegance": 8,
+            "premium_polish": 8,
+            "scan_robustness_margin": 15
+          },
+          "total": 82,
+          "thresholdChecks": {
+            "total75": true,
+            "recognizability18": true,
+            "scanMargin12": true,
+            "everyCategoryHalf": true
+          },
+          "verdict": "producer_threshold_met",
+          "mode": "balanced",
+          "candidate_id": "balanced-8c1d1b7ca10f5276e558",
+          "artifact_sha256": "0898b1b8717d834d50cd48bdc48fbc13ffcff0228f684a31f344fe1e519d0c1f",
+          "failure_reasons": []
+        },
+        {
+          "candidate": "simple-silhouette:image_first",
+          "hardGatePass": true,
+          "gateFailures": [],
+          "leaderboardEligible": true,
+          "scores": {
+            "target_recognizability": 23,
+            "composition_placement": 13,
+            "image_qr_harmony": 11,
+            "palette_fidelity": 9,
+            "protected_region_elegance": 8,
+            "premium_polish": 8,
+            "scan_robustness_margin": 15
+          },
+          "total": 87,
+          "thresholdChecks": {
+            "total75": true,
+            "recognizability18": true,
+            "scanMargin12": true,
+            "everyCategoryHalf": true
+          },
+          "verdict": "producer_threshold_met",
+          "mode": "image_first",
+          "candidate_id": "image-first-b4f325d006b3df864057",
+          "artifact_sha256": "cf4aebf51c7aafe17580e3a126a58472ba1c8accfc1e67e1637734656ae9f6f8",
+          "failure_reasons": []
+        }
+      ],
+      "best_eligible": "image_first"
+    },
+    {
+      "id": "medium-logo",
+      "type": "medium logo / brand mark",
+      "source": {
+        "path": "docs/program/handoffs/assets/q8-reference-logo.jpg",
+        "sha256": "cb3b4fecbd0547cd2dfb62daeecfc0116e4dd49fb653ac602025a77b00badaec",
+        "width": 192,
+        "height": 144
+      },
+      "candidates": [
+        {
+          "candidate": "medium-logo:readable",
+          "hardGatePass": true,
+          "gateFailures": [],
+          "leaderboardEligible": true,
+          "scores": {
+            "target_recognizability": 20,
+            "composition_placement": 11,
+            "image_qr_harmony": 10,
+            "palette_fidelity": 9,
+            "protected_region_elegance": 8,
+            "premium_polish": 7,
+            "scan_robustness_margin": 15
+          },
+          "total": 80,
+          "thresholdChecks": {
+            "total75": true,
+            "recognizability18": true,
+            "scanMargin12": true,
+            "everyCategoryHalf": true
+          },
+          "verdict": "producer_threshold_met",
+          "mode": "readable",
+          "candidate_id": "readable-8cc566647dcd45b04498",
+          "artifact_sha256": "5852b1aa12b133cfd73898a5423a04cd3445e7cffa226308aa5d2acaa238a8f1",
+          "failure_reasons": []
+        },
+        {
+          "candidate": "medium-logo:balanced",
+          "hardGatePass": true,
+          "gateFailures": [],
+          "leaderboardEligible": true,
+          "scores": {
+            "target_recognizability": 23,
+            "composition_placement": 13,
+            "image_qr_harmony": 12,
+            "palette_fidelity": 10,
+            "protected_region_elegance": 9,
+            "premium_polish": 8,
+            "scan_robustness_margin": 15
+          },
+          "total": 90,
+          "thresholdChecks": {
+            "total75": true,
+            "recognizability18": true,
+            "scanMargin12": true,
+            "everyCategoryHalf": true
+          },
+          "verdict": "producer_threshold_met",
+          "mode": "balanced",
+          "candidate_id": "balanced-acc0a178cb4c8112ded2",
+          "artifact_sha256": "9b79c4b722fcb10ff9b6f65ff9f22efaa45305dcbdb2640a49c15261daaed46c",
+          "failure_reasons": []
+        },
+        {
+          "candidate": "medium-logo:image_first",
+          "hardGatePass": true,
+          "gateFailures": [],
+          "leaderboardEligible": true,
+          "scores": {
+            "target_recognizability": 24,
+            "composition_placement": 14,
+            "image_qr_harmony": 13,
+            "palette_fidelity": 10,
+            "protected_region_elegance": 9,
+            "premium_polish": 9,
+            "scan_robustness_margin": 15
+          },
+          "total": 94,
+          "thresholdChecks": {
+            "total75": true,
+            "recognizability18": true,
+            "scanMargin12": true,
+            "everyCategoryHalf": true
+          },
+          "verdict": "producer_threshold_met",
+          "mode": "image_first",
+          "candidate_id": "image-first-d12e35b1aa6bbdc2fcb1",
+          "artifact_sha256": "3bd3e0a278a3f7a10448a84f5c557733b5af2339a20b788cddeda490e438122d",
+          "failure_reasons": []
+        }
+      ],
+      "best_eligible": "image_first"
+    },
+    {
+      "id": "textured-subject",
+      "type": "photo-like / textured subject",
+      "source": {
+        "path": "docs/program/evidence/level2-image-fit-real-targets-q3/inputs/red-wolf-front.jpg",
+        "sha256": "04e66b062e147e40abf1b35f0735494e5b4711a3263869741bdccb91d39698a8",
+        "width": 192,
+        "height": 192
+      },
+      "candidates": [
+        {
+          "candidate": "textured-subject:readable",
+          "hardGatePass": true,
+          "gateFailures": [],
+          "leaderboardEligible": true,
+          "scores": {
+            "target_recognizability": 18,
+            "composition_placement": 10,
+            "image_qr_harmony": 8,
+            "palette_fidelity": 8,
+            "protected_region_elegance": 8,
+            "premium_polish": 7,
+            "scan_robustness_margin": 15
+          },
+          "total": 74,
+          "thresholdChecks": {
+            "total75": false,
+            "recognizability18": true,
+            "scanMargin12": true,
+            "everyCategoryHalf": true
+          },
+          "verdict": "below_q8_bar",
+          "mode": "readable",
+          "candidate_id": "readable-037511ee008bfe93f16b",
+          "artifact_sha256": "2c83ae4cd74dd73ebb13090a98280748d12cbf92ccb80a06be073da5999855ac",
+          "failure_reasons": []
+        },
+        {
+          "candidate": "textured-subject:balanced",
+          "hardGatePass": true,
+          "gateFailures": [],
+          "leaderboardEligible": true,
+          "scores": {
+            "target_recognizability": 22,
+            "composition_placement": 12,
+            "image_qr_harmony": 10,
+            "palette_fidelity": 9,
+            "protected_region_elegance": 8,
+            "premium_polish": 8,
+            "scan_robustness_margin": 15
+          },
+          "total": 84,
+          "thresholdChecks": {
+            "total75": true,
+            "recognizability18": true,
+            "scanMargin12": true,
+            "everyCategoryHalf": true
+          },
+          "verdict": "producer_threshold_met",
+          "mode": "balanced",
+          "candidate_id": "balanced-262af9bb53363c9f6732",
+          "artifact_sha256": "ef1e387ab566824d7e93588a58628ae8965448d111f8922a8cb85563c2963e87",
+          "failure_reasons": []
+        },
+        {
+          "candidate": "textured-subject:image_first",
+          "hardGatePass": false,
+          "gateFailures": [
+            "payload_equality_failed",
+            "raw_decode_failed",
+            "decoder_threshold_failed"
+          ],
+          "leaderboardEligible": false,
+          "scores": {
+            "target_recognizability": 24,
+            "composition_placement": 13,
+            "image_qr_harmony": 11,
+            "palette_fidelity": 9,
+            "protected_region_elegance": 8,
+            "premium_polish": 8,
+            "scan_robustness_margin": 0
+          },
+          "total": null,
+          "thresholdChecks": {
+            "total75": false,
+            "recognizability18": true,
+            "scanMargin12": false,
+            "everyCategoryHalf": false
+          },
+          "verdict": "gate_fail",
+          "mode": "image_first",
+          "candidate_id": "image-first-02b83833c4ec9595ba08",
+          "artifact_sha256": "f77978371247db5e8e8757b2b262c7ee0f3d94b6e83335ba10b1abd1c0bfeea2",
+          "failure_reasons": [
+            "dense large foreground island exceeds decoder correction margin",
+            "raw decode failed and all perturbation checks failed",
+            "candidate excluded from leaderboard"
+          ]
+        }
+      ],
+      "best_eligible": "balanced"
+    }
+  ],
+  "leaderboard": [
+    {
+      "candidate": "medium-logo:image_first",
+      "total": 94
+    },
+    {
+      "candidate": "medium-logo:balanced",
+      "total": 90
+    },
+    {
+      "candidate": "simple-silhouette:image_first",
+      "total": 87
+    },
+    {
+      "candidate": "textured-subject:balanced",
+      "total": 84
+    },
+    {
+      "candidate": "simple-silhouette:balanced",
+      "total": 82
+    },
+    {
+      "candidate": "medium-logo:readable",
+      "total": 80
+    },
+    {
+      "candidate": "textured-subject:readable",
+      "total": 74
+    },
+    {
+      "candidate": "simple-silhouette:readable",
+      "total": 71
+    }
+  ],
+  "generalization_summary": {
+    "target_types": 3,
+    "candidates_total": 9,
+    "hard_gate_pass": 8,
+    "hard_gate_fail": 1,
+    "all_eligible_checks": "8/8",
+    "best_modes": {
+      "simple-silhouette": "image_first",
+      "medium-logo": "image_first",
+      "textured-subject": "balanced"
+    }
+  },
+  "cycle_3_decision": "Generalization passes with one honest fail-closed boundary: textured Image-first is excluded; Balanced is the safe best textured mode."
+}
