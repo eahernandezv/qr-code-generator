@@ -8,6 +8,8 @@ Status: **READY_FOR_PRODUCT_ARCHITECT_REVIEW**
 - SOW SHA-256: `b84fce32966d0d80ceb935847a1cc2a7f1c02cb757021e70ee3c84f20b5f591e`
 - Exact baseline: `e641b673d81afed6228346d305bd31f77a513e16`
 - Branch: `studio/integrate-q7-deterministic-path`
+- Implementation/evidence commit: `33d8b39ec21cffd88e834184da022863aabc6022`
+- Push state: blocked by unavailable GitHub credentials on this host; remote branch was absent before the attempt
 - PR/merge: not opened; Product Architect retains both authorities
 
 ## Outcome
@@ -118,6 +120,16 @@ git diff --check
 # exit 0
 ss -ltnp '( sport = :4173 )'
 # no listener
+```
+
+Push attempt after the implementation/evidence commit:
+
+```text
+git ls-remote --heads origin studio/integrate-q7-deterministic-path
+# absent
+git push -u origin studio/integrate-q7-deterministic-path
+# failed before remote mutation: configured credential helper points to missing /home/hermes/.local/bin/gh;
+# HTTPS could not read a username, and SSH authentication also returned Permission denied (publickey)
 ```
 
 ## Failure and no-side-effect coverage
