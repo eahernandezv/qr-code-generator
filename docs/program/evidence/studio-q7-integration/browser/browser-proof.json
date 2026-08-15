@@ -1,7 +1,7 @@
 {
   "requests": [
     {
-      "request_id": "l2req-f4f52a9d-6c83-4daa-82f5-91e5c0cc9516",
+      "request_id": "l2req-71f67f99-5fbc-4f32-bba8-596cdb72954b",
       "destination": {
         "kind": "url",
         "normalized_url": "https://example.com/products/summer-collection?source=printed-menu",

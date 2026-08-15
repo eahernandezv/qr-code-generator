@@ -74,7 +74,12 @@ describe('App integration', () => {
     }))
     render(<App />)
     await user.click(screen.getByRole('button', { name: 'Generate candidates' }))
-    expect(await screen.findByRole('alert')).toHaveTextContent(/Image-Fit did not qualify.*No scan-safe Image-Fit candidate qualified.*Continue with deterministic Level 1 Safe/i)
+    const alert = await screen.findByRole('alert')
+    expect(alert).toHaveTextContent(/Image-Fit did not qualify.*No scan-safe Image-Fit candidate qualified.*Continue with deterministic Level 1 Safe/i)
+    const fallbackLink = alert.querySelector('a')!
+    fallbackLink.addEventListener('click', (event) => event.preventDefault(), { once: true })
+    await user.click(fallbackLink)
+    expect(useStudioStore.getState().project.payload).toMatchObject({ raw: fixture.request.destination.normalized_url, normalized: fixture.request.destination.normalized_url, mode: 'url' })
     expect(screen.queryByTestId('selected-image-fit-candidate')).not.toBeInTheDocument()
     expect(screen.queryByRole('article')).not.toBeInTheDocument()
   })
