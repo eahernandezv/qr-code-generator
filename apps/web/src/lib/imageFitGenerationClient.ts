@@ -38,6 +38,14 @@ export type ImageFitGenerationResponseV1 = {
   candidates: ImageFitCandidateV1[]
   selection_policy: { default_mode: 'balanced'; export_requires_entitlement: true; image_first_default_export_allowed: false }
   fallback: { available: boolean; kind: 'level1_styled_qr' | 'none'; reason: string }
+  authorized_fallback?: ImageFitAuthorizedFallbackV1
+}
+
+export type ImageFitAuthorizedFallbackV1 = {
+  artifact: { kind: 'export_svg'; uri: string; sha256: string }
+  encoded_payload: string
+  payload_sha256: string
+  scan_evidence: ImageFitCandidateV1['scan_evidence']
 }
 
 export type ImageFitRequestControls = {
@@ -165,8 +173,36 @@ export class ImageFitGenerationClient {
     const result = unwrapGenerationResponse(body)
     if (!isGenerationResponse(result, request.request_id)) throw new Error('Creator returned an invalid Image-Fit response. No candidate evidence was accepted.')
     await verifyInlineArtifactHashes(result)
-    return result
+    const authorizedFallback = await readAuthorizedFallback(body, result)
+    return { ...result, ...(authorizedFallback ? { authorized_fallback: authorizedFallback } : {}) }
   }
+}
+
+async function readAuthorizedFallback(value: unknown, response: ImageFitGenerationResponseV1): Promise<ImageFitAuthorizedFallbackV1 | undefined> {
+  if (!value || typeof value !== 'object' || (value as { success?: unknown }).success !== true) return undefined
+  const fallback = (value as { authorized_fallback?: unknown }).authorized_fallback
+  if (!fallback || typeof fallback !== 'object') return undefined
+  const candidate = fallback as Partial<ImageFitAuthorizedFallbackV1>
+  const artifact = candidate.artifact
+  if (response.fallback.available !== true
+    || response.fallback.kind !== 'level1_styled_qr'
+    || artifact?.kind !== 'export_svg'
+    || typeof artifact.uri !== 'string'
+    || !artifact.uri.startsWith('data:image/svg+xml')
+    || !SHA256.test(artifact.sha256 ?? '')
+    || typeof candidate.encoded_payload !== 'string'
+    || candidate.encoded_payload.length === 0
+    || !SHA256.test(candidate.payload_sha256 ?? '')
+    || candidate.scan_evidence?.verdict !== 'pass') return undefined
+  const payloadHashes = response.candidates.map((item) => item.qr_settings.payload_sha256).filter((hash): hash is string => typeof hash === 'string')
+  if (payloadHashes.length > 0 && payloadHashes.some((hash) => hash !== candidate.payload_sha256)) return undefined
+  if (response.request.user_controls.link_mode === 'original_url' && candidate.encoded_payload !== response.request.destination.normalized_url) return undefined
+  const payloadDigest = await globalThis.crypto.subtle.digest('SHA-256', new TextEncoder().encode(candidate.encoded_payload))
+  const actualPayloadHash = Array.from(new Uint8Array(payloadDigest), (byte) => byte.toString(16).padStart(2, '0')).join('')
+  if (actualPayloadHash !== candidate.payload_sha256) return undefined
+  const digest = await globalThis.crypto.subtle.digest('SHA-256', decodeDataUri(artifact.uri))
+  const actual = Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('')
+  return actual === artifact.sha256 ? candidate as ImageFitAuthorizedFallbackV1 : undefined
 }
 
 /** Verify the exact bytes used by the browser whenever Core returns inline artifacts. */
@@ -210,7 +246,6 @@ export function isGenerationResponse(value: unknown, requestId: string): value i
     && response.selection_policy?.export_requires_entitlement === true
     && response.selection_policy?.image_first_default_export_allowed === false
     && Array.isArray(response.candidates)
-    && response.candidates.length > 0
     && response.candidates.length <= 12
     && response.candidates.every(isCandidate)
 }

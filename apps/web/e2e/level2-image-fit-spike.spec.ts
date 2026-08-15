@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test'
 import fs from 'node:fs'
 import path from 'node:path'
+import { createHash } from 'node:crypto'
 
 const evidenceRoot = path.resolve(process.cwd(), '../../docs/program/evidence/studio-q7-integration')
 const evidenceDir = path.join(evidenceRoot, 'browser')
@@ -8,6 +9,7 @@ const fixture = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), '../../pa
 const q7Evidence = JSON.parse(fs.readFileSync(path.join(evidenceRoot, 'integration-evidence.json'), 'utf8'))
 const q7Balanced = q7Evidence.image_fit_modes.find((mode: { core_mode: string }) => mode.core_mode === 'balanced')
 const q7BalancedSvg = fs.readFileSync(path.join(evidenceRoot, 'artifacts/balanced.svg'), 'utf8')
+const fallbackSvg = fs.readFileSync(path.join(evidenceRoot, 'artifacts/fallback-level1.svg'), 'utf8')
 
 function q7BalancedCandidate() {
   if (!q7Balanced) throw new Error('Missing Q7 balanced evidence')
@@ -93,4 +95,55 @@ test('mobile request binding keeps scan, fit, and visual acceptance evidence sep
   expect(pageErrors).toEqual([])
   expect(consoleErrors).toEqual(['Failed to load resource: net::ERR_FAILED'])
   fs.writeFileSync(path.join(evidenceDir, 'browser-proof.json'), `${JSON.stringify({ requests, metrics, expectedFailClosedNetworkConsoleErrors: consoleErrors, pageErrors }, null, 2)}\n`)
+})
+
+test('non-qualifying Image-Fit keeps Q7 hidden and downloads only the Core-authorized fallback bytes', async ({ page }) => {
+  const outputRoot = path.resolve(process.cwd(), '../../docs/program/evidence/studio-q7-fallback-parity')
+  const browserDir = path.join(outputRoot, 'browser')
+  fs.mkdirSync(browserDir, { recursive: true })
+  const fallbackHash = createHash('sha256').update(fallbackSvg).digest('hex')
+  const encodedPayload = 'https://placeholder-online.com/r/bD7xQ2'
+  const payloadSha256 = createHash('sha256').update(encodedPayload).digest('hex')
+  const failedCandidates = q7Evidence.image_fit_modes.map((mode: { core_mode: string; denial_blockers: string[] }) => ({
+    ...fixture.candidates[0], candidate_id: `failed-${mode.core_mode.replace('_', '-')}`, mode: mode.core_mode, status: 'failed',
+    qr_settings: { ...fixture.candidates[0].qr_settings, payload_sha256: payloadSha256 },
+    scan_evidence: { ...fixture.candidates[0].scan_evidence, verdict: 'fail', checks_passed: 0 },
+    image_fit_evidence: { ...fixture.candidates[0].image_fit_evidence, fit_label: 'failed' },
+    export_authority: { ...fixture.candidates[0].export_authority, export_allowed: false, blockers: mode.denial_blockers },
+  }))
+  await page.route('**/api/artistic-qr/image-fit/candidates', async (route) => {
+    const request = route.request().postDataJSON()
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({
+      success: true,
+      result: { ...fixture, request: { ...fixture.request, request_id: request.request_id }, candidates: failedCandidates },
+      authorized_fallback: {
+        artifact: { kind: 'export_svg', uri: `data:image/svg+xml;base64,${Buffer.from(fallbackSvg).toString('base64')}`, sha256: fallbackHash },
+        encoded_payload: encodedPayload,
+        payload_sha256: payloadSha256,
+        scan_evidence: fixture.candidates[0].scan_evidence,
+      },
+    }) })
+  })
+  await page.goto('/concepts/level2-image-fit-qr')
+  await page.getByRole('button', { name: 'Generate candidates' }).click()
+  await expect(page.getByRole('alert')).toContainText('Image-Fit did not qualify')
+  await expect(page.getByTestId('selected-image-fit-candidate')).toHaveCount(0)
+  await expect(page.getByRole('article')).toHaveCount(0)
+  const fallbackPreview = page.getByTestId('level1-fallback-preview')
+  await expect(fallbackPreview).toHaveAttribute('data-artifact-sha256', fallbackHash)
+  await expect(fallbackPreview).toHaveAttribute('data-payload-sha256', payloadSha256)
+  await expect(page.getByRole('status')).toContainText('Payment, committed short-link, scan, parity, and Image-first experimental blockers remain visible and fail closed')
+  await expect(page.getByRole('button', { name: /Export|Checkout|Create short link/i })).toHaveCount(0)
+  const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'Download Core-authorized Level 1 fallback' }).click()])
+  const downloadedPath = path.join(outputRoot, 'fallback-level1-downloaded.svg')
+  await download.saveAs(downloadedPath)
+  const downloadedHash = createHash('sha256').update(fs.readFileSync(downloadedPath)).digest('hex')
+  expect(downloadedHash).toBe(fallbackHash)
+  await page.screenshot({ path: path.join(browserDir, 'mobile-failure-fallback-download.png'), fullPage: true })
+  fs.writeFileSync(path.join(outputRoot, 'fallback-download-proof.json'), `${JSON.stringify({
+    schema_version: 'studio-q7-fallback-parity.v1', provider_generative_exposed: false,
+    fallback: { preview_sha256: fallbackHash, downloaded_sha256: downloadedHash, encoded_payload: encodedPayload, payload_sha256: payloadSha256, candidate_payload_hashes_equal: failedCandidates.every((candidate: { qr_settings: { payload_sha256: string } }) => candidate.qr_settings.payload_sha256 === payloadSha256), scan_verdict: 'pass', downloadable: true },
+    q7_modes: q7Evidence.image_fit_modes.map((mode: { studio_label: string; core_mode: string; preview_sha256: string; denial_blockers: string[] }) => ({ studio_label: mode.studio_label, core_mode: mode.core_mode, preview_sha256: mode.preview_sha256, checkout_hash: null, final_png_hash: null, final_svg_hash: null, export_denied: true, denial_blockers: mode.denial_blockers })),
+    assertions: { q7_candidates_hidden: true, q7_export_not_unlocked: true, checkout_does_not_alter_bytes: true, checkout_absent: true, fallback_preview_download_parity: downloadedHash === fallbackHash },
+  }, null, 2)}\n`)
 })

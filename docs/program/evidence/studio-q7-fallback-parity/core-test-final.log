@@ -1,0 +1,96 @@
+
+> @qr/artistic-qr@0.1.0 test /srv/qr-agents/qr-studio/home/worktrees/q7-fallback-parity/packages/artistic-qr
+> vitest run && python3 -m unittest discover -s provider -p 'test_*.py'
+
+
+ RUN  v3.2.6 /srv/qr-agents/qr-studio/home/worktrees/q7-fallback-parity/packages/artistic-qr
+
+ ✓ src/security-boundaries.test.ts (29 tests) 32880ms
+   ✓ D1 exact-byte candidate authority and SVG safety > rejects modified SVG containing script and returns no export  2184ms
+   ✓ D1 exact-byte candidate authority and SVG safety > rejects modified SVG containing event handler and returns no export  1858ms
+   ✓ D1 exact-byte candidate authority and SVG safety > rejects modified SVG containing foreignObject and returns no export  1868ms
+   ✓ D1 exact-byte candidate authority and SVG safety > rejects modified SVG containing external href and returns no export  1777ms
+   ✓ D1 exact-byte candidate authority and SVG safety > rejects modified SVG containing external xlink href and returns no export  1848ms
+   ✓ D1 exact-byte candidate authority and SVG safety > rejects a one-module byte mutation even when the image still decodes  2169ms
+   ✓ D1 exact-byte candidate authority and SVG safety > rejects replayed candidate ID with different dimensions  1875ms
+   ✓ D1 exact-byte candidate authority and SVG safety > rejects replayed candidate ID with different format  1696ms
+   ✓ D1 exact-byte candidate authority and SVG safety > exports genuine unchanged authoritative bytes and independently decodes the PNG  3092ms
+   ✓ D1 exact-byte candidate authority and SVG safety > rejects a non-square png after the final export transform  2122ms
+   ✓ D1 exact-byte candidate authority and SVG safety > rejects a non-square svg after the final export transform  2152ms
+   ✓ D1 exact-byte candidate authority and SVG safety > fails a multi-file export closed when a later transformed file is invalid  2661ms
+   ✓ D1 exact-byte candidate authority and SVG safety > preserves valid square PNG and SVG exports after final-byte validation  3996ms
+   ✓ D1 exact-byte candidate authority and SVG safety > denies export after simulated process restart loses the default authority record  1721ms
+   ✓ D2 complete validation and safety before provider spawn > spawns provider only after a valid safe request and preserves genuine failure fallback  1843ms
+ ✓ src/image-fit.test.ts (23 tests) 46359ms
+   ✓ Level 2 Image-Fit optimizer > produces contract-valid Readable, Balanced, and experimental Image-first metadata  15127ms
+   ✓ Level 2 Image-Fit optimizer > is stable for payload, QR settings, candidate IDs, and artifact bytes  3739ms
+   ✓ Level 2 Image-Fit optimizer > returns the deterministic Level 1 fallback when every image-fit candidate fails  2421ms
+   ✓ Level 2 Image-Fit optimizer > Q7 ranks scan robustness ahead of visual appearance within its bounded shortlist  928ms
+   ✓ Level 2 Image-Fit optimizer > Q7 never replaces a scan pass with a failed visual challenger  729ms
+   ✓ Coherent rendering and protected regions > never modifies modules inside protected regions  1888ms
+   ✓ Coherent rendering and protected regions > produces displayable SVG artifacts with valid XML and positive dimensions  9057ms
+   ✓ Coherent rendering and protected regions > produces coherent grouped runs instead of one rect per module  9359ms
+   ✓ Legacy vs quality-improved comparison > legacy and improved produce different artifacts for a realistic target  1376ms
+   ✓ Legacy vs quality-improved comparison > improved version reports higher or equal recognition scores  1192ms
+ ✓ src/http-service.test.ts (13 tests) 53871ms
+   ✓ B1C Core export HTTP authority boundary > POST /candidates generates and stores authoritative Core candidates  2232ms
+   ✓ B1C Core export HTTP authority boundary > POST /exports loads a stored candidate and returns final-byte-validated Core artifacts  4047ms
+   ✓ B1C Core export HTTP authority boundary > preserves NOT_VALIDATED and EXPORT_FAILED as structured non-2xx errors  3946ms
+   ✓ B1C Core export HTTP authority boundary > fails closed after a new service process store loses prior authority  1777ms
+   ✓ POST /image-fit/candidates > succeeds for a valid controlled fixture and returns contract-valid image-fit-qr-api.v1  9486ms
+   ✓ POST /image-fit/candidates > accepts a browser-uploaded PNG target and uses it for candidate generation  9298ms
+   ✓ POST /image-fit/candidates > reserves a deterministic short-link slug in optimized_short_link mode without committing it  13934ms
+   ✓ POST /image-fit/candidates > preserves export_authority locked for public preview (export_allowed = false)  9108ms
+ ✓ src/extreme-style-primitives.test.ts (15 tests) 22707ms
+   ✓ B17 extreme artistic primitive parity > passes unchanged objective scan and final export parity for 'module' 'notched'  3946ms
+   ✓ B17 extreme artistic primitive parity > passes unchanged objective scan and final export parity for 'module' 'shield'  3442ms
+   ✓ B17 extreme artistic primitive parity > passes unchanged objective scan and final export parity for 'eye-frame' 'diamond'  3070ms
+   ✓ B17 extreme artistic primitive parity > passes unchanged objective scan and final export parity for 'eye-frame' 'hex'  3003ms
+   ✓ B17 extreme artistic primitive parity > passes unchanged objective scan and final export parity for 'eye-ball' 'hex'  3048ms
+   ✓ B17 extreme artistic primitive parity > passes unchanged objective scan and final export parity for 'eye-ball' 'vertical-capsule'  3142ms
+   ✓ B17 extreme artistic primitive parity > passes unchanged objective scan and final export parity for 'eye-ball' 'horizontal-capsule'  3039ms
+ ✓ src/qrio-eye-shapes.test.ts (13 tests) 20882ms
+   ✓ B26 QR.io-inspired Core-backed eye primitives > passes unchanged objective scan and SVG/PNG export parity for 'eye-frame' 'leaf-frame'  3828ms
+   ✓ B26 QR.io-inspired Core-backed eye primitives > passes unchanged objective scan and SVG/PNG export parity for 'eye-frame' 'opposing-leaf-frame'  3381ms
+   ✓ B26 QR.io-inspired Core-backed eye primitives > passes unchanged objective scan and SVG/PNG export parity for 'eye-frame' 'd-frame'  3532ms
+   ✓ B26 QR.io-inspired Core-backed eye primitives > passes unchanged objective scan and SVG/PNG export parity for 'eye-frame' 'inset-leaf-frame'  3342ms
+   ✓ B26 QR.io-inspired Core-backed eye primitives > passes unchanged objective scan and SVG/PNG export parity for 'eye-ball' 'star'  3353ms
+   ✓ B26 QR.io-inspired Core-backed eye primitives > passes unchanged objective scan and SVG/PNG export parity for 'eye-ball' 'diamond'  3424ms
+ ✓ src/fallback.test.ts (6 tests) 11475ms
+   ✓ provider failure and deterministic fallback > maps a valid provider candidate but replaces claimed scan evidence with local validation  2385ms
+   ✓ provider failure and deterministic fallback > falls back when provider is unavailable  1889ms
+   ✓ provider failure and deterministic fallback > falls back after timeout  1762ms
+   ✓ provider failure and deterministic fallback > falls back after malformed provider output  1767ms
+   ✓ provider failure and deterministic fallback > falls back when provider output is unscannable and does not trust provider authorization  1900ms
+   ✓ provider failure and deterministic fallback > honors cancellation, stops the provider, and returns contract-valid safe fallback candidates  1772ms
+ ✓ src/style-primitives.test.ts (13 tests) 19570ms
+   ✓ expanded artistic style primitive parity > passes unchanged objective scan thresholds and export parity for 'module' 'vertical-bars'  3831ms
+   ✓ expanded artistic style primitive parity > passes unchanged objective scan thresholds and export parity for 'module' 'horizontal-bars'  3188ms
+   ✓ expanded artistic style primitive parity > passes unchanged objective scan thresholds and export parity for 'eye-frame' 'squircle'  3184ms
+   ✓ expanded artistic style primitive parity > passes unchanged objective scan thresholds and export parity for 'eye-frame' 'chamfered'  3074ms
+   ✓ expanded artistic style primitive parity > passes unchanged objective scan thresholds and export parity for 'eye-ball' 'squircle'  3194ms
+   ✓ expanded artistic style primitive parity > passes unchanged objective scan thresholds and export parity for 'eye-ball' 'chamfered'  3086ms
+ ✓ src/contracts.test.ts (2 tests) 2753ms
+   ✓ frozen contract conformance > conforms successful core, candidate board, and export objects  2750ms
+ ✓ src/provider-adapter.test.ts (8 tests) 344ms
+ ✓ src/artistic-qr.test.ts (6 tests) 10221ms
+   ✓ objective validation and export safety > decodes every deterministic candidate and records perturbation evidence  2148ms
+   ✓ objective validation and export safety > repairs a known low-contrast matrix and authorizes only after revalidation  2651ms
+   ✓ objective validation and export safety > exports non-empty, decodable PNG bundles at requested sizes  3593ms
+   ✓ objective validation and export safety > denies a scannable artifact when its matrix authority is forged  1824ms
+ ✓ src/render-intent.test.ts (18 tests) 11245ms
+   ✓ artistic render intent > keeps patterned generation at four objectively validated candidates  1993ms
+   ✓ artistic render intent > honors Berry palette in both preview intent and generated candidates  1915ms
+   ✓ artistic render intent > keeps four objectively validated candidates across distinct render intents  5476ms
+   ✓ artistic render intent > adapts a low-contrast cornerColor deterministically without weakening scan thresholds  1796ms
+
+ Test Files  11 passed (11)
+      Tests  146 passed (146)
+   Start at  13:30:27
+   Duration  80.21s (transform 658ms, setup 0ms, collect 3.15s, tests 232.31s, environment 3ms, prepare 1.00s)
+
+......
+----------------------------------------------------------------------
+Ran 6 tests in 0.110s
+
+OK
