@@ -22,7 +22,9 @@ Test the recommended existing-solution route before committing to custom GPU inf
 
 | Metric | Result |
 |---|---:|
-| Live prediction attempts retained | 8 |
+| Unique provider prediction IDs | 9 |
+| Completed/failed screen records | 8 |
+| Canceled before provider start | 1 |
 | Successful predictions | 4 |
 | Provider images | 16 |
 | Raw decode | 0/16 |
@@ -35,6 +37,8 @@ Test the recommended existing-solution route before committing to custom GPU inf
 | New subscription/refill/purchase | none |
 
 The IP-Adapter route preserved wolf identity better than the M emblem, but all outputs failed raw decoding and most visibly placed artwork over a conventional QR-like grid. It did not achieve premium integrated art.
+
+The ninth prediction ID is an explicit resource-envelope variance: the first IP-Adapter call never started, was canceled at the timeout with zero reported predict-time cost, and was retried through the persisted recovery path.
 
 ## Safety result
 

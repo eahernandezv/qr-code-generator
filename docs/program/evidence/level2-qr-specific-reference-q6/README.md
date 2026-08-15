@@ -14,7 +14,8 @@
 ## Live provider result
 
 - Architecture 1: 4/4 calls failed inside the hosted model with the same `canny_preprocess()` signature incompatibility. Recovered provider records show approximately `$0.000025` predict-time cost; the first call spent about 201 seconds waiting for cold start but only 0.006 seconds in failed prediction code.
-- Architecture 2: 4/4 predictions succeeded and produced 16 PNG outputs.
+- Architecture 2: 4/4 completed predictions succeeded and produced 16 PNG outputs. One preceding prediction remained queued without starting, was canceled at the timeout, and reports zero predict-time cost.
+- Unique provider prediction IDs: 9. This is one above the initial eight-prediction envelope because the never-started canceled queue attempt was retried under the authorized recovery rule. The variance is explicit rather than hidden.
 - Successful prediction cost estimate: `$0.040852`.
 - Total Q6 provider cost estimate including failed predict time: `$0.040877`.
 - One initial cold queued prediction was canceled after the bounded timeout and reports no predict-time cost.

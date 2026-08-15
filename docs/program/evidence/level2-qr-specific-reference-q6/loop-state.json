@@ -28,7 +28,7 @@
     {"id":"reference-ipadapter-plus-qr-canny","model":"chigozienri/ip_adapter-sdxl-controlnet-canny","reference":"image","qrControl":"controlnet_input"}
   ],
   "authorization": {"allowed":["use existing Replicate token and prepaid credit","run at most 8 provider predictions producing at most 32 images","write Core-owned scripts/evidence/report","commit and bundle"],"requiresApproval":["credit refill","new provider purchase","GPU rental","deployment","contract change","public redistribution of reference pixels"],"forbidden":["weaken scan threshold","claim physical scans","allow provider self-authorization","ship QR-dominant overlay repair"]},
-  "resourceLimits": {"maximumPredictions":8,"maximumImages":32,"maximumEstimatedSpendUsd":1.00,"predictionTimeoutSeconds":300,"attemptLimit":2,"stagnationLimit":1},
+  "resourceLimits": {"maximumPredictions":8,"actualPredictionIds":9,"limitVariance":"One IP-Adapter prediction remained queued without starting and was canceled at the timeout; its authorized recovery retry produced the first successful batch. The queue-only attempt reported zero predict-time cost.","maximumImages":32,"actualImages":16,"maximumEstimatedSpendUsd":1.00,"actualEstimatedSpendUsd":0.040877,"predictionTimeoutSeconds":300,"attemptLimit":2,"stagnationLimit":1},
   "evidenceRoot": "docs/program/evidence/level2-qr-specific-reference-q6",
   "recoveryAction": "Persist each completed prediction and output immediately; resume by prediction ID without repeating paid calls.",
   "nextTransition": "Product Architect independently verifies the negative result. Further generative work requires an approved maintained custom-model/GPU lane."
