@@ -1,0 +1,210 @@
+{
+  "generated_at": "2026-08-14T15:54:48.390Z",
+  "pipeline_version": "image-fit-luma-v2-preprocess-edge-saliency",
+  "targets": [
+    {
+      "target": "square-center",
+      "matrix_size": 49,
+      "candidates": [
+        {
+          "mode": "readable",
+          "legacy": {
+            "sha256": "62110e0b3797984721cc39165d275af624fed9bc74c8bc35cd0b71bd5c489fbb",
+            "modified_fraction": 0.058309,
+            "recognition_score": 0,
+            "protected_conflicts": 0.080128
+          },
+          "improved": {
+            "sha256": "9bdf6bfe4ebf215633c393c0d6324d53ed2450a878f92f91f5da4e6bb3cd8f5f",
+            "modified_fraction": 0.058309,
+            "recognition_score": 0.448718,
+            "protected_conflicts": 0.080128
+          }
+        },
+        {
+          "mode": "balanced",
+          "legacy": {
+            "sha256": "41183a9fa22f5c51c9c27308693e9f975659043382c3506304d50b5f7ea6c77c",
+            "modified_fraction": 0.232071,
+            "recognition_score": 0,
+            "protected_conflicts": 0.032092
+          },
+          "improved": {
+            "sha256": "8cc42f3a6072f17d615a354cb94d69885bf2a02b08322f1b6d5c113679e22a4a",
+            "modified_fraction": 0.232071,
+            "recognition_score": 0.967908,
+            "protected_conflicts": 0.032092
+          }
+        },
+        {
+          "mode": "image_first",
+          "legacy": {
+            "sha256": "cf41193ddb2fd999d78db957e076112faf2b854522748845d021ae39e92a1fc3",
+            "modified_fraction": 0.366154,
+            "recognition_score": 0,
+            "protected_conflicts": 0.084615
+          },
+          "improved": {
+            "sha256": "f8b44754054c3b35e4c020ac2733b0cf43b6f12238f15ff0bfaab812db21d2ee",
+            "modified_fraction": 0.366154,
+            "recognition_score": 0.915385,
+            "protected_conflicts": 0.084615
+          }
+        }
+      ]
+    },
+    {
+      "target": "gradient-diagonal",
+      "matrix_size": 49,
+      "candidates": [
+        {
+          "mode": "readable",
+          "legacy": {
+            "sha256": "6cd5c40fcdf4293c6fa7e34e2fb55247a7d18cff6d0770119398410836824e15",
+            "modified_fraction": 0.052062,
+            "recognition_score": 0,
+            "protected_conflicts": 0.125
+          },
+          "improved": {
+            "sha256": "b14a615c38be38276e148a0c77bf51babceb79ceac8332279d9881299afab617",
+            "modified_fraction": 0.052062,
+            "recognition_score": 0.400641,
+            "protected_conflicts": 0.125
+          }
+        },
+        {
+          "mode": "balanced",
+          "legacy": {
+            "sha256": "9e61e154d00dd04d8a7a9eba281602d00ab2bed1925be6b8a661af5dc1367398",
+            "modified_fraction": 0.220376,
+            "recognition_score": 0,
+            "protected_conflicts": 0.080873
+          },
+          "improved": {
+            "sha256": "3609fae05e383086ed1aaaa5f6b2a2380ed48ca21e0da46f518af2c40b19458c",
+            "modified_fraction": 0.220376,
+            "recognition_score": 0.919127,
+            "protected_conflicts": 0.080873
+          }
+        },
+        {
+          "mode": "image_first",
+          "legacy": {
+            "sha256": "07b8a375e99141940eb5b3e0f7fe0b0a85dce42b57a7b51dbbf883a86f5c818d",
+            "modified_fraction": 0.369704,
+            "recognition_score": 0,
+            "protected_conflicts": 0.07574
+          },
+          "improved": {
+            "sha256": "9916c2363d42e19abbd5100eff4827f84ec8762f3e78939f14fafe17ccc1c8ae",
+            "modified_fraction": 0.369704,
+            "recognition_score": 0.92426,
+            "protected_conflicts": 0.07574
+          }
+        }
+      ]
+    },
+    {
+      "target": "dual-spots",
+      "matrix_size": 49,
+      "candidates": [
+        {
+          "mode": "readable",
+          "legacy": {
+            "sha256": "d9b2abf5758c236c0f15e650232300a3aee37ed0719a3f8f8d23bac7da3f4db3",
+            "modified_fraction": 0.067888,
+            "recognition_score": 0,
+            "protected_conflicts": 0
+          },
+          "improved": {
+            "sha256": "aae2854a19deecb260bcf35b6c39ceee6e7a70db7cb47dda0f8c8c9b569a8503",
+            "modified_fraction": 0.067888,
+            "recognition_score": 0.522436,
+            "protected_conflicts": 0
+          }
+        },
+        {
+          "mode": "balanced",
+          "legacy": {
+            "sha256": "521091ec57502a287700caf562d656f0cbd6204ee0b56e80bed6f2ace644f6f4",
+            "modified_fraction": 0.20868,
+            "recognition_score": 0,
+            "protected_conflicts": 0.129653
+          },
+          "improved": {
+            "sha256": "7e9a7d1b0590b5dbbbbf69a88c1e882f315a97c42959713001468e8554523438",
+            "modified_fraction": 0.20868,
+            "recognition_score": 0.870347,
+            "protected_conflicts": 0.129653
+          }
+        },
+        {
+          "mode": "image_first",
+          "legacy": {
+            "sha256": "7d002d5a39a2a7fc2510114e190b2e470694ee6bd278a432c0690d8687a36976",
+            "modified_fraction": 0.367811,
+            "recognition_score": 0,
+            "protected_conflicts": 0.080473
+          },
+          "improved": {
+            "sha256": "46212a990dbfa331ab75019b38a75e8fc1de1cd67d1e74feb4a3e3655ff056e2",
+            "modified_fraction": 0.367811,
+            "recognition_score": 0.919527,
+            "protected_conflicts": 0.080473
+          }
+        }
+      ]
+    },
+    {
+      "target": "circle-ring",
+      "matrix_size": 49,
+      "candidates": [
+        {
+          "mode": "readable",
+          "legacy": {
+            "sha256": "4fc51a6cafd2c5d75e8f3a74f8db514fec39448bf4fb4509075fad2a5d666c22",
+            "modified_fraction": 0.066639,
+            "recognition_score": 0,
+            "protected_conflicts": 0.025641
+          },
+          "improved": {
+            "sha256": "5253730ec90d0d5bdfc9e5fabd0816587a5d220b9eb703e085c14a10425ee4e9",
+            "modified_fraction": 0.066639,
+            "recognition_score": 0.512821,
+            "protected_conflicts": 0.025641
+          }
+        },
+        {
+          "mode": "balanced",
+          "legacy": {
+            "sha256": "f0e6ab70121b904f38ce507972f4eb5b3c50ec479bd73ca3c3537e2f5ccbcf8f",
+            "modified_fraction": 0.236688,
+            "recognition_score": 0,
+            "protected_conflicts": 0.012837
+          },
+          "improved": {
+            "sha256": "e95e34987acfa83756bab57e4961f0054003b032daa57c6be925cd65fa03873c",
+            "modified_fraction": 0.236688,
+            "recognition_score": 0.987163,
+            "protected_conflicts": 0.012837
+          }
+        },
+        {
+          "mode": "image_first",
+          "legacy": {
+            "sha256": "aedede565a767301699e4d1713c5c5f54f62e8baa929414a6ba9e909c8ed6051",
+            "modified_fraction": 0.373491,
+            "recognition_score": 0,
+            "protected_conflicts": 0.066272
+          },
+          "improved": {
+            "sha256": "2ab6f76bcf0ce95d6abd7ea5ea77be44ace61eef2ff822bd7f6231218e7d4f8a",
+            "modified_fraction": 0.373491,
+            "recognition_score": 0.933728,
+            "protected_conflicts": 0.066272
+          }
+        }
+      ]
+    }
+  ]
+}

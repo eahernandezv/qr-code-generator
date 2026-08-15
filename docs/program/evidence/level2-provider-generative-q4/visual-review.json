@@ -1,0 +1,29 @@
+{
+  "method": "unlabeled row-major inspection of provider and selected-repair contact sheets; source filenames were not used to infer panel contents",
+  "reviewer_kind": "machine-vision inspection, not a blinded human panel",
+  "raw_provider": [
+    {"target":"calligraphic-j-heart","recognition":"unidentifiable","observed":"ornamental QR field with a small butterfly-like accent; calligraphic J and detached heart not retained","integration":"QR dominates"},
+    {"target":"circular-food-emblem","recognition":"clear","observed":"stacked burger in a circular warm-color badge","integration":"subject overlays a conventional QR"},
+    {"target":"faceted-helmet","recognition":"partial","observed":"faceted mask or helmet form","integration":"subject overlays a conventional QR"},
+    {"target":"gradient-j","recognition":"unidentifiable","observed":"colorful abstract block composition","integration":"QR dominates"},
+    {"target":"gradient-m-ribbon","recognition":"partial","observed":"blue-violet ribbon fragments","integration":"QR dominates"},
+    {"target":"red-wolf-front","recognition":"clear","observed":"front-facing angular wolf head","integration":"subject and QR occupy the same field but modules remain explicit"},
+    {"target":"wolf-black-white","recognition":"clear","observed":"front-facing monochrome wolf face with blue eyes","integration":"strong subject framing around explicit QR"},
+    {"target":"wolf-profile","recognition":"clear","observed":"standing/profile wolf","integration":"subject placed beside and over explicit QR"}
+  ],
+  "raw_counts": {"clear":4,"partial":2,"unidentifiable":2},
+  "selected_scan_repair": [
+    {"target":"gradient-j","recognition":"unidentifiable"},
+    {"target":"faceted-helmet","recognition":"partial"},
+    {"target":"gradient-m-ribbon","recognition":"partial"},
+    {"target":"red-wolf-front","recognition":"clear"},
+    {"target":"circular-food-emblem","recognition":"clear"},
+    {"target":"wolf-black-white","recognition":"partial"},
+    {"target":"wolf-profile","recognition":"partial"},
+    {"target":"calligraphic-j-heart","recognition":"unidentifiable"}
+  ],
+  "selected_repair_counts": {"clear":2,"partial":4,"unidentifiable":2},
+  "sponsor_ready_count": 0,
+  "decision": "failed",
+  "reason": "Raw art can be visually strong but none passes Core scan validation. The scan-safe composite repairs pass but a conventional QR dominates and erases identity-critical detail. This is not high-end sponsor-ready integrated QR art."
+}

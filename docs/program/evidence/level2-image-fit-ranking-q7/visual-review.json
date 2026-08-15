@@ -1,0 +1,24 @@
+{
+  "schema_version": "image-fit-ranking-q7-visual-review.v1",
+  "method": "Conservative machine-vision review of local rights-restricted source/Q3/Q7 contact sheets; not a blinded human panel and not scan authorization.",
+  "panels": {"left":"source target","middle":"Q3 first-pass","right":"Q7 scan-first ranked"},
+  "summary": {
+    "meaningful_or_subtle": "Mostly subtle-to-moderate mask/composition changes rather than a new visual style.",
+    "visible_regressions": 0,
+    "sponsor_quality": 0,
+    "strongest_directional_improvements": [
+      "letter-j-gradient image_first",
+      "calligraphic-j-heart image_first",
+      "gradient-m-mark image_first",
+      "geometric-media-mark image_first",
+      "wolf-profile-watermarked image_first"
+    ]
+  },
+  "observations": [
+    "Q7 generally makes the intended silhouette slightly more coherent or centered while preserving finder/quiet-zone visibility.",
+    "Readable changes are frequently subtle because scan-safe black modules dominate by design.",
+    "Balanced and Image-first show the clearest directional contour changes, especially on the J, M, and geometric marks.",
+    "The dense QR grid still dominates every artifact; fine text, brand typography, facial detail, and thin calligraphy remain materially degraded.",
+    "No panel qualifies as premium sponsor-faithful artwork. Q7 is a safer deterministic selector improvement, not a sponsor-readiness breakthrough."
+  ]
+}

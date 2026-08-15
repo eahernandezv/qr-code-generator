@@ -1,0 +1,276 @@
+{
+  "candidates": [
+    {
+      "target": "square-center",
+      "mode": "readable",
+      "verdict": "pass",
+      "checks": "8/8",
+      "decoder": "jsQR",
+      "export_allowed": false,
+      "blockers": [
+        "preview_export_parity_not_proven",
+        "preview_not_paid",
+        "short_link_not_committed"
+      ]
+    },
+    {
+      "target": "square-center",
+      "mode": "balanced",
+      "verdict": "pass",
+      "checks": "8/8",
+      "decoder": "jsQR",
+      "export_allowed": false,
+      "blockers": [
+        "preview_export_parity_not_proven",
+        "preview_not_paid",
+        "short_link_not_committed"
+      ]
+    },
+    {
+      "target": "square-center",
+      "mode": "image_first",
+      "verdict": "pass",
+      "checks": "6/8",
+      "decoder": "jsQR",
+      "export_allowed": false,
+      "blockers": [
+        "preview_export_parity_not_proven",
+        "preview_not_paid",
+        "short_link_not_committed",
+        "image_first_experimental"
+      ]
+    },
+    {
+      "target": "gradient-diagonal",
+      "mode": "readable",
+      "verdict": "pass",
+      "checks": "8/8",
+      "decoder": "jsQR",
+      "export_allowed": false,
+      "blockers": [
+        "preview_export_parity_not_proven",
+        "preview_not_paid",
+        "short_link_not_committed"
+      ]
+    },
+    {
+      "target": "gradient-diagonal",
+      "mode": "balanced",
+      "verdict": "pass",
+      "checks": "8/8",
+      "decoder": "jsQR",
+      "export_allowed": false,
+      "blockers": [
+        "preview_export_parity_not_proven",
+        "preview_not_paid",
+        "short_link_not_committed"
+      ]
+    },
+    {
+      "target": "gradient-diagonal",
+      "mode": "image_first",
+      "verdict": "pass",
+      "checks": "6/8",
+      "decoder": "jsQR",
+      "export_allowed": false,
+      "blockers": [
+        "preview_export_parity_not_proven",
+        "preview_not_paid",
+        "short_link_not_committed",
+        "image_first_experimental"
+      ]
+    },
+    {
+      "target": "dual-spots",
+      "mode": "readable",
+      "verdict": "pass",
+      "checks": "8/8",
+      "decoder": "jsQR",
+      "export_allowed": false,
+      "blockers": [
+        "preview_export_parity_not_proven",
+        "preview_not_paid",
+        "short_link_not_committed"
+      ]
+    },
+    {
+      "target": "dual-spots",
+      "mode": "balanced",
+      "verdict": "pass",
+      "checks": "8/8",
+      "decoder": "jsQR",
+      "export_allowed": false,
+      "blockers": [
+        "preview_export_parity_not_proven",
+        "preview_not_paid",
+        "short_link_not_committed"
+      ]
+    },
+    {
+      "target": "dual-spots",
+      "mode": "image_first",
+      "verdict": "pass",
+      "checks": "6/8",
+      "decoder": "jsQR",
+      "export_allowed": false,
+      "blockers": [
+        "preview_export_parity_not_proven",
+        "preview_not_paid",
+        "short_link_not_committed",
+        "image_first_experimental"
+      ]
+    },
+    {
+      "target": "circle-ring",
+      "mode": "readable",
+      "verdict": "pass",
+      "checks": "8/8",
+      "decoder": "jsQR",
+      "export_allowed": false,
+      "blockers": [
+        "preview_export_parity_not_proven",
+        "preview_not_paid",
+        "short_link_not_committed"
+      ]
+    },
+    {
+      "target": "circle-ring",
+      "mode": "balanced",
+      "verdict": "pass",
+      "checks": "8/8",
+      "decoder": "jsQR",
+      "export_allowed": false,
+      "blockers": [
+        "preview_export_parity_not_proven",
+        "preview_not_paid",
+        "short_link_not_committed"
+      ]
+    },
+    {
+      "target": "circle-ring",
+      "mode": "image_first",
+      "verdict": "pass",
+      "checks": "6/8",
+      "decoder": "jsQR",
+      "export_allowed": false,
+      "blockers": [
+        "preview_export_parity_not_proven",
+        "preview_not_paid",
+        "short_link_not_committed",
+        "image_first_experimental"
+      ]
+    },
+    {
+      "target": "heart-silhouette",
+      "mode": "readable",
+      "verdict": "pass",
+      "checks": "8/8",
+      "decoder": "jsQR",
+      "export_allowed": false,
+      "blockers": [
+        "preview_export_parity_not_proven",
+        "preview_not_paid",
+        "short_link_not_committed"
+      ]
+    },
+    {
+      "target": "heart-silhouette",
+      "mode": "balanced",
+      "verdict": "pass",
+      "checks": "8/8",
+      "decoder": "jsQR",
+      "export_allowed": false,
+      "blockers": [
+        "preview_export_parity_not_proven",
+        "preview_not_paid",
+        "short_link_not_committed"
+      ]
+    },
+    {
+      "target": "heart-silhouette",
+      "mode": "image_first",
+      "verdict": "pass",
+      "checks": "6/8",
+      "decoder": "jsQR",
+      "export_allowed": false,
+      "blockers": [
+        "preview_export_parity_not_proven",
+        "preview_not_paid",
+        "short_link_not_committed",
+        "image_first_experimental"
+      ]
+    },
+    {
+      "target": "house-silhouette",
+      "mode": "readable",
+      "verdict": "pass",
+      "checks": "8/8",
+      "decoder": "jsQR",
+      "export_allowed": false,
+      "blockers": [
+        "preview_export_parity_not_proven",
+        "preview_not_paid",
+        "short_link_not_committed"
+      ]
+    },
+    {
+      "target": "house-silhouette",
+      "mode": "balanced",
+      "verdict": "pass",
+      "checks": "8/8",
+      "decoder": "jsQR",
+      "export_allowed": false,
+      "blockers": [
+        "preview_export_parity_not_proven",
+        "preview_not_paid",
+        "short_link_not_committed"
+      ]
+    },
+    {
+      "target": "house-silhouette",
+      "mode": "image_first",
+      "verdict": "pass",
+      "checks": "6/8",
+      "decoder": "jsQR",
+      "export_allowed": false,
+      "blockers": [
+        "preview_export_parity_not_proven",
+        "preview_not_paid",
+        "short_link_not_committed",
+        "image_first_experimental"
+      ]
+    }
+  ],
+  "fallback_proofs": [
+    {
+      "target": "square-center",
+      "verdict": "pass",
+      "checks": "8/8"
+    },
+    {
+      "target": "gradient-diagonal",
+      "verdict": "pass",
+      "checks": "8/8"
+    },
+    {
+      "target": "dual-spots",
+      "verdict": "pass",
+      "checks": "8/8"
+    },
+    {
+      "target": "circle-ring",
+      "verdict": "pass",
+      "checks": "8/8"
+    },
+    {
+      "target": "heart-silhouette",
+      "verdict": "pass",
+      "checks": "8/8"
+    },
+    {
+      "target": "house-silhouette",
+      "verdict": "pass",
+      "checks": "8/8"
+    }
+  ]
+}

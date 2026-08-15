@@ -1,0 +1,35 @@
+{
+  "schema_version": "q6-architecture-discovery.v1",
+  "discovered_at": "2026-08-15",
+  "provider": "replicate",
+  "purchase_or_refill": false,
+  "architectures": [
+    {
+      "id": "qr-controlnet-plus-reference-canny",
+      "model": "anotherjesse/multi-control",
+      "version": "76d8414a702e66c84fe2e6e9c8cbdc12e53f950f255aae9ffa5caa7873b12de0",
+      "reference_field": "canny_image",
+      "qr_field": "qr_image",
+      "schema_result": "genuine separate controls",
+      "live_result": "incompatible_hosted_build",
+      "failure": "canny_preprocess() takes 2 positional arguments but 4 were given",
+      "reproductions": 4
+    },
+    {
+      "id": "reference-ipadapter-plus-qr-canny",
+      "model": "chigozienri/ip_adapter-sdxl-controlnet-canny",
+      "version": "6a095e6e0feec0f857752e809946fc0e995a0f126c8bbcfdc5d0e715fbb1989e",
+      "reference_field": "image",
+      "reference_scale_field": "scale",
+      "qr_field": "controlnet_input",
+      "qr_scale_field": "controlnet_conditioning_scale",
+      "schema_result": "genuine separate controls",
+      "live_result": "16 outputs generated"
+    }
+  ],
+  "quickqr_art": {
+    "assessment": "public V5 API supports QR art controls, but base-reference API parity was not established",
+    "purchase_boundary": "minimum published API credit pack requires explicit approval; no purchase made",
+    "runtime_test": "not_run"
+  }
+}

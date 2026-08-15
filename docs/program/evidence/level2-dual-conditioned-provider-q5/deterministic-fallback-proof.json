@@ -1,0 +1,35 @@
+{
+  "replayed_artifact": "local-artifacts/tune--qr-heavy-3p0--wolf-black-white.png",
+  "provider_claimed_export_allowed": true,
+  "core_rejected_provider_artifact": true,
+  "fallback_candidates": [
+    {
+      "provider": "local-safe-fallback",
+      "export_allowed": true,
+      "scan_pass": true,
+      "checks": "7/8",
+      "payload_match": true
+    },
+    {
+      "provider": "local-safe-fallback",
+      "export_allowed": true,
+      "scan_pass": true,
+      "checks": "8/8",
+      "payload_match": true
+    },
+    {
+      "provider": "local-safe-fallback",
+      "export_allowed": true,
+      "scan_pass": true,
+      "checks": "8/8",
+      "payload_match": true
+    },
+    {
+      "provider": "local-safe-fallback",
+      "export_allowed": true,
+      "scan_pass": true,
+      "checks": "8/8",
+      "payload_match": true
+    }
+  ]
+}

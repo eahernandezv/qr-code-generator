@@ -1,0 +1,41 @@
+{
+  "replayed_provider_artifact": "local-artifacts/gradient-j--zylim--seed-4101.png",
+  "provider_claimed_export_allowed": true,
+  "core_board_status": "completed",
+  "core_returned_candidate_count": 4,
+  "core_rejected_provider_artifact": true,
+  "fallback_candidates": [
+    {
+      "provider": "local-safe-fallback",
+      "model": "qr-core-v1",
+      "export_allowed": true,
+      "scan_pass": true,
+      "checks": "8/8",
+      "payload_match": true
+    },
+    {
+      "provider": "local-safe-fallback",
+      "model": "qr-core-v1",
+      "export_allowed": true,
+      "scan_pass": true,
+      "checks": "8/8",
+      "payload_match": true
+    },
+    {
+      "provider": "local-safe-fallback",
+      "model": "qr-core-v1",
+      "export_allowed": true,
+      "scan_pass": true,
+      "checks": "8/8",
+      "payload_match": true
+    },
+    {
+      "provider": "local-safe-fallback",
+      "model": "qr-core-v1",
+      "export_allowed": true,
+      "scan_pass": true,
+      "checks": "8/8",
+      "payload_match": true
+    }
+  ]
+}

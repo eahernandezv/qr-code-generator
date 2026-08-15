@@ -1,0 +1,23 @@
+{
+  "schemaVersion": "observable-work-loop.v1",
+  "objective": "Improve deterministic Q3 Image-Fit output selection by ranking QR version/ECC/mask candidates with real scan perturbation evidence and target appearance, without changing frozen contracts or weakening export gates.",
+  "branch": "creator/level2-image-fit-ranking-q7",
+  "baseline": "4e890b14f7d6a57deddd444a7cf899b60d861710",
+  "status": "COMPLETE",
+  "cycle": 2,
+  "currentStage": "packaging",
+  "criteria": [
+    {"id":"Q7-C1","status":"PASS","requirement":"The optimizer ranks more than the first passing QR setting while remaining deterministic and bounded.","evidence":"Q3 safety-anchor walk plus at most two Q7 challengers per mode; deterministic artifact/ID test passes."},
+    {"id":"Q7-C2","status":"PASS","requirement":"Scan evidence dominates visual score; no weaker-scanning candidate may win for appearance alone.","evidence":"Comparator orders pass, checks, raw decode before appearance; 0/24 per-candidate check regressions."},
+    {"id":"Q7-C3","status":"PASS","requirement":"Recognition score measures rendered target appearance rather than a constant represented-cell ratio.","evidence":"Normalized RGB displacement metric is bounded, tested, and versioned image-fit-scan-first-appearance-q7."},
+    {"id":"Q7-C4","status":"PASS","requirement":"Real-target aggregate evidence compares frozen Q3 first-pass selection with Q7 ranking and reports all scan/fallback results honestly.","evidence":"24/24 pass both; checks 182 to 183; appearance improved/equal/regressed 21/3/0; fallbacks 8/8."},
+    {"id":"Q7-C5","status":"PASS","requirement":"Core/Artistic tests, contract diff, evidence manifest, commit, and verified bundle pass.","evidence":"Core 24/24, Artistic 139/139 plus Python 6/6, contract worktree unchanged; manifest/commit/bundle verified during packaging."}
+  ],
+  "authorization": {
+    "allowed": ["Core-owned source, tests, scripts, evidence, and report", "local rights-restricted Q3 references", "commit and bundle"],
+    "forbidden": ["frozen contract edits", "provider calls", "deployment", "physical scan claims", "weakened decoder threshold", "committing rights-unverified reference pixels"]
+  },
+  "resourceLimits": {"maximumVisualChallengersPerMode":2,"safetyAnchor":"deterministic Q3 preference walk until first scan pass or time bound","maximumEvidenceTargets":8,"maximumSearchMs":60000,"attemptLimit":2,"stagnationLimit":1},
+  "evidenceRoot": "docs/program/evidence/level2-image-fit-ranking-q7",
+  "nextTransition": "Product Architect independently reproduces evidence and decides merge. Physical/device QA remains external and unclaimed."
+}

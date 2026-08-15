@@ -1,0 +1,20 @@
+{
+  "method": "machine-vision inspection of generated-only contact sheets against the two named reference classes; not a blinded human panel",
+  "phase_a": {
+    "architecture_count": 3,
+    "targets_per_architecture": 2,
+    "reference_recognition": {"clear":6,"partial":0,"unidentifiable":0},
+    "qr_integration": "absent or imperceptible in all six outputs",
+    "sponsor_ready": 0,
+    "decision": "none qualify for eight-reference expansion because all six score 0/8 and raw decode fails"
+  },
+  "bounded_tuning": {
+    "variants": [
+      {"id":"qr-heavy-2p0","visual":"both references remain clear; QR ghost is too faint to function","scan":"0/8 on both"},
+      {"id":"qr-heavy-3p0","visual":"M remains clear over an obvious QR field; wolf remains recognizable but QR pixels dominate identity detail","scan":"M 0/8; wolf 1/8 with raw failure"}
+    ],
+    "sponsor_ready": 0,
+    "decision": "stop for stagnation: stronger QR control trades integrated reference quality for a visible conventional QR without reaching raw decode"
+  },
+  "overall": {"clear_reference_outputs":10,"core_scan_passes":0,"sponsor_ready_outputs":0,"expand_to_eight_references":false}
+}

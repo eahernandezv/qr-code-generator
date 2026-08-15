@@ -1,0 +1,18 @@
+{
+  "discovered_at": "live provider API and model-page inspection during Q5",
+  "provider": "replicate",
+  "model": "fofr/sdxl-multi-controlnet-lora",
+  "version": "89eb212b3d1366a83e949c12a4b45dfe6b6b313b594cb8268e864931ac9ffb16",
+  "schema_proof": {
+    "reference_pixels": {"field":"image","description":"Input image for img2img or inpaint mode"},
+    "qr_control_pixels": {"field":"controlnet_1_image","control_type":"illusion","scale_field":"controlnet_1_conditioning_scale"},
+    "additional_reference_control": {"field":"controlnet_2_image","types_tested":["edge_canny","lineart"]},
+    "pricing": {"hardware":"L40S","usd_per_predict_second":0.000975,"source":"live Replicate model page"}
+  },
+  "architectures": [
+    {"id":"sdxl-img2img-illusion","reference_path":"img2img","qr_path":"illusion ControlNet","schema_verified":true},
+    {"id":"sdxl-img2img-illusion-canny","reference_path":"img2img plus canny ControlNet","qr_path":"illusion ControlNet","schema_verified":true},
+    {"id":"sdxl-img2img-illusion-lineart","reference_path":"img2img plus lineart ControlNet","qr_path":"illusion ControlNet","schema_verified":true}
+  ],
+  "local_execution_feasibility": {"available_gpu":false,"ram_gib":7.6,"decision":"hosted inference required; local SDXL plus IP-Adapter plus QR ControlNet is not viable on this host"}
+}

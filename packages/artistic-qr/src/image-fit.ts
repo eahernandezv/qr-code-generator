@@ -116,9 +116,19 @@ export interface ImageFitOptimizationResult {
 
 export interface ImageFitOptimizerOptions {
   validationRunner?: (candidate: Candidate, expectedPayload: string) => ScanValidationResult;
+  /**
+   * When true, use the legacy naive per-module target recolor (luma threshold 160).
+   * Used for A/B evidence generation only.
+   */
+  _legacyNaiveRender?: boolean;
+  /** Evidence switch for exact Q1/Q2/Q3 preprocessing comparisons. */
+  _compositionPolicy?: 'q1' | 'q2' | 'q3';
+  /** Evidence switch for exact Q3 first-pass versus Q7 ranked selection comparisons. */
+  _selectionPolicy?: 'q3_first_pass' | 'q7_ranked';
 }
 
 const MODE_ORDER: readonly ImageFitMode[] = ['readable', 'balanced', 'image_first'];
+const MAX_VISUAL_CHALLENGERS_PER_MODE = 2;
 const DISCLAIMER = 'Controlled decoder checks are not a universal scan guarantee. No physical-device or print scan was performed.';
 
 /** Deterministic production-shaped Level 2 optimizer. It never mutates matrix bits. */
@@ -128,21 +138,28 @@ export function optimizeImageFitQr(
 ): ImageFitOptimizationResult {
   validateInput(input);
   const validate = options.validationRunner ?? runValidation;
+  const compositionPolicy = options._compositionPolicy ?? 'q3';
+  const selectionPolicy = options._selectionPolicy ?? 'q7_ranked';
   const started = performance.now();
   const artifacts: Record<string, ImageFitArtifact> = {};
   const candidates: ImageFitCandidateV1[] = [];
   const modes = MODE_ORDER.slice(0, Math.min(input.request.constraints.max_candidates, MODE_ORDER.length));
 
   for (const mode of modes) {
-    let selected: {
+    type Evaluated = {
       settings: QrSearchSettings;
       matrix: QrMatrix;
       rendered: ReturnType<typeof renderImageFitSvg>;
       artifact: ImageFitArtifact;
       validation: ScanValidationResult;
-    } | undefined;
-    for (const settings of settingsCandidatesForMode(input.request, mode)) {
+      preference: number;
+    };
+    let selected: Evaluated | undefined;
+    const renderedSettings: Array<Omit<Evaluated, 'validation'>> = [];
+    const settingsCandidates = settingsCandidatesForMode(input.request, mode);
+    for (let preference = 0; preference < settingsCandidates.length; preference++) {
       if (performance.now() - started > input.request.constraints.max_search_ms) break;
+      const settings = settingsCandidates[preference];
       const normalized: NormalizedPayload = {
         canonical: input.encoded_payload,
         mode: 'url',
@@ -157,12 +174,48 @@ export function optimizeImageFitQr(
       } catch {
         continue;
       }
-      const target = targetMap(input, matrix.size);
-      const rendered = renderImageFitSvg(matrix, target, mode);
+      const useLegacy = options._legacyNaiveRender === true;
+      const preprocessed = preprocessTarget(input, matrix, mode, compositionPolicy);
+      const rendered = renderImageFitSvg(matrix, preprocessed.mask, mode, { useLegacy, edgeScore: preprocessed.edgeScore, componentCount: preprocessed.componentCount });
       const artifact = makeArtifact(mode, rendered.svg);
-      const validation = validate(validationCandidate(artifact, rendered.width, settings, mode), input.encoded_payload);
-      selected = { settings, matrix, rendered, artifact, validation };
-      if (validation.pass) break;
+      renderedSettings.push({ settings, matrix, rendered, artifact, preference });
+      if (selectionPolicy === 'q3_first_pass') {
+        const validation = validate(validationCandidate(artifact, rendered.width, settings, mode), input.encoded_payload);
+        selected = { settings, matrix, rendered, artifact, validation, preference };
+        if (validation.pass) break;
+      }
+    }
+    if (selectionPolicy === 'q7_ranked' && renderedSettings.length > 0) {
+      const evaluated = new Set<number>();
+      // Preserve Q3's safety floor: walk deterministic preference order until the first
+      // scan-passing candidate is found. Q7 may improve on that anchor but never replace
+      // it with a visually stronger failure.
+      for (const entry of renderedSettings) {
+        if (selected?.validation.pass) break;
+        if (performance.now() - started > input.request.constraints.max_search_ms) break;
+        const validation = validate(validationCandidate(entry.artifact, entry.rendered.width, entry.settings, mode), input.encoded_payload);
+        evaluated.add(entry.preference);
+        const candidate = { ...entry, validation };
+        if (!selected || compareEvaluated(candidate, selected) > 0) selected = candidate;
+      }
+
+      // Challenge the safety anchor with at most two composition-aware alternatives.
+      // Scan verdict/check count remain the leading comparator dimensions.
+      const visualOrder = [...renderedSettings].sort((a, b) =>
+        b.rendered.recognitionScore - a.rendered.recognitionScore
+        || a.rendered.protectedConflictScore - b.rendered.protectedConflictScore
+        || a.preference - b.preference,
+      );
+      let challengers = 0;
+      for (const entry of visualOrder) {
+        if (challengers >= MAX_VISUAL_CHALLENGERS_PER_MODE) break;
+        if (evaluated.has(entry.preference)) continue;
+        if (performance.now() - started > input.request.constraints.max_search_ms) break;
+        const validation = validate(validationCandidate(entry.artifact, entry.rendered.width, entry.settings, mode), input.encoded_payload);
+        const candidate = { ...entry, validation };
+        if (!selected || compareEvaluated(candidate, selected) > 0) selected = candidate;
+        challengers += 1;
+      }
     }
     if (!selected) continue;
     const { settings, matrix, rendered, artifact, validation } = selected;
@@ -190,7 +243,9 @@ export function optimizeImageFitQr(
         kind: treatmentForMode(mode),
         modified_modules: rendered.modifiedModules,
         modified_fraction: round(rendered.modifiedModules / (matrix.size * matrix.size), 6),
-        luminance_policy_version: 'image-fit-luma-v1-dark<=64-light>=218',
+        luminance_policy_version: compositionPolicy === 'q3'
+          ? 'image-fit-real-target-foreground-q3'
+          : 'image-fit-composition-q2-morphology-v1',
         color_profile: 'srgb',
       },
       protected_regions: {
@@ -202,7 +257,9 @@ export function optimizeImageFitQr(
       scan_evidence: scanEvidence,
       image_fit_evidence: {
         fit_label: fitLabel,
-        score_version: 'image-fit-target-coverage-v1',
+        score_version: compositionPolicy === 'q3'
+          ? selectionPolicy === 'q7_ranked' ? 'image-fit-scan-first-appearance-q7' : 'image-fit-real-target-coverage-q3'
+          : 'image-fit-composition-coverage-q2',
         recognition_score: rendered.recognitionScore,
         protected_zone_conflict_score: rendered.protectedConflictScore,
       },
@@ -247,6 +304,23 @@ export function optimizeImageFitQr(
 
 type QrSearchSettings = { version: number; ecc: ImageFitEcc; mask: number };
 
+function compareEvaluated(
+  left: { validation: ScanValidationResult; rendered: { recognitionScore: number; protectedConflictScore: number }; preference: number },
+  right: { validation: ScanValidationResult; rendered: { recognitionScore: number; protectedConflictScore: number }; preference: number },
+): number {
+  const tuple = (entry: typeof left): number[] => [
+    entry.validation.pass ? 1 : 0,
+    entry.validation.tests.filter((test) => test.pass).length,
+    entry.validation.tests.find((test) => test.name === 'decode_raw')?.pass ? 1 : 0,
+    entry.rendered.recognitionScore,
+    -entry.rendered.protectedConflictScore,
+    -entry.preference,
+  ];
+  const a = tuple(left), b = tuple(right);
+  for (let index = 0; index < a.length; index++) if (a[index] !== b[index]) return a[index] - b[index];
+  return 0;
+}
+
 function settingsCandidatesForMode(request: ImageFitQrRequestV1, mode: ImageFitMode): QrSearchSettings[] {
   const versions = [...request.constraints.allowed_versions].sort((a, b) => a - b);
   const preferredVersion = mode === 'readable' ? versions[0] : mode === 'balanced'
@@ -266,18 +340,452 @@ function settingsCandidatesForMode(request: ImageFitQrRequestV1, mode: ImageFitM
   return result;
 }
 
-function targetMap(input: ImageFitOptimizerInput, size: number): boolean[][] {
-  const result = Array.from({ length: size }, () => Array<boolean>(size).fill(false));
-  const source = input.target_luma;
-  for (let y = 0; y < size; y += 1) for (let x = 0; x < size; x += 1) {
-    const sx = Math.min(source.width - 1, Math.floor((x + 0.5) * source.width / size));
-    const sy = Math.min(source.height - 1, Math.floor((y + 0.5) * source.height / size));
-    result[y][x] = source.values[sy * source.width + sx] < 160;
+/* ================================================================
+   Image preprocessing pipeline: square crop → edge/saliency mask
+   → connected-component filtering → protected-region exclusion
+   ================================================================ */
+
+export interface PreprocessedTarget {
+  mask: boolean[][];
+  edgeScore: number;
+  componentCount: number;
+}
+
+interface LumaPlane {
+  width: number;
+  height: number;
+  values: readonly number[];
+}
+
+/** Deterministically crops margins and detached captions while retaining dominant central marks. */
+export function foregroundAwareCrop(source: LumaPlane): LumaPlane {
+  if (source.width < 8 || source.height < 8) return source;
+  const border: number[] = [];
+  for (let x = 0; x < source.width; x++) border.push(source.values[x], source.values[(source.height - 1) * source.width + x]);
+  for (let y = 1; y < source.height - 1; y++) border.push(source.values[y * source.width], source.values[y * source.width + source.width - 1]);
+  border.sort((a, b) => a - b);
+  const background = border[Math.floor(border.length / 2)] ?? 255;
+  const deviations = border.map((value) => Math.abs(value - background)).sort((a, b) => a - b);
+  const noise = deviations[Math.floor(deviations.length * 0.6)] ?? 0;
+  const threshold = Math.max(24, noise * 2.5);
+  const foreground = new Uint8Array(source.width * source.height);
+  for (let i = 0; i < foreground.length; i++) if (Math.abs(source.values[i] - background) >= threshold) foreground[i] = 1;
+
+  type Component = { minX: number; minY: number; maxX: number; maxY: number; area: number; score: number };
+  const visited = new Uint8Array(foreground.length);
+  let components: Component[] = [];
+  const centerX = (source.width - 1) / 2, centerY = (source.height - 1) / 2;
+  const diagonal = Math.hypot(source.width, source.height);
+  for (let y = 0; y < source.height; y++) for (let x = 0; x < source.width; x++) {
+    const start = y * source.width + x;
+    if (!foreground[start] || visited[start]) continue;
+    const stack = [start]; visited[start] = 1;
+    let minX = x, minY = y, maxX = x, maxY = y, area = 0;
+    while (stack.length > 0) {
+      const index = stack.pop()!; area++;
+      const px = index % source.width, py = Math.floor(index / source.width);
+      minX = Math.min(minX, px); minY = Math.min(minY, py); maxX = Math.max(maxX, px); maxY = Math.max(maxY, py);
+      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+        if (dx === 0 && dy === 0) continue;
+        const nx = px + dx, ny = py + dy;
+        if (nx < 0 || ny < 0 || nx >= source.width || ny >= source.height) continue;
+        const next = ny * source.width + nx;
+        if (foreground[next] && !visited[next]) { visited[next] = 1; stack.push(next); }
+      }
+    }
+    const touchesBorder = minX === 0 || minY === 0 || maxX === source.width - 1 || maxY === source.height - 1;
+    if ((touchesBorder && (maxX - minX + 1) / source.width > 0.60) || area < Math.max(6, source.width * source.height * 0.00008)) continue;
+    const cx = (minX + maxX) / 2, cy = (minY + maxY) / 2;
+    const centrality = 1 - Math.min(1, Math.hypot(cx - centerX, cy - centerY) / (diagonal * 0.55));
+    components.push({ minX, minY, maxX, maxY, area, score: area * (0.55 + 0.45 * centrality) });
+  }
+  if (components.length === 0) return source;
+
+  // Merge pieces separated only by narrow design cuts (faceted marks, outlined animals) before
+  // ranking. Caption glyphs usually remain farther apart and therefore do not outrank the mark.
+  const mergeGap = Math.max(1, Math.round(Math.min(source.width, source.height) * 0.015));
+  const parent = components.map((_, index) => index);
+  const root = (index: number): number => parent[index] === index ? index : (parent[index] = root(parent[index]));
+  const unite = (a: number, b: number): void => { const ra = root(a), rb = root(b); if (ra !== rb) parent[rb] = ra; };
+  for (let a = 0; a < components.length; a++) for (let b = a + 1; b < components.length; b++) {
+    const left = components[a], right = components[b];
+    const gapX = Math.max(0, left.minX - right.maxX - 1, right.minX - left.maxX - 1);
+    const gapY = Math.max(0, left.minY - right.maxY - 1, right.minY - left.maxY - 1);
+    if (gapX <= mergeGap && gapY <= mergeGap) unite(a, b);
+  }
+  const clusters = new Map<number, Component>();
+  for (let index = 0; index < components.length; index++) {
+    const component = components[index], key = root(index), existing = clusters.get(key);
+    if (!existing) clusters.set(key, { ...component });
+    else {
+      existing.minX = Math.min(existing.minX, component.minX); existing.minY = Math.min(existing.minY, component.minY);
+      existing.maxX = Math.max(existing.maxX, component.maxX); existing.maxY = Math.max(existing.maxY, component.maxY);
+      existing.area += component.area;
+    }
+  }
+  components = [...clusters.values()].map((component) => {
+    const cx = (component.minX + component.maxX) / 2, cy = (component.minY + component.maxY) / 2;
+    const centrality = 1 - Math.min(1, Math.hypot(cx - centerX, cy - centerY) / (diagonal * 0.55));
+    return { ...component, score: component.area * (0.55 + 0.45 * centrality) };
+  });
+  components.sort((a, b) => b.score - a.score || a.minY - b.minY || a.minX - b.minX);
+  const best = components[0].score;
+  // Detached caption glyphs are typically individually much smaller than the primary mark.
+  // Keep a bounded set of material components so intentional satellites (for example a heart)
+  // survive while slogan/caption noise does not determine the crop.
+  const selected = components.filter((component, index) => index < 8 && component.score >= best * 0.10);
+  let minX = source.width - 1, minY = source.height - 1, maxX = 0, maxY = 0;
+  for (const component of selected) {
+    minX = Math.min(minX, component.minX); minY = Math.min(minY, component.minY);
+    maxX = Math.max(maxX, component.maxX); maxY = Math.max(maxY, component.maxY);
+  }
+  // Deliberate breathing room keeps the mark away from finder/timing regions after square fit.
+  const span = Math.max(maxX - minX + 1, maxY - minY + 1), padding = Math.max(3, Math.round(span * 0.30));
+  minX = Math.max(0, minX - padding); minY = Math.max(0, minY - padding);
+  maxX = Math.min(source.width - 1, maxX + padding); maxY = Math.min(source.height - 1, maxY + padding);
+  const width = maxX - minX + 1, height = maxY - minY + 1;
+  const values = new Array<number>(width * height);
+  for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
+    const sourceX = minX + x, sourceY = minY + y;
+    const insideSelected = selected.some((component) => sourceX >= component.minX && sourceX <= component.maxX && sourceY >= component.minY && sourceY <= component.maxY);
+    const value = source.values[sourceY * source.width + sourceX];
+    // Normalize uniform source backgrounds to white and erase rejected caption/watermark components.
+    values[y * width + x] = insideSelected && Math.abs(value - background) >= threshold ? value : 255;
+  }
+  return { width, height, values };
+}
+
+/**
+ * Produce a square-cropped, edge/saliency-aware target mask aligned to QR modules.
+ * When a matrix is supplied, protected regions are excluded during preprocessing as well as rendering,
+ * so morphology cannot spend the artistic module budget inside functional regions.
+ */
+export function preprocessTarget(
+  input: ImageFitOptimizerInput,
+  matrixOrSize: QrMatrix | number,
+  mode: ImageFitMode,
+  compositionPolicy: 'q1' | 'q2' | 'q3' = 'q3',
+): PreprocessedTarget {
+  const matrixSize = typeof matrixOrSize === 'number' ? matrixOrSize : matrixOrSize.size;
+  const drawableMask = Array.from({ length: matrixSize }, (_, y) =>
+    Array.from({ length: matrixSize }, (_, x) =>
+      typeof matrixOrSize === 'number' || !isProtectedFunctionalModule(matrixOrSize.functionalRegions, x, y),
+    ),
+  );
+  const source = compositionPolicy === 'q3' ? foregroundAwareCrop(input.target_luma) : input.target_luma;
+  const scale = 2;
+
+  // 1. Square crop / center pad with white
+  const squareDim = Math.max(source.width, source.height);
+  const lumaSquare = new Float32Array(squareDim * squareDim);
+  lumaSquare.fill(255);
+  const offX = Math.floor((squareDim - source.width) / 2);
+  const offY = Math.floor((squareDim - source.height) / 2);
+  for (let y = 0; y < source.height; y++) {
+    for (let x = 0; x < source.width; x++) {
+      lumaSquare[(y + offY) * squareDim + (x + offX)] = source.values[y * source.width + x];
+    }
+  }
+
+  // 2. Resize to (matrixSize * scale) for anti-aliased edge work
+  const scaledSize = matrixSize * scale;
+  const scaled = new Float32Array(scaledSize * scaledSize);
+  for (let y = 0; y < scaledSize; y++) {
+    for (let x = 0; x < scaledSize; x++) {
+      const sx = Math.min(squareDim - 1, Math.floor(x * squareDim / scaledSize));
+      const sy = Math.min(squareDim - 1, Math.floor(y * squareDim / scaledSize));
+      scaled[y * scaledSize + x] = lumaSquare[sy * squareDim + sx];
+    }
+  }
+
+  // 3. Edge magnitude (Sobel-like) + local contrast + dark-region coherence
+  const edgeMag = new Float32Array(scaledSize * scaledSize);
+  const localContrast = new Float32Array(scaledSize * scaledSize);
+  const darkCoherence = new Float32Array(scaledSize * scaledSize);
+  let maxEdge = 0;
+  let maxContrast = 0;
+  let maxDC = 0;
+  for (let y = 1; y < scaledSize - 1; y++) {
+    for (let x = 1; x < scaledSize - 1; x++) {
+      const i = y * scaledSize + x;
+      const dx = (scaled[i + 1] - scaled[i - 1]) / 2;
+      const dy = (scaled[i + scaledSize] - scaled[i - scaledSize]) / 2;
+      const mag = Math.sqrt(dx * dx + dy * dy);
+      edgeMag[i] = mag;
+      if (mag > maxEdge) maxEdge = mag;
+
+      // local contrast (range)
+      let minV = 255, maxV = 0;
+      for (let dy2 = -1; dy2 <= 1; dy2++) {
+        for (let dx2 = -1; dx2 <= 1; dx2++) {
+          const v = scaled[i + dy2 * scaledSize + dx2];
+          if (v < minV) minV = v;
+          if (v > maxV) maxV = v;
+        }
+      }
+      const c = maxV - minV;
+      localContrast[i] = c;
+      if (c > maxContrast) maxContrast = c;
+
+      // dark-region coherence: high for dark, flat interiors (spots, solid shapes)
+      const invNorm = (255 - scaled[i]) / 255;        // 1 = black, 0 = white
+      const flatness = 1 - Math.min(c / 128, 1);       // 1 = flat, 0 = high contrast
+      const dc = invNorm * flatness;
+      darkCoherence[i] = dc;
+      if (dc > maxDC) maxDC = dc;
+    }
+  }
+
+  // 4. Saliency = weighted blend (edge + contrast + dark coherence)
+  const saliency = new Float32Array(scaledSize * scaledSize);
+  for (let i = 0; i < saliency.length; i++) {
+    const e = maxEdge > 0 ? edgeMag[i] / maxEdge : 0;
+    const c = maxContrast > 0 ? localContrast[i] / maxContrast : 0;
+    const dc = maxDC > 0 ? darkCoherence[i] / maxDC : 0;
+    saliency[i] = e * 0.35 + c * 0.15 + dc * 0.50;
+  }
+
+  // 5. Adaptive percentile threshold per mode (fraction of modules that become mask)
+  const targetFraction = mode === 'readable' ? 0.13 : mode === 'balanced' ? 0.24 : 0.40;
+  const sorted = Array.from(saliency).filter((v) => v > 0).sort((a, b) => a - b);
+  const pixelTargetPercentile = mode === 'readable' ? 0.50 : mode === 'balanced' ? 0.55 : 0.60;
+  const threshIdx = Math.max(0, Math.floor(sorted.length * (1 - pixelTargetPercentile)) - 1);
+  const threshold = sorted.length > 0 ? sorted[Math.min(threshIdx, sorted.length - 1)] : 0.5;
+
+  // 6. Initial binary mask at subpixel level
+  const binaryMask = new Uint8Array(scaledSize * scaledSize);
+  for (let i = 0; i < saliency.length; i++) {
+    if (saliency[i] >= threshold) binaryMask[i] = 1;
+  }
+
+  // 7. 8-connected flood-fill: remove tiny specks (fewer than 4 pixels ≈ 1 module at 2×)
+  const visited = new Uint8Array(scaledSize * scaledSize);
+  const minComponentSize = 4;
+  for (let y = 0; y < scaledSize; y++) {
+    for (let x = 0; x < scaledSize; x++) {
+      const idx = y * scaledSize + x;
+      if (!binaryMask[idx] || visited[idx]) continue;
+      const component: Array<{ x: number; y: number }> = [];
+      const stack = [{ x, y }];
+      visited[idx] = 1;
+      while (stack.length > 0) {
+        const p = stack.pop()!;
+        component.push(p);
+        for (let dy = -1; dy <= 1; dy++) {
+          for (let dx = -1; dx <= 1; dx++) {
+            if (dx === 0 && dy === 0) continue;
+            const nx = p.x + dx, ny = p.y + dy;
+            if (nx >= 0 && nx < scaledSize && ny >= 0 && ny < scaledSize) {
+              const nidx = ny * scaledSize + nx;
+              if (binaryMask[nidx] && !visited[nidx]) {
+                visited[nidx] = 1;
+                stack.push({ x: nx, y: ny });
+              }
+            }
+          }
+        }
+      }
+      if (component.length < minComponentSize) {
+        for (const p of component) binaryMask[p.y * scaledSize + p.x] = 0;
+      }
+    }
+  }
+
+  // 8. Downsample to module grid
+  const moduleMask: boolean[][] = Array.from({ length: matrixSize }, () => Array(matrixSize).fill(false));
+  for (let my = 0; my < matrixSize; my++) {
+    for (let mx = 0; mx < matrixSize; mx++) {
+      let hasImage = false;
+      for (let sy = 0; sy < scale; sy++) {
+        for (let sx = 0; sx < scale; sx++) {
+          const px = mx * scale + sx;
+          const py = my * scale + sy;
+          if (binaryMask[py * scaledSize + px]) {
+            hasImage = true;
+            break;
+          }
+        }
+        if (hasImage) break;
+      }
+      moduleMask[my][mx] = hasImage && drawableMask[my][mx];
+    }
+  }
+
+  // 9. Q2 composition repair: bridge single-module breaks, close narrow gaps, and remove isolated fragments.
+  // Morphology is constrained again by drawableMask before budget enforcement; render-time functional-region
+  // exclusion remains a second independent safety net.
+  if (compositionPolicy !== 'q1') {
+    const bridged = bridgeSingleModuleGaps(moduleMask);
+    const closed = morphologicalClose(bridged, mode === 'image_first' ? 2 : 1);
+    const withoutSpecks = removeSmallMaskComponents(closed, mode === 'readable' ? 2 : 4);
+    const consolidated = retainDominantMaskComponents(withoutSpecks, mode === 'readable' ? 3 : 5);
+    for (let y = 0; y < matrixSize; y++) {
+      for (let x = 0; x < matrixSize; x++) moduleMask[y][x] = consolidated[y][x] && drawableMask[y][x];
+    }
+  }
+
+  // 10. Module-level cap enforcement: if overshooting the target fraction, remove weakest
+  // boundary modules first. Interior modules receive a coherence bonus so circles, spots,
+  // and solid silhouettes are not shredded into edge-only fragments.
+  const currentFraction = moduleMask.flat().filter(Boolean).length / (matrixSize * matrixSize);
+  if (currentFraction > targetFraction) {
+    // Build module-level scores from saliency
+    const moduleScores = Array.from({ length: matrixSize }, (_, my) =>
+      Array.from({ length: matrixSize }, (_, mx) => {
+        let sum = 0;
+        for (let sy = 0; sy < scale; sy++) {
+          for (let sx = 0; sx < scale; sx++) {
+            const px = mx * scale + sx;
+            const py = my * scale + sy;
+            sum += saliency[py * scaledSize + px];
+          }
+        }
+        let coherentNeighbors = 0;
+        for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+          if (dx === 0 && dy === 0) continue;
+          const nx = mx + dx; const ny = my + dy;
+          if (nx >= 0 && nx < matrixSize && ny >= 0 && ny < matrixSize && moduleMask[ny][nx]) coherentNeighbors += 1;
+        }
+        return sum / (scale * scale) + coherentNeighbors * 0.08;
+      })
+    );
+    const maskedModules: Array<{ x: number; y: number; score: number }> = [];
+    for (let y = 0; y < matrixSize; y++) {
+      for (let x = 0; x < matrixSize; x++) {
+        if (moduleMask[y][x]) maskedModules.push({ x, y, score: moduleScores[y][x] });
+      }
+    }
+    maskedModules.sort((a, b) => a.score - b.score);
+    const target = Math.floor(matrixSize * matrixSize * targetFraction);
+    for (let k = 0; k < maskedModules.length - target; k++) {
+      const m = maskedModules[k];
+      moduleMask[m.y][m.x] = false;
+    }
+  }
+
+  // Count connected components at module level (for diagnostics)
+  const moduleVisited = Array.from({ length: matrixSize }, () => Array(matrixSize).fill(false));
+  let componentCount = 0;
+  for (let y = 0; y < matrixSize; y++) {
+    for (let x = 0; x < matrixSize; x++) {
+      if (!moduleMask[y][x] || moduleVisited[y][x]) continue;
+      componentCount++;
+      const stack = [{ x, y }];
+      moduleVisited[y][x] = true;
+      while (stack.length > 0) {
+        const p = stack.pop()!;
+        for (let dy = -1; dy <= 1; dy++) {
+          for (let dx = -1; dx <= 1; dx++) {
+            if (dx === 0 && dy === 0) continue;
+            const nx = p.x + dx, ny = p.y + dy;
+            if (nx >= 0 && nx < matrixSize && ny >= 0 && ny < matrixSize && moduleMask[ny][nx] && !moduleVisited[ny][nx]) {
+              moduleVisited[ny][nx] = true;
+              stack.push({ x: nx, y: ny });
+            }
+          }
+        }
+      }
+    }
+  }
+
+  return { mask: moduleMask, edgeScore: round(maxEdge, 2), componentCount };
+}
+
+function cloneMask(mask: readonly boolean[][]): boolean[][] {
+  return mask.map((row) => [...row]);
+}
+
+function bridgeSingleModuleGaps(mask: readonly boolean[][]): boolean[][] {
+  const height = mask.length; const width = mask[0]?.length ?? 0;
+  const result = cloneMask(mask);
+  for (let y = 1; y < height - 1; y++) for (let x = 1; x < width - 1; x++) {
+    if (mask[y][x]) continue;
+    const horizontal = mask[y][x - 1] && mask[y][x + 1];
+    const vertical = mask[y - 1][x] && mask[y + 1][x];
+    const diagonalA = mask[y - 1][x - 1] && mask[y + 1][x + 1];
+    const diagonalB = mask[y - 1][x + 1] && mask[y + 1][x - 1];
+    let neighbors = 0;
+    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+      if ((dx !== 0 || dy !== 0) && mask[y + dy][x + dx]) neighbors += 1;
+    }
+    if (horizontal || vertical || diagonalA || diagonalB || neighbors >= 5) result[y][x] = true;
   }
   return result;
 }
 
-function renderImageFitSvg(matrix: QrMatrix, target: boolean[][], mode: ImageFitMode): {
+function morphologicalClose(mask: readonly boolean[][], iterations: number): boolean[][] {
+  let current = cloneMask(mask);
+  const height = current.length; const width = current[0]?.length ?? 0;
+  for (let iteration = 0; iteration < iterations; iteration++) {
+    const dilated = cloneMask(current);
+    for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
+      if (!current[y][x]) continue;
+      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+        const nx = x + dx; const ny = y + dy;
+        if (nx >= 0 && nx < width && ny >= 0 && ny < height) dilated[ny][nx] = true;
+      }
+    }
+    const eroded = cloneMask(dilated);
+    for (let y = 1; y < height - 1; y++) for (let x = 1; x < width - 1; x++) {
+      if (!dilated[y][x]) continue;
+      eroded[y][x] = dilated[y - 1][x] && dilated[y + 1][x] && dilated[y][x - 1] && dilated[y][x + 1];
+    }
+    current = eroded;
+  }
+  return current;
+}
+
+type MaskComponent = Array<{ x: number; y: number }>;
+
+function maskComponents(mask: readonly boolean[][]): MaskComponent[] {
+  const height = mask.length; const width = mask[0]?.length ?? 0;
+  const visited = Array.from({ length: height }, () => Array(width).fill(false));
+  const components: MaskComponent[] = [];
+  for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
+    if (!mask[y][x] || visited[y][x]) continue;
+    const component: MaskComponent = [];
+    const stack = [{ x, y }]; visited[y][x] = true;
+    while (stack.length > 0) {
+      const point = stack.pop()!; component.push(point);
+      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+        if (dx === 0 && dy === 0) continue;
+        const nx = point.x + dx; const ny = point.y + dy;
+        if (nx >= 0 && nx < width && ny >= 0 && ny < height && mask[ny][nx] && !visited[ny][nx]) {
+          visited[ny][nx] = true; stack.push({ x: nx, y: ny });
+        }
+      }
+    }
+    components.push(component);
+  }
+  return components;
+}
+
+function removeSmallMaskComponents(mask: readonly boolean[][], minimumArea: number): boolean[][] {
+  const result = Array.from({ length: mask.length }, () => Array(mask[0]?.length ?? 0).fill(false));
+  for (const component of maskComponents(mask)) {
+    if (component.length < minimumArea) continue;
+    for (const point of component) result[point.y][point.x] = true;
+  }
+  return result;
+}
+
+function retainDominantMaskComponents(mask: readonly boolean[][], maximumComponents: number): boolean[][] {
+  const components = maskComponents(mask).sort((a, b) => b.length - a.length).slice(0, maximumComponents);
+  const result = Array.from({ length: mask.length }, () => Array(mask[0]?.length ?? 0).fill(false));
+  for (const component of components) for (const point of component) result[point.y][point.x] = true;
+  return result;
+}
+
+/* ================================================================
+   Coherent grouped rendering
+   ================================================================ */
+
+function renderImageFitSvg(
+  matrix: QrMatrix,
+  mask: boolean[][],
+  mode: ImageFitMode,
+  meta: { useLegacy?: boolean; edgeScore?: number; componentCount?: number },
+): {
   svg: string; width: number; modifiedModules: number; recognitionScore: number;
   protectedConflictScore: number; protectedViolations: string[];
 } {
@@ -285,37 +793,121 @@ function renderImageFitSvg(matrix: QrMatrix, target: boolean[][], mode: ImageFit
   const margin = 4;
   const width = (matrix.size + margin * 2) * moduleSize;
   const offset = margin * moduleSize;
-  let svg = `<?xml version="1.0" encoding="UTF-8"?><svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${width}" viewBox="0 0 ${width} ${width}"><rect width="${width}" height="${width}" fill="#ffffff"/>`;
+
+  const svgHeader = `<?xml version="1.0" encoding="UTF-8"?><svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${width}" viewBox="0 0 ${width} ${width}"><rect width="${width}" height="${width}" fill="#ffffff"/>`;
+
   let modifiedModules = 0;
   let targetCount = 0;
-  let representedTargetCount = 0;
+  let appearanceScoreSum = 0;
   let protectedTargetCount = 0;
   const protectedViolations: string[] = [];
-  for (let y = 0; y < matrix.size; y += 1) for (let x = 0; x < matrix.size; x += 1) {
-    const active = matrix.modules[y][x] === 1;
-    const targetCell = target[y]?.[x] === true;
-    const protectedCell = isProtectedFunctionalModule(matrix.functionalRegions, x, y);
-    if (targetCell) targetCount += 1;
-    if (targetCell && protectedCell) protectedTargetCount += 1;
-    let fill = active ? '#000000' : '#ffffff';
-    if (targetCell && !protectedCell) {
-      const next = treatmentColor(mode, active);
-      if (next !== fill) modifiedModules += 1;
-      fill = next;
-      if (mode !== 'readable' || !active) representedTargetCount += 1;
-    }
-    if (protectedCell && fill !== (active ? '#000000' : '#ffffff')) protectedViolations.push(`${x},${y}`);
-    if (active || fill !== '#ffffff') {
-      svg += `<rect x="${offset + x * moduleSize}" y="${offset + y * moduleSize}" width="${moduleSize}" height="${moduleSize}" fill="${fill}"/>`;
+
+  // Compute fill for every module
+  const fills: string[][] = Array.from({ length: matrix.size }, () => Array(matrix.size).fill('#ffffff'));
+  for (let y = 0; y < matrix.size; y++) {
+    for (let x = 0; x < matrix.size; x++) {
+      const active = matrix.modules[y][x] === 1;
+      const maskCell = mask[y]?.[x] === true;
+      const protectedCell = isProtectedFunctionalModule(matrix.functionalRegions, x, y);
+      const baseFill = active ? '#000000' : '#ffffff';
+
+      if (maskCell) targetCount += 1;
+      if (maskCell && protectedCell) protectedTargetCount += 1;
+
+      let fill = baseFill;
+      if (maskCell && !protectedCell) {
+        if (meta.useLegacy) {
+          fill = treatmentColor(mode, active);
+          if (fill !== baseFill) modifiedModules += 1;
+        } else {
+          // Coherent mode-aware coloring
+          fill = modeAwareFill(mode, active, x, y, matrix, mask);
+          if (fill !== baseFill) modifiedModules += 1;
+        }
+      }
+
+      if (maskCell && !protectedCell) appearanceScoreSum += normalizedRgbDistance(fill, baseFill);
+      if (protectedCell && fill !== baseFill) protectedViolations.push(`${x},${y}`);
+      fills[y][x] = fill;
     }
   }
-  svg += '</svg>';
-  return {
-    svg, width, modifiedModules,
-    recognitionScore: targetCount === 0 ? 0 : round(representedTargetCount / targetCount, 6),
-    protectedConflictScore: targetCount === 0 ? 0 : round(protectedTargetCount / targetCount, 6),
-    protectedViolations,
-  };
+
+  // Build SVG using coherent horizontal-run grouping (fewer elements = cleaner visual)
+  let svgBody = '';
+  for (let y = 0; y < matrix.size; y++) {
+    let runStart = -1;
+    let runFill = '';
+    for (let x = 0; x <= matrix.size; x++) {
+      const fill = x < matrix.size ? fills[y][x] : '';
+      if (x < matrix.size && fill === runFill) continue;
+      if (runStart >= 0 && runFill !== '#ffffff') {
+        const runLength = x - runStart;
+        svgBody += `<rect x="${offset + runStart * moduleSize}" y="${offset + y * moduleSize}" width="${runLength * moduleSize}" height="${moduleSize}" fill="${runFill}"/>`;
+      }
+      runStart = x;
+      runFill = fill;
+    }
+  }
+
+  const svg = `${svgHeader}${svgBody}</svg>`;
+
+  const recognitionScore = targetCount === 0 ? 0 : round(appearanceScoreSum / targetCount, 6);
+  const protectedConflictScore = targetCount === 0 ? 0 : round(protectedTargetCount / targetCount, 6);
+
+  return { svg, width, modifiedModules, recognitionScore, protectedConflictScore, protectedViolations };
+}
+
+function normalizedRgbDistance(left: string, right: string): number {
+  const rgb = (hex: string): [number, number, number] => [
+    Number.parseInt(hex.slice(1, 3), 16),
+    Number.parseInt(hex.slice(3, 5), 16),
+    Number.parseInt(hex.slice(5, 7), 16),
+  ];
+  const a = rgb(left), b = rgb(right);
+  return Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]) / Math.hypot(255, 255, 255);
+}
+
+/**
+ * Mode-aware fill considering whether the QR module is dark and local coherence.
+ *
+ * - readable:   image only on light QR modules. Dark modules stay black.
+ * - balanced:   image on both, with tinted darks and mid-tones.
+ * - image_first: stronger image everywhere, dark stays dark-blue.
+ */
+function modeAwareFill(mode: ImageFitMode, active: boolean, x: number, y: number, matrix: QrMatrix, mask: boolean[][]): string {
+  // Local coherence: are neighboring image-mask modules mostly on dark or light QR modules?
+  let darkNeighbors = 0;
+  let lightNeighbors = 0;
+  for (let dy = -1; dy <= 1; dy++) {
+    for (let dx = -1; dx <= 1; dx++) {
+      const nx = x + dx, ny = y + dy;
+      if (nx >= 0 && nx < matrix.size && ny >= 0 && ny < matrix.size && mask[ny][nx]) {
+        if (matrix.modules[ny][nx] === 1) darkNeighbors++; else lightNeighbors++;
+      }
+    }
+  }
+  const mostlyDarkBackground = darkNeighbors >= lightNeighbors;
+
+  if (mode === 'readable') {
+    if (active) return '#000000';
+    // Subtle tint on light background, stronger if surrounded by image
+    const tintStrength = darkNeighbors + lightNeighbors >= 3 ? '#b8c8d8' : '#d0dce8';
+    return tintStrength;
+  }
+
+  if (mode === 'balanced') {
+    if (active) {
+      // Dark module: keep dark but shift toward cohesive blue to avoid pure-black voids
+      return mostlyDarkBackground ? '#1a3a5a' : '#142e48';
+    }
+    return mostlyDarkBackground ? '#8ab4d8' : '#a8c8e8';
+  }
+
+  // image_first
+  if (active) {
+    return mostlyDarkBackground ? '#3a6a9e' : '#2a5884';
+  }
+  return mostlyDarkBackground ? '#9ec8ec' : '#b8daf4';
 }
 
 function treatmentColor(mode: ImageFitMode, active: boolean): string {
@@ -330,13 +922,17 @@ function treatmentForMode(mode: ImageFitMode): ImageFitCandidateV1['image_treatm
   return 'central_logo_pixel';
 }
 
+/* ================================================================
+   Validation, fallback, artifact, utility (unchanged contracts)
+   ================================================================ */
+
 function validationCandidate(
   artifact: ImageFitArtifact, width: number,
   settings: { version: number; ecc: ImageFitEcc; mask: number }, mode: ImageFitMode,
 ): Candidate {
   return {
-    candidateId: `validation-${mode}`,
-    matrixRef: `qr:${settings.version}:${settings.mask}`,
+    candidateId: `validation-${mode}-v${settings.version}-${settings.ecc.toLowerCase()}-m${settings.mask}`,
+    matrixRef: `qr:${settings.version}:${settings.ecc}:${settings.mask}`,
     rendered: { format: 'svg', data: artifact.data, width, height: width },
     scanResults: [], exportAllowed: false, artisticScore: 0,
   };
