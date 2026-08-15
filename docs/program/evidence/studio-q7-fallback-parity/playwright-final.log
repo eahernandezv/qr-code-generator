@@ -6,4 +6,4 @@
 Running 1 test using 1 worker
 
 [1/1] [chromium-desktop] › e2e/level2-image-fit-spike.spec.ts:100:1 › non-qualifying Image-Fit keeps Q7 hidden and downloads only the Core-authorized fallback bytes
-  1 passed (3.8s)
+  1 passed (4.2s)

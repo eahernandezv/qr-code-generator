@@ -118,6 +118,7 @@ test('non-qualifying Image-Fit keeps Q7 hidden and downloads only the Core-autho
       result: { ...fixture, request: { ...fixture.request, request_id: request.request_id }, candidates: failedCandidates },
       authorized_fallback: {
         artifact: { kind: 'export_svg', uri: `data:image/svg+xml;base64,${Buffer.from(fallbackSvg).toString('base64')}`, sha256: fallbackHash },
+        encoded_payload: encodedPayload,
         payload_sha256: payloadSha256,
         scan_evidence: fixture.candidates[0].scan_evidence,
       },

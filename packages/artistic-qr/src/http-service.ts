@@ -74,6 +74,7 @@ export function createArtisticQrHttpService(options: ArtisticQrHttpServiceOption
               uri: `data:image/svg+xml;base64,${Buffer.from(result.fallback_artifact.data, 'utf8').toString('base64')}`,
               sha256: result.fallback_artifact.sha256,
             },
+            encoded_payload: result.encoded_payload,
             payload_sha256: sha256(result.encoded_payload),
             scan_evidence: result.fallback_scan_evidence,
           }

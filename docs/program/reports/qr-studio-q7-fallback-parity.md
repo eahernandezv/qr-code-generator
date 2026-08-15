@@ -17,7 +17,7 @@ Status: `READY_FOR_PRODUCT_ARCHITECT_REVIEW`
 
 1. Core's existing deterministic fallback artifact and scan evidence are now exposed as a sibling HTTP transport field, outside the frozen `result` contract, only when Core reports the Level 1 fallback available and scan-passing.
 2. The transport binds exact inline SVG bytes to Core's artifact SHA-256 and binds the fallback to the exact encoded payload SHA-256.
-3. Studio independently verifies the fallback data-URI bytes, artifact hash, payload-hash agreement, scan verdict, request binding, and frozen response before accepting it.
+3. Studio independently verifies the fallback data-URI bytes, artifact hash, exact encoded-payload bytes and SHA-256 (including zero-candidate responses), candidate payload-hash agreement when candidates exist, scan verdict, request binding, and frozen response before accepting it.
 4. A response with no validated, scan-passing Image-Fit candidate removes/hides every Q7 candidate and shows a clear non-qualification state.
 5. Only the verified deterministic Level 1 Safe fallback gets a download affordance. Its preview carries the authoritative artifact and payload hashes.
 6. The fallback action does not change Q7 export authority. Payment, committed short-link, scan, parity, and Image-first experimental gates remain visibly fail-closed; no Q7 checkout/export/short-link action is rendered.
@@ -43,7 +43,7 @@ Evidence root: `docs/program/evidence/studio-q7-fallback-parity/`
 
 All commands ran against the final working tree before handoff report creation:
 
-- `npm exec --yes pnpm@9.0.0 -- --filter @qr/web test` — PASS, 15 files / 138 tests.
+- `npm exec --yes pnpm@9.0.0 -- --filter @qr/web test` — PASS, 15 files / 139 tests.
 - `npm exec --yes pnpm@9.0.0 -- --filter @qr/web lint` — PASS, zero warnings/errors.
 - `npm exec --yes pnpm@9.0.0 -- --filter @qr/web build` — PASS, TypeScript and Vite production build.
 - `npm exec --yes pnpm@9.0.0 -- --filter @qr/web test:e2e --grep "non-qualifying Image-Fit"` — PASS, 1/1 Playwright test.
@@ -54,6 +54,8 @@ All commands ran against the final working tree before handoff report creation:
 - `git diff --check` — PASS.
 
 The first focused Playwright attempt was a harness-only failure before browser launch because the host defaulted to Node 18 and the configured local-library path omitted `local-libs/root`. The canonical retry used isolated Node `v20.19.5` and the existing local Playwright libraries, then passed and produced the cited evidence. No product assertion ran in the failed attempt.
+
+An independent read-only semantic review found that the initial browser adapter skipped payload verification for a frozen-contract-valid zero-candidate response. The final tree remediates that finding by carrying Core's exact encoded payload, independently hashing it in Studio, and rejecting any mismatch; a dedicated zero-candidate negative test is included. All final gates above were rerun after remediation.
 
 ## Changed implementation surfaces
 

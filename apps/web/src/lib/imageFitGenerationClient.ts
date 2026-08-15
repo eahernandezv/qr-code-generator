@@ -43,6 +43,7 @@ export type ImageFitGenerationResponseV1 = {
 
 export type ImageFitAuthorizedFallbackV1 = {
   artifact: { kind: 'export_svg'; uri: string; sha256: string }
+  encoded_payload: string
   payload_sha256: string
   scan_evidence: ImageFitCandidateV1['scan_evidence']
 }
@@ -189,10 +190,16 @@ async function readAuthorizedFallback(value: unknown, response: ImageFitGenerati
     || typeof artifact.uri !== 'string'
     || !artifact.uri.startsWith('data:image/svg+xml')
     || !SHA256.test(artifact.sha256 ?? '')
+    || typeof candidate.encoded_payload !== 'string'
+    || candidate.encoded_payload.length === 0
     || !SHA256.test(candidate.payload_sha256 ?? '')
     || candidate.scan_evidence?.verdict !== 'pass') return undefined
   const payloadHashes = response.candidates.map((item) => item.qr_settings.payload_sha256).filter((hash): hash is string => typeof hash === 'string')
   if (payloadHashes.length > 0 && payloadHashes.some((hash) => hash !== candidate.payload_sha256)) return undefined
+  if (response.request.user_controls.link_mode === 'original_url' && candidate.encoded_payload !== response.request.destination.normalized_url) return undefined
+  const payloadDigest = await globalThis.crypto.subtle.digest('SHA-256', new TextEncoder().encode(candidate.encoded_payload))
+  const actualPayloadHash = Array.from(new Uint8Array(payloadDigest), (byte) => byte.toString(16).padStart(2, '0')).join('')
+  if (actualPayloadHash !== candidate.payload_sha256) return undefined
   const digest = await globalThis.crypto.subtle.digest('SHA-256', decodeDataUri(artifact.uri))
   const actual = Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('')
   return actual === artifact.sha256 ? candidate as ImageFitAuthorizedFallbackV1 : undefined
