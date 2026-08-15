@@ -1,0 +1,1226 @@
+{
+  "threshold_version": "scan-v1-real-75pct",
+  "decoder": "jsQR 1.4.0",
+  "results": [
+    {
+      "phase": "phase-a",
+      "identity": "sdxl-img2img-illusion",
+      "target": "gradient-m-ribbon",
+      "artifact": "local-artifacts/phase-a--sdxl-img2img-illusion--gradient-m-ribbon.png",
+      "artifact_sha256": "e03c13d0aa766b8897d9a5eceee56014ee16728b20b587cf6640d3a751e918a4",
+      "scan": {
+        "pass": false,
+        "decoder": "jsQR",
+        "version": "1.4.0",
+        "thresholdVersion": "scan-v1-real-75pct",
+        "scannedPayload": "",
+        "tests": [
+          {
+            "name": "decode_raw",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "none",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 164.212,
+              "width": 1024,
+              "height": 1024
+            }
+          },
+          {
+            "name": "decode_0.5x",
+            "pass": false,
+            "scale": 0.5,
+            "perturbation": "none",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 44.189,
+              "width": 512,
+              "height": 512
+            }
+          },
+          {
+            "name": "decode_2x",
+            "pass": false,
+            "scale": 2,
+            "perturbation": "none",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 260.945,
+              "width": 2048,
+              "height": 2048
+            }
+          },
+          {
+            "name": "blur_light",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "blur",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 49.523,
+              "width": 1024,
+              "height": 1024
+            }
+          },
+          {
+            "name": "noise_light",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "noise",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 62.733,
+              "width": 1024,
+              "height": 1024
+            }
+          },
+          {
+            "name": "contrast_low",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "contrast",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 49.42,
+              "width": 1024,
+              "height": 1024
+            }
+          },
+          {
+            "name": "rotation_2deg",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "rotation",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 53.31,
+              "width": 1024,
+              "height": 1024
+            }
+          },
+          {
+            "name": "perspective_mild",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "perspective",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 55.309,
+              "width": 1024,
+              "height": 1024
+            }
+          }
+        ],
+        "overallConfidence": "failed"
+      },
+      "export_allowed_by_core": false
+    },
+    {
+      "phase": "phase-a",
+      "identity": "sdxl-img2img-illusion",
+      "target": "wolf-black-white",
+      "artifact": "local-artifacts/phase-a--sdxl-img2img-illusion--wolf-black-white.png",
+      "artifact_sha256": "3dfcc5e288b758cedcf510856580a9de471dd59a100dabcd35a250c8be52e341",
+      "scan": {
+        "pass": false,
+        "decoder": "jsQR",
+        "version": "1.4.0",
+        "thresholdVersion": "scan-v1-real-75pct",
+        "scannedPayload": "",
+        "tests": [
+          {
+            "name": "decode_raw",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "none",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 206.792,
+              "width": 1024,
+              "height": 1024
+            }
+          },
+          {
+            "name": "decode_0.5x",
+            "pass": false,
+            "scale": 0.5,
+            "perturbation": "none",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 65.489,
+              "width": 512,
+              "height": 512
+            }
+          },
+          {
+            "name": "decode_2x",
+            "pass": false,
+            "scale": 2,
+            "perturbation": "none",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 395.275,
+              "width": 2048,
+              "height": 2048
+            }
+          },
+          {
+            "name": "blur_light",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "blur",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 87.209,
+              "width": 1024,
+              "height": 1024
+            }
+          },
+          {
+            "name": "noise_light",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "noise",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 90.253,
+              "width": 1024,
+              "height": 1024
+            }
+          },
+          {
+            "name": "contrast_low",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "contrast",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 87.217,
+              "width": 1024,
+              "height": 1024
+            }
+          },
+          {
+            "name": "rotation_2deg",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "rotation",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 94.481,
+              "width": 1024,
+              "height": 1024
+            }
+          },
+          {
+            "name": "perspective_mild",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "perspective",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 112.067,
+              "width": 1024,
+              "height": 1024
+            }
+          }
+        ],
+        "overallConfidence": "failed"
+      },
+      "export_allowed_by_core": false
+    },
+    {
+      "phase": "phase-a",
+      "identity": "sdxl-img2img-illusion-canny",
+      "target": "gradient-m-ribbon",
+      "artifact": "local-artifacts/phase-a--sdxl-img2img-illusion-canny--gradient-m-ribbon.png",
+      "artifact_sha256": "836993b4283ed84724e2408038207a44c0efaedd1226c4c8c8b05eae34874a1f",
+      "scan": {
+        "pass": false,
+        "decoder": "jsQR",
+        "version": "1.4.0",
+        "thresholdVersion": "scan-v1-real-75pct",
+        "scannedPayload": "",
+        "tests": [
+          {
+            "name": "decode_raw",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "none",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 90.967,
+              "width": 1024,
+              "height": 1024
+            }
+          },
+          {
+            "name": "decode_0.5x",
+            "pass": false,
+            "scale": 0.5,
+            "perturbation": "none",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 24.692,
+              "width": 512,
+              "height": 512
+            }
+          },
+          {
+            "name": "decode_2x",
+            "pass": false,
+            "scale": 2,
+            "perturbation": "none",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 367.936,
+              "width": 2048,
+              "height": 2048
+            }
+          },
+          {
+            "name": "blur_light",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "blur",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 68.027,
+              "width": 1024,
+              "height": 1024
+            }
+          },
+          {
+            "name": "noise_light",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "noise",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 78.065,
+              "width": 1024,
+              "height": 1024
+            }
+          },
+          {
+            "name": "contrast_low",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "contrast",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 73.106,
+              "width": 1024,
+              "height": 1024
+            }
+          },
+          {
+            "name": "rotation_2deg",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "rotation",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 72.601,
+              "width": 1024,
+              "height": 1024
+            }
+          },
+          {
+            "name": "perspective_mild",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "perspective",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 77.545,
+              "width": 1024,
+              "height": 1024
+            }
+          }
+        ],
+        "overallConfidence": "failed"
+      },
+      "export_allowed_by_core": false
+    },
+    {
+      "phase": "phase-a",
+      "identity": "sdxl-img2img-illusion-canny",
+      "target": "wolf-black-white",
+      "artifact": "local-artifacts/phase-a--sdxl-img2img-illusion-canny--wolf-black-white.png",
+      "artifact_sha256": "acca8381b6d99d6fa13dfa55946393a8692e8e71bbd76d32bb6d4d112374acfc",
+      "scan": {
+        "pass": false,
+        "decoder": "jsQR",
+        "version": "1.4.0",
+        "thresholdVersion": "scan-v1-real-75pct",
+        "scannedPayload": "",
+        "tests": [
+          {
+            "name": "decode_raw",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "none",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 108.887,
+              "width": 1024,
+              "height": 1024
+            }
+          },
+          {
+            "name": "decode_0.5x",
+            "pass": false,
+            "scale": 0.5,
+            "perturbation": "none",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 29.461,
+              "width": 512,
+              "height": 512
+            }
+          },
+          {
+            "name": "decode_2x",
+            "pass": false,
+            "scale": 2,
+            "perturbation": "none",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 400.879,
+              "width": 2048,
+              "height": 2048
+            }
+          },
+          {
+            "name": "blur_light",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "blur",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 85.936,
+              "width": 1024,
+              "height": 1024
+            }
+          },
+          {
+            "name": "noise_light",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "noise",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 92.38,
+              "width": 1024,
+              "height": 1024
+            }
+          },
+          {
+            "name": "contrast_low",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "contrast",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 91.575,
+              "width": 1024,
+              "height": 1024
+            }
+          },
+          {
+            "name": "rotation_2deg",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "rotation",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 90.979,
+              "width": 1024,
+              "height": 1024
+            }
+          },
+          {
+            "name": "perspective_mild",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "perspective",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 89.381,
+              "width": 1024,
+              "height": 1024
+            }
+          }
+        ],
+        "overallConfidence": "failed"
+      },
+      "export_allowed_by_core": false
+    },
+    {
+      "phase": "phase-a",
+      "identity": "sdxl-img2img-illusion-lineart",
+      "target": "gradient-m-ribbon",
+      "artifact": "local-artifacts/phase-a--sdxl-img2img-illusion-lineart--gradient-m-ribbon.png",
+      "artifact_sha256": "c0d3e464c7121942502bf0d03e783ed71b0d56c0c7c7f1900a4cbc1b5320312e",
+      "scan": {
+        "pass": false,
+        "decoder": "jsQR",
+        "version": "1.4.0",
+        "thresholdVersion": "scan-v1-real-75pct",
+        "scannedPayload": "",
+        "tests": [
+          {
+            "name": "decode_raw",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "none",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 107.197,
+              "width": 1024,
+              "height": 1024
+            }
+          },
+          {
+            "name": "decode_0.5x",
+            "pass": false,
+            "scale": 0.5,
+            "perturbation": "none",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 21.594,
+              "width": 512,
+              "height": 512
+            }
+          },
+          {
+            "name": "decode_2x",
+            "pass": false,
+            "scale": 2,
+            "perturbation": "none",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 385.346,
+              "width": 2048,
+              "height": 2048
+            }
+          },
+          {
+            "name": "blur_light",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "blur",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 84.969,
+              "width": 1024,
+              "height": 1024
+            }
+          },
+          {
+            "name": "noise_light",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "noise",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 86.586,
+              "width": 1024,
+              "height": 1024
+            }
+          },
+          {
+            "name": "contrast_low",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "contrast",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 86.479,
+              "width": 1024,
+              "height": 1024
+            }
+          },
+          {
+            "name": "rotation_2deg",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "rotation",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 86.098,
+              "width": 1024,
+              "height": 1024
+            }
+          },
+          {
+            "name": "perspective_mild",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "perspective",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 88.183,
+              "width": 1024,
+              "height": 1024
+            }
+          }
+        ],
+        "overallConfidence": "failed"
+      },
+      "export_allowed_by_core": false
+    },
+    {
+      "phase": "phase-a",
+      "identity": "sdxl-img2img-illusion-lineart",
+      "target": "wolf-black-white",
+      "artifact": "local-artifacts/phase-a--sdxl-img2img-illusion-lineart--wolf-black-white.png",
+      "artifact_sha256": "8b39bdb75dd904c3d3b138acb5ab2aef4be368c7fd7fb88cc0b292b406b0e4be",
+      "scan": {
+        "pass": false,
+        "decoder": "jsQR",
+        "version": "1.4.0",
+        "thresholdVersion": "scan-v1-real-75pct",
+        "scannedPayload": "",
+        "tests": [
+          {
+            "name": "decode_raw",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "none",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 121.607,
+              "width": 1024,
+              "height": 1024
+            }
+          },
+          {
+            "name": "decode_0.5x",
+            "pass": false,
+            "scale": 0.5,
+            "perturbation": "none",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 28.474,
+              "width": 512,
+              "height": 512
+            }
+          },
+          {
+            "name": "decode_2x",
+            "pass": false,
+            "scale": 2,
+            "perturbation": "none",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 402.296,
+              "width": 2048,
+              "height": 2048
+            }
+          },
+          {
+            "name": "blur_light",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "blur",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 95.348,
+              "width": 1024,
+              "height": 1024
+            }
+          },
+          {
+            "name": "noise_light",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "noise",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 93.186,
+              "width": 1024,
+              "height": 1024
+            }
+          },
+          {
+            "name": "contrast_low",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "contrast",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 101.563,
+              "width": 1024,
+              "height": 1024
+            }
+          },
+          {
+            "name": "rotation_2deg",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "rotation",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 90.654,
+              "width": 1024,
+              "height": 1024
+            }
+          },
+          {
+            "name": "perspective_mild",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "perspective",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 90.23,
+              "width": 1024,
+              "height": 1024
+            }
+          }
+        ],
+        "overallConfidence": "failed"
+      },
+      "export_allowed_by_core": false
+    },
+    {
+      "phase": "tuning",
+      "identity": "qr-heavy-2p0",
+      "target": "gradient-m-ribbon",
+      "artifact": "local-artifacts/tune--qr-heavy-2p0--gradient-m-ribbon.png",
+      "artifact_sha256": "b5dcbcf4948cab746fd0c6172f729f4b8293b78a02ce33436da2b7ef808a0c9e",
+      "scan": {
+        "pass": false,
+        "decoder": "jsQR",
+        "version": "1.4.0",
+        "thresholdVersion": "scan-v1-real-75pct",
+        "scannedPayload": "",
+        "tests": [
+          {
+            "name": "decode_raw",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "none",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 112.222,
+              "width": 1024,
+              "height": 1024
+            }
+          },
+          {
+            "name": "decode_0.5x",
+            "pass": false,
+            "scale": 0.5,
+            "perturbation": "none",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 23.991,
+              "width": 512,
+              "height": 512
+            }
+          },
+          {
+            "name": "decode_2x",
+            "pass": false,
+            "scale": 2,
+            "perturbation": "none",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 338.045,
+              "width": 2048,
+              "height": 2048
+            }
+          },
+          {
+            "name": "blur_light",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "blur",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 108.475,
+              "width": 1024,
+              "height": 1024
+            }
+          },
+          {
+            "name": "noise_light",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "noise",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 99.003,
+              "width": 1024,
+              "height": 1024
+            }
+          },
+          {
+            "name": "contrast_low",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "contrast",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 74.057,
+              "width": 1024,
+              "height": 1024
+            }
+          },
+          {
+            "name": "rotation_2deg",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "rotation",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 82.506,
+              "width": 1024,
+              "height": 1024
+            }
+          },
+          {
+            "name": "perspective_mild",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "perspective",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 79.699,
+              "width": 1024,
+              "height": 1024
+            }
+          }
+        ],
+        "overallConfidence": "failed"
+      },
+      "export_allowed_by_core": false
+    },
+    {
+      "phase": "tuning",
+      "identity": "qr-heavy-2p0",
+      "target": "wolf-black-white",
+      "artifact": "local-artifacts/tune--qr-heavy-2p0--wolf-black-white.png",
+      "artifact_sha256": "ea356288765c6696d67564d72315318bf48007dbd99f7571d272e1cd0a173343",
+      "scan": {
+        "pass": false,
+        "decoder": "jsQR",
+        "version": "1.4.0",
+        "thresholdVersion": "scan-v1-real-75pct",
+        "scannedPayload": "",
+        "tests": [
+          {
+            "name": "decode_raw",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "none",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 93.633,
+              "width": 1024,
+              "height": 1024
+            }
+          },
+          {
+            "name": "decode_0.5x",
+            "pass": false,
+            "scale": 0.5,
+            "perturbation": "none",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 33.385,
+              "width": 512,
+              "height": 512
+            }
+          },
+          {
+            "name": "decode_2x",
+            "pass": false,
+            "scale": 2,
+            "perturbation": "none",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 406.381,
+              "width": 2048,
+              "height": 2048
+            }
+          },
+          {
+            "name": "blur_light",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "blur",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 95.947,
+              "width": 1024,
+              "height": 1024
+            }
+          },
+          {
+            "name": "noise_light",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "noise",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 92.15,
+              "width": 1024,
+              "height": 1024
+            }
+          },
+          {
+            "name": "contrast_low",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "contrast",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 92.919,
+              "width": 1024,
+              "height": 1024
+            }
+          },
+          {
+            "name": "rotation_2deg",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "rotation",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 93.341,
+              "width": 1024,
+              "height": 1024
+            }
+          },
+          {
+            "name": "perspective_mild",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "perspective",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 97.648,
+              "width": 1024,
+              "height": 1024
+            }
+          }
+        ],
+        "overallConfidence": "failed"
+      },
+      "export_allowed_by_core": false
+    },
+    {
+      "phase": "tuning",
+      "identity": "qr-heavy-3p0",
+      "target": "gradient-m-ribbon",
+      "artifact": "local-artifacts/tune--qr-heavy-3p0--gradient-m-ribbon.png",
+      "artifact_sha256": "021e70cf66766cadf4e2fbe9a3cfb43e49347ee3b0a98fc165e489fe0f46a5db",
+      "scan": {
+        "pass": false,
+        "decoder": "jsQR",
+        "version": "1.4.0",
+        "thresholdVersion": "scan-v1-real-75pct",
+        "scannedPayload": "",
+        "tests": [
+          {
+            "name": "decode_raw",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "none",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 94.94,
+              "width": 1024,
+              "height": 1024
+            }
+          },
+          {
+            "name": "decode_0.5x",
+            "pass": false,
+            "scale": 0.5,
+            "perturbation": "none",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 24.085,
+              "width": 512,
+              "height": 512
+            }
+          },
+          {
+            "name": "decode_2x",
+            "pass": false,
+            "scale": 2,
+            "perturbation": "none",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 452.515,
+              "width": 2048,
+              "height": 2048
+            }
+          },
+          {
+            "name": "blur_light",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "blur",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 96.198,
+              "width": 1024,
+              "height": 1024
+            }
+          },
+          {
+            "name": "noise_light",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "noise",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 83.659,
+              "width": 1024,
+              "height": 1024
+            }
+          },
+          {
+            "name": "contrast_low",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "contrast",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 77.247,
+              "width": 1024,
+              "height": 1024
+            }
+          },
+          {
+            "name": "rotation_2deg",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "rotation",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 81.116,
+              "width": 1024,
+              "height": 1024
+            }
+          },
+          {
+            "name": "perspective_mild",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "perspective",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 78.542,
+              "width": 1024,
+              "height": 1024
+            }
+          }
+        ],
+        "overallConfidence": "failed"
+      },
+      "export_allowed_by_core": false
+    },
+    {
+      "phase": "tuning",
+      "identity": "qr-heavy-3p0",
+      "target": "wolf-black-white",
+      "artifact": "local-artifacts/tune--qr-heavy-3p0--wolf-black-white.png",
+      "artifact_sha256": "020c9029582c2dbf7b3cfddcb608ee8cddae306483c94bcbc2649f97487d154b",
+      "scan": {
+        "pass": false,
+        "decoder": "jsQR",
+        "version": "1.4.0",
+        "thresholdVersion": "scan-v1-real-75pct",
+        "scannedPayload": "",
+        "tests": [
+          {
+            "name": "decode_raw",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "none",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 116.791,
+              "width": 1024,
+              "height": 1024
+            }
+          },
+          {
+            "name": "decode_0.5x",
+            "pass": true,
+            "scale": 0.5,
+            "perturbation": "none",
+            "details": {
+              "decodedPayload": "https://placeholder-online.com/r/q5Dual8",
+              "payloadMatches": true,
+              "latencyMs": 28.235,
+              "width": 512,
+              "height": 512
+            }
+          },
+          {
+            "name": "decode_2x",
+            "pass": false,
+            "scale": 2,
+            "perturbation": "none",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 573.774,
+              "width": 2048,
+              "height": 2048
+            }
+          },
+          {
+            "name": "blur_light",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "blur",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 123.998,
+              "width": 1024,
+              "height": 1024
+            }
+          },
+          {
+            "name": "noise_light",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "noise",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 128.225,
+              "width": 1024,
+              "height": 1024
+            }
+          },
+          {
+            "name": "contrast_low",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "contrast",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 125.151,
+              "width": 1024,
+              "height": 1024
+            }
+          },
+          {
+            "name": "rotation_2deg",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "rotation",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 139.216,
+              "width": 1024,
+              "height": 1024
+            }
+          },
+          {
+            "name": "perspective_mild",
+            "pass": false,
+            "scale": 1,
+            "perturbation": "perspective",
+            "details": {
+              "decodedPayload": "",
+              "payloadMatches": false,
+              "latencyMs": 132.345,
+              "width": 1024,
+              "height": 1024
+            }
+          }
+        ],
+        "overallConfidence": "failed"
+      },
+      "export_allowed_by_core": false
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "schemaVersion": "observable-work-loop.v2",
+  "loopId": "level2-dual-conditioned-provider-q5",
+  "objective": "Discover and evaluate genuinely dual-conditioned artistic QR architectures that consume both supplied reference pixels and exact QR structure.",
+  "scope": [
+    "live provider schema verification",
+    "reference-image plus QR-control generation",
+    "Core exact-byte scan validation",
+    "visual reference recognizability",
+    "cost, latency, provenance, repair, and deterministic fallback evidence"
+  ],
+  "nonGoals": ["Studio UI", "commerce", "frozen-contract changes", "deployment", "public redistribution of source-bearing artifacts", "physical or print scan claims"],
+  "status": "COMPLETE",
+  "cycle": 2,
+  "currentStage": "final-verification",
+  "processOutcome": "exited",
+  "artifactDecision": "partial",
+  "criteria": [
+    {"id":"Q5-C1","status":"PASS","requirement":"At least three architectures are schema-proven to consume reference pixels and a separate QR control image.","evidence":"Live schema verified img2img reference plus illusion QR control, with optional canny or lineart reference control."},
+    {"id":"Q5-C2","status":"PASS","requirement":"Phase A runs each architecture on one geometric and one complex reference with exact provenance, latency, cost, and local scan evidence.","evidence":"6/6 Phase A predictions succeeded with exact hashes, cost, latency, and Core scan evidence."},
+    {"id":"Q5-C3","status":"PASS","requirement":"Only architectures showing at least partial reference recognizability and raw decode or at least 2/8 perturbation checks expand to all eight references.","evidence":"All references were clear but all candidates scored 0/8; expansion correctly stopped. A bounded strength sweep also failed qualification."},
+    {"id":"Q5-C4","status":"FAIL","requirement":"Sponsor gate requires at least 6/8 clear reference recognition and at least one raw+6/8 candidate per target without QR-dominant overlay repair.","evidence":"0/10 provider candidates passed Core scan; sponsor-ready 0/10."},
+    {"id":"Q5-C5","status":"PASS","requirement":"All unusable outputs remain export-denied and deterministic fallback passes exact payload validation.","evidence":"10/10 provider outputs denied; 4/4 deterministic fallbacks passed threshold with exact payload equality."},
+    {"id":"Q5-C6","status":"PASS","requirement":"Full Core gates, evidence hashes, rights handling, clean owned-scope diff, commit, and bundle verification pass.","evidence":"Core 24/24, Artistic 136/136 TypeScript plus 6/6 Python, schema parse and Q5 evidence validator passed; source-bearing artifacts excluded."}
+  ],
+  "architectures": [
+    {"id":"sdxl-img2img-illusion","model":"fofr/sdxl-multi-controlnet-lora","reference":"img2img image","qrControl":"illusion ControlNet"},
+    {"id":"sdxl-img2img-illusion-canny","model":"fofr/sdxl-multi-controlnet-lora","reference":"img2img image plus canny reference ControlNet","qrControl":"illusion ControlNet"},
+    {"id":"sdxl-img2img-illusion-lineart","model":"fofr/sdxl-multi-controlnet-lora","reference":"img2img image plus lineart reference ControlNet","qrControl":"illusion ControlNet"}
+  ],
+  "authorization": {
+    "allowed": ["up to six Phase A paid predictions", "expand only qualifying architectures to remaining references", "maximum 24 total predictions", "Core scripts/tests/evidence", "local commit and bundle"],
+    "forbidden": ["provider credit refill", "frozen-contract edits", "public source/reference bytes", "Studio/commerce changes", "PR", "merge", "deploy"]
+  },
+  "resourceLimits": {"maximumPredictions":24,"maximumEstimatedSpendUsd":1.50,"predictionTimeoutSeconds":300,"attemptLimit":2,"stagnationLimit":1},
+  "evidenceRoot": "docs/program/evidence/level2-dual-conditioned-provider-q5",
+  "recoveryAction": "Save every completed provider output immediately; resume from the first missing architecture-target pair without repeating successful paid calls.",
+  "nextTransition": "Product Architect independently verifies the negative gate. Do not integrate this model or expand to the remaining six references."
+}

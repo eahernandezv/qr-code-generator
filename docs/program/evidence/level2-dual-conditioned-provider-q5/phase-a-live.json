@@ -1,0 +1,210 @@
+{
+  "schema_version": "dual-conditioned-q5-phase-a.v1",
+  "model": "fofr/sdxl-multi-controlnet-lora",
+  "version": "89eb212b3d1366a83e949c12a4b45dfe6b6b313b594cb8268e864931ac9ffb16",
+  "payload": "https://placeholder-online.com/r/q5Dual8",
+  "price_source": "Replicate model page live read-back: $0.000975 per prediction second",
+  "price_per_predict_second_usd": 0.000975,
+  "results": [
+    {
+      "architecture": "sdxl-img2img-illusion",
+      "target": "gradient-m-ribbon",
+      "status": "succeeded",
+      "prediction_id": "dq6av9cxb5rmy0d00ksr69vwbm",
+      "model": "fofr/sdxl-multi-controlnet-lora",
+      "version": "89eb212b3d1366a83e949c12a4b45dfe6b6b313b594cb8268e864931ac9ffb16",
+      "source_sha256": "cb3b4fecbd0547cd2dfb62daeecfc0116e4dd49fb653ac602025a77b00badaec",
+      "reference_preprocessed_sha256": "e7997377aea6ee6551ddbacfc8e381a91b225f29f08d5dd311c2a07deb42cb88",
+      "reference_dimensions": [
+        704,
+        528
+      ],
+      "qr_control_sha256": "0653d4d27cb6cea1c617dc70afca5dafff87a26a3f2f214d5b4dfc6ddb7979b2",
+      "seed": 5103,
+      "sanitized_prompt": "premium minimal abstract capital M made from crossing rounded ribbons, cyan blue violet gradient, centered, preserve the supplied emblem geometry, integrated square modular artwork, no additional words",
+      "inputs": {
+        "prompt_strength": 0.48,
+        "qr_control": "illusion",
+        "qr_scale": 1.15,
+        "reference_control": null,
+        "reference_control_scale": null
+      },
+      "artifact": "local-artifacts/phase-a--sdxl-img2img-illusion--gradient-m-ribbon.png",
+      "artifact_sha256": "e03c13d0aa766b8897d9a5eceee56014ee16728b20b587cf6640d3a751e918a4",
+      "artifact_dimensions": [
+        1024,
+        1024
+      ],
+      "predict_seconds": 4.487674245,
+      "wall_seconds": 55.652,
+      "cost_estimate_usd": 0.004375,
+      "output_selection": "last provider output; first output is processed ControlNet preview"
+    },
+    {
+      "architecture": "sdxl-img2img-illusion",
+      "target": "wolf-black-white",
+      "status": "succeeded",
+      "prediction_id": "fwzv6mkkn9rmy0d00ktbz7k7bm",
+      "model": "fofr/sdxl-multi-controlnet-lora",
+      "version": "89eb212b3d1366a83e949c12a4b45dfe6b6b313b594cb8268e864931ac9ffb16",
+      "source_sha256": "19bd5a92ea6b89fddf128f8be4af1c21f09c4e5869a7848e4a152d38286ab88a",
+      "reference_preprocessed_sha256": "09084aec6d5d19a8b9a3ba2cb478228b7bea1792857854736e9ab8db3e2ba3fc",
+      "reference_dimensions": [
+        704,
+        704
+      ],
+      "qr_control_sha256": "0653d4d27cb6cea1c617dc70afca5dafff87a26a3f2f214d5b4dfc6ddb7979b2",
+      "seed": 5106,
+      "sanitized_prompt": "high contrast black and white front-facing wolf face illustration with luminous eyes, preserve the supplied face identity and silhouette, integrated square modular artwork, no words",
+      "inputs": {
+        "prompt_strength": 0.48,
+        "qr_control": "illusion",
+        "qr_scale": 1.15,
+        "reference_control": null,
+        "reference_control_scale": null
+      },
+      "artifact": "local-artifacts/phase-a--sdxl-img2img-illusion--wolf-black-white.png",
+      "artifact_sha256": "3dfcc5e288b758cedcf510856580a9de471dd59a100dabcd35a250c8be52e341",
+      "artifact_dimensions": [
+        1024,
+        1024
+      ],
+      "predict_seconds": 3.050127084,
+      "wall_seconds": 7.152,
+      "cost_estimate_usd": 0.002974,
+      "output_selection": "last provider output; first output is processed ControlNet preview"
+    },
+    {
+      "architecture": "sdxl-img2img-illusion-canny",
+      "target": "gradient-m-ribbon",
+      "status": "succeeded",
+      "prediction_id": "majc2qszxxrmy0d00kv8t2r7y4",
+      "model": "fofr/sdxl-multi-controlnet-lora",
+      "version": "89eb212b3d1366a83e949c12a4b45dfe6b6b313b594cb8268e864931ac9ffb16",
+      "source_sha256": "cb3b4fecbd0547cd2dfb62daeecfc0116e4dd49fb653ac602025a77b00badaec",
+      "reference_preprocessed_sha256": "e7997377aea6ee6551ddbacfc8e381a91b225f29f08d5dd311c2a07deb42cb88",
+      "reference_dimensions": [
+        704,
+        528
+      ],
+      "qr_control_sha256": "0653d4d27cb6cea1c617dc70afca5dafff87a26a3f2f214d5b4dfc6ddb7979b2",
+      "seed": 5103,
+      "sanitized_prompt": "premium minimal abstract capital M made from crossing rounded ribbons, cyan blue violet gradient, centered, preserve the supplied emblem geometry, integrated square modular artwork, no additional words",
+      "inputs": {
+        "prompt_strength": 0.48,
+        "qr_control": "illusion",
+        "qr_scale": 1.15,
+        "reference_control": "edge_canny",
+        "reference_control_scale": 0.45
+      },
+      "artifact": "local-artifacts/phase-a--sdxl-img2img-illusion-canny--gradient-m-ribbon.png",
+      "artifact_sha256": "836993b4283ed84724e2408038207a44c0efaedd1226c4c8c8b05eae34874a1f",
+      "artifact_dimensions": [
+        1024,
+        1024
+      ],
+      "predict_seconds": 6.357422338,
+      "wall_seconds": 10.434,
+      "cost_estimate_usd": 0.006198
+    },
+    {
+      "architecture": "sdxl-img2img-illusion-canny",
+      "target": "wolf-black-white",
+      "status": "succeeded",
+      "prediction_id": "v445dd3b95rmy0d00kvajv9r2g",
+      "model": "fofr/sdxl-multi-controlnet-lora",
+      "version": "89eb212b3d1366a83e949c12a4b45dfe6b6b313b594cb8268e864931ac9ffb16",
+      "source_sha256": "19bd5a92ea6b89fddf128f8be4af1c21f09c4e5869a7848e4a152d38286ab88a",
+      "reference_preprocessed_sha256": "09084aec6d5d19a8b9a3ba2cb478228b7bea1792857854736e9ab8db3e2ba3fc",
+      "reference_dimensions": [
+        704,
+        704
+      ],
+      "qr_control_sha256": "0653d4d27cb6cea1c617dc70afca5dafff87a26a3f2f214d5b4dfc6ddb7979b2",
+      "seed": 5106,
+      "sanitized_prompt": "high contrast black and white front-facing wolf face illustration with luminous eyes, preserve the supplied face identity and silhouette, integrated square modular artwork, no words",
+      "inputs": {
+        "prompt_strength": 0.48,
+        "qr_control": "illusion",
+        "qr_scale": 1.15,
+        "reference_control": "edge_canny",
+        "reference_control_scale": 0.45
+      },
+      "artifact": "local-artifacts/phase-a--sdxl-img2img-illusion-canny--wolf-black-white.png",
+      "artifact_sha256": "acca8381b6d99d6fa13dfa55946393a8692e8e71bbd76d32bb6d4d112374acfc",
+      "artifact_dimensions": [
+        1024,
+        1024
+      ],
+      "predict_seconds": 3.878762718,
+      "wall_seconds": 8.015,
+      "cost_estimate_usd": 0.003782
+    },
+    {
+      "architecture": "sdxl-img2img-illusion-lineart",
+      "target": "gradient-m-ribbon",
+      "status": "succeeded",
+      "prediction_id": "dcxzafmvvhrmr0d00kvb67ca5m",
+      "model": "fofr/sdxl-multi-controlnet-lora",
+      "version": "89eb212b3d1366a83e949c12a4b45dfe6b6b313b594cb8268e864931ac9ffb16",
+      "source_sha256": "cb3b4fecbd0547cd2dfb62daeecfc0116e4dd49fb653ac602025a77b00badaec",
+      "reference_preprocessed_sha256": "e7997377aea6ee6551ddbacfc8e381a91b225f29f08d5dd311c2a07deb42cb88",
+      "reference_dimensions": [
+        704,
+        528
+      ],
+      "qr_control_sha256": "0653d4d27cb6cea1c617dc70afca5dafff87a26a3f2f214d5b4dfc6ddb7979b2",
+      "seed": 5103,
+      "sanitized_prompt": "premium minimal abstract capital M made from crossing rounded ribbons, cyan blue violet gradient, centered, preserve the supplied emblem geometry, integrated square modular artwork, no additional words",
+      "inputs": {
+        "prompt_strength": 0.48,
+        "qr_control": "illusion",
+        "qr_scale": 1.15,
+        "reference_control": "lineart",
+        "reference_control_scale": 0.45
+      },
+      "artifact": "local-artifacts/phase-a--sdxl-img2img-illusion-lineart--gradient-m-ribbon.png",
+      "artifact_sha256": "c0d3e464c7121942502bf0d03e783ed71b0d56c0c7c7f1900a4cbc1b5320312e",
+      "artifact_dimensions": [
+        1024,
+        1024
+      ],
+      "predict_seconds": 7.020981073,
+      "wall_seconds": 15.192,
+      "cost_estimate_usd": 0.006845
+    },
+    {
+      "architecture": "sdxl-img2img-illusion-lineart",
+      "target": "wolf-black-white",
+      "status": "succeeded",
+      "prediction_id": "4v9h8ey6ehrmt0d00kv98jbdk0",
+      "model": "fofr/sdxl-multi-controlnet-lora",
+      "version": "89eb212b3d1366a83e949c12a4b45dfe6b6b313b594cb8268e864931ac9ffb16",
+      "source_sha256": "19bd5a92ea6b89fddf128f8be4af1c21f09c4e5869a7848e4a152d38286ab88a",
+      "reference_preprocessed_sha256": "09084aec6d5d19a8b9a3ba2cb478228b7bea1792857854736e9ab8db3e2ba3fc",
+      "reference_dimensions": [
+        704,
+        704
+      ],
+      "qr_control_sha256": "0653d4d27cb6cea1c617dc70afca5dafff87a26a3f2f214d5b4dfc6ddb7979b2",
+      "seed": 5106,
+      "sanitized_prompt": "high contrast black and white front-facing wolf face illustration with luminous eyes, preserve the supplied face identity and silhouette, integrated square modular artwork, no words",
+      "inputs": {
+        "prompt_strength": 0.48,
+        "qr_control": "illusion",
+        "qr_scale": 1.15,
+        "reference_control": "lineart",
+        "reference_control_scale": 0.45
+      },
+      "artifact": "local-artifacts/phase-a--sdxl-img2img-illusion-lineart--wolf-black-white.png",
+      "artifact_sha256": "8b39bdb75dd904c3d3b138acb5ab2aef4be368c7fd7fb88cc0b292b406b0e4be",
+      "artifact_dimensions": [
+        1024,
+        1024
+      ],
+      "predict_seconds": 4.259360404,
+      "wall_seconds": 7.893,
+      "cost_estimate_usd": 0.004153
+    }
+  ]
+}
