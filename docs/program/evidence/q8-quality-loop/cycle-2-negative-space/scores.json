@@ -1,0 +1,122 @@
+{
+  "schema_version": "q8-visual-quality-scores.v1",
+  "cycle": 2,
+  "producer": "QR Creator",
+  "scoring_engine": "scoreQ8VisualQuality",
+  "scoring_engine_version": "q8-weighted-rubric-v1",
+  "reference_sha256": "cb3b4fecbd0547cd2dfb62daeecfc0116e4dd49fb653ac602025a77b00badaec",
+  "scoring_note": "Producer telemetry only; Product Architect acceptance is separate.",
+  "weights": {
+    "target_recognizability": 25,
+    "composition_placement": 15,
+    "image_qr_harmony": 15,
+    "scan_robustness_margin": 15,
+    "palette_fidelity": 10,
+    "protected_region_elegance": 10,
+    "premium_polish": 10
+  },
+  "candidates": [
+    {
+      "candidate": "readable",
+      "hardGatePass": true,
+      "gateFailures": [],
+      "leaderboardEligible": true,
+      "scores": {
+        "target_recognizability": 20,
+        "composition_placement": 11,
+        "image_qr_harmony": 10,
+        "palette_fidelity": 9,
+        "protected_region_elegance": 8,
+        "premium_polish": 7,
+        "scan_robustness_margin": 15
+      },
+      "total": 80,
+      "thresholdChecks": {
+        "total75": true,
+        "recognizability18": true,
+        "scanMargin12": true,
+        "everyCategoryHalf": true
+      },
+      "verdict": "producer_threshold_met",
+      "candidate_id": "readable-8cc566647dcd45b04498",
+      "artifact_sha256": "5852b1aa12b133cfd73898a5423a04cd3445e7cffa226308aa5d2acaa238a8f1",
+      "score_delta_from_cycle_1": 1,
+      "score_delta_from_cycle_0": 29,
+      "visual_verdict": "Crisp compact mark with cleaner white openings; QR remains intentionally dominant.",
+      "remaining_blockers": [
+        "mark remains too small for flagship use",
+        "dense QR field limits premium calm"
+      ]
+    },
+    {
+      "candidate": "balanced",
+      "hardGatePass": true,
+      "gateFailures": [],
+      "leaderboardEligible": true,
+      "scores": {
+        "target_recognizability": 23,
+        "composition_placement": 13,
+        "image_qr_harmony": 12,
+        "palette_fidelity": 10,
+        "protected_region_elegance": 9,
+        "premium_polish": 8,
+        "scan_robustness_margin": 15
+      },
+      "total": 90,
+      "thresholdChecks": {
+        "total75": true,
+        "recognizability18": true,
+        "scanMargin12": true,
+        "everyCategoryHalf": true
+      },
+      "verdict": "producer_threshold_met",
+      "candidate_id": "balanced-acc0a178cb4c8112ded2",
+      "artifact_sha256": "9b79c4b722fcb10ff9b6f65ff9f22efaa45305dcbdb2640a49c15261daaed46c",
+      "score_delta_from_cycle_1": 2,
+      "score_delta_from_cycle_0": 26,
+      "visual_verdict": "Internal white geometry separates the ribbon cleanly and makes the immutable alignment square read as intentional.",
+      "remaining_blockers": [
+        "QR pattern still touches outer silhouette",
+        "white cutout transitions are deliberately pixel-bounded"
+      ]
+    },
+    {
+      "candidate": "image_first",
+      "hardGatePass": true,
+      "gateFailures": [],
+      "leaderboardEligible": true,
+      "scores": {
+        "target_recognizability": 24,
+        "composition_placement": 14,
+        "image_qr_harmony": 13,
+        "palette_fidelity": 10,
+        "protected_region_elegance": 9,
+        "premium_polish": 9,
+        "scan_robustness_margin": 15
+      },
+      "total": 94,
+      "thresholdChecks": {
+        "total75": true,
+        "recognizability18": true,
+        "scanMargin12": true,
+        "everyCategoryHalf": true
+      },
+      "verdict": "producer_threshold_met",
+      "candidate_id": "image-first-d12e35b1aa6bbdc2fcb1",
+      "artifact_sha256": "3bd3e0a278a3f7a10448a84f5c557733b5af2339a20b788cddeda490e438122d",
+      "score_delta_from_cycle_1": 2,
+      "score_delta_from_cycle_0": 27,
+      "visual_verdict": "Strongest identity-preserving candidate: smooth palette and explicit M openings with full controlled scan margin.",
+      "remaining_blockers": [
+        "protected alignment square remains visible",
+        "no physical-device or print evidence yet"
+      ]
+    }
+  ],
+  "leaderboard": [
+    "image_first",
+    "balanced",
+    "readable"
+  ],
+  "cycle_2_decision": "Negative-space preservation improves the two target categories by two points on the best candidate without gate regression; proceed to three-target generalization."
+}

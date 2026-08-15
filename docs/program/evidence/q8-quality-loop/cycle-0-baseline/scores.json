@@ -1,0 +1,74 @@
+{
+  "schema_version": "q8-visual-quality-scores.v1",
+  "cycle": 0,
+  "producer": "QR Creator",
+  "baseline_commit": "e150965c758ad8ba8b9b407a9e0fab5a100a11e9",
+  "implementation_changes": false,
+  "reference_sha256": "cb3b4fecbd0547cd2dfb62daeecfc0116e4dd49fb653ac602025a77b00badaec",
+  "contact_sheet": "docs/program/evidence/q8-quality-loop/cycle-0-baseline/contact-sheet.png",
+  "scoring_note": "Producer scoring is progress telemetry based on the required weighted rubric and conservative visual inspection. Product Architect visual acceptance is separate.",
+  "weights": {
+    "target_recognizability": 25,
+    "composition_placement": 15,
+    "image_qr_harmony": 15,
+    "scan_robustness_margin": 15,
+    "palette_fidelity": 10,
+    "protected_region_elegance": 10,
+    "premium_polish": 10
+  },
+  "scan_margin_mapping": {"8_of_8":15,"7_of_8":13,"6_of_8":12,"below_6_or_raw_fail":"gate_fail"},
+  "candidates": [
+    {
+      "candidate": "readable_mellow",
+      "source_mode": "readable",
+      "candidate_id": "readable-c35cb6e9b7a3f5d95d7c",
+      "artifact_sha256": "efebdd5d6a7ca83bde6c299cc2fb4a35e4dc81c3b59acbc11d3af8a4c5bd9674",
+      "hard_gates": {"pass":true,"payload_equal":true,"raw_decode":true,"checks":"8/8","protected_violations":0,"export_parity":"not_claimed_export_locked","contract_valid":true,"deterministic":true},
+      "scores": {"target_recognizability":8,"composition_placement":8,"image_qr_harmony":5,"scan_robustness_margin":15,"palette_fidelity":2,"protected_region_elegance":9,"premium_polish":4,"total":51},
+      "verdict": "gate_pass_below_q8_bar",
+      "visual_verdict": "Centered M hint is visible only after prompting; pale fragmented recolor is overwhelmed by QR modules.",
+      "failure_reasons": ["M silhouette is incomplete and low-contrast","no cyan-purple gradient identity","module fragments read as noise rather than ribbon bands"]
+    },
+    {
+      "candidate": "balanced",
+      "source_mode": "balanced",
+      "candidate_id": "balanced-66b1e50270026be2a9d6",
+      "artifact_sha256": "2eaa142ccd6421eb93d667ae9913007e63335d7a5f8b42c938ba9cc188373aad",
+      "hard_gates": {"pass":true,"payload_equal":true,"raw_decode":true,"checks":"8/8","protected_violations":0,"export_parity":"not_claimed_export_locked","contract_valid":true,"deterministic":true},
+      "scores": {"target_recognizability":15,"composition_placement":10,"image_qr_harmony":7,"scan_robustness_margin":15,"palette_fidelity":4,"protected_region_elegance":8,"premium_polish":5,"total":64},
+      "verdict": "gate_pass_below_q8_bar",
+      "visual_verdict": "The M silhouette is recognizable, but its crossing, rounded lobes, negative space, and premium ribbon character are broken into a blue module field.",
+      "failure_reasons": ["central crossing and lower negative-space geometry are corrupted","flat blue palette loses cyan-purple reference energy","ragged module boundaries make the artwork feel accidental"]
+    },
+    {
+      "candidate": "image_first_punchy",
+      "source_mode": "image_first",
+      "candidate_id": "image-first-e5990a00147535031fa7",
+      "artifact_sha256": "a293d34633026a2a342eab2ddf2c2df289db418706ea161ba1ad2053d3842c38",
+      "hard_gates": {"pass":true,"payload_equal":true,"raw_decode":true,"checks":"7/8","protected_violations":0,"export_parity":"not_claimed_export_locked","contract_valid":true,"deterministic":true},
+      "scores": {"target_recognizability":17,"composition_placement":11,"image_qr_harmony":8,"scan_robustness_margin":13,"palette_fidelity":4,"protected_region_elegance":8,"premium_polish":6,"total":67},
+      "verdict": "gate_pass_below_q8_bar",
+      "visual_verdict": "Strongest Q7 silhouette, but still a chunky perforated M with lost ribbon crossing, weak gradient fidelity, and only 7/8 scan margin.",
+      "failure_reasons": ["recognizability remains below required 18/25","large module holes disrupt continuous ribbon structure","palette is monochromatic and output lacks sponsor polish"]
+    },
+    {
+      "candidate": "level1_fallback",
+      "source_mode": "fallback",
+      "candidate_id": "level1-fallback",
+      "artifact_sha256": "f453ef42520daa427212ce61b4b697f2ba6177652ea7004aa1734a4a3f8a2e7b",
+      "hard_gates": {"pass":true,"payload_equal":true,"raw_decode":true,"checks":"8/8","protected_violations":"not_modified_level1","export_parity":"not_claimed_export_locked","contract_valid":true,"deterministic":true},
+      "scores": {"target_recognizability":0,"composition_placement":5,"image_qr_harmony":0,"scan_robustness_margin":15,"palette_fidelity":1,"protected_region_elegance":10,"premium_polish":7,"total":38},
+      "verdict": "safe_fallback_not_visual_candidate",
+      "visual_verdict": "Clean and scan-safe deterministic QR, but intentionally contains no recognizable target artwork.",
+      "failure_reasons": ["no target recognizability","no image integration","no reference palette fidelity"]
+    }
+  ],
+  "leaderboard": ["image_first_punchy","balanced","readable_mellow","level1_fallback"],
+  "cycle_0_decision": "No Q7 candidate meets the >=75 total and >=18 recognizability Q8 threshold. Proceed to deterministic Cycle 1.",
+  "cycle_1_targets": [
+    "preserve a symmetric continuous M/ribbon silhouette with open lower negative space",
+    "replace one-module speckle emphasis with coherent bands or a bounded central visual island",
+    "map cyan-blue-purple color by target position while preserving luminance safety",
+    "retain 8/8 scan margin for the preferred candidate"
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "schema_version": "q8-verification.v1",
+  "qr_core": {"build":"pass","tests":{"passed":24,"failed":0}},
+  "artistic_qr": {
+    "build":"pass",
+    "typescript_tests":{"passed":157,"failed":0,"execution":"isolated test files; image-fit split by describe block"},
+    "python_provider_tests":{"passed":6,"failed":0},
+    "single_process_runner_note":"Two aggregate Vitest attempts completed all 157 assertions but exited nonzero on a vitest-worker onTaskUpdate RPC timeout after long-running files. Isolated file/describe execution removed the runner transport timeout and all assertions passed without unhandled errors."
+  },
+  "evidence_validators": {"cycle_1":"pass","cycle_2":"pass","cycle_3":"pass"},
+  "sha256_manifests": {"cycle_0":"pass","cycle_1":"pass","cycle_2":"pass","cycle_3":"pass"},
+  "frozen_contract_diff":"none",
+  "git_diff_check":"pass",
+  "physical_device_scan":"not_performed",
+  "print_scan":"not_performed"
+}

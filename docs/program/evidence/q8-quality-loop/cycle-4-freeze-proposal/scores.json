@@ -1,0 +1,45 @@
+{
+  "schema_version": "q8-freeze-proposal.v1",
+  "cycle": 4,
+  "producer": "QR Creator",
+  "proposal": "freeze_for_product_architect_verification",
+  "acceptance_claimed": false,
+  "runtime_policy": {
+    "rgb_target_default": "q8_negative_space_island",
+    "luma_only_compatibility": "q7_module_recolor",
+    "default_mode": "balanced",
+    "image_first": "experimental_scan_gated_export_blocked",
+    "fallback": "deterministic_level1_independent"
+  },
+  "score_progression": [
+    {"cycle":0,"best_candidate":"image_first","total":67,"checks":"7/8"},
+    {"cycle":1,"best_candidate":"image_first","total":92,"checks":"8/8","delta":25},
+    {"cycle":2,"best_candidate":"image_first","total":94,"checks":"8/8","delta":2}
+  ],
+  "generalization": {
+    "target_types": 3,
+    "candidates_total": 9,
+    "eligible": 8,
+    "failed_closed": 1,
+    "best_by_target": [
+      {"target":"simple_silhouette","mode":"image_first","total":87,"checks":"8/8"},
+      {"target":"medium_logo","mode":"image_first","total":94,"checks":"8/8"},
+      {"target":"textured_subject","mode":"balanced","total":84,"checks":"8/8"}
+    ],
+    "rejected": {"target":"textured_subject","mode":"image_first","checks":"0/8","raw_decode":false,"leaderboard_score":null}
+  },
+  "hard_gate_policy": {
+    "minimum_checks":"6/8",
+    "raw_decode_required":true,
+    "payload_equality_required":true,
+    "protected_violations_allowed":0,
+    "determinism_required":true,
+    "unproven_export_parity":"export_locked"
+  },
+  "remaining_acceptance_work": [
+    "Product Architect independently reproduces hashes, decodes, scores, and contract diff",
+    "Studio preview/export parity QA against authoritative Core bytes",
+    "physical-device and print QA",
+    "Product Architect decides PR, merge, and release"
+  ]
+}

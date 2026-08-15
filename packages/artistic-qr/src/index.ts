@@ -12,6 +12,7 @@ export {
 export { InMemoryCandidateAuthorityStore, setCandidateAuthorityStore } from './candidate-context.js';
 export { PATTERNED_PALETTE_PRESETS, resolveArtisticRenderIntent } from './render-intent.js';
 export { optimizeImageFitQr } from './image-fit.js';
+export { Q8_VISUAL_WEIGHTS, scoreQ8VisualQuality } from './visual-quality.js';
 export type {
   ImageFitArtifact,
   ImageFitCandidateV1,
@@ -20,6 +21,13 @@ export type {
   ImageFitOptimizerOptions,
   ImageFitQrRequestV1,
 } from './image-fit.js';
+export type {
+  Q8HardGateEvidence,
+  Q8ProducerVisualScores,
+  Q8VisualCategory,
+  Q8VisualQualityInput,
+  Q8VisualQualityResult,
+} from './visual-quality.js';
 
 export type {
   ArtDirection,

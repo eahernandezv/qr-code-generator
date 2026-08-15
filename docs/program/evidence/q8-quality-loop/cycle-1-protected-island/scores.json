@@ -1,0 +1,119 @@
+{
+  "schema_version": "q8-visual-quality-scores.v1",
+  "cycle": 1,
+  "producer": "QR Creator",
+  "scoring_engine": "scoreQ8VisualQuality",
+  "scoring_engine_version": "q8-weighted-rubric-v1",
+  "reference_sha256": "cb3b4fecbd0547cd2dfb62daeecfc0116e4dd49fb653ac602025a77b00badaec",
+  "scoring_note": "Producer telemetry only; Product Architect acceptance is separate.",
+  "weights": {
+    "target_recognizability": 25,
+    "composition_placement": 15,
+    "image_qr_harmony": 15,
+    "scan_robustness_margin": 15,
+    "palette_fidelity": 10,
+    "protected_region_elegance": 10,
+    "premium_polish": 10
+  },
+  "candidates": [
+    {
+      "candidate": "readable",
+      "hardGatePass": true,
+      "gateFailures": [],
+      "leaderboardEligible": true,
+      "scores": {
+        "target_recognizability": 20,
+        "composition_placement": 11,
+        "image_qr_harmony": 9,
+        "palette_fidelity": 9,
+        "protected_region_elegance": 8,
+        "premium_polish": 7,
+        "scan_robustness_margin": 15
+      },
+      "total": 79,
+      "thresholdChecks": {
+        "total75": true,
+        "recognizability18": true,
+        "scanMargin12": true,
+        "everyCategoryHalf": true
+      },
+      "verdict": "producer_threshold_met",
+      "candidate_id": "readable-246498131fe79ba6bd2f",
+      "artifact_sha256": "28b52cd227ef0057dbe7cb5311400724eaf88190dda9bb1831a38704739deb86",
+      "score_delta_from_cycle_0": 28,
+      "visual_verdict": "Small but crisp and unmistakable reference mark; QR remains dominant.",
+      "remaining_blockers": [
+        "mark is too small for flagship use",
+        "dense QR field limits premium calm"
+      ]
+    },
+    {
+      "candidate": "balanced",
+      "hardGatePass": true,
+      "gateFailures": [],
+      "leaderboardEligible": true,
+      "scores": {
+        "target_recognizability": 23,
+        "composition_placement": 13,
+        "image_qr_harmony": 11,
+        "palette_fidelity": 10,
+        "protected_region_elegance": 8,
+        "premium_polish": 8,
+        "scan_robustness_margin": 15
+      },
+      "total": 88,
+      "thresholdChecks": {
+        "total75": true,
+        "recognizability18": true,
+        "scanMargin12": true,
+        "everyCategoryHalf": true
+      },
+      "verdict": "producer_threshold_met",
+      "candidate_id": "balanced-7cb5ef0b333752f43450",
+      "artifact_sha256": "756aeb8ec8a359ddd82408cb90b28d9b657a0634edc42b9cb54e16532c029f7a",
+      "score_delta_from_cycle_0": 24,
+      "visual_verdict": "Strong identity and exact palette with a balanced centered footprint; alignment square reads as a QR-native detail in the lower opening.",
+      "remaining_blockers": [
+        "QR pattern touches the silhouette edge",
+        "protected alignment square remains visually prominent"
+      ]
+    },
+    {
+      "candidate": "image_first",
+      "hardGatePass": true,
+      "gateFailures": [],
+      "leaderboardEligible": true,
+      "scores": {
+        "target_recognizability": 24,
+        "composition_placement": 14,
+        "image_qr_harmony": 12,
+        "palette_fidelity": 10,
+        "protected_region_elegance": 8,
+        "premium_polish": 9,
+        "scan_robustness_margin": 15
+      },
+      "total": 92,
+      "thresholdChecks": {
+        "total75": true,
+        "recognizability18": true,
+        "scanMargin12": true,
+        "everyCategoryHalf": true
+      },
+      "verdict": "producer_threshold_met",
+      "candidate_id": "image-first-4f12a1d6a28aabba6a8b",
+      "artifact_sha256": "e6edd63adf80cf0b9ff9728c43321c74e47f03e3d9000a73388dc3e94073dfbb",
+      "score_delta_from_cycle_0": 25,
+      "visual_verdict": "Reference-faithful ribbon silhouette and gradient dominate cleanly while all controlled scans retain full margin.",
+      "remaining_blockers": [
+        "protected alignment square remains visually prominent",
+        "no physical-device or print evidence yet"
+      ]
+    }
+  ],
+  "leaderboard": [
+    "image_first",
+    "balanced",
+    "readable"
+  ],
+  "cycle_1_decision": "Producer threshold met by all three Q8 candidates; proceed to Cycle 2 to strengthen image/QR harmony and protected negative-space elegance before generalization."
+}

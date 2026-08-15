@@ -70,6 +70,31 @@ function realisticInput(): ImageFitOptimizerInput {
   };
 }
 
+function rgbLogoInput(): ImageFitOptimizerInput {
+  const width = 80, height = 60, hash = '9'.repeat(64);
+  const rgb: number[] = [], luma: number[] = [];
+  for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
+    const nx = x / (width - 1), ny = y / (height - 1);
+    const foreground = (nx > 0.12 && nx < 0.88)
+      && (Math.abs(ny - (0.18 + nx * 0.58)) < 0.075 || Math.abs(ny - (0.76 - nx * 0.58)) < 0.075);
+    const red = foreground ? Math.round(24 + nx * 148) : 255;
+    const green = foreground ? Math.round(196 - nx * 100) : 255;
+    const blue = foreground ? 244 : 255;
+    rgb.push(red, green, blue);
+    luma.push(Math.round(0.2126 * red + 0.7152 * green + 0.0722 * blue));
+  }
+  const result = realisticInput();
+  result.request.target_image = {
+    ...result.request.target_image, image_ref: 'fixtures/rgb-logo.png', width_px: width, height_px: height, sha256: hash,
+  };
+  result.request.constraints = {
+    ...result.request.constraints, allowed_versions: [8], allowed_ecc: ['H'], allowed_masks: [5], max_candidates: 3,
+  };
+  result.target_luma = { width, height, values: luma, source_image_sha256: hash };
+  result.target_rgb = { width, height, values: rgb, source_image_sha256: hash };
+  return result;
+}
+
 function compositionInput(kind: 'ring' | 'spots'): ImageFitOptimizerInput {
   const size = 64;
   const values: number[] = [];
@@ -402,6 +427,56 @@ describe('Coherent rendering and protected regions', () => {
       expect(minRectWidth).toBeGreaterThan(0);
     }
   }, 30_000);
+});
+
+describe('Q8 deterministic protected visual island', () => {
+  it('preserves RGB target identity while passing scan and protected-region gates deterministically', () => {
+    const first = optimizeImageFitQr(rgbLogoInput(), { _visualPolicy: 'q8_protected_island' });
+    const second = optimizeImageFitQr(rgbLogoInput(), { _visualPolicy: 'q8_protected_island' });
+    expect(validateResponse(first.response), JSON.stringify(validateResponse.errors)).toBe(true);
+    expect(first.response.candidates).toHaveLength(3);
+    for (const candidate of first.response.candidates) {
+      const artifact = first.artifacts[candidate.candidate_id];
+      const repeated = second.response.candidates.find((entry) => entry.mode === candidate.mode)!;
+      expect(candidate.image_fit_evidence.score_version).toBe('image-fit-protected-rgb-island-q8-cycle1');
+      expect(candidate.scan_evidence.verdict).toBe('pass');
+      expect(candidate.scan_evidence.checks_passed).toBeGreaterThanOrEqual(6);
+      expect(candidate.protected_regions.violations).toEqual([]);
+      expect(artifact.data).toMatch(/fill="rgb\(/);
+      expect(second.artifacts[repeated.candidate_id].sha256).toBe(artifact.sha256);
+    }
+  }, 30_000);
+
+  it('preserves internal negative space without weakening scan or protected-region gates', () => {
+    const cycle1 = optimizeImageFitQr(rgbLogoInput(), { _visualPolicy: 'q8_protected_island' });
+    const cycle2 = optimizeImageFitQr(rgbLogoInput(), { _visualPolicy: 'q8_negative_space_island' });
+    for (const candidate of cycle2.response.candidates) {
+      const prior = cycle1.response.candidates.find((entry) => entry.mode === candidate.mode)!;
+      const artifact = cycle2.artifacts[candidate.candidate_id].data;
+      const priorArtifact = cycle1.artifacts[prior.candidate_id].data;
+      expect(candidate.image_fit_evidence.score_version).toBe('image-fit-negative-space-island-q8-cycle2');
+      expect(candidate.scan_evidence.verdict).toBe('pass');
+      expect(candidate.scan_evidence.checks_passed).toBeGreaterThanOrEqual(6);
+      expect(candidate.protected_regions.violations).toEqual([]);
+      expect((artifact.match(/#ffffff/g) ?? []).length).toBeGreaterThan((priorArtifact.match(/#ffffff/g) ?? []).length);
+    }
+  }, 30_000);
+
+  it('promotes the negative-space family by default only when an RGB plane is available', () => {
+    const automatic = optimizeImageFitQr(rgbLogoInput());
+    const explicit = optimizeImageFitQr(rgbLogoInput(), { _visualPolicy: 'q8_negative_space_island' });
+    expect(automatic.response.candidates.map((candidate) => candidate.image_fit_evidence.score_version))
+      .toEqual(Array(3).fill('image-fit-negative-space-island-q8-cycle2'));
+    expect(automatic.response.candidates.map((candidate) => automatic.artifacts[candidate.candidate_id].sha256))
+      .toEqual(explicit.response.candidates.map((candidate) => explicit.artifacts[candidate.candidate_id].sha256));
+    expect(optimizeImageFitQr(realisticInput()).response.candidates.every((candidate) => candidate.image_fit_evidence.score_version.includes('q7'))).toBe(true);
+  }, 30_000);
+
+  it('rejects an RGB plane that is not exactly bound to the luma plane', () => {
+    const malformed = rgbLogoInput();
+    malformed.target_rgb = { ...malformed.target_rgb!, values: malformed.target_rgb!.values.slice(3) };
+    expect(() => optimizeImageFitQr(malformed, { _visualPolicy: 'q8_protected_island' })).toThrow(/target_rgb/);
+  });
 });
 
 describe('Legacy vs quality-improved comparison', () => {
