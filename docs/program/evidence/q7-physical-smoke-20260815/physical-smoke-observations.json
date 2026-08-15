@@ -1,0 +1,60 @@
+{
+  "schema_version": "q7-physical-smoke-report.v1",
+  "recorded_utc": "2026-08-15T14:16:13Z",
+  "repo_head": "c596b700a979b6a947cb5e8882f52b35e9ab6a81",
+  "expected_payload": "https://placeholder-online.com/r/bD7xQ2",
+  "source_contact_sheet_sha256": "32e956cf398fa3baf6e143a2e84bf1416198f9c094667c1e6c89a22815a82232",
+  "android_google_screenshot_sha256": "69a85d4832731cf649206843d71fbfbd0f415f80855581d5e1d7bd7410fe483a",
+  "observations": [
+    {
+      "artifact_mode": "Level 1 Safe fallback",
+      "artifact_sha256": "f453ef42520daa427212ce61b4b697f2ba6177652ea7004aa1734a4a3f8a2e7b",
+      "expected_payload": "https://placeholder-online.com/r/bD7xQ2",
+      "device_scanner": "Google Android phone / Google screen QR detection",
+      "medium": "Telegram-delivered contact sheet displayed on screen",
+      "condition": "single-screen smoke test, all four codes visible at once",
+      "decode_result": "pass (user-reported)",
+      "payload_equality": "pass (user-reported exact expected payload)",
+      "evidence": "android-google-all-four-detected.jpg shows four Google URL chips; URLs are truncated visually, exact equality is based on Ernesto's report \"All passed\" in this chat."
+    },
+    {
+      "artifact_mode": "Q7 Mellow / readable",
+      "artifact_sha256": "ba9517638245d6f0b7c478c8b758a87c669c8f9accc840476ee87fe54628ecd2",
+      "expected_payload": "https://placeholder-online.com/r/bD7xQ2",
+      "device_scanner": "Google Android phone / Google screen QR detection",
+      "medium": "Telegram-delivered contact sheet displayed on screen",
+      "condition": "single-screen smoke test, all four codes visible at once",
+      "decode_result": "pass (user-reported)",
+      "payload_equality": "pass (user-reported exact expected payload)",
+      "evidence": "android-google-all-four-detected.jpg shows four Google URL chips; URLs are truncated visually, exact equality is based on Ernesto's report \"All passed\" in this chat."
+    },
+    {
+      "artifact_mode": "Q7 Balanced",
+      "artifact_sha256": "2e1aebf8e03466b5391f5b45a28d4259901ed964cc1cf3d9c5953c8fb822165c",
+      "expected_payload": "https://placeholder-online.com/r/bD7xQ2",
+      "device_scanner": "Google Android phone / Google screen QR detection",
+      "medium": "Telegram-delivered contact sheet displayed on screen",
+      "condition": "single-screen smoke test, all four codes visible at once",
+      "decode_result": "pass (user-reported)",
+      "payload_equality": "pass (user-reported exact expected payload)",
+      "evidence": "android-google-all-four-detected.jpg shows four Google URL chips; URLs are truncated visually, exact equality is based on Ernesto's report \"All passed\" in this chat."
+    },
+    {
+      "artifact_mode": "Q7 Punchy / image_first experimental",
+      "artifact_sha256": "350bd24a526b474eddb545bface00b709098f7fbbc39e4e4c29404c22be38c58",
+      "expected_payload": "https://placeholder-online.com/r/bD7xQ2",
+      "device_scanner": "Google Android phone / Google screen QR detection",
+      "medium": "Telegram-delivered contact sheet displayed on screen",
+      "condition": "single-screen smoke test, all four codes visible at once",
+      "decode_result": "pass (user-reported)",
+      "payload_equality": "pass (user-reported exact expected payload)",
+      "evidence": "android-google-all-four-detected.jpg shows four Google URL chips; URLs are truncated visually, exact equality is based on Ernesto's report \"All passed\" in this chat."
+    }
+  ],
+  "scope_limitations": [
+    "This is a physical smoke test on a Google Android phone/screen detector, not a universal scan guarantee.",
+    "Screenshot visibly shows four URL chips but truncates URL text; exact payload equality is recorded from user report.",
+    "It does not cover iPhone native camera, third-party scanner app, printed output, low light, glare, distance, or reduced print size."
+  ],
+  "decision": "Smoke test passed for all four representative contact-sheet artifacts; physical QA remains limited to this tested Android/screen scope."
+}
