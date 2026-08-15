@@ -65,7 +65,24 @@ export function createArtisticQrHttpService(options: ArtisticQrHttpServiceOption
       if (request.method === 'POST' && request.url === '/image-fit/candidates') {
         const body = await readJson(request, maxBodyBytes) as ImageFitQrRequestV1;
         const result = handleImageFitCandidates(body, uploadDir);
-        sendJson(response, 200, { success: true, result: result.response });
+        const authorizedFallback = result.response.fallback.available
+          && result.response.fallback.kind === 'level1_styled_qr'
+          && result.fallback_scan_evidence.verdict === 'pass'
+          ? {
+            artifact: {
+              kind: result.fallback_artifact.kind,
+              uri: `data:image/svg+xml;base64,${Buffer.from(result.fallback_artifact.data, 'utf8').toString('base64')}`,
+              sha256: result.fallback_artifact.sha256,
+            },
+            payload_sha256: sha256(result.encoded_payload),
+            scan_evidence: result.fallback_scan_evidence,
+          }
+          : undefined;
+        sendJson(response, 200, {
+          success: true,
+          result: result.response,
+          ...(authorizedFallback ? { authorized_fallback: authorizedFallback } : {}),
+        });
         return;
       }
       if (request.method === 'POST' && request.url === '/exports') {
@@ -169,7 +186,7 @@ function handleImageFitCandidates(request: ImageFitQrRequestV1, uploadDir: strin
   };
 
   const result = optimizeImageFitQr(input);
-  return result;
+  return { ...result, encoded_payload };
 }
 
 const ALLOWED_FIXTURE_PATHS = ['fixtures/', 'docs/program/evidence/', 'uploads/'];

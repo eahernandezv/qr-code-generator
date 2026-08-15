@@ -1,0 +1,47 @@
+
+> @qr/web@0.1.0 test /srv/qr-agents/qr-studio/home/worktrees/q7-fallback-parity/apps/web
+> vitest run
+
+
+ RUN  v3.2.6 /srv/qr-agents/qr-studio/home/worktrees/q7-fallback-parity/apps/web
+
+ ✓ src/lib/creatorSignature.test.ts (30 tests) 26ms
+ ✓ src/components/ExportPanel.test.tsx (12 tests) 861ms
+stderr | src/components/CandidateBoard.test.tsx > CandidateBoard > updates art direction prompt on successful refinement
+Warning: The current testing environment is not configured to support act(...)
+
+stderr | src/components/CandidateBoard.test.tsx > CandidateBoard > updates art direction prompt on successful refinement
+Warning: The current testing environment is not configured to support act(...)
+Warning: The current testing environment is not configured to support act(...)
+
+ ✓ src/components/CandidateBoard.test.tsx (13 tests) 678ms
+ ✓ src/lib/studioGenerationRequest.test.ts (13 tests) 193ms
+ ✓ src/store.test.ts (12 tests) 14ms
+ ✓ src/lib/imageFitGenerationClient.test.ts (13 tests) 34ms
+ ✓ src/components/ArtDirectionPanel.test.tsx (3 tests) 2819ms
+   ✓ ArtDirectionPanel B18 controls > combines seventeen solids and eleven patterns in Body Color and offers Match body plus seventeen corner colors  2629ms
+ ✓ src/App.test.tsx (15 tests) 5406ms
+   ✓ App integration > builds a real request, renders Creator candidates, then invalidates them on edits  373ms
+   ✓ App integration > uses the QR-Style Creator Signature card as the default Level 1 editor and preserves two independent lines  1045ms
+   ✓ App integration > uses one shared style toolbar for two independently editable lines on the space-efficient concept route  411ms
+   ✓ App integration > renders the independent icon-first Creator Signature concept only on its child route  507ms
+   ✓ App integration > toggles between Basic QR settings and Creator Signature settings while keeping one shared QR canvas  320ms
+   ✓ App integration > edits exactly two independently styled Creator Signature lines with fixed offset choices  616ms
+   ✓ App integration > uses accessible Core-backed Body Color, Corner Color, Style, Corners, and Eyes choices  867ms
+   ✓ App integration > keeps public typing draft-only while internal entitlement can live-update  361ms
+ ✓ src/components/CheckoutPanel.test.tsx (6 tests) 1269ms
+   ✓ CheckoutPanel > runs $12 test checkout through pending to authoritative paid unlock  420ms
+   ✓ CheckoutPanel > grants exactly +8 candidates and +1 artwork for the $5 add-on  601ms
+ ✓ src/accessibility.test.tsx (4 tests) 343ms
+ ✓ src/components/PayloadInput.test.tsx (5 tests) 751ms
+ ✓ src/lib/exportFormats.test.ts (2 tests) 15ms
+ ✓ src/lib/commerceClient.test.ts (4 tests) 767ms
+ ✓ src/components/QRPreview.test.tsx (3 tests) 80ms
+ ✓ src/components/RecoveryPanel.test.tsx (3 tests) 2151ms
+   ✓ RecoveryPanel > recovers paid guest access and rotates the one-time code  541ms
+   ✓ RecoveryPanel > rejects invalid, expired, and replayed recovery capabilities  1488ms
+
+ Test Files  15 passed (15)
+      Tests  138 passed (138)
+   Start at  13:19:11
+   Duration  11.68s (transform 933ms, setup 3.46s, collect 2.27s, tests 15.41s, environment 8.14s, prepare 1.89s)

@@ -130,7 +130,7 @@ describe('POST /image-fit/candidates', () => {
     const running = await start();
     const response = await post(running.url, '/image-fit/candidates', buildImageFitRequest(TEST_IMAGE_REF, TEST_IMAGE_SHA));
     expect(response.status).toBe(200);
-    const payload = await response.json() as { success: true; result: Record<string, unknown> };
+    const payload = await response.json() as { success: true; result: Record<string, unknown>; authorized_fallback: { artifact: { uri: string; sha256: string }; payload_sha256: string; scan_evidence: { verdict: string } } };
     expect(payload.success).toBe(true);
     // Validate against frozen schema
     expect(validateResponse(payload.result)).toBe(true);
@@ -148,6 +148,10 @@ describe('POST /image-fit/candidates', () => {
       expect(artifacts[0].uri).toMatch(/^data:image\/svg\+xml;base64,/);
       expect(artifacts[0].uri).not.toContain('artifact://');
     }
+    expect(payload.authorized_fallback.artifact.uri).toMatch(/^data:image\/svg\+xml;base64,/);
+    expect(payload.authorized_fallback.artifact.sha256).toMatch(/^[a-f0-9]{64}$/);
+    expect(payload.authorized_fallback.payload_sha256).toBe((candidates[0].qr_settings as Record<string, unknown>).payload_sha256);
+    expect(payload.authorized_fallback.scan_evidence.verdict).toBe('pass');
   }, 30_000);
 
   it('fails closed for a missing target image with structured error', async () => {

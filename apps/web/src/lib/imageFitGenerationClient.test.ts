@@ -74,6 +74,24 @@ describe('Image-Fit real generation boundary', () => {
     expect(response.candidates).toHaveLength(1)
   })
 
+  it('accepts a hash- and payload-bound Core fallback without upgrading Q7 export authority', async () => {
+    vi.stubGlobal('crypto', webcrypto)
+    const request = buildImageFitRequest(controls, fixture.request.request_id)
+    const svg = '<svg xmlns="http://www.w3.org/2000/svg"><rect width="2" height="2"/></svg>'
+    const uri = `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`
+    const sha256 = createHash('sha256').update(svg).digest('hex')
+    const payloadSha256 = fixture.candidates[0].qr_settings.payload_sha256
+    const envelope = {
+      success: true,
+      result: fixture,
+      authorized_fallback: { artifact: { kind: 'export_svg', uri, sha256 }, payload_sha256: payloadSha256, scan_evidence: fixture.candidates[0].scan_evidence },
+    }
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => envelope }))
+    const response = await new ImageFitGenerationClient('/real').generate(request)
+    expect(response.authorized_fallback).toMatchObject({ artifact: { sha256 }, payload_sha256: payloadSha256, scan_evidence: { verdict: 'pass' } })
+    expect(imageFitExportDecision(response.candidates[0]).allowed).toBe(false)
+  })
+
   it('fails closed for malformed or cross-request responses', async () => {
     const request = buildImageFitRequest(controls, 'l2req-test-0003')
     expect(isGenerationResponse(fixture, request.request_id)).toBe(false)
