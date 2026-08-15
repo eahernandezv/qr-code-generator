@@ -1,0 +1,48 @@
+{
+  "recorded_utc": "2026-08-15T14:41:03Z",
+  "repo_head": "4f77917561d44f7ee53e9ac276ec2d014dbf1714",
+  "public_url": "https://placeholder-online.com/",
+  "status": "PASS",
+  "files": [
+    {
+      "file": "live-deploy-build-report.md",
+      "sha256": "0b36e2d7cd780399f607d80ee6d51ec9f3250bca63cd71aef3e8d1b48e92f4f0",
+      "bytes": 649
+    },
+    {
+      "file": "live-runtime-report.md",
+      "sha256": "3e3ad69f5e815e6df6f745ae981351c8c9fa837715e7efcc88a4b9ab13265136",
+      "bytes": 1010
+    },
+    {
+      "file": "live-runtime-smoke.json",
+      "sha256": "23b91f2b462cd344007eb1eda56299de9e1526aa3dff0d6e369ac5e98484098f",
+      "bytes": 1183
+    },
+    {
+      "file": "local-root.html",
+      "sha256": "6a433d70e08a2d0037142dc31402585da2ad61315c278f66811e743f5020ddd1",
+      "bytes": 430
+    },
+    {
+      "file": "public-level2-after-generate-mobile.png",
+      "sha256": "a02a26a3a521141d8222dbee0747e5423014e36e9c8b76046af0ee8120bebfd5",
+      "bytes": 522115
+    },
+    {
+      "file": "public-root-mobile.png",
+      "sha256": "a66f717298d4adc157a08aab6dc7374f6b2f17e29b50517a19f2f1e1d06bd0cc",
+      "bytes": 91363
+    },
+    {
+      "file": "public-root.html",
+      "sha256": "6a433d70e08a2d0037142dc31402585da2ad61315c278f66811e743f5020ddd1",
+      "bytes": 430
+    },
+    {
+      "file": "rc-verify-report.md",
+      "sha256": "36f43a953b6944e4e8a6cde6d7bc85f180f967ee091dd4178f39107886e5e924",
+      "bytes": 710
+    }
+  ]
+}

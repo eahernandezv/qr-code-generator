@@ -1,0 +1,46 @@
+{
+  "publicUrl": "https://placeholder-online.com/",
+  "checks": [
+    {
+      "name": "public_root_http",
+      "pass": true,
+      "status": 200,
+      "html_sha256": "a17b81df683ea873fce5b94294d0ed115bd1fa79713be907500767088e534040"
+    },
+    {
+      "name": "public_current_assets",
+      "pass": true,
+      "expectedAsset": "assets/index-Bit2gMpX.js",
+      "expectedCss": "assets/index-CCbA-zcL.css"
+    },
+    {
+      "name": "image_fit_schema_version",
+      "pass": true,
+      "schemaVersion": "image-fit-qr-api.v1"
+    },
+    {
+      "name": "selected_artifact_hash_bound",
+      "pass": true,
+      "artifactSha": "58951e9836a85d84e0b5d642b1045cdb92c9a41d8232ffc5ac126ec1a938a478"
+    },
+    {
+      "name": "q7_export_fail_closed",
+      "pass": true,
+      "exportBound": "false",
+      "blockers": "Blocked: preview_export_parity_not_proven, preview_not_paid, short_link_not_committed"
+    },
+    {
+      "name": "browser_console_errors",
+      "pass": true,
+      "count": 0
+    }
+  ],
+  "observations": {
+    "mode": "q7_candidate",
+    "consoleMessages": []
+  },
+  "screenshots": [
+    "public-root-mobile.png",
+    "public-level2-after-generate-mobile.png"
+  ]
+}
