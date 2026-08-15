@@ -61,10 +61,22 @@ export type ImageFitExportDecision = {
   artifact?: ImageFitCandidateV1['artifacts'][number]
 }
 
+function isScanQualified(candidate: ImageFitCandidateV1) {
+  return candidate.scan_evidence.verdict === 'pass' && (candidate.status === 'validated' || candidate.status === 'experimental')
+}
+
+export function selectImageFitCandidate(candidates: ImageFitCandidateV1[], requestedMode: ImageFitStrength) {
+  const qualified = candidates.filter(isScanQualified)
+  return qualified.find((candidate) => candidate.mode === requestedMode)
+    ?? qualified.find((candidate) => candidate.mode === 'balanced')
+    ?? qualified[0]
+}
+
 /** Studio never upgrades preview evidence into export authority. */
-export function imageFitExportDecision(candidate: ImageFitCandidateV1): ImageFitExportDecision {
+export function imageFitExportDecision(candidate: ImageFitCandidateV1, exportEntitled = false): ImageFitExportDecision {
   const artifact = candidate.artifacts.find((item) => item.kind === 'export_svg' || item.kind === 'export_png')
   const blockers = [...candidate.export_authority.blockers]
+  if (!exportEntitled) blockers.push('preview_not_export_entitled')
   if (candidate.scan_evidence.verdict !== 'pass') blockers.push('scan_not_passed')
   if (candidate.scan_evidence.checks_total < 1 || candidate.scan_evidence.checks_passed !== candidate.scan_evidence.checks_total || candidate.scan_evidence.decoders.some((decoder) => !decoder.pass)) blockers.push('scan_checks_incomplete')
   if (candidate.status !== 'validated') blockers.push('candidate_not_validated')

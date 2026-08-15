@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { createHash, webcrypto } from 'node:crypto'
 import fixture from '../../../../packages/contracts/fixtures/image-fit-qr/valid-balanced-response.v1.json'
-import { buildImageFitRequest, fetchVerifiedArtifactBytes, IMAGE_FIT_STRENGTHS, imageFitExportDecision, ImageFitGenerationClient, isGenerationResponse, unwrapGenerationResponse, verifyInlineArtifactHashes } from './imageFitGenerationClient'
+import { buildImageFitRequest, fetchVerifiedArtifactBytes, IMAGE_FIT_STRENGTHS, imageFitExportDecision, ImageFitGenerationClient, isGenerationResponse, selectImageFitCandidate, unwrapGenerationResponse, verifyInlineArtifactHashes } from './imageFitGenerationClient'
 
 const controls = {
   destination: 'https://example.com/a?source=test#fragment',
@@ -32,8 +32,23 @@ describe('Image-Fit real generation boundary', () => {
       export_authority: { ...balanced.export_authority, export_allowed: true, blockers: [], preview_export_parity: 'proven' as const },
       artifacts: [...balanced.artifacts, { kind: 'export_svg' as const, uri: 'data:image/svg+xml,%3Csvg/%3E', sha256: '0'.repeat(64) }],
     }
-    expect(imageFitExportDecision(apparentlyAuthorized)).toMatchObject({ allowed: false, blockers: expect.arrayContaining(['short_link_not_committed']) })
-    expect(imageFitExportDecision({ ...apparentlyAuthorized, qr_settings: { ...apparentlyAuthorized.qr_settings, short_link: { ...apparentlyAuthorized.qr_settings.short_link!, state: 'committed' as const } }, scan_evidence: { ...apparentlyAuthorized.scan_evidence, checks_passed: 7, checks_total: 8 } })).toMatchObject({ allowed: false, blockers: expect.arrayContaining(['scan_checks_incomplete']) })
+    expect(imageFitExportDecision(apparentlyAuthorized)).toMatchObject({ allowed: false, blockers: expect.arrayContaining(['preview_not_export_entitled', 'short_link_not_committed']) })
+    const committed = { ...apparentlyAuthorized, qr_settings: { ...apparentlyAuthorized.qr_settings, short_link: { ...apparentlyAuthorized.qr_settings.short_link!, state: 'committed' as const } } }
+    expect(imageFitExportDecision(committed)).toMatchObject({ allowed: false, blockers: expect.arrayContaining(['preview_not_export_entitled']) })
+    expect(imageFitExportDecision(committed, true)).toMatchObject({ allowed: true, blockers: [] })
+    expect(imageFitExportDecision({ ...committed, scan_evidence: { ...committed.scan_evidence, checks_passed: 7, checks_total: 8 } }, true)).toMatchObject({ allowed: false, blockers: expect.arrayContaining(['scan_checks_incomplete']) })
+  })
+
+  it('selects the requested Mellow/Balanced/Punchy mode before the default fallback', () => {
+    const balanced = fixture.candidates[0] as Parameters<typeof selectImageFitCandidate>[0][number]
+    const candidates = [
+      { ...balanced, candidate_id: 'candidate-readable', mode: 'readable' as const },
+      balanced,
+      { ...balanced, candidate_id: 'candidate-image-first', mode: 'image_first' as const, status: 'experimental' as const },
+    ]
+    expect(selectImageFitCandidate(candidates, 'readable')?.mode).toBe('readable')
+    expect(selectImageFitCandidate(candidates, 'balanced')?.mode).toBe('balanced')
+    expect(selectImageFitCandidate(candidates, 'image_first')?.mode).toBe('image_first')
   })
 
   it('verifies inline preview bytes against the Core artifact hash and rejects mismatch', async () => {

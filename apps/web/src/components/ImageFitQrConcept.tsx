@@ -1,6 +1,6 @@
 import React from 'react'
 import { IMAGE_FIT_CONTRACT, type ImageFitDetail, type ImageFitLinkMode, type ImageFitStrength, type ImageFitTreatment } from '../imageFitContract'
-import { buildImageFitRequest, fetchVerifiedArtifactBytes, imageFitExportDecision, imageFitGenerationClient, type ImageFitCandidateV1, type ImageFitRequestV1 } from '../lib/imageFitGenerationClient'
+import { buildImageFitRequest, fetchVerifiedArtifactBytes, imageFitExportDecision, imageFitGenerationClient, selectImageFitCandidate, type ImageFitCandidateV1, type ImageFitRequestV1 } from '../lib/imageFitGenerationClient'
 import { useStudioStore } from '../store'
 
 const labels: Record<string, string> = {
@@ -147,14 +147,14 @@ export default function ImageFitQrConcept() {
     try {
       const request = buildImageFitRequest({ destination, treatment, strength, detail, linkMode, targetImage })
       const response = await imageFitGenerationClient.generate(request, controller.signal)
-      const qualifiedCandidates = response.candidates.filter((candidate) => candidate.scan_evidence.verdict === 'pass' && (candidate.status === 'validated' || candidate.status === 'experimental'))
-      if (qualifiedCandidates.length === 0) {
+      const selectedCandidate = selectImageFitCandidate(response.candidates, strength)
+      if (!selectedCandidate) {
         throw new Error(response.fallback.available
           ? response.fallback.reason
           : 'Core returned no scan-qualified Image-Fit candidate and no fallback authority.')
       }
       setCandidates(response.candidates)
-      setSelectedId(response.candidates.find((candidate) => candidate.mode === 'balanced' && qualifiedCandidates.includes(candidate))?.candidate_id ?? qualifiedCandidates[0]?.candidate_id)
+      setSelectedId(selectedCandidate.candidate_id)
       setRunState('success')
     } catch (caught) {
       if (caught instanceof DOMException && caught.name === 'AbortError') return
