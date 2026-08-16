@@ -17,28 +17,38 @@ page.on('request', (request) => {
   }
 })
 await page.goto(process.env.STUDIO_URL || 'http://127.0.0.1:8093/concepts/level2-image-fit-qr', { waitUntil: 'networkidle' })
-const bodyText = await page.locator('body').innerText()
+const beforeText = await page.locator('body').innerText()
 for (const forbidden of ['Logo size', 'Treatment', 'Image-Fit strength', 'Detail']) {
-  if (bodyText.includes(forbidden)) throw new Error(`${forbidden} control is visible`)
+  if (beforeText.includes(forbidden)) throw new Error(`${forbidden} control is visible before generation`)
 }
 await page.getByRole('button', { name: 'Generate candidates' }).click()
 await page.getByTestId('selected-image-fit-candidate').waitFor({ timeout: 120000 })
-const selectedHash = await page.getByTestId('selected-image-fit-candidate').getAttribute('data-artifact-sha256')
+const articles = await page.locator('article').count()
+if (articles !== 0) throw new Error(`Expected no extra candidate card grid, found ${articles} article cards`)
+const selectedBefore = {
+  hash: await page.getByTestId('selected-image-fit-candidate').getAttribute('data-artifact-sha256'),
+  candidateId: await page.getByTestId('selected-image-fit-candidate').getAttribute('data-candidate-id'),
+}
+const sizeButtons = await page.getByRole('group', { name: 'Validated size options' }).locator('button').evaluateAll((nodes) => nodes.map((node) => ({ text: node.textContent?.replace(/\s+/g, ' ').trim(), pressed: node.getAttribute('aria-pressed') })))
+await page.getByRole('button', { name: /Large/ }).click()
+const selectedAfterLarge = {
+  hash: await page.getByTestId('selected-image-fit-candidate').getAttribute('data-artifact-sha256'),
+  candidateId: await page.getByTestId('selected-image-fit-candidate').getAttribute('data-candidate-id'),
+}
 const blockers = await page.getByTestId('image-fit-export-blockers').innerText()
-const cards = await page.locator('article').evaluateAll((nodes) => nodes.map((node) => node.textContent?.replace(/\s+/g, ' ').trim()))
-const cardNames = await page.locator('article').evaluateAll((nodes) => nodes.map((node) => node.getAttribute('aria-label')))
-await page.screenshot({ path: path.join(outDir, 'size-candidates-live.png'), fullPage: true })
+await page.screenshot({ path: path.join(outDir, 'size-toggle-live.png'), fullPage: true })
 const proof = {
-  schema_version: 'q9-size-candidates-live.v1',
-  selectedHash,
+  schema_version: 'q9-size-toggle-live.v1',
   submittedLogoSize: requests.at(-1)?.user_controls?.logo_size,
   hiddenPreSizePicker: true,
-  cardNames,
-  cards,
+  extraCandidateCards: articles,
+  sizeButtons,
+  selectedBefore,
+  selectedAfterLarge,
   blockers,
   consoleErrors,
   pageErrors,
-  screenshot: 'size-candidates-live.png',
+  screenshot: 'size-toggle-live.png',
 }
 fs.writeFileSync(path.join(outDir, 'proof.json'), JSON.stringify(proof, null, 2) + '\n')
 console.log(JSON.stringify(proof, null, 2))
