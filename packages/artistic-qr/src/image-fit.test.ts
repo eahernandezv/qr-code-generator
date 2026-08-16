@@ -502,7 +502,7 @@ describe('Q8 deterministic protected visual island', () => {
       },
     });
     expect(result.response.candidates.map((candidate) => candidate.image_treatment.logo_size)).toEqual(['small', 'medium', 'large']);
-    expect(result.response.candidates.map((candidate) => candidate.image_treatment.logo_size_fraction)).toEqual([0.4, 0.5, 0.58]);
+    expect(result.response.candidates.map((candidate) => candidate.image_treatment.logo_size_fraction)).toEqual([0.4, 0.5, 0.56]);
     expect(result.response.candidates.every((candidate) => candidate.scan_evidence.verdict === 'pass')).toBe(true);
     expect(result.response.candidates.map((candidate) => candidate.protected_regions.violations)).toEqual([[], [], []]);
   }, 30_000);

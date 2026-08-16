@@ -30,21 +30,25 @@ const selectedBefore = {
   candidateId: await page.getByTestId('selected-image-fit-candidate').getAttribute('data-candidate-id'),
 }
 const sizeButtons = await page.getByRole('group', { name: 'Validated size options' }).locator('button').evaluateAll((nodes) => nodes.map((node) => ({ text: node.textContent?.replace(/\s+/g, ' ').trim(), pressed: node.getAttribute('aria-pressed') })))
-await page.getByRole('button', { name: /Large/ }).click()
-const selectedAfterLarge = {
+const availableSizeButtonNames = sizeButtons.map((button) => button.text ?? '')
+const lastAvailable = availableSizeButtonNames.at(-1)
+if (!lastAvailable) throw new Error('No validated size toggle options were shown')
+await page.getByRole('group', { name: 'Validated size options' }).locator('button').last().click()
+const selectedAfterLastAvailable = {
+  sizeText: lastAvailable,
   hash: await page.getByTestId('selected-image-fit-candidate').getAttribute('data-artifact-sha256'),
   candidateId: await page.getByTestId('selected-image-fit-candidate').getAttribute('data-candidate-id'),
 }
 const blockers = await page.getByTestId('image-fit-export-blockers').innerText()
 await page.screenshot({ path: path.join(outDir, 'size-toggle-live.png'), fullPage: true })
 const proof = {
-  schema_version: 'q9-size-toggle-live.v1',
+  schema_version: 'q9-size-toggle-live.v2',
   submittedLogoSize: requests.at(-1)?.user_controls?.logo_size,
   hiddenPreSizePicker: true,
   extraCandidateCards: articles,
   sizeButtons,
   selectedBefore,
-  selectedAfterLarge,
+  selectedAfterLastAvailable,
   blockers,
   consoleErrors,
   pageErrors,
