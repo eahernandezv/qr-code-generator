@@ -133,8 +133,8 @@ export interface ImageFitOptimizerOptions {
   _compositionPolicy?: 'q1' | 'q2' | 'q3';
   /** Evidence switch for exact Q3 first-pass versus Q7 ranked selection comparisons. */
   _selectionPolicy?: 'q3_first_pass' | 'q7_ranked';
-  /** Evidence-gated Q8 deterministic foreground-island family. Public contracts remain unchanged. */
-  _visualPolicy?: 'q7_module_recolor' | 'q8_protected_island' | 'q8_negative_space_island';
+  /** Evidence-gated deterministic foreground-island families. Public contracts remain unchanged. */
+  _visualPolicy?: 'q7_module_recolor' | 'q8_protected_island' | 'q8_negative_space_island' | 'q9_negative_space_showcase';
 }
 
 const MODE_ORDER: readonly ImageFitMode[] = ['readable', 'balanced', 'image_first'];
@@ -167,7 +167,7 @@ export function optimizeImageFitQr(
     };
     let selected: Evaluated | undefined;
     const renderedSettings: Array<Omit<Evaluated, 'validation'>> = [];
-    const q8Island = visualPolicy === 'q8_protected_island' || visualPolicy === 'q8_negative_space_island';
+    const q8Island = visualPolicy === 'q8_protected_island' || visualPolicy === 'q8_negative_space_island' || visualPolicy === 'q9_negative_space_showcase';
     const settingsCandidates = settingsCandidatesForMode(input.request, mode, q8Island);
     for (let preference = 0; preference < settingsCandidates.length; preference++) {
       if (performance.now() - started > input.request.constraints.max_search_ms) break;
@@ -189,7 +189,7 @@ export function optimizeImageFitQr(
       const useLegacy = options._legacyNaiveRender === true;
       const preprocessed = preprocessTarget(input, matrix, mode, compositionPolicy);
       const rendered = q8Island && input.target_rgb
-        ? renderProtectedVisualIslandSvg(matrix, input.target_rgb, mode, visualPolicy === 'q8_negative_space_island')
+        ? renderProtectedVisualIslandSvg(matrix, input.target_rgb, mode, visualPolicy === 'q8_negative_space_island' || visualPolicy === 'q9_negative_space_showcase', visualPolicy, input.request.target_image.complexity)
         : renderImageFitSvg(matrix, preprocessed.mask, mode, { useLegacy, edgeScore: preprocessed.edgeScore, componentCount: preprocessed.componentCount });
       const artifact = makeArtifact(mode, rendered.svg);
       renderedSettings.push({ settings, matrix, rendered, artifact, preference });
@@ -258,9 +258,11 @@ export function optimizeImageFitQr(
         modified_modules: rendered.modifiedModules,
         modified_fraction: round(rendered.modifiedModules / (matrix.size * matrix.size), 6),
         luminance_policy_version: q8Island && input.target_rgb
-          ? visualPolicy === 'q8_negative_space_island'
-            ? 'image-fit-negative-space-island-q8-cycle2'
-            : 'image-fit-protected-rgb-island-q8-cycle1'
+          ? visualPolicy === 'q9_negative_space_showcase'
+            ? 'image-fit-negative-space-showcase-q9-cycle1'
+            : visualPolicy === 'q8_negative_space_island'
+              ? 'image-fit-negative-space-island-q8-cycle2'
+              : 'image-fit-protected-rgb-island-q8-cycle1'
           : compositionPolicy === 'q3'
           ? 'image-fit-real-target-foreground-q3'
           : 'image-fit-composition-q2-morphology-v1',
@@ -276,9 +278,11 @@ export function optimizeImageFitQr(
       image_fit_evidence: {
         fit_label: fitLabel,
         score_version: q8Island && input.target_rgb
-          ? visualPolicy === 'q8_negative_space_island'
-            ? 'image-fit-negative-space-island-q8-cycle2'
-            : 'image-fit-protected-rgb-island-q8-cycle1'
+          ? visualPolicy === 'q9_negative_space_showcase'
+            ? 'image-fit-negative-space-showcase-q9-cycle1'
+            : visualPolicy === 'q8_negative_space_island'
+              ? 'image-fit-negative-space-island-q8-cycle2'
+              : 'image-fit-protected-rgb-island-q8-cycle1'
           : compositionPolicy === 'q3'
           ? selectionPolicy === 'q7_ranked' ? 'image-fit-scan-first-appearance-q7' : 'image-fit-real-target-coverage-q3'
           : 'image-fit-composition-coverage-q2',
@@ -811,6 +815,8 @@ function renderProtectedVisualIslandSvg(
   target: RgbPlane,
   mode: ImageFitMode,
   preserveNegativeSpace = false,
+  visualPolicy: ImageFitOptimizerOptions['_visualPolicy'] = 'q8_negative_space_island',
+  targetComplexity: ImageFitQrRequestV1['target_image']['complexity'] = 'medium_logo',
 ): {
   svg: string; width: number; modifiedModules: number; recognitionScore: number;
   protectedConflictScore: number; protectedViolations: string[];
@@ -858,14 +864,60 @@ function renderProtectedVisualIslandSvg(
   }
 
   const cropWidth = maxX - minX + 1, cropHeight = maxY - minY + 1;
+  // Q9 distinguishes meaningful logo holes from exterior/background whitespace.
+  // A background-like pixel is preserved as negative space only when it is enclosed
+  // by foreground within the crop; background connected to the crop edge is treated
+  // as outside-logo whitespace and omitted from the overlay.
+  const backgroundConnected = new Uint8Array(cropWidth * cropHeight);
+  const isForegroundAt = (x: number, y: number): boolean => distanceFromBackground(pixel(x, y)) > foregroundThreshold;
+  const markOutside = (x: number, y: number, stack: number[]): void => {
+    if (x < minX || x > maxX || y < minY || y > maxY || isForegroundAt(x, y)) return;
+    const index = (y - minY) * cropWidth + (x - minX);
+    if (backgroundConnected[index]) return;
+    backgroundConnected[index] = 1;
+    stack.push(index);
+  };
+  const stack: number[] = [];
+  for (let x = minX; x <= maxX; x++) { markOutside(x, minY, stack); markOutside(x, maxY, stack); }
+  for (let y = minY + 1; y < maxY; y++) { markOutside(minX, y, stack); markOutside(maxX, y, stack); }
+  while (stack.length > 0) {
+    const index = stack.pop() ?? 0;
+    const x = minX + (index % cropWidth), y = minY + Math.floor(index / cropWidth);
+    markOutside(x + 1, y, stack); markOutside(x - 1, y, stack); markOutside(x, y + 1, stack); markOutside(x, y - 1, stack);
+  }
+
+  let foregroundCount = 0, foregroundSumX = 0, foregroundSumY = 0;
+  for (let y = minY; y <= maxY; y++) for (let x = minX; x <= maxX; x++) {
+    if (!isForegroundAt(x, y)) continue;
+    foregroundCount += 1;
+    foregroundSumX += x - minX + 0.5;
+    foregroundSumY += y - minY + 0.5;
+  }
+
   const inner = matrix.size * moduleSize;
-  const fraction = mode === 'readable' ? 0.32 : mode === 'balanced' ? 0.42 : 0.52;
+  const q9Showcase = visualPolicy === 'q9_negative_space_showcase';
+  const fraction = q9Showcase
+    ? mode === 'readable' ? 0.36 : mode === 'balanced' ? 0.52 : 0.54
+    : mode === 'readable' ? 0.32 : mode === 'balanced' ? 0.42 : 0.52;
   const drawWidth = Math.round(inner * fraction);
   const drawHeight = Math.max(1, Math.round(drawWidth * cropHeight / cropWidth));
-  const offsetX = margin * moduleSize + (inner - drawWidth) / 2;
-  // For versions with a central alignment pattern, move the mark up just enough to let
-  // the immutable pattern sit in lower negative space rather than pierce the crossing.
-  const offsetY = margin * moduleSize + (inner - drawHeight) / 2 - (matrix.version >= 7 ? drawHeight * 0.12 : 0);
+  const centeredX = margin * moduleSize + (inner - drawWidth) / 2;
+  const centeredY = margin * moduleSize + (inner - drawHeight) / 2;
+  const clamp = (value: number, low: number, high: number): number => Math.max(low, Math.min(high, value));
+  const centroidX = foregroundCount > 0 ? foregroundSumX / foregroundCount : cropWidth / 2;
+  const centroidY = foregroundCount > 0 ? foregroundSumY / foregroundCount : cropHeight / 2;
+  const centroidDrawX = centroidX * drawWidth / cropWidth;
+  const centroidDrawY = centroidY * drawHeight / cropHeight;
+  const qrCenterX = margin * moduleSize + inner / 2;
+  const qrCenterY = margin * moduleSize + inner / 2;
+  const centerOnForeground = q9Showcase && targetComplexity !== 'complex_photo_like' && targetComplexity !== 'high_risk_thin_detail';
+  const offsetX = centerOnForeground
+    ? clamp(qrCenterX - centroidDrawX, margin * moduleSize, margin * moduleSize + inner - drawWidth)
+    : centeredX;
+  // Q9 centers simple/logo foregrounds, but preserves the proven scan-safer placement for complex/texture targets.
+  const offsetY = centerOnForeground
+    ? clamp(qrCenterY - centroidDrawY, margin * moduleSize, margin * moduleSize + inner - drawHeight)
+    : centeredY - (matrix.version >= 7 ? drawHeight * 0.12 : 0);
   const sampleStep = 4;
   const modified = new Set<string>();
   let foregroundSamples = 0, protectedSamples = 0, body = '';
@@ -878,7 +930,9 @@ function renderProtectedVisualIslandSvg(
     const rgb = pixel(sourceX, sourceY);
     const foreground = distanceFromBackground(rgb) > foregroundThreshold;
     const extent = rowExtents[sourceY];
-    const internalNegativeSpace = preserveNegativeSpace && !foreground
+    const sourceIndex = (sourceY - minY) * cropWidth + (sourceX - minX);
+    const exteriorBackground = backgroundConnected[sourceIndex] === 1;
+    const internalNegativeSpace = preserveNegativeSpace && !foreground && (!q9Showcase || !exteriorBackground)
       && extent.max >= extent.min && sourceX > extent.min && sourceX < extent.max;
     if (!foreground && !internalNegativeSpace) continue;
     foregroundSamples += 1;

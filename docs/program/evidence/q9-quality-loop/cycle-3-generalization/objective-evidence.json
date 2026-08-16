@@ -1,0 +1,487 @@
+{
+  "schema_version": "q9-cycle-3-generalization.v1",
+  "visual_policy": "q9_negative_space_showcase",
+  "payload_sha256": "0b9d3c08679190dc700907affabb5257b049d4cf154027168e366bed74571d7d",
+  "targets": [
+    {
+      "id": "simple-silhouette",
+      "type": "simple silhouette",
+      "source": {
+        "path": "docs/program/evidence/level2-image-fit-real-targets-q3/inputs/wolf-black-white.jpg",
+        "sha256": "19bd5a92ea6b89fddf128f8be4af1c21f09c4e5869a7848e4a152d38286ab88a",
+        "width": 192,
+        "height": 192
+      },
+      "candidates": [
+        {
+          "mode": "readable",
+          "candidate_id": "readable-4f8f5aa8a14980f94f23",
+          "settings": {
+            "payload_mode": "optimized_short_link",
+            "short_link": {
+              "slug": "bD7xQ2",
+              "state": "reserved",
+              "route": "/r/bD7xQ2"
+            },
+            "encoded_payload_display": "https://placeholder-online.com/r/bD7xQ2",
+            "payload_sha256": "0b9d3c08679190dc700907affabb5257b049d4cf154027168e366bed74571d7d",
+            "version": 12,
+            "module_count": 65,
+            "ecc": "H",
+            "mask": 3
+          },
+          "scan": {
+            "verdict": "pass",
+            "decoder_suite_version": "scan-v1-real-75pct",
+            "checks_passed": 8,
+            "checks_total": 8,
+            "decoders": [
+              {
+                "name": "jsQR",
+                "version": "1.4.0",
+                "pass": true
+              }
+            ],
+            "physical_scan": "not_performed",
+            "print_scan": "not_performed",
+            "disclaimer": "Controlled decoder checks are not a universal scan guarantee. No physical-device or print scan was performed."
+          },
+          "independent_validation": {
+            "pass": true,
+            "scanned_payload": "https://placeholder-online.com/r/bD7xQ2",
+            "payload_equal": true,
+            "raw_decode": true,
+            "checks_passed": 8,
+            "checks_total": 8
+          },
+          "recognition_score": 0.941793,
+          "protected_conflict_score": 0.058207,
+          "protected_violations": [],
+          "export_parity": "not_claimed_export_locked",
+          "artifact": {
+            "sha256": "820e9f41483a4456ffd6c56c0b5fe247f8d271cb8d599ff5dd56b3daa17736d4",
+            "path": "simple-silhouette/artifacts/readable.svg"
+          },
+          "deterministic": true
+        },
+        {
+          "mode": "balanced",
+          "candidate_id": "balanced-c77f2614b1a1561d8313",
+          "settings": {
+            "payload_mode": "optimized_short_link",
+            "short_link": {
+              "slug": "bD7xQ2",
+              "state": "reserved",
+              "route": "/r/bD7xQ2"
+            },
+            "encoded_payload_display": "https://placeholder-online.com/r/bD7xQ2",
+            "payload_sha256": "0b9d3c08679190dc700907affabb5257b049d4cf154027168e366bed74571d7d",
+            "version": 12,
+            "module_count": 65,
+            "ecc": "H",
+            "mask": 1
+          },
+          "scan": {
+            "verdict": "pass",
+            "decoder_suite_version": "scan-v1-real-75pct",
+            "checks_passed": 8,
+            "checks_total": 8,
+            "decoders": [
+              {
+                "name": "jsQR",
+                "version": "1.4.0",
+                "pass": true
+              }
+            ],
+            "physical_scan": "not_performed",
+            "print_scan": "not_performed",
+            "disclaimer": "Controlled decoder checks are not a universal scan guarantee. No physical-device or print scan was performed."
+          },
+          "independent_validation": {
+            "pass": true,
+            "scanned_payload": "https://placeholder-online.com/r/bD7xQ2",
+            "payload_equal": true,
+            "raw_decode": true,
+            "checks_passed": 8,
+            "checks_total": 8
+          },
+          "recognition_score": 0.972044,
+          "protected_conflict_score": 0.027956,
+          "protected_violations": [],
+          "export_parity": "not_claimed_export_locked",
+          "artifact": {
+            "sha256": "dd71517ef4cd5a72ec7cafacb0d8b29489848c0c2b54943cc6c252b411a13cd5",
+            "path": "simple-silhouette/artifacts/balanced.svg"
+          },
+          "deterministic": true
+        },
+        {
+          "mode": "image_first",
+          "candidate_id": "image-first-521914c6909c4f53d9b5",
+          "settings": {
+            "payload_mode": "optimized_short_link",
+            "short_link": {
+              "slug": "bD7xQ2",
+              "state": "reserved",
+              "route": "/r/bD7xQ2"
+            },
+            "encoded_payload_display": "https://placeholder-online.com/r/bD7xQ2",
+            "payload_sha256": "0b9d3c08679190dc700907affabb5257b049d4cf154027168e366bed74571d7d",
+            "version": 12,
+            "module_count": 65,
+            "ecc": "H",
+            "mask": 0
+          },
+          "scan": {
+            "verdict": "pass",
+            "decoder_suite_version": "scan-v1-real-75pct",
+            "checks_passed": 8,
+            "checks_total": 8,
+            "decoders": [
+              {
+                "name": "jsQR",
+                "version": "1.4.0",
+                "pass": true
+              }
+            ],
+            "physical_scan": "not_performed",
+            "print_scan": "not_performed",
+            "disclaimer": "Controlled decoder checks are not a universal scan guarantee. No physical-device or print scan was performed."
+          },
+          "independent_validation": {
+            "pass": true,
+            "scanned_payload": "https://placeholder-online.com/r/bD7xQ2",
+            "payload_equal": true,
+            "raw_decode": true,
+            "checks_passed": 8,
+            "checks_total": 8
+          },
+          "recognition_score": 0.971525,
+          "protected_conflict_score": 0.028475,
+          "protected_violations": [],
+          "export_parity": "not_claimed_export_locked",
+          "artifact": {
+            "sha256": "3e0f1caeeaf933c4cae18d5b5508f2a1a5d315a5b0624c0066f57778aef7f25d",
+            "path": "simple-silhouette/artifacts/image-first.svg"
+          },
+          "deterministic": true
+        }
+      ],
+      "fallback": {
+        "independent_validation": {
+          "pass": true,
+          "scanned_payload": "https://placeholder-online.com/r/bD7xQ2",
+          "payload_equal": true,
+          "raw_decode": true,
+          "checks_passed": 8,
+          "checks_total": 8
+        },
+        "artifact_sha256": "f453ef42520daa427212ce61b4b697f2ba6177652ea7004aa1734a4a3f8a2e7b",
+        "deterministic": true
+      }
+    },
+    {
+      "id": "medium-logo",
+      "type": "medium logo / brand mark",
+      "source": {
+        "path": "docs/program/handoffs/assets/q8-reference-logo.jpg",
+        "sha256": "cb3b4fecbd0547cd2dfb62daeecfc0116e4dd49fb653ac602025a77b00badaec",
+        "width": 192,
+        "height": 144
+      },
+      "candidates": [
+        {
+          "mode": "readable",
+          "candidate_id": "readable-33f4eef0898d54d2420d",
+          "settings": {
+            "payload_mode": "optimized_short_link",
+            "short_link": {
+              "slug": "bD7xQ2",
+              "state": "reserved",
+              "route": "/r/bD7xQ2"
+            },
+            "encoded_payload_display": "https://placeholder-online.com/r/bD7xQ2",
+            "payload_sha256": "0b9d3c08679190dc700907affabb5257b049d4cf154027168e366bed74571d7d",
+            "version": 12,
+            "module_count": 65,
+            "ecc": "H",
+            "mask": 3
+          },
+          "scan": {
+            "verdict": "pass",
+            "decoder_suite_version": "scan-v1-real-75pct",
+            "checks_passed": 8,
+            "checks_total": 8,
+            "decoders": [
+              {
+                "name": "jsQR",
+                "version": "1.4.0",
+                "pass": true
+              }
+            ],
+            "physical_scan": "not_performed",
+            "print_scan": "not_performed",
+            "disclaimer": "Controlled decoder checks are not a universal scan guarantee. No physical-device or print scan was performed."
+          },
+          "independent_validation": {
+            "pass": true,
+            "scanned_payload": "https://placeholder-online.com/r/bD7xQ2",
+            "payload_equal": true,
+            "raw_decode": true,
+            "checks_passed": 8,
+            "checks_total": 8
+          },
+          "recognition_score": 0.942562,
+          "protected_conflict_score": 0.057438,
+          "protected_violations": [],
+          "export_parity": "not_claimed_export_locked",
+          "artifact": {
+            "sha256": "9623cf8062711c402a948835395f8e40f18538b57af625c0081fdd3a542d1c72",
+            "path": "medium-logo/artifacts/readable.svg"
+          },
+          "deterministic": true
+        },
+        {
+          "mode": "balanced",
+          "candidate_id": "balanced-302cf2ea09395ef5e906",
+          "settings": {
+            "payload_mode": "optimized_short_link",
+            "short_link": {
+              "slug": "bD7xQ2",
+              "state": "reserved",
+              "route": "/r/bD7xQ2"
+            },
+            "encoded_payload_display": "https://placeholder-online.com/r/bD7xQ2",
+            "payload_sha256": "0b9d3c08679190dc700907affabb5257b049d4cf154027168e366bed74571d7d",
+            "version": 12,
+            "module_count": 65,
+            "ecc": "H",
+            "mask": 1
+          },
+          "scan": {
+            "verdict": "pass",
+            "decoder_suite_version": "scan-v1-real-75pct",
+            "checks_passed": 8,
+            "checks_total": 8,
+            "decoders": [
+              {
+                "name": "jsQR",
+                "version": "1.4.0",
+                "pass": true
+              }
+            ],
+            "physical_scan": "not_performed",
+            "print_scan": "not_performed",
+            "disclaimer": "Controlled decoder checks are not a universal scan guarantee. No physical-device or print scan was performed."
+          },
+          "independent_validation": {
+            "pass": true,
+            "scanned_payload": "https://placeholder-online.com/r/bD7xQ2",
+            "payload_equal": true,
+            "raw_decode": true,
+            "checks_passed": 8,
+            "checks_total": 8
+          },
+          "recognition_score": 0.971957,
+          "protected_conflict_score": 0.028043,
+          "protected_violations": [],
+          "export_parity": "not_claimed_export_locked",
+          "artifact": {
+            "sha256": "76346ed8d4070bc649528fe31b414b9610acfbb5b15037195f8a5ef7973b4ce6",
+            "path": "medium-logo/artifacts/balanced.svg"
+          },
+          "deterministic": true
+        },
+        {
+          "mode": "image_first",
+          "candidate_id": "image-first-1a6a930240b93b34b3dd",
+          "settings": {
+            "payload_mode": "optimized_short_link",
+            "short_link": {
+              "slug": "bD7xQ2",
+              "state": "reserved",
+              "route": "/r/bD7xQ2"
+            },
+            "encoded_payload_display": "https://placeholder-online.com/r/bD7xQ2",
+            "payload_sha256": "0b9d3c08679190dc700907affabb5257b049d4cf154027168e366bed74571d7d",
+            "version": 10,
+            "module_count": 57,
+            "ecc": "H",
+            "mask": 0
+          },
+          "scan": {
+            "verdict": "pass",
+            "decoder_suite_version": "scan-v1-real-75pct",
+            "checks_passed": 8,
+            "checks_total": 8,
+            "decoders": [
+              {
+                "name": "jsQR",
+                "version": "1.4.0",
+                "pass": true
+              }
+            ],
+            "physical_scan": "not_performed",
+            "print_scan": "not_performed",
+            "disclaimer": "Controlled decoder checks are not a universal scan guarantee. No physical-device or print scan was performed."
+          },
+          "independent_validation": {
+            "pass": true,
+            "scanned_payload": "https://placeholder-online.com/r/bD7xQ2",
+            "payload_equal": true,
+            "raw_decode": true,
+            "checks_passed": 8,
+            "checks_total": 8
+          },
+          "recognition_score": 0.966678,
+          "protected_conflict_score": 0.033322,
+          "protected_violations": [],
+          "export_parity": "not_claimed_export_locked",
+          "artifact": {
+            "sha256": "1f90a6a3257d7f2f792c16f7e68c1802f7dbe8f5e6df9028e57b93d1fd73653a",
+            "path": "medium-logo/artifacts/image-first.svg"
+          },
+          "deterministic": true
+        }
+      ],
+      "fallback": {
+        "independent_validation": {
+          "pass": true,
+          "scanned_payload": "https://placeholder-online.com/r/bD7xQ2",
+          "payload_equal": true,
+          "raw_decode": true,
+          "checks_passed": 8,
+          "checks_total": 8
+        },
+        "artifact_sha256": "f453ef42520daa427212ce61b4b697f2ba6177652ea7004aa1734a4a3f8a2e7b",
+        "deterministic": true
+      }
+    },
+    {
+      "id": "textured-subject",
+      "type": "photo-like / textured subject",
+      "source": {
+        "path": "docs/program/evidence/level2-image-fit-real-targets-q3/inputs/red-wolf-front.jpg",
+        "sha256": "04e66b062e147e40abf1b35f0735494e5b4711a3263869741bdccb91d39698a8",
+        "width": 192,
+        "height": 192
+      },
+      "candidates": [
+        {
+          "mode": "readable",
+          "candidate_id": "readable-78fad9987f904c2c0863",
+          "settings": {
+            "payload_mode": "optimized_short_link",
+            "short_link": {
+              "slug": "bD7xQ2",
+              "state": "reserved",
+              "route": "/r/bD7xQ2"
+            },
+            "encoded_payload_display": "https://placeholder-online.com/r/bD7xQ2",
+            "payload_sha256": "0b9d3c08679190dc700907affabb5257b049d4cf154027168e366bed74571d7d",
+            "version": 12,
+            "module_count": 65,
+            "ecc": "H",
+            "mask": 3
+          },
+          "scan": {
+            "verdict": "pass",
+            "decoder_suite_version": "scan-v1-real-75pct",
+            "checks_passed": 8,
+            "checks_total": 8,
+            "decoders": [
+              {
+                "name": "jsQR",
+                "version": "1.4.0",
+                "pass": true
+              }
+            ],
+            "physical_scan": "not_performed",
+            "print_scan": "not_performed",
+            "disclaimer": "Controlled decoder checks are not a universal scan guarantee. No physical-device or print scan was performed."
+          },
+          "independent_validation": {
+            "pass": true,
+            "scanned_payload": "https://placeholder-online.com/r/bD7xQ2",
+            "payload_equal": true,
+            "raw_decode": true,
+            "checks_passed": 8,
+            "checks_total": 8
+          },
+          "recognition_score": 0.955947,
+          "protected_conflict_score": 0.044053,
+          "protected_violations": [],
+          "export_parity": "not_claimed_export_locked",
+          "artifact": {
+            "sha256": "ae53a7541c909cb7755bec826b7e4980198dea48139443149bc9970f74b620b9",
+            "path": "textured-subject/artifacts/readable.svg"
+          },
+          "deterministic": true
+        },
+        {
+          "mode": "balanced",
+          "candidate_id": "balanced-9a6dbb65cadf89cd197a",
+          "settings": {
+            "payload_mode": "optimized_short_link",
+            "short_link": {
+              "slug": "bD7xQ2",
+              "state": "reserved",
+              "route": "/r/bD7xQ2"
+            },
+            "encoded_payload_display": "https://placeholder-online.com/r/bD7xQ2",
+            "payload_sha256": "0b9d3c08679190dc700907affabb5257b049d4cf154027168e366bed74571d7d",
+            "version": 12,
+            "module_count": 65,
+            "ecc": "H",
+            "mask": 1
+          },
+          "scan": {
+            "verdict": "fail",
+            "decoder_suite_version": "scan-v1-real-75pct",
+            "checks_passed": 0,
+            "checks_total": 8,
+            "decoders": [
+              {
+                "name": "jsQR",
+                "version": "1.4.0",
+                "pass": false
+              }
+            ],
+            "physical_scan": "not_performed",
+            "print_scan": "not_performed",
+            "disclaimer": "Controlled decoder checks are not a universal scan guarantee. No physical-device or print scan was performed."
+          },
+          "independent_validation": {
+            "pass": false,
+            "scanned_payload": "",
+            "payload_equal": false,
+            "raw_decode": false,
+            "checks_passed": 0,
+            "checks_total": 8
+          },
+          "recognition_score": 0.940989,
+          "protected_conflict_score": 0.059011,
+          "protected_violations": [],
+          "export_parity": "not_claimed_export_locked",
+          "artifact": {
+            "sha256": "76001a9cbce270811e9df1c55f589583fa675fdd04cbca5d8fe6a43dc5dfadd2",
+            "path": "textured-subject/artifacts/balanced.svg"
+          },
+          "deterministic": true
+        }
+      ],
+      "fallback": {
+        "independent_validation": {
+          "pass": true,
+          "scanned_payload": "https://placeholder-online.com/r/bD7xQ2",
+          "payload_equal": true,
+          "raw_decode": true,
+          "checks_passed": 8,
+          "checks_total": 8
+        },
+        "artifact_sha256": "f453ef42520daa427212ce61b4b697f2ba6177652ea7004aa1734a4a3f8a2e7b",
+        "deterministic": true
+      }
+    }
+  ]
+}

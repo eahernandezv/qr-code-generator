@@ -1,0 +1,101 @@
+{
+  "schema_version": "q9-cycle-6-product-scores.v1",
+  "scorer": "QR Product Architect direct",
+  "selections": [
+    {
+      "target": "simple-silhouette",
+      "mode": "image_first",
+      "score": 89,
+      "checks": 8,
+      "hash": "86969132ba60bf6338754246062429e6b5fda96d40d2188eaadfffe8ec471272"
+    },
+    {
+      "target": "medium-logo",
+      "mode": "balanced",
+      "score": 96,
+      "checks": 8,
+      "hash": "02bc82162c72fb436b3d89ead9530ae785f6e309130b845d7b0e0e9c0c9542c5"
+    },
+    {
+      "target": "textured-subject",
+      "mode": "balanced",
+      "score": 88,
+      "checks": 8,
+      "hash": "97a0a6e3504382630a8275b3e52a8ece17f777e023ddc1767dccf5e9d6b3737e"
+    }
+  ],
+  "all_candidates": [
+    {
+      "target": "simple-silhouette",
+      "mode": "readable",
+      "total": 76,
+      "checks": 8,
+      "raw_decode": true,
+      "payload_equal": true
+    },
+    {
+      "target": "simple-silhouette",
+      "mode": "balanced",
+      "total": 88,
+      "checks": 8,
+      "raw_decode": true,
+      "payload_equal": true
+    },
+    {
+      "target": "simple-silhouette",
+      "mode": "image_first",
+      "total": 89,
+      "checks": 8,
+      "raw_decode": true,
+      "payload_equal": true
+    },
+    {
+      "target": "medium-logo",
+      "mode": "readable",
+      "total": 80,
+      "checks": 8,
+      "raw_decode": true,
+      "payload_equal": true
+    },
+    {
+      "target": "medium-logo",
+      "mode": "balanced",
+      "total": 96,
+      "checks": 8,
+      "raw_decode": true,
+      "payload_equal": true
+    },
+    {
+      "target": "medium-logo",
+      "mode": "image_first",
+      "total": 93,
+      "checks": 8,
+      "raw_decode": true,
+      "payload_equal": true
+    },
+    {
+      "target": "textured-subject",
+      "mode": "readable",
+      "total": 84,
+      "checks": 8,
+      "raw_decode": true,
+      "payload_equal": true
+    },
+    {
+      "target": "textured-subject",
+      "mode": "balanced",
+      "total": 88,
+      "checks": 8,
+      "raw_decode": true,
+      "payload_equal": true
+    },
+    {
+      "target": "textured-subject",
+      "mode": "image_first",
+      "total": null,
+      "checks": 0,
+      "raw_decode": false,
+      "payload_equal": false
+    }
+  ]
+}
