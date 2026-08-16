@@ -474,6 +474,18 @@
           "type": "integer",
           "minimum": 0
         },
+        "logo_size": {
+          "enum": [
+            "small",
+            "medium",
+            "large"
+          ]
+        },
+        "logo_size_fraction": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
         "modified_fraction": {
           "type": "number",
           "minimum": 0,

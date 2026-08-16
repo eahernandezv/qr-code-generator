@@ -23,7 +23,7 @@ export type ImageFitCandidateV1 = {
     ecc: 'Q' | 'H'
     mask: number
   }
-  image_treatment: { kind: string; modified_modules: number; modified_fraction: number }
+  image_treatment: { kind: string; logo_size?: 'small' | 'medium' | 'large'; logo_size_fraction?: number; modified_modules: number; modified_fraction: number }
   protected_regions: { quiet_zone: true; finder: true; separator: true; timing: true; alignment: true; format: true; version_info: boolean; immutable_modules_policy_version: string; violations: string[] }
   scan_evidence: { verdict: 'pass' | 'fail' | 'not_run'; decoder_suite_version: string; checks_passed: number; checks_total: number; decoders: Array<{ name: string; version: string; pass: boolean }>; physical_scan: 'not_performed' | 'pass' | 'fail'; print_scan: 'not_performed' | 'pass' | 'fail'; disclaimer: string }
   image_fit_evidence: { fit_label: 'readable' | 'balanced' | 'experimental' | 'failed'; score_version: string; recognition_score: number; protected_zone_conflict_score: number }
@@ -106,7 +106,7 @@ export function buildImageFitRequest(controls: ImageFitRequestControls, requestI
       safety: { verdict: 'pass', policy_version: 'studio-public-https-input-v1' },
     },
     target_image: { ...controls.targetImage },
-    user_controls: { treatment: controls.treatment, strength: controls.strength, detail: controls.detail, logo_size: controls.logoSize ?? 'medium', link_mode: controls.linkMode },
+    user_controls: { treatment: controls.treatment, strength: controls.strength, detail: controls.detail, ...(controls.logoSize ? { logo_size: controls.logoSize } : {}), link_mode: controls.linkMode },
     constraints: { max_candidates: 12, max_search_ms: 45_000, allowed_ecc: ['Q', 'H'], allowed_masks: [0, 1, 2, 3, 4, 5, 6, 7], allowed_versions: [8, 9, 10, 11, 12] },
     entitlement_context: { mode: 'preview', export_entitled: false },
   }

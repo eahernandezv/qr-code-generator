@@ -80,7 +80,9 @@ test('mobile request binding keeps scan, fit, and visual acceptance evidence sep
   await page.screenshot({ path: path.join(evidenceDir, 'mobile-creator-response-bound.png'), fullPage: true })
 
   expect(requests).toHaveLength(1)
-  expect(requests[0]).toMatchObject({ destination: { normalized_url: fixture.request.destination.normalized_url, safety: { verdict: 'pass' } }, user_controls: fixture.request.user_controls, entitlement_context: { mode: 'preview', export_entitled: false } })
+  const expectedControls = { ...fixture.request.user_controls }
+  delete (expectedControls as { logo_size?: string }).logo_size
+  expect(requests[0]).toMatchObject({ destination: { normalized_url: fixture.request.destination.normalized_url, safety: { verdict: 'pass' } }, user_controls: expectedControls, entitlement_context: { mode: 'preview', export_entitled: false } })
   await page.getByRole('textbox', { name: 'Level 2 destination URL' }).fill('https://example.org/changed')
   await expect(selected).toHaveCount(0)
   await expect(page.getByRole('article')).toHaveCount(0)
