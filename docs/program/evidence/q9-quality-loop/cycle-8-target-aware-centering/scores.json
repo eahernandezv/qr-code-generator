@@ -1,0 +1,102 @@
+{
+  "schema_version": "q9-cycle-8-product-scores.v1",
+  "scorer": "QR Product Architect direct",
+  "selection_note": "Target-aware centering keeps full centroid centering for simple/logo targets and uses scan-safer placement for complex/textured targets.",
+  "selections": [
+    {
+      "target": "simple-silhouette",
+      "mode": "image_first",
+      "score": 90,
+      "checks": 8,
+      "hash": "5736b57fac4b12d912154dbea584ee9788c35f156255a15d86dfe4efa29f76bf"
+    },
+    {
+      "target": "medium-logo",
+      "mode": "balanced",
+      "score": 97,
+      "checks": 8,
+      "hash": "95c5b58fcb51f849446da11d95a4a0ed7713d7d292aa899a3459730762b61b3f"
+    },
+    {
+      "target": "textured-subject",
+      "mode": "balanced",
+      "score": 88,
+      "checks": 8,
+      "hash": "97a0a6e3504382630a8275b3e52a8ece17f777e023ddc1767dccf5e9d6b3737e"
+    }
+  ],
+  "all_candidates": [
+    {
+      "target": "simple-silhouette",
+      "mode": "readable",
+      "total": 76,
+      "checks": 8,
+      "raw_decode": true,
+      "payload_equal": true
+    },
+    {
+      "target": "simple-silhouette",
+      "mode": "balanced",
+      "total": 89,
+      "checks": 8,
+      "raw_decode": true,
+      "payload_equal": true
+    },
+    {
+      "target": "simple-silhouette",
+      "mode": "image_first",
+      "total": 90,
+      "checks": 8,
+      "raw_decode": true,
+      "payload_equal": true
+    },
+    {
+      "target": "medium-logo",
+      "mode": "readable",
+      "total": 82,
+      "checks": 8,
+      "raw_decode": true,
+      "payload_equal": true
+    },
+    {
+      "target": "medium-logo",
+      "mode": "balanced",
+      "total": 97,
+      "checks": 8,
+      "raw_decode": true,
+      "payload_equal": true
+    },
+    {
+      "target": "medium-logo",
+      "mode": "image_first",
+      "total": 94,
+      "checks": 8,
+      "raw_decode": true,
+      "payload_equal": true
+    },
+    {
+      "target": "textured-subject",
+      "mode": "readable",
+      "total": 84,
+      "checks": 8,
+      "raw_decode": true,
+      "payload_equal": true
+    },
+    {
+      "target": "textured-subject",
+      "mode": "balanced",
+      "total": 88,
+      "checks": 8,
+      "raw_decode": true,
+      "payload_equal": true
+    },
+    {
+      "target": "textured-subject",
+      "mode": "image_first",
+      "total": null,
+      "checks": 0,
+      "raw_decode": false,
+      "payload_equal": false
+    }
+  ]
+}

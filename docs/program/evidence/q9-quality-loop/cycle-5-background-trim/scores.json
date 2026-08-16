@@ -1,0 +1,100 @@
+{
+  "schema_version": "q9-product-visual-quality-scores.v1",
+  "cycle": 5,
+  "scorer": "QR Product Architect direct",
+  "scoring_note": "Independent Product visual score, not Creator telemetry.",
+  "weights": {
+    "target_recognizability": 25,
+    "composition_placement": 15,
+    "image_qr_harmony": 15,
+    "scan_robustness_margin": 15,
+    "palette_fidelity": 10,
+    "protected_region_elegance": 10,
+    "premium_polish": 10
+  },
+  "candidates": [
+    {
+      "candidate": "readable",
+      "candidate_id": "readable-7e9e72cbad386190aebe",
+      "artifact_sha256": "4d5a8277f9e23a91f4f02f9e2d10a48d7ec99ec134d896b22cfa48b88db14fd5",
+      "hardGatePass": true,
+      "gateFailures": [],
+      "leaderboardEligible": true,
+      "scores": {
+        "target_recognizability": 20,
+        "composition_placement": 11,
+        "image_qr_harmony": 10,
+        "palette_fidelity": 9,
+        "protected_region_elegance": 8,
+        "premium_polish": 7,
+        "scan_robustness_margin": 15
+      },
+      "total": 80,
+      "thresholdChecks": {
+        "total75": true,
+        "recognizability18": true,
+        "scanMargin12": true,
+        "everyCategoryHalf": true
+      },
+      "verdict": "producer_threshold_met",
+      "delta_from_q9_cycle2": 0
+    },
+    {
+      "candidate": "balanced",
+      "candidate_id": "balanced-99d2fad097d82e9ee239",
+      "artifact_sha256": "02bc82162c72fb436b3d89ead9530ae785f6e309130b845d7b0e0e9c0c9542c5",
+      "hardGatePass": true,
+      "gateFailures": [],
+      "leaderboardEligible": true,
+      "scores": {
+        "target_recognizability": 25,
+        "composition_placement": 14,
+        "image_qr_harmony": 14,
+        "palette_fidelity": 10,
+        "protected_region_elegance": 9,
+        "premium_polish": 9,
+        "scan_robustness_margin": 15
+      },
+      "total": 96,
+      "thresholdChecks": {
+        "total75": true,
+        "recognizability18": true,
+        "scanMargin12": true,
+        "everyCategoryHalf": true
+      },
+      "verdict": "producer_threshold_met",
+      "delta_from_q9_cycle2": 2
+    },
+    {
+      "candidate": "image_first",
+      "candidate_id": "image-first-a2cc304b788a40a122f8",
+      "artifact_sha256": "59c0de0775ee18406abd1ae497e0a426dc64bb6282779ed602e5fcf1a949763d",
+      "hardGatePass": true,
+      "gateFailures": [],
+      "leaderboardEligible": true,
+      "scores": {
+        "target_recognizability": 24,
+        "composition_placement": 14,
+        "image_qr_harmony": 13,
+        "palette_fidelity": 10,
+        "protected_region_elegance": 8,
+        "premium_polish": 9,
+        "scan_robustness_margin": 15
+      },
+      "total": 93,
+      "thresholdChecks": {
+        "total75": true,
+        "recognizability18": true,
+        "scanMargin12": true,
+        "everyCategoryHalf": true
+      },
+      "verdict": "producer_threshold_met",
+      "delta_from_q9_cycle2": -1
+    }
+  ],
+  "leaderboard": [
+    "balanced",
+    "image_first",
+    "readable"
+  ]
+}

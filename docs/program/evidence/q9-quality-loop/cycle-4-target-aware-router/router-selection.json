@@ -1,0 +1,145 @@
+{
+  "schema_version": "q9-cycle-4-target-aware-router.v1",
+  "baseline_commit": "234d759d978de159f105dcdfce0aeb3b1e275f9c",
+  "source_cycle": "cycle-3-generalization",
+  "policy": {
+    "simple_or_logo_targets": "Q9 showcase; pick highest scan-safe visual candidate",
+    "complex_or_textured_targets": "fail closed to Readable unless Balanced/Image-first pass and are visually superior",
+    "public_contract_change": "none"
+  },
+  "selections": [
+    {
+      "target": "simple-silhouette",
+      "selected_mode": "image_first",
+      "selection_reason": "highest Product-quality candidate that preserves raw decode, 8/8 controlled checks, payload equality, and zero protected violations",
+      "candidate_id": "image-first-521914c6909c4f53d9b5",
+      "artifact_sha256": "3e0f1caeeaf933c4cae18d5b5508f2a1a5d315a5b0624c0066f57778aef7f25d",
+      "artifact_path": "artifacts/simple-silhouette-image-first.svg",
+      "hard_gates": {
+        "payload_equal": true,
+        "raw_decode": true,
+        "checks_passed": 8,
+        "checks_total": 8,
+        "protected_violations": 0,
+        "deterministic": true
+      },
+      "product_scores": {
+        "target_recognizability": 23,
+        "composition_placement": 13,
+        "image_qr_harmony": 12,
+        "palette_fidelity": 9,
+        "protected_region_elegance": 8,
+        "premium_polish": 8,
+        "scan_robustness_margin": 15,
+        "total": 88
+      },
+      "verdict": "selected"
+    },
+    {
+      "target": "medium-logo",
+      "selected_mode": "balanced",
+      "selection_reason": "highest Product-quality candidate that preserves raw decode, 8/8 controlled checks, payload equality, and zero protected violations",
+      "candidate_id": "balanced-302cf2ea09395ef5e906",
+      "artifact_sha256": "76346ed8d4070bc649528fe31b414b9610acfbb5b15037195f8a5ef7973b4ce6",
+      "artifact_path": "artifacts/medium-logo-balanced.svg",
+      "hard_gates": {
+        "payload_equal": true,
+        "raw_decode": true,
+        "checks_passed": 8,
+        "checks_total": 8,
+        "protected_violations": 0,
+        "deterministic": true
+      },
+      "product_scores": {
+        "target_recognizability": 24,
+        "composition_placement": 14,
+        "image_qr_harmony": 13,
+        "palette_fidelity": 10,
+        "protected_region_elegance": 9,
+        "premium_polish": 9,
+        "scan_robustness_margin": 15,
+        "total": 94
+      },
+      "verdict": "selected"
+    },
+    {
+      "target": "textured-subject",
+      "selected_mode": "readable",
+      "selection_reason": "highest Product-quality candidate that preserves raw decode, 8/8 controlled checks, payload equality, and zero protected violations",
+      "candidate_id": "readable-78fad9987f904c2c0863",
+      "artifact_sha256": "ae53a7541c909cb7755bec826b7e4980198dea48139443149bc9970f74b620b9",
+      "artifact_path": "artifacts/textured-subject-readable.svg",
+      "hard_gates": {
+        "payload_equal": true,
+        "raw_decode": true,
+        "checks_passed": 8,
+        "checks_total": 8,
+        "protected_violations": 0,
+        "deterministic": true
+      },
+      "product_scores": {
+        "target_recognizability": 20,
+        "composition_placement": 12,
+        "image_qr_harmony": 10,
+        "palette_fidelity": 8,
+        "protected_region_elegance": 9,
+        "premium_polish": 10,
+        "scan_robustness_margin": 15,
+        "total": 84
+      },
+      "verdict": "selected"
+    }
+  ],
+  "rejected": [
+    {
+      "target": "simple-silhouette",
+      "mode": "readable",
+      "checks": "8/8",
+      "raw_decode": true,
+      "payload_equal": true,
+      "reason": [
+        "lower_product_quality_or_less_safe_than_selected"
+      ]
+    },
+    {
+      "target": "simple-silhouette",
+      "mode": "balanced",
+      "checks": "8/8",
+      "raw_decode": true,
+      "payload_equal": true,
+      "reason": [
+        "lower_product_quality_or_less_safe_than_selected"
+      ]
+    },
+    {
+      "target": "medium-logo",
+      "mode": "readable",
+      "checks": "8/8",
+      "raw_decode": true,
+      "payload_equal": true,
+      "reason": [
+        "lower_product_quality_or_less_safe_than_selected"
+      ]
+    },
+    {
+      "target": "medium-logo",
+      "mode": "image_first",
+      "checks": "8/8",
+      "raw_decode": true,
+      "payload_equal": true,
+      "reason": [
+        "lower_product_quality_or_less_safe_than_selected"
+      ]
+    },
+    {
+      "target": "textured-subject",
+      "mode": "balanced",
+      "checks": "0/8",
+      "raw_decode": false,
+      "payload_equal": false,
+      "reason": [
+        "hard_gate_fail"
+      ]
+    }
+  ]
+}
