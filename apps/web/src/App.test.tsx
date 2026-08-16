@@ -47,6 +47,10 @@ describe('App integration', () => {
     }
     vi.stubGlobal('fetch', vi.fn().mockImplementation(async (_url, init) => {
       const request = JSON.parse(String(init?.body))
+      expect(request.user_controls.logo_size).toBe('large')
+      expect(request.user_controls.treatment).toBe('pixel_blend')
+      expect(request.user_controls.strength).toBe('balanced')
+      expect(request.user_controls.detail).toBe('detailed')
       return { ok: true, json: async () => ({ ...response, request: { ...response.request, request_id: request.request_id } }) }
     }))
     render(<App />)
@@ -58,6 +62,13 @@ describe('App integration', () => {
     expect(screen.getByRole('button', { name: 'Generate candidates' })).toBeEnabled()
     expect(screen.getByLabelText('Choose target image')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Upload locked' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Medium' })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.queryByText('Treatment')).not.toBeInTheDocument()
+    expect(screen.queryByText(/Image-Fit strength/)).not.toBeInTheDocument()
+    expect(screen.queryByText('Detail')).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Large' }))
+    expect(screen.getByRole('button', { name: 'Large' })).toHaveAttribute('aria-pressed', 'true')
 
     await user.click(screen.getByRole('button', { name: 'Generate candidates' }))
     const preview = await screen.findByTestId('selected-image-fit-candidate')

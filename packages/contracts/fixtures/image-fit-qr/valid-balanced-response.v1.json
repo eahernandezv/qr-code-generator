@@ -23,6 +23,7 @@
       "treatment": "pixel_blend",
       "strength": "balanced",
       "detail": "detailed",
+      "logo_size": "medium",
       "link_mode": "optimized_short_link"
     },
     "constraints": {

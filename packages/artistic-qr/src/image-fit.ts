@@ -10,6 +10,7 @@ import type { Candidate, ScanValidationResult } from './types.js';
 import { runValidation } from './validation.js';
 
 export type ImageFitMode = 'readable' | 'balanced' | 'image_first';
+export type ImageFitLogoSize = 'small' | 'medium' | 'large';
 export type ImageFitEcc = 'Q' | 'H';
 export type ShortLinkState = 'reserved' | 'committed' | 'expired' | 'disabled';
 
@@ -27,6 +28,7 @@ export interface ImageFitQrRequestV1 {
   user_controls: {
     treatment: 'logo' | 'pixel_blend' | 'background_image' | 'cutout_perforated';
     strength: ImageFitMode; detail: 'simple' | 'detailed' | 'maximum';
+    logo_size?: ImageFitLogoSize;
     link_mode: 'optimized_short_link' | 'original_url';
   };
   constraints: {
@@ -189,7 +191,7 @@ export function optimizeImageFitQr(
       const useLegacy = options._legacyNaiveRender === true;
       const preprocessed = preprocessTarget(input, matrix, mode, compositionPolicy);
       const rendered = q8Island && input.target_rgb
-        ? renderProtectedVisualIslandSvg(matrix, input.target_rgb, mode, visualPolicy === 'q8_negative_space_island' || visualPolicy === 'q9_negative_space_showcase', visualPolicy, input.request.target_image.complexity)
+        ? renderProtectedVisualIslandSvg(matrix, input.target_rgb, mode, visualPolicy === 'q8_negative_space_island' || visualPolicy === 'q9_negative_space_showcase', visualPolicy, input.request.target_image.complexity, input.request.user_controls.logo_size ?? 'medium')
         : renderImageFitSvg(matrix, preprocessed.mask, mode, { useLegacy, edgeScore: preprocessed.edgeScore, componentCount: preprocessed.componentCount });
       const artifact = makeArtifact(mode, rendered.svg);
       renderedSettings.push({ settings, matrix, rendered, artifact, preference });
@@ -817,6 +819,7 @@ function renderProtectedVisualIslandSvg(
   preserveNegativeSpace = false,
   visualPolicy: ImageFitOptimizerOptions['_visualPolicy'] = 'q8_negative_space_island',
   targetComplexity: ImageFitQrRequestV1['target_image']['complexity'] = 'medium_logo',
+  logoSize: ImageFitLogoSize = 'medium',
 ): {
   svg: string; width: number; modifiedModules: number; recognitionScore: number;
   protectedConflictScore: number; protectedViolations: string[];
@@ -896,8 +899,13 @@ function renderProtectedVisualIslandSvg(
 
   const inner = matrix.size * moduleSize;
   const q9Showcase = visualPolicy === 'q9_negative_space_showcase';
+  const q9SizedFraction = (size: ImageFitLogoSize): number => {
+    if (mode === 'readable') return size === 'small' ? 0.30 : size === 'large' ? 0.40 : 0.35;
+    if (mode === 'balanced') return size === 'small' ? 0.40 : size === 'large' ? 0.60 : 0.50;
+    return size === 'small' ? 0.46 : size === 'large' ? 0.62 : 0.54;
+  };
   const fraction = q9Showcase
-    ? mode === 'readable' ? 0.36 : mode === 'balanced' ? 0.52 : 0.54
+    ? q9SizedFraction(logoSize)
     : mode === 'readable' ? 0.32 : mode === 'balanced' ? 0.42 : 0.52;
   const drawWidth = Math.round(inner * fraction);
   const drawHeight = Math.max(1, Math.round(drawWidth * cropHeight / cropWidth));
@@ -1234,6 +1242,10 @@ function validateInput(input: ImageFitOptimizerInput): void {
   }
   if (constraints.allowed_ecc.length === 0 || constraints.allowed_ecc.some((v) => v !== 'Q' && v !== 'H')) {
     throw new Error('allowed_ecc must contain Q or H');
+  }
+  const logoSize = input.request.user_controls.logo_size ?? 'medium';
+  if (logoSize !== 'small' && logoSize !== 'medium' && logoSize !== 'large') {
+    throw new Error('logo_size must be small, medium, or large');
   }
   if (input.request.user_controls.link_mode === 'optimized_short_link') {
     if (!input.short_link || input.encoded_payload !== `https://placeholder-online.com${input.short_link.route}`) {
