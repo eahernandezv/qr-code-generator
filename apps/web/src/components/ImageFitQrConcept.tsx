@@ -4,7 +4,7 @@ import { buildImageFitRequest, imageFitExportDecision, imageFitGenerationClient,
 
 const labels: Record<string, string> = {
   logo: 'Logo', pixel_blend: 'Pixel blend', background_image: 'Background image', cutout_perforated: 'Cutout-perforated',
-  readable: 'Mellow', balanced: 'Balanced', image_first: 'Punchy', simple: 'Simple', detailed: 'Detailed', maximum: 'Maximum',
+  readable: 'Mellow', balanced: 'Balanced', image_first: 'Punchy', experimental: 'Punchy', failed: 'Failed', simple: 'Simple', detailed: 'Detailed', maximum: 'Maximum',
   optimized_short_link: 'Optimized short link', original_url: 'Original URL',
 }
 
@@ -161,7 +161,8 @@ export default function ImageFitQrConcept() {
       }
       setCandidates(response.candidates)
       setFallback(undefined)
-      setSelectedId(response.candidates.find((candidate) => candidate.mode === 'balanced')?.candidate_id ?? response.candidates[0]?.candidate_id)
+      const defaultQualifying = qualifying.find((candidate) => candidate.mode === 'balanced') ?? qualifying[0]
+      setSelectedId(defaultQualifying?.candidate_id)
       setRunState('success')
     } catch (caught) {
       if (caught instanceof DOMException && caught.name === 'AbortError') return
@@ -176,7 +177,7 @@ export default function ImageFitQrConcept() {
   React.useEffect(() => () => { abortRef.current?.abort(); uploadAbortRef.current?.abort() }, [])
 
   return <main data-testid="image-fit-qr-concept" data-schema-version="image-fit-qr-api.v1" data-export-payload-bound={exportDecision?.allowed ? 'true' : 'false'} data-checkout-bound="false" className="min-h-[100dvh] bg-[#070b16] text-white">
-    <header className="border-b border-white/10 bg-slate-950/90 px-4 py-3"><div className="mx-auto flex max-w-6xl items-center justify-between gap-3"><div><p className="text-[10px] font-black uppercase tracking-[.2em] text-indigo-300">Deterministic Studio</p><h1 className="text-base font-bold">Q7 Image-Fit</h1><nav aria-label="QR integration mode" className="mt-2 flex gap-2 text-[10px] font-bold"><a href="/" className="rounded-lg border border-emerald-300/40 px-2 py-1 text-emerald-200">Level 1 Safe</a><span aria-current="page" className="rounded-lg border border-indigo-300/50 bg-indigo-500/20 px-2 py-1 text-indigo-100">Q7 Image-Fit Premium</span></nav></div><span className="rounded-full border border-amber-300/30 bg-amber-300/10 px-2.5 py-1 text-[10px] font-bold text-amber-200">Core authority required</span></div></header>
+    <header className="border-b border-white/10 bg-slate-950/90 px-4 py-3"><div className="mx-auto flex max-w-6xl items-center justify-between gap-3"><div><p className="text-[10px] font-black uppercase tracking-[.2em] text-indigo-300">Deterministic Studio</p><h1 className="text-base font-bold">Q9 Image-Fit</h1><nav aria-label="QR integration mode" className="mt-2 flex gap-2 text-[10px] font-bold"><a href="/" className="rounded-lg border border-emerald-300/40 px-2 py-1 text-emerald-200">Level 1 Safe</a><span aria-current="page" className="rounded-lg border border-indigo-300/50 bg-indigo-500/20 px-2 py-1 text-indigo-100">Q9 Image-Fit Premium</span></nav></div><span className="rounded-full border border-amber-300/30 bg-amber-300/10 px-2.5 py-1 text-[10px] font-bold text-amber-200">Core authority required</span></div></header>
     <div className="mx-auto grid max-w-6xl gap-3 p-3 lg:grid-cols-[minmax(0,.9fr)_minmax(360px,1.1fr)]">
       <section aria-label="How to test" className="lg:col-span-2 rounded-2xl border border-indigo-300/20 bg-indigo-500/10 px-3 py-2 text-[11px] leading-relaxed text-indigo-100"><strong className="text-white">Test in four steps:</strong> 1. keep the controlled target image; 2. choose or keep the destination; 3. press <strong>Generate candidates</strong>; 4. review Readable, Balanced, and Image-first evidence returned by Creator. Export is not available yet.</section>
 
@@ -190,7 +191,7 @@ export default function ImageFitQrConcept() {
         {fallback && <section aria-label="Core-authorized Level 1 fallback" className="mt-3 rounded-xl border border-emerald-300/30 bg-emerald-400/10 p-3 text-xs text-emerald-50">
           <div className="grid grid-cols-[72px_1fr] items-center gap-3"><img src={fallback.artifact.uri} data-testid="level1-fallback-preview" data-artifact-sha256={fallback.artifact.sha256} data-payload-sha256={fallback.payload_sha256} alt="Deterministic Level 1 Safe fallback preview" className="aspect-square w-[72px] rounded-lg bg-white object-contain" /><div><strong className="block">Deterministic Level 1 Safe</strong><span className="mt-1 block text-[10px]">Core scan {fallback.scan_evidence.verdict} · {fallback.scan_evidence.checks_passed}/{fallback.scan_evidence.checks_total}</span><code className="mt-1 block break-all text-[9px] text-emerald-200">SHA-256 {fallback.artifact.sha256}</code></div></div>
           <button type="button" onClick={() => downloadFallbackArtifact(fallback)} className="mt-3 min-h-11 w-full rounded-xl bg-emerald-500 px-4 text-xs font-black text-slate-950">Download Core-authorized Level 1 fallback</button>
-          <p className="mt-2 text-[10px]">This downloads only the hash-bound fallback bytes. Q7 Image-Fit export remains denied.</p>
+          <p className="mt-2 text-[10px]">This downloads only the hash-bound fallback bytes. Q9 Image-Fit export remains denied.</p>
         </section>}
         <div role="status" className="mt-3 rounded-xl border border-amber-300/25 bg-amber-300/10 px-3 py-2 text-[10px] text-amber-100">Only Core-authorized exact bytes can download. Payment, committed short-link, scan, parity, and Image-first experimental blockers remain visible and fail closed. <a href="/" className="font-bold underline">Level 1 Safe remains available</a>.</div>
       </section>

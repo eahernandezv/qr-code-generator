@@ -1,0 +1,61 @@
+{
+  "schema_version": "studio-q9-fallback-parity.v1",
+  "provider_generative_exposed": false,
+  "fallback": {
+    "preview_sha256": "f453ef42520daa427212ce61b4b697f2ba6177652ea7004aa1734a4a3f8a2e7b",
+    "downloaded_sha256": "f453ef42520daa427212ce61b4b697f2ba6177652ea7004aa1734a4a3f8a2e7b",
+    "encoded_payload": "https://placeholder-online.com/r/bD7xQ2",
+    "payload_sha256": "0b9d3c08679190dc700907affabb5257b049d4cf154027168e366bed74571d7d",
+    "candidate_payload_hashes_equal": true,
+    "scan_verdict": "pass",
+    "downloadable": true
+  },
+  "q9_modes": [
+    {
+      "studio_label": "Mellow",
+      "core_mode": "readable",
+      "preview_sha256": "224a98f6e363392d572c4c50fd64f0e1fac0d3db82f3495034a86de3a438adef",
+      "checkout_hash": null,
+      "final_png_hash": null,
+      "final_svg_hash": null,
+      "export_denied": true,
+      "denial_blockers": [
+        "scan_not_passed",
+        "preview_export_parity_not_proven"
+      ]
+    },
+    {
+      "studio_label": "Balanced",
+      "core_mode": "balanced",
+      "preview_sha256": "95c5b58fcb51f849446da11d95a4a0ed7713d7d292aa899a3459730762b61b3f",
+      "checkout_hash": null,
+      "final_png_hash": null,
+      "final_svg_hash": null,
+      "export_denied": true,
+      "denial_blockers": [
+        "scan_not_passed",
+        "preview_export_parity_not_proven"
+      ]
+    },
+    {
+      "studio_label": "Punchy",
+      "core_mode": "image_first",
+      "preview_sha256": "1a09348d332d423ad9dca5e8a19f924bef8701f27df5861a66016573804cb056",
+      "checkout_hash": null,
+      "final_png_hash": null,
+      "final_svg_hash": null,
+      "export_denied": true,
+      "denial_blockers": [
+        "scan_not_passed",
+        "preview_export_parity_not_proven"
+      ]
+    }
+  ],
+  "assertions": {
+    "q9_candidates_hidden": true,
+    "q9_export_not_unlocked": true,
+    "checkout_does_not_alter_bytes": true,
+    "checkout_absent": true,
+    "fallback_preview_download_parity": true
+  }
+}
