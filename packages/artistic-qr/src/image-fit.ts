@@ -938,7 +938,7 @@ function renderProtectedVisualIslandSvg(
   const offsetY = centerOnForeground
     ? clamp(qrCenterY - centroidDrawY, margin * moduleSize, margin * moduleSize + inner - drawHeight)
     : centeredY - (matrix.version >= 7 ? drawHeight * 0.12 : 0);
-  const sampleStep = 4;
+  const sampleStep = q9Showcase ? 2 : 4;
   const modified = new Set<string>();
   let foregroundSamples = 0, protectedSamples = 0, body = '';
   const quantize = (value: number): number => Math.max(0, Math.min(255, Math.round(value / 4) * 4));
@@ -954,17 +954,19 @@ function renderProtectedVisualIslandSvg(
     const exteriorBackground = backgroundConnected[sourceIndex] === 1;
     const internalNegativeSpace = preserveNegativeSpace && !foreground && (!q9Showcase || !exteriorBackground)
       && extent.max >= extent.min && sourceX > extent.min && sourceX < extent.max;
-    if (!foreground && !internalNegativeSpace) continue;
-    foregroundSamples += 1;
+    const silhouetteSubstrate = q9Showcase && !foreground && !internalNegativeSpace
+      && extent.max >= extent.min && sourceX >= extent.min - 2 && sourceX <= extent.max + 2;
+    if (!foreground && !internalNegativeSpace && !silhouetteSubstrate) continue;
+    if (foreground || internalNegativeSpace) foregroundSamples += 1;
     const moduleX = Math.floor((offsetX + drawX - margin * moduleSize) / moduleSize);
     const moduleY = Math.floor((offsetY + drawY - margin * moduleSize) / moduleSize);
     if (moduleX < 0 || moduleY < 0 || moduleX >= matrix.size || moduleY >= matrix.size) continue;
     if (isProtectedFunctionalModule(matrix.functionalRegions, moduleX, moduleY)) {
-      protectedSamples += 1;
+      if (foreground || internalNegativeSpace) protectedSamples += 1;
       continue;
     }
     modified.add(`${moduleX},${moduleY}`);
-    const fill = internalNegativeSpace ? '#ffffff' : `rgb(${quantize(rgb[0])},${quantize(rgb[1])},${quantize(rgb[2])})`;
+    const fill = foreground ? `rgb(${quantize(rgb[0])},${quantize(rgb[1])},${quantize(rgb[2])})` : '#ffffff';
     body += `<rect x="${coordinate(offsetX + drawX)}" y="${coordinate(offsetY + drawY)}" width="${sampleStep}" height="${sampleStep}" fill="${fill}"/>`;
   }
   const recognitionScore = foregroundSamples === 0 ? 0 : round((foregroundSamples - protectedSamples) / foregroundSamples, 6);

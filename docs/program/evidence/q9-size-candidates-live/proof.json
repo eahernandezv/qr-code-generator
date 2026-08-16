@@ -1,5 +1,5 @@
 {
-  "schema_version": "q9-size-toggle-live.v1",
+  "schema_version": "q9-size-toggle-live.v2",
   "hiddenPreSizePicker": true,
   "extraCandidateCards": 0,
   "sizeButtons": [
@@ -10,19 +10,16 @@
     {
       "text": "Medium50%",
       "pressed": "true"
-    },
-    {
-      "text": "Large60%",
-      "pressed": "false"
     }
   ],
   "selectedBefore": {
-    "hash": "884fbb5eb8d70e02eabc7697af974a5b7de387047b7c8737f6e49df2bbbbbd1e",
-    "candidateId": "balanced-fe054aa0a7691ddf06a7"
+    "hash": "e7ac655b45df60753428fa5a6d807448dbdfc5608d282a1898808eda87c8a18b",
+    "candidateId": "balanced-5da692abfad7430f5407"
   },
-  "selectedAfterLarge": {
-    "hash": "79d1c63770434af87a3a915cc7d93a729f5009375554cc15831c0fd84db4820f",
-    "candidateId": "balanced-6537e8456ca46fa84296"
+  "selectedAfterLastAvailable": {
+    "sizeText": "Medium50%",
+    "hash": "e7ac655b45df60753428fa5a6d807448dbdfc5608d282a1898808eda87c8a18b",
+    "candidateId": "balanced-5da692abfad7430f5407"
   },
   "blockers": "Blocked: preview_export_parity_not_proven, preview_not_paid, short_link_not_committed",
   "consoleErrors": [],

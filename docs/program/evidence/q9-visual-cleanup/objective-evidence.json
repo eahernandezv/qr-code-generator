@@ -1,0 +1,88 @@
+{
+  "schema_version": "q9-visual-cleanup.v1",
+  "payload": "https://placeholder-online.com/r/bD7xQ2",
+  "target": {
+    "id": "medium-logo",
+    "path": "docs/program/handoffs/assets/q8-reference-logo.jpg",
+    "complexity": "medium_logo",
+    "sha256": "cb3b4fecbd0547cd2dfb62daeecfc0116e4dd49fb653ac602025a77b00badaec",
+    "width": 192,
+    "height": 144
+  },
+  "variants": {
+    "baseline-main": [
+      {
+        "label": "small-40",
+        "size": "small",
+        "fraction": 0.4,
+        "candidate_id": "balanced-80491c0afc2c78aa28f2",
+        "artifact_sha256": "2dc5bdb332821aa0ad4ac5d136f9fbce3b227f9dc6a82cde52944c477ad6411d",
+        "pass": true,
+        "raw_decode": true,
+        "payload_equal": true,
+        "checks_passed": 8,
+        "checks_total": 8,
+        "protected_violations": [],
+        "recognition_score": 0.94213
+      },
+      {
+        "label": "medium-50",
+        "size": "medium",
+        "fraction": 0.5,
+        "candidate_id": "balanced-c661cfbc996a2ac2e91b",
+        "artifact_sha256": "9a75dbc9bf77318fd0736adeb1f640478cc11bd9d3cd6cbfc231861e30f1d5db",
+        "pass": true,
+        "raw_decode": true,
+        "payload_equal": true,
+        "checks_passed": 8,
+        "checks_total": 8,
+        "protected_violations": [],
+        "recognition_score": 0.962949
+      },
+      {
+        "label": "large-60",
+        "size": "large",
+        "fraction": 0.6,
+        "candidate_id": "balanced-656f1dfb00649663f769",
+        "artifact_sha256": "f50d749e53f6713c536d3b392daa779c4a54795448605b43a17f44bfa420f3db",
+        "pass": true,
+        "raw_decode": true,
+        "payload_equal": true,
+        "checks_passed": 8,
+        "checks_total": 8,
+        "protected_violations": [],
+        "recognition_score": 0.974379
+      }
+    ],
+    "cleanup-candidate": [
+      {
+        "label": "small-40",
+        "size": "small",
+        "fraction": 0.4,
+        "candidate_id": "balanced-dce7fee98f95cf9f7b8b",
+        "artifact_sha256": "98e357d88c9dcd7acd7b9b63012d9571ebe12ec003d52cdf55c1dbd548778152",
+        "pass": true,
+        "raw_decode": true,
+        "payload_equal": true,
+        "checks_passed": 8,
+        "checks_total": 8,
+        "protected_violations": [],
+        "recognition_score": 0.941538
+      },
+      {
+        "label": "medium-50",
+        "size": "medium",
+        "fraction": 0.5,
+        "candidate_id": "balanced-6c0ffc353d4c3ac38f2b",
+        "artifact_sha256": "35db99f0b2f83737b17c1f05031347846e7d84fc0fb3df79076df33e00939198",
+        "pass": true,
+        "raw_decode": true,
+        "payload_equal": true,
+        "checks_passed": 8,
+        "checks_total": 8,
+        "protected_violations": [],
+        "recognition_score": 0.962659
+      }
+    ]
+  }
+}
