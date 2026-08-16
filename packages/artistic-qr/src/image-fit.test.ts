@@ -472,20 +472,16 @@ describe('Q8 deterministic protected visual island', () => {
     expect(optimizeImageFitQr(realisticInput()).response.candidates.every((candidate) => candidate.image_fit_evidence.score_version.includes('q7'))).toBe(true);
   }, 30_000);
 
-  it('applies the Core-backed Q9 logo-size ladder at 40/50/60 for Balanced image-fit', () => {
-    const variants = ['small', 'medium', 'large'] as const;
-    const outputs = variants.map((logoSize) => {
-      const requestInput = rgbLogoInput();
-      requestInput.request.user_controls.logo_size = logoSize;
-      const result = optimizeImageFitQr(requestInput, { _visualPolicy: 'q9_negative_space_showcase' });
-      const balanced = result.response.candidates.find((candidate) => candidate.mode === 'balanced')!;
-      return { logoSize, balanced, hash: result.artifacts[balanced.candidate_id].sha256 };
-    });
-    expect(new Set(outputs.map((output) => output.hash)).size).toBe(3);
-    expect(outputs.map((output) => output.balanced.scan_evidence.verdict)).toEqual(['pass', 'pass', 'pass']);
-    expect(outputs.map((output) => output.balanced.protected_regions.violations)).toEqual([[], [], []]);
-    expect(outputs.map((output) => output.balanced.image_fit_evidence.recognition_score))
-      .toEqual([...outputs.map((output) => output.balanced.image_fit_evidence.recognition_score)].sort((a, b) => a - b));
+  it('returns Small, Medium, and Large as separately validated Q9 size candidates', () => {
+    const result = optimizeImageFitQr(rgbLogoInput(), { _visualPolicy: 'q9_negative_space_showcase' });
+    const sizes = result.response.candidates.map((candidate) => candidate.image_treatment.logo_size);
+    expect(sizes).toEqual(['small', 'medium', 'large']);
+    expect(result.response.candidates.map((candidate) => candidate.mode)).toEqual(['balanced', 'balanced', 'balanced']);
+    expect(result.response.candidates.map((candidate) => candidate.image_treatment.logo_size_fraction)).toEqual([0.4, 0.5, 0.6]);
+    expect(new Set(result.response.candidates.map((candidate) => result.artifacts[candidate.candidate_id].sha256)).size).toBe(3);
+    expect(result.response.candidates.every((candidate) => candidate.scan_evidence.verdict === 'pass')).toBe(true);
+    expect(result.response.candidates.every((candidate) => candidate.scan_evidence.checks_passed >= 6)).toBe(true);
+    expect(result.response.candidates.map((candidate) => candidate.protected_regions.violations)).toEqual([[], [], []]);
   }, 30_000);
 
   it('rejects an RGB plane that is not exactly bound to the luma plane', () => {

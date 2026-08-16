@@ -27,13 +27,14 @@ describe('App integration', () => {
     const q9Medium = q9Evidence.targets.find((target: { id: string }) => target.id === 'medium-logo')
     const q9Balanced = q9Medium.candidates.find((candidate: { mode: string }) => candidate.mode === 'balanced')
     const q9BalancedSvg = readFileSync(resolve(evidenceRoot, q9Balanced.artifact.path), 'utf8')
-    response.candidates[0] = {
+    response.candidates = (['small', 'medium', 'large'] as const).map((logoSize, index) => ({
       ...response.candidates[0],
-      candidate_id: q9Balanced.candidate_id,
+      candidate_id: `${q9Balanced.candidate_id}-${logoSize}`,
       mode: q9Balanced.mode,
       status: 'validated',
       scan_evidence: q9Balanced.scan,
       qr_settings: { ...response.candidates[0].qr_settings, ...q9Balanced.settings },
+      image_treatment: { ...response.candidates[0].image_treatment, logo_size: logoSize, logo_size_fraction: [0.4, 0.5, 0.6][index] },
       image_fit_evidence: {
         ...response.candidates[0].image_fit_evidence,
         fit_label: 'balanced',
@@ -44,10 +45,10 @@ describe('App integration', () => {
       protected_regions: { ...response.candidates[0].protected_regions, violations: q9Balanced.protected_violations },
       export_authority: { ...response.candidates[0].export_authority, blockers: ['requires_payment_or_internal_entitlement', 'preview_export_parity_not_proven'], preview_export_parity: 'not_proven' },
       artifacts: [{ kind: 'export_svg', uri: `data:image/svg+xml;base64,${Buffer.from(q9BalancedSvg).toString('base64')}`, sha256: q9Balanced.artifact.sha256 }],
-    }
+    }))
     vi.stubGlobal('fetch', vi.fn().mockImplementation(async (_url, init) => {
       const request = JSON.parse(String(init?.body))
-      expect(request.user_controls.logo_size).toBe('large')
+      expect(request.user_controls.logo_size).toBeUndefined()
       expect(request.user_controls.treatment).toBe('pixel_blend')
       expect(request.user_controls.strength).toBe('balanced')
       expect(request.user_controls.detail).toBe('detailed')
@@ -62,20 +63,17 @@ describe('App integration', () => {
     expect(screen.getByRole('button', { name: 'Generate candidates' })).toBeEnabled()
     expect(screen.getByLabelText('Choose target image')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Upload locked' })).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Medium' })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.queryByText('Logo size')).not.toBeInTheDocument()
     expect(screen.queryByText('Treatment')).not.toBeInTheDocument()
     expect(screen.queryByText(/Image-Fit strength/)).not.toBeInTheDocument()
     expect(screen.queryByText('Detail')).not.toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: 'Large' }))
-    expect(screen.getByRole('button', { name: 'Large' })).toHaveAttribute('aria-pressed', 'true')
-
     await user.click(screen.getByRole('button', { name: 'Generate candidates' }))
     const preview = await screen.findByTestId('selected-image-fit-candidate')
     expect(preview).toHaveAttribute('data-artifact-sha256', q9Balanced.artifact.sha256)
-    const candidateCard = screen.getByRole('article', { name: 'Balanced generated candidate' })
+    const candidateCard = screen.getByRole('article', { name: 'Medium generated candidate' })
     expect(candidateCard).toHaveTextContent(/Scan verdictPass · 8\/8/)
-    expect(candidateCard).toHaveTextContent(/Image fit97% · Balanced/)
+    expect(candidateCard).toHaveTextContent(/Image fit97% · 50%/)
     expect(candidateCard).toHaveTextContent(/Visual acceptancePending/)
     const selectedEvidence = screen.getByRole('region', { name: 'Selected candidate evidence' })
     expect(selectedEvidence).toHaveTextContent(/Pending visual review/)

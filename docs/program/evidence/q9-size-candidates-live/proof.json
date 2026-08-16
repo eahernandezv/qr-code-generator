@@ -1,0 +1,19 @@
+{
+  "schema_version": "q9-size-candidates-live.v1",
+  "selectedHash": "8538f44078ad369a584f26859bc72efd3e36fdfc6022e1ed7b156b11674eef76",
+  "hiddenPreSizePicker": true,
+  "cardNames": [
+    "Small generated candidate",
+    "Medium generated candidate",
+    "Large generated candidate"
+  ],
+  "cards": [
+    "SmallScan verdictPass · 8/8Image fit94% · 40%Visual acceptancePending",
+    "MediumScan verdictPass · 8/8Image fit96% · 50%Visual acceptancePending",
+    "LargeScan verdictPass · 8/8Image fit97% · 60%Visual acceptancePending"
+  ],
+  "blockers": "Blocked: preview_export_parity_not_proven, preview_not_paid, short_link_not_committed",
+  "consoleErrors": [],
+  "pageErrors": [],
+  "screenshot": "size-candidates-live.png"
+}

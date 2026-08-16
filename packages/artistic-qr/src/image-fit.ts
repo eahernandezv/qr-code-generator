@@ -83,6 +83,7 @@ export interface ImageFitCandidateV1 {
   };
   image_treatment: {
     kind: 'central_logo_pixel' | 'module_recolor' | 'background_silhouette' | 'cutout_perforated' | 'fallback_level1';
+    logo_size?: ImageFitLogoSize; logo_size_fraction?: number;
     modified_modules: number; modified_fraction: number;
     luminance_policy_version: string; color_profile: string;
   };
@@ -140,6 +141,8 @@ export interface ImageFitOptimizerOptions {
 }
 
 const MODE_ORDER: readonly ImageFitMode[] = ['readable', 'balanced', 'image_first'];
+const LOGO_SIZE_ORDER: readonly ImageFitLogoSize[] = ['small', 'medium', 'large'];
+const LOGO_SIZE_FRACTION: Record<ImageFitLogoSize, number> = { small: 0.40, medium: 0.50, large: 0.60 };
 const MAX_VISUAL_CHALLENGERS_PER_MODE = 2;
 const DISCLAIMER = 'Controlled decoder checks are not a universal scan guarantee. No physical-device or print scan was performed.';
 
@@ -156,9 +159,14 @@ export function optimizeImageFitQr(
   const started = performance.now();
   const artifacts: Record<string, ImageFitArtifact> = {};
   const candidates: ImageFitCandidateV1[] = [];
-  const modes = MODE_ORDER.slice(0, Math.min(input.request.constraints.max_candidates, MODE_ORDER.length));
+  const sizeCandidateFlow = visualPolicy === 'q9_negative_space_showcase' && Boolean(input.target_rgb);
+  const candidateSpecs = sizeCandidateFlow
+    ? LOGO_SIZE_ORDER.slice(0, Math.min(input.request.constraints.max_candidates, LOGO_SIZE_ORDER.length))
+      .map((logoSize) => ({ mode: 'balanced' as const, logoSize }))
+    : MODE_ORDER.slice(0, Math.min(input.request.constraints.max_candidates, MODE_ORDER.length))
+      .map((mode) => ({ mode, logoSize: input.request.user_controls.logo_size ?? 'medium' }));
 
-  for (const mode of modes) {
+  for (const { mode, logoSize } of candidateSpecs) {
     type Evaluated = {
       settings: QrSearchSettings;
       matrix: QrMatrix;
@@ -191,9 +199,9 @@ export function optimizeImageFitQr(
       const useLegacy = options._legacyNaiveRender === true;
       const preprocessed = preprocessTarget(input, matrix, mode, compositionPolicy);
       const rendered = q8Island && input.target_rgb
-        ? renderProtectedVisualIslandSvg(matrix, input.target_rgb, mode, visualPolicy === 'q8_negative_space_island' || visualPolicy === 'q9_negative_space_showcase', visualPolicy, input.request.target_image.complexity, input.request.user_controls.logo_size ?? 'medium')
+        ? renderProtectedVisualIslandSvg(matrix, input.target_rgb, mode, visualPolicy === 'q8_negative_space_island' || visualPolicy === 'q9_negative_space_showcase', visualPolicy, input.request.target_image.complexity, logoSize)
         : renderImageFitSvg(matrix, preprocessed.mask, mode, { useLegacy, edgeScore: preprocessed.edgeScore, componentCount: preprocessed.componentCount });
-      const artifact = makeArtifact(mode, rendered.svg);
+      const artifact = makeArtifact(sizeCandidateFlow ? `${logoSize}-${mode}` : mode, rendered.svg);
       renderedSettings.push({ settings, matrix, rendered, artifact, preference });
       if (selectionPolicy === 'q3_first_pass') {
         const validation = validate(validationCandidate(artifact, rendered.width, settings, mode), input.encoded_payload);
@@ -235,6 +243,7 @@ export function optimizeImageFitQr(
     }
     if (!selected) continue;
     const { settings, matrix, rendered, artifact, validation } = selected;
+    if (sizeCandidateFlow && !validation.pass) continue;
     const scanEvidence = mapScanEvidence(validation);
     const candidateId = stableId(input, mode, settings, artifact.sha256);
     artifact.uri = `artifact://image-fit/${candidateId}.svg`;
@@ -257,6 +266,8 @@ export function optimizeImageFitQr(
       },
       image_treatment: {
         kind: treatmentForMode(mode),
+        logo_size: sizeCandidateFlow ? logoSize : input.request.user_controls.logo_size ?? 'medium',
+        logo_size_fraction: sizeCandidateFlow ? LOGO_SIZE_FRACTION[logoSize] : LOGO_SIZE_FRACTION[input.request.user_controls.logo_size ?? 'medium'],
         modified_modules: rendered.modifiedModules,
         modified_fraction: round(rendered.modifiedModules / (matrix.size * matrix.size), 6),
         luminance_policy_version: q8Island && input.target_rgb
@@ -901,7 +912,7 @@ function renderProtectedVisualIslandSvg(
   const q9Showcase = visualPolicy === 'q9_negative_space_showcase';
   const q9SizedFraction = (size: ImageFitLogoSize): number => {
     if (mode === 'readable') return size === 'small' ? 0.30 : size === 'large' ? 0.40 : 0.35;
-    if (mode === 'balanced') return size === 'small' ? 0.40 : size === 'large' ? 0.60 : 0.50;
+    if (mode === 'balanced') return LOGO_SIZE_FRACTION[size];
     return size === 'small' ? 0.46 : size === 'large' ? 0.62 : 0.54;
   };
   const fraction = q9Showcase
