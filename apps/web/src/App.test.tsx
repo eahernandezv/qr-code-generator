@@ -22,16 +22,28 @@ describe('App integration', () => {
     window.history.replaceState({}, '', '/concepts/level2-image-fit-qr')
     const response = structuredClone((await import('../../../packages/contracts/fixtures/image-fit-qr/valid-balanced-response.v1.json')).default)
     vi.stubGlobal('crypto', webcrypto)
-    const evidenceRoot = resolve(process.cwd(), '../../docs/program/evidence/studio-q7-integration')
-    const q7Evidence = JSON.parse(readFileSync(resolve(evidenceRoot, 'integration-evidence.json'), 'utf8'))
-    const q7Balanced = q7Evidence.image_fit_modes.find((mode: { core_mode: string }) => mode.core_mode === 'balanced')
-    const q7BalancedSvg = readFileSync(resolve(evidenceRoot, 'artifacts/balanced.svg'), 'utf8')
+    const evidenceRoot = resolve(process.cwd(), '../../docs/program/evidence/q9-quality-loop/cycle-8-target-aware-centering')
+    const q9Evidence = JSON.parse(readFileSync(resolve(evidenceRoot, 'objective-evidence.json'), 'utf8'))
+    const q9Medium = q9Evidence.targets.find((target: { id: string }) => target.id === 'medium-logo')
+    const q9Balanced = q9Medium.candidates.find((candidate: { mode: string }) => candidate.mode === 'balanced')
+    const q9BalancedSvg = readFileSync(resolve(evidenceRoot, q9Balanced.artifact.path), 'utf8')
     response.candidates[0] = {
       ...response.candidates[0],
-      status: q7Balanced.core_status,
-      image_fit_evidence: { ...response.candidates[0].image_fit_evidence, score_version: q7Balanced.score_version },
-      export_authority: { ...response.candidates[0].export_authority, blockers: q7Balanced.denial_blockers, preview_export_parity: 'not_proven' },
-      artifacts: [{ kind: 'export_svg', uri: `data:image/svg+xml;base64,${Buffer.from(q7BalancedSvg).toString('base64')}`, sha256: q7Balanced.preview_sha256 }],
+      candidate_id: q9Balanced.candidate_id,
+      mode: q9Balanced.mode,
+      status: 'validated',
+      scan_evidence: q9Balanced.scan,
+      qr_settings: { ...response.candidates[0].qr_settings, ...q9Balanced.settings },
+      image_fit_evidence: {
+        ...response.candidates[0].image_fit_evidence,
+        fit_label: 'balanced',
+        score_version: 'image-fit-negative-space-showcase-q9-target-aware-centering',
+        recognition_score: q9Balanced.recognition_score,
+        protected_zone_conflict_score: q9Balanced.protected_conflict_score,
+      },
+      protected_regions: { ...response.candidates[0].protected_regions, violations: q9Balanced.protected_violations },
+      export_authority: { ...response.candidates[0].export_authority, blockers: ['requires_payment_or_internal_entitlement', 'preview_export_parity_not_proven'], preview_export_parity: 'not_proven' },
+      artifacts: [{ kind: 'export_svg', uri: `data:image/svg+xml;base64,${Buffer.from(q9BalancedSvg).toString('base64')}`, sha256: q9Balanced.artifact.sha256 }],
     }
     vi.stubGlobal('fetch', vi.fn().mockImplementation(async (_url, init) => {
       const request = JSON.parse(String(init?.body))
@@ -49,14 +61,14 @@ describe('App integration', () => {
 
     await user.click(screen.getByRole('button', { name: 'Generate candidates' }))
     const preview = await screen.findByTestId('selected-image-fit-candidate')
-    expect(preview).toHaveAttribute('data-artifact-sha256', q7Balanced.preview_sha256)
+    expect(preview).toHaveAttribute('data-artifact-sha256', q9Balanced.artifact.sha256)
     const candidateCard = screen.getByRole('article', { name: 'Balanced generated candidate' })
     expect(candidateCard).toHaveTextContent(/Scan verdictPass · 8\/8/)
-    expect(candidateCard).toHaveTextContent(/Image fit71% · Balanced/)
+    expect(candidateCard).toHaveTextContent(/Image fit97% · Balanced/)
     expect(candidateCard).toHaveTextContent(/Visual acceptancePending/)
     const selectedEvidence = screen.getByRole('region', { name: 'Selected candidate evidence' })
     expect(selectedEvidence).toHaveTextContent(/Pending visual review/)
-    expect(selectedEvidence).toHaveTextContent(/image-fit-scan-first-appearance-q7/)
+    expect(selectedEvidence).toHaveTextContent(/image-fit-negative-space-showcase-q9-target-aware-centering/)
     expect(selectedEvidence).toHaveTextContent(/Not sponsor-approved/)
     expect(screen.queryByRole('button', { name: 'Generate another set' })).not.toBeInTheDocument()
     expect(screen.getByRole('status')).toHaveTextContent(/Only Core-authorized exact bytes can download/)

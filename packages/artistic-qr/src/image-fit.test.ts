@@ -462,11 +462,11 @@ describe('Q8 deterministic protected visual island', () => {
     }
   }, 30_000);
 
-  it('promotes the negative-space family by default only when an RGB plane is available', () => {
+  it('promotes the Q9 target-aware negative-space showcase by default only when an RGB plane is available', () => {
     const automatic = optimizeImageFitQr(rgbLogoInput());
-    const explicit = optimizeImageFitQr(rgbLogoInput(), { _visualPolicy: 'q8_negative_space_island' });
+    const explicit = optimizeImageFitQr(rgbLogoInput(), { _visualPolicy: 'q9_negative_space_showcase' });
     expect(automatic.response.candidates.map((candidate) => candidate.image_fit_evidence.score_version))
-      .toEqual(Array(3).fill('image-fit-negative-space-island-q8-cycle2'));
+      .toEqual(Array(3).fill('image-fit-negative-space-showcase-q9-target-aware-centering'));
     expect(automatic.response.candidates.map((candidate) => automatic.artifacts[candidate.candidate_id].sha256))
       .toEqual(explicit.response.candidates.map((candidate) => explicit.artifacts[candidate.candidate_id].sha256));
     expect(optimizeImageFitQr(realisticInput()).response.candidates.every((candidate) => candidate.image_fit_evidence.score_version.includes('q7'))).toBe(true);

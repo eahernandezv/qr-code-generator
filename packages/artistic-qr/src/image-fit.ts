@@ -150,7 +150,7 @@ export function optimizeImageFitQr(
   const validate = options.validationRunner ?? runValidation;
   const compositionPolicy = options._compositionPolicy ?? 'q3';
   const selectionPolicy = options._selectionPolicy ?? 'q7_ranked';
-  const visualPolicy = options._visualPolicy ?? (input.target_rgb ? 'q8_negative_space_island' : 'q7_module_recolor');
+  const visualPolicy = options._visualPolicy ?? (input.target_rgb ? 'q9_negative_space_showcase' : 'q7_module_recolor');
   const started = performance.now();
   const artifacts: Record<string, ImageFitArtifact> = {};
   const candidates: ImageFitCandidateV1[] = [];
@@ -259,7 +259,7 @@ export function optimizeImageFitQr(
         modified_fraction: round(rendered.modifiedModules / (matrix.size * matrix.size), 6),
         luminance_policy_version: q8Island && input.target_rgb
           ? visualPolicy === 'q9_negative_space_showcase'
-            ? 'image-fit-negative-space-showcase-q9-cycle1'
+            ? 'image-fit-negative-space-showcase-q9-target-aware-centering'
             : visualPolicy === 'q8_negative_space_island'
               ? 'image-fit-negative-space-island-q8-cycle2'
               : 'image-fit-protected-rgb-island-q8-cycle1'
@@ -279,7 +279,7 @@ export function optimizeImageFitQr(
         fit_label: fitLabel,
         score_version: q8Island && input.target_rgb
           ? visualPolicy === 'q9_negative_space_showcase'
-            ? 'image-fit-negative-space-showcase-q9-cycle1'
+            ? 'image-fit-negative-space-showcase-q9-target-aware-centering'
             : visualPolicy === 'q8_negative_space_island'
               ? 'image-fit-negative-space-island-q8-cycle2'
               : 'image-fit-protected-rgb-island-q8-cycle1'

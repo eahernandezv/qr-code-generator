@@ -7,10 +7,11 @@ const controlledRuntimeRequest = {
   ...imageFitFixture.request,
   target_image: {
     ...imageFitFixture.request.target_image,
-    image_ref: 'fixtures/test-target.png',
-    width_px: 4,
-    height_px: 4,
-    sha256: 'db41519156394cb47b94569d402c7bddd1d867c39e1c3e2c7abff28ea29e90b0',
+    image_ref: 'docs/program/evidence/q9-quality-loop/inputs/q9-medium-logo-default.png',
+    width_px: 192,
+    height_px: 144,
+    sha256: 'b8e3a76c0937fd7efa18c2e1ee50a07a0ed002824eb26c6e65fce5b304f6b799',
+    complexity: 'medium_logo',
   },
 } as const
 

@@ -1,0 +1,22 @@
+{
+  "schema_version": "studio-q9-live-proof.v1",
+  "url": "http://127.0.0.1:8091/concepts/level2-image-fit-qr",
+  "selectedHash": "a15736559cb6ab6ef3b3116b7366536266815772ef38dc32ead918e571091ba5",
+  "selectedAlt": "Balanced generated candidate",
+  "conceptAttrs": {
+    "exportPayloadBound": "false",
+    "checkoutBound": "false",
+    "schemaVersion": "image-fit-qr-api.v1"
+  },
+  "blockers": "Blocked: preview_export_parity_not_proven, preview_not_paid, short_link_not_committed",
+  "hasQ9PolicyText": true,
+  "visibleQ9Heading": true,
+  "cards": [
+    "MellowScan verdictPass · 8/8Image fit93% · MellowVisual acceptancePending",
+    "BalancedScan verdictPass · 8/8Image fit97% · BalancedVisual acceptancePending",
+    "PunchyScan verdictPass · 8/8Image fit97% · PunchyVisual acceptancePending"
+  ],
+  "consoleErrors": [],
+  "pageErrors": [],
+  "screenshot": "q9-live-generation.png"
+}
