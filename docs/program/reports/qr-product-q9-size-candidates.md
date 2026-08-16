@@ -6,15 +6,15 @@ Status: **accepted for merge candidate**
 
 Logo size is no longer a pre-generation customer setting. Q9 Image-Fit now outputs size candidates:
 
-- Small = 40% of QR field width
-- Medium = 50% of QR field width, selected by default when it qualifies
-- Large = 60% of QR field width
+- Small = 30–40% of QR field width; Core tries 40%, then 38%, then 36%.
+- Medium = 41–50% of QR field width; Core tries 50%, then 48%, then 46%.
+- Large = 51–60% of QR field width; Core tries 60%, then 58%, then 56%.
 
 Each size is generated as a deterministic Core candidate and must independently pass controlled decoder validation against the exact target payload. Failed size candidates are not surfaced in Studio. If no size candidate qualifies, Studio uses the existing Core-authorized Level 1 fallback path.
 
 ## UI rule
 
-Studio does **not** show a pre-generation logo-size picker. After Core produces and validates Small / Medium / Large, Studio shows one main preview and a compact size toggle. Customers switch the same preview between validated size outputs; the old three-card grid is hidden.
+Studio does **not** show a pre-generation logo-size picker. After Core produces and validates the available Small / Medium / Large category outputs, Studio shows one main preview and a compact size toggle. Customers switch the same preview between validated size outputs; the old three-card grid is hidden.
 
 ## Evidence
 

@@ -484,6 +484,29 @@ describe('Q8 deterministic protected visual island', () => {
     expect(result.response.candidates.map((candidate) => candidate.protected_regions.violations)).toEqual([[], [], []]);
   }, 30_000);
 
+
+  it('falls back within a size band and drops attempts that do not validate', () => {
+    const maxColorX = (svg: string): number => Math.max(...[...svg.matchAll(/<rect x="([0-9.]+)"[^>]+fill="rgb\(/g)].map((match) => Number(match[1])));
+    const result = optimizeImageFitQr(rgbLogoInput(), {
+      _visualPolicy: 'q9_negative_space_showcase',
+      validationRunner: (candidate, expectedPayload) => {
+        const validation = runValidation(candidate, expectedPayload);
+        const tooLarge = maxColorX(candidate.rendered.data) > 340;
+        if (!tooLarge) return validation;
+        return {
+          ...validation,
+          pass: false,
+          tests: validation.tests.map((test) => ({ ...test, pass: false, details: { ...test.details, forced_failure: 'oversized-large-attempt' } })),
+          overallConfidence: 'failed',
+        } satisfies ScanValidationResult;
+      },
+    });
+    expect(result.response.candidates.map((candidate) => candidate.image_treatment.logo_size)).toEqual(['small', 'medium', 'large']);
+    expect(result.response.candidates.map((candidate) => candidate.image_treatment.logo_size_fraction)).toEqual([0.4, 0.5, 0.58]);
+    expect(result.response.candidates.every((candidate) => candidate.scan_evidence.verdict === 'pass')).toBe(true);
+    expect(result.response.candidates.map((candidate) => candidate.protected_regions.violations)).toEqual([[], [], []]);
+  }, 30_000);
+
   it('rejects an RGB plane that is not exactly bound to the luma plane', () => {
     const malformed = rgbLogoInput();
     malformed.target_rgb = { ...malformed.target_rgb!, values: malformed.target_rgb!.values.slice(3) };
