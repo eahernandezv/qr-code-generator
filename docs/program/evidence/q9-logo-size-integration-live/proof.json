@@ -1,0 +1,15 @@
+{
+  "schema_version": "q9-logo-size-integration-live.v1",
+  "selectedHash": "1d6663a04d485cf380b51ef0692e3c759598c573e871ceb691f063af9242a05a",
+  "submittedLogoSize": "large",
+  "hiddenNoopControls": true,
+  "blockers": "Blocked: preview_export_parity_not_proven, preview_not_paid, short_link_not_committed",
+  "cards": [
+    "MellowScan verdictPass · 8/8Image fit94% · MellowVisual acceptancePending",
+    "BalancedScan verdictPass · 8/8Image fit97% · BalancedVisual acceptancePending",
+    "PunchyScan verdictFail · 1/8Image fit96% · FailedVisual acceptancePending"
+  ],
+  "consoleErrors": [],
+  "pageErrors": [],
+  "screenshot": "large-logo-size-live.png"
+}

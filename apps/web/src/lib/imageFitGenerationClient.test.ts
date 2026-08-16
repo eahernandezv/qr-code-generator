@@ -45,7 +45,7 @@ describe('Image-Fit real generation boundary', () => {
     expect(request).toEqual(expect.objectContaining({
       request_id: 'l2req-test-0001',
       destination: expect.objectContaining({ normalized_url: 'https://example.com/a?source=test', safety: { verdict: 'pass', policy_version: 'studio-public-https-input-v1' } }),
-      user_controls: { treatment: 'pixel_blend', strength: 'balanced', detail: 'detailed', link_mode: 'optimized_short_link' },
+      user_controls: { treatment: 'pixel_blend', strength: 'balanced', detail: 'detailed', logo_size: 'medium', link_mode: 'optimized_short_link' },
       constraints: { max_candidates: 12, max_search_ms: 45000, allowed_ecc: ['Q', 'H'], allowed_masks: [0, 1, 2, 3, 4, 5, 6, 7], allowed_versions: [8, 9, 10, 11, 12] },
       entitlement_context: { mode: 'preview', export_entitled: false },
     }))

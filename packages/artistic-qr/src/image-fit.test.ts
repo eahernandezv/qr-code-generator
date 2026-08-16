@@ -472,6 +472,22 @@ describe('Q8 deterministic protected visual island', () => {
     expect(optimizeImageFitQr(realisticInput()).response.candidates.every((candidate) => candidate.image_fit_evidence.score_version.includes('q7'))).toBe(true);
   }, 30_000);
 
+  it('applies the Core-backed Q9 logo-size ladder at 40/50/60 for Balanced image-fit', () => {
+    const variants = ['small', 'medium', 'large'] as const;
+    const outputs = variants.map((logoSize) => {
+      const requestInput = rgbLogoInput();
+      requestInput.request.user_controls.logo_size = logoSize;
+      const result = optimizeImageFitQr(requestInput, { _visualPolicy: 'q9_negative_space_showcase' });
+      const balanced = result.response.candidates.find((candidate) => candidate.mode === 'balanced')!;
+      return { logoSize, balanced, hash: result.artifacts[balanced.candidate_id].sha256 };
+    });
+    expect(new Set(outputs.map((output) => output.hash)).size).toBe(3);
+    expect(outputs.map((output) => output.balanced.scan_evidence.verdict)).toEqual(['pass', 'pass', 'pass']);
+    expect(outputs.map((output) => output.balanced.protected_regions.violations)).toEqual([[], [], []]);
+    expect(outputs.map((output) => output.balanced.image_fit_evidence.recognition_score))
+      .toEqual([...outputs.map((output) => output.balanced.image_fit_evidence.recognition_score)].sort((a, b) => a - b));
+  }, 30_000);
+
   it('rejects an RGB plane that is not exactly bound to the luma plane', () => {
     const malformed = rgbLogoInput();
     malformed.target_rgb = { ...malformed.target_rgb!, values: malformed.target_rgb!.values.slice(3) };

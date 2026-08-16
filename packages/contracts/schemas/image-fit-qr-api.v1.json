@@ -211,6 +211,15 @@
             "maximum"
           ]
         },
+        "logo_size": {
+          "enum": [
+            "small",
+            "medium",
+            "large"
+          ],
+          "default": "medium",
+          "description": "Q9 Image-Fit visual logo/image island width: small=40%, medium=50%, large=60% of QR field."
+        },
         "link_mode": {
           "enum": [
             "optimized_short_link",

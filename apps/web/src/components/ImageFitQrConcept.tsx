@@ -1,10 +1,11 @@
 import React from 'react'
-import { IMAGE_FIT_CONTRACT, type ImageFitDetail, type ImageFitLinkMode, type ImageFitStrength, type ImageFitTreatment } from '../imageFitContract'
+import { IMAGE_FIT_CONTRACT, type ImageFitDetail, type ImageFitLinkMode, type ImageFitLogoSize, type ImageFitStrength, type ImageFitTreatment } from '../imageFitContract'
 import { buildImageFitRequest, imageFitExportDecision, imageFitGenerationClient, type ImageFitAuthorizedFallbackV1, type ImageFitCandidateV1, type ImageFitRequestV1 } from '../lib/imageFitGenerationClient'
 
 const labels: Record<string, string> = {
   logo: 'Logo', pixel_blend: 'Pixel blend', background_image: 'Background image', cutout_perforated: 'Cutout-perforated',
   readable: 'Mellow', balanced: 'Balanced', image_first: 'Punchy', experimental: 'Punchy', failed: 'Failed', simple: 'Simple', detailed: 'Detailed', maximum: 'Maximum',
+  small: 'Small', medium: 'Medium', large: 'Large',
   optimized_short_link: 'Optimized short link', original_url: 'Original URL',
 }
 
@@ -98,9 +99,10 @@ function CandidateCard({ candidate, selected, onSelect }: { candidate: ImageFitC
 
 export default function ImageFitQrConcept() {
   const fixtureRequest = IMAGE_FIT_CONTRACT.request
-  const [treatment, setTreatment] = React.useState<ImageFitTreatment>(fixtureRequest.user_controls.treatment)
-  const [strength, setStrength] = React.useState<ImageFitStrength>(fixtureRequest.user_controls.strength)
-  const [detail, setDetail] = React.useState<ImageFitDetail>(fixtureRequest.user_controls.detail)
+  const treatment = fixtureRequest.user_controls.treatment as ImageFitTreatment
+  const strength = fixtureRequest.user_controls.strength as ImageFitStrength
+  const detail = fixtureRequest.user_controls.detail as ImageFitDetail
+  const [logoSize, setLogoSize] = React.useState<ImageFitLogoSize>(fixtureRequest.user_controls.logo_size ?? 'medium')
   const [linkMode, setLinkMode] = React.useState<ImageFitLinkMode>(fixtureRequest.user_controls.link_mode)
   const [destination, setDestination] = React.useState(fixtureRequest.destination.normalized_url)
   const [targetImage, setTargetImage] = React.useState<ImageFitRequestV1['target_image']>(fixtureRequest.target_image as ImageFitRequestV1['target_image'])
@@ -146,7 +148,7 @@ export default function ImageFitQrConcept() {
     abortRef.current = controller
     setRunState('loading')
     try {
-      const request = buildImageFitRequest({ destination, treatment, strength, detail, linkMode, targetImage })
+      const request = buildImageFitRequest({ destination, treatment, strength, detail, logoSize, linkMode, targetImage })
       const response = await imageFitGenerationClient.generate(request, controller.signal)
       const qualifying = response.candidates.filter((candidate) => candidate.status === 'validated' && candidate.scan_evidence.verdict === 'pass')
       if (qualifying.length === 0) {
@@ -179,7 +181,7 @@ export default function ImageFitQrConcept() {
   return <main data-testid="image-fit-qr-concept" data-schema-version="image-fit-qr-api.v1" data-export-payload-bound={exportDecision?.allowed ? 'true' : 'false'} data-checkout-bound="false" className="min-h-[100dvh] bg-[#070b16] text-white">
     <header className="border-b border-white/10 bg-slate-950/90 px-4 py-3"><div className="mx-auto flex max-w-6xl items-center justify-between gap-3"><div><p className="text-[10px] font-black uppercase tracking-[.2em] text-indigo-300">Deterministic Studio</p><h1 className="text-base font-bold">Q9 Image-Fit</h1><nav aria-label="QR integration mode" className="mt-2 flex gap-2 text-[10px] font-bold"><a href="/" className="rounded-lg border border-emerald-300/40 px-2 py-1 text-emerald-200">Level 1 Safe</a><span aria-current="page" className="rounded-lg border border-indigo-300/50 bg-indigo-500/20 px-2 py-1 text-indigo-100">Q9 Image-Fit Premium</span></nav></div><span className="rounded-full border border-amber-300/30 bg-amber-300/10 px-2.5 py-1 text-[10px] font-bold text-amber-200">Core authority required</span></div></header>
     <div className="mx-auto grid max-w-6xl gap-3 p-3 lg:grid-cols-[minmax(0,.9fr)_minmax(360px,1.1fr)]">
-      <section aria-label="How to test" className="lg:col-span-2 rounded-2xl border border-indigo-300/20 bg-indigo-500/10 px-3 py-2 text-[11px] leading-relaxed text-indigo-100"><strong className="text-white">Test in four steps:</strong> 1. keep the controlled target image; 2. choose or keep the destination; 3. press <strong>Generate candidates</strong>; 4. review Readable, Balanced, and Image-first evidence returned by Creator. Export is not available yet.</section>
+      <section aria-label="How to test" className="lg:col-span-2 rounded-2xl border border-indigo-300/20 bg-indigo-500/10 px-3 py-2 text-[11px] leading-relaxed text-indigo-100"><strong className="text-white">Test in four steps:</strong> 1. keep or upload a target image; 2. choose logo size and destination; 3. press <strong>Generate candidates</strong>; 4. review Mellow, Balanced, and Punchy evidence returned by Core. Export is not available yet.</section>
 
       <section aria-label="Image-Fit QR preview" className="rounded-2xl border border-white/10 bg-slate-900/60 p-3">
         <div className="relative mx-auto aspect-square max-w-[430px] overflow-hidden rounded-2xl border border-indigo-400/20 bg-slate-100 p-3">
@@ -200,9 +202,8 @@ export default function ImageFitQrConcept() {
         <div className="grid grid-cols-[1fr_auto] items-end gap-2 rounded-xl border border-white/10 bg-slate-950/60 p-2.5"><label className="min-w-0"><span className="mb-1 block text-[10px] font-black uppercase tracking-[.16em] text-slate-400">Target image</span><span className="block truncate text-xs">{targetImage.image_ref}</span><span className="mt-1 block text-[9px] text-slate-500">Upload a PNG, JPG, or WebP; Studio converts it to a bounded PNG target for Creator generation.</span></label><label className={`rounded-lg border px-3 py-2 text-center text-[10px] font-bold focus-within:ring-2 focus-within:ring-indigo-300 ${uploadState === 'uploading' ? 'cursor-wait border-white/10 bg-slate-800 text-slate-400' : 'cursor-pointer border-indigo-300/40 bg-indigo-500/20 text-indigo-100'}`}><span>{uploadState === 'uploading' ? 'Uploading…' : 'Choose image'}</span><input aria-label="Choose target image" type="file" accept="image/png,image/jpeg,image/webp" disabled={uploadState === 'uploading'} onChange={(event) => { const file = event.currentTarget.files?.[0]; if (file) void uploadTarget(file); event.currentTarget.value = '' }} className="sr-only" /></label></div>
         {uploadError && <div role="alert" className="rounded-xl border border-rose-300/30 bg-rose-400/10 px-3 py-2 text-xs text-rose-100"><strong>Upload failed.</strong> {uploadError}</div>}
         <label><span className="mb-1 block text-[10px] font-black uppercase tracking-[.16em] text-slate-400">Destination</span><input aria-label="Level 2 destination URL" value={destination} aria-invalid={!destinationValid} onChange={(event) => change(setDestination, event.target.value)} className="h-11 w-full rounded-xl border border-white/10 bg-slate-950 px-3 text-xs outline-none focus:ring-2 focus:ring-indigo-300" /></label>
-        <ChoiceRow label="Treatment" value={treatment} values={IMAGE_FIT_CONTRACT.controls.treatments} onChange={(value) => change(setTreatment, value)} />
-        <ChoiceRow label="Image-Fit strength · Mellow / Balanced / Punchy" value={strength} values={IMAGE_FIT_CONTRACT.controls.strengths} onChange={(value) => change(setStrength, value)} />
-        <ChoiceRow label="Detail" value={detail} values={IMAGE_FIT_CONTRACT.controls.details} onChange={(value) => change(setDetail, value)} />
+        <ChoiceRow label="Logo size" value={logoSize} values={IMAGE_FIT_CONTRACT.controls.logoSizes} onChange={(value) => change(setLogoSize, value)} />
+        <p className="rounded-xl border border-indigo-300/20 bg-indigo-500/10 px-3 py-2 text-[10px] text-indigo-100">Small = 40%, Medium = 50% default, Large = 60% of the QR field. Core keeps the uploaded image colours unchanged.</p>
         <ChoiceRow label="Link mode" value={linkMode} values={IMAGE_FIT_CONTRACT.controls.linkModes} onChange={(value) => change(setLinkMode, value)} />
         <p className={`rounded-xl border px-3 py-2 text-[10px] ${linkMode === 'optimized_short_link' ? 'border-indigo-300/20 bg-indigo-500/10 text-indigo-100' : 'border-amber-300/30 bg-amber-300/10 text-amber-100'}`}>{linkMode === 'optimized_short_link' ? 'Optimized short links can help the QR matrix fit the image more cleanly. Generation may reserve/evaluate slugs; this page cannot commit one.' : 'Original URLs can increase QR density and reduce image clarity.'}</p>
         <button type="button" onClick={generate} disabled={!canGenerate} className="min-h-11 rounded-xl bg-indigo-500 px-4 text-sm font-black text-white disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-400">{runState === 'loading' ? 'Generating candidates…' : 'Generate candidates'}</button>
