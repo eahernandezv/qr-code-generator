@@ -14,21 +14,22 @@ Each size is generated as a deterministic Core candidate and must independently 
 
 ## UI rule
 
-Studio does **not** show a logo-size picker. Customers choose among generated Small / Medium / Large candidates only after Core has produced and validated them.
+Studio does **not** show a pre-generation logo-size picker. After Core produces and validates Small / Medium / Large, Studio shows one main preview and a compact size toggle. Customers switch the same preview between validated size outputs; the old three-card grid is hidden.
 
 ## Evidence
 
 Live proof:
 
 - `docs/program/evidence/q9-size-candidates-live/proof.json`
-- `docs/program/evidence/q9-size-candidates-live/size-candidates-live.png`
+- `docs/program/evidence/q9-size-candidates-live/size-toggle-live.png`
 
 Observed:
 
 - No pre-generation Logo size, Treatment, Detail, or Image-Fit strength control visible.
-- Generated cards: Small, Medium, Large.
-- All three live candidates passed controlled checks against the encoded target URL.
-- Medium selected by default.
+- One main preview only; no extra candidate card grid (`extraCandidateCards = 0`).
+- Validated size toggle shown: Small 40%, Medium 50%, Large 60%.
+- Medium selected by default; toggling Large changes the selected Core artifact hash and candidate ID.
+- All surfaced options are Core-validated against the encoded target URL before display.
 - Export blockers visible: `preview_export_parity_not_proven`, `preview_not_paid`, `short_link_not_committed`.
 - Console/page errors: none.
 

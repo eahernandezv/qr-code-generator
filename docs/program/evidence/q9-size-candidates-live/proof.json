@@ -1,19 +1,31 @@
 {
-  "schema_version": "q9-size-candidates-live.v1",
-  "selectedHash": "8538f44078ad369a584f26859bc72efd3e36fdfc6022e1ed7b156b11674eef76",
+  "schema_version": "q9-size-toggle-live.v1",
   "hiddenPreSizePicker": true,
-  "cardNames": [
-    "Small generated candidate",
-    "Medium generated candidate",
-    "Large generated candidate"
+  "extraCandidateCards": 0,
+  "sizeButtons": [
+    {
+      "text": "Small40%",
+      "pressed": "false"
+    },
+    {
+      "text": "Medium50%",
+      "pressed": "true"
+    },
+    {
+      "text": "Large60%",
+      "pressed": "false"
+    }
   ],
-  "cards": [
-    "SmallScan verdictPass · 8/8Image fit94% · 40%Visual acceptancePending",
-    "MediumScan verdictPass · 8/8Image fit96% · 50%Visual acceptancePending",
-    "LargeScan verdictPass · 8/8Image fit97% · 60%Visual acceptancePending"
-  ],
+  "selectedBefore": {
+    "hash": "6c76b1228bce33fc83eff7c3f1d2980f77e1612b916e3428a0d6ecff93903cd5",
+    "candidateId": "balanced-e7c9c9a3ab5be4def69c"
+  },
+  "selectedAfterLarge": {
+    "hash": "93e1d53379ff0a5cc5f3bcebc966269ef5ad2475eed8723515d7e0925561e38a",
+    "candidateId": "balanced-bd9b3a6a88cdbbe1952a"
+  },
   "blockers": "Blocked: preview_export_parity_not_proven, preview_not_paid, short_link_not_committed",
   "consoleErrors": [],
   "pageErrors": [],
-  "screenshot": "size-candidates-live.png"
+  "screenshot": "size-toggle-live.png"
 }
