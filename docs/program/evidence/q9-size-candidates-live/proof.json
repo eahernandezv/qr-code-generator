@@ -13,13 +13,13 @@
     }
   ],
   "selectedBefore": {
-    "hash": "e7ac655b45df60753428fa5a6d807448dbdfc5608d282a1898808eda87c8a18b",
-    "candidateId": "balanced-5da692abfad7430f5407"
+    "hash": "d353d8361ecad125c0986d9666e8cb5b4e040ef702cffdab165c3f6a099bc016",
+    "candidateId": "balanced-ca78f37c42753ec3f6d4"
   },
   "selectedAfterLastAvailable": {
     "sizeText": "Medium50%",
-    "hash": "e7ac655b45df60753428fa5a6d807448dbdfc5608d282a1898808eda87c8a18b",
-    "candidateId": "balanced-5da692abfad7430f5407"
+    "hash": "d353d8361ecad125c0986d9666e8cb5b4e040ef702cffdab165c3f6a099bc016",
+    "candidateId": "balanced-ca78f37c42753ec3f6d4"
   },
   "blockers": "Blocked: preview_export_parity_not_proven, preview_not_paid, short_link_not_committed",
   "consoleErrors": [],

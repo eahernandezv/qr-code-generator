@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import { PNG } from 'pngjs';
 import {
   generateMatrix,
   isProtectedFunctionalModule,
@@ -66,7 +67,7 @@ export interface ImageFitArtifact {
   kind: 'preview_png' | 'export_png' | 'export_svg' | 'metadata_json';
   uri: string;
   sha256: string;
-  media_type: 'image/svg+xml';
+  media_type: 'image/svg+xml' | 'image/png';
   data: string;
 }
 
@@ -137,7 +138,7 @@ export interface ImageFitOptimizerOptions {
   /** Evidence switch for exact Q3 first-pass versus Q7 ranked selection comparisons. */
   _selectionPolicy?: 'q3_first_pass' | 'q7_ranked';
   /** Evidence-gated deterministic foreground-island families. Public contracts remain unchanged. */
-  _visualPolicy?: 'q7_module_recolor' | 'q8_protected_island' | 'q8_negative_space_island' | 'q9_negative_space_showcase';
+  _visualPolicy?: 'q7_module_recolor' | 'q8_protected_island' | 'q8_negative_space_island' | 'q9_negative_space_showcase' | 'q10_raster_image_layer';
 }
 
 const MODE_ORDER: readonly ImageFitMode[] = ['readable', 'balanced', 'image_first'];
@@ -160,11 +161,11 @@ export function optimizeImageFitQr(
   const validate = options.validationRunner ?? runValidation;
   const compositionPolicy = options._compositionPolicy ?? 'q3';
   const selectionPolicy = options._selectionPolicy ?? 'q7_ranked';
-  const visualPolicy = options._visualPolicy ?? (input.target_rgb ? 'q9_negative_space_showcase' : 'q7_module_recolor');
+  const visualPolicy = options._visualPolicy ?? (input.target_rgb ? 'q10_raster_image_layer' : 'q7_module_recolor');
   const started = performance.now();
   const artifacts: Record<string, ImageFitArtifact> = {};
   const candidates: ImageFitCandidateV1[] = [];
-  const sizeCandidateFlow = visualPolicy === 'q9_negative_space_showcase' && Boolean(input.target_rgb);
+  const sizeCandidateFlow = (visualPolicy === 'q9_negative_space_showcase' || visualPolicy === 'q10_raster_image_layer') && Boolean(input.target_rgb);
   const candidateSpecs = sizeCandidateFlow
     ? LOGO_SIZE_ORDER.flatMap((logoSize) => LOGO_SIZE_ATTEMPTS[logoSize].map((logoSizeFraction) => ({ mode: 'balanced' as const, logoSize, logoSizeFraction })))
     : MODE_ORDER.slice(0, Math.min(input.request.constraints.max_candidates, MODE_ORDER.length))
@@ -175,14 +176,14 @@ export function optimizeImageFitQr(
     type Evaluated = {
       settings: QrSearchSettings;
       matrix: QrMatrix;
-      rendered: ReturnType<typeof renderImageFitSvg>;
+      rendered: RenderedImageFit;
       artifact: ImageFitArtifact;
       validation: ScanValidationResult;
       preference: number;
     };
     let selected: Evaluated | undefined;
     const renderedSettings: Array<Omit<Evaluated, 'validation'>> = [];
-    const q8Island = visualPolicy === 'q8_protected_island' || visualPolicy === 'q8_negative_space_island' || visualPolicy === 'q9_negative_space_showcase';
+    const q8Island = visualPolicy === 'q8_protected_island' || visualPolicy === 'q8_negative_space_island' || visualPolicy === 'q9_negative_space_showcase' || visualPolicy === 'q10_raster_image_layer';
     const settingsCandidates = settingsCandidatesForMode(input.request, mode, q8Island);
     for (let preference = 0; preference < settingsCandidates.length; preference++) {
       if (performance.now() - started > input.request.constraints.max_search_ms) break;
@@ -204,9 +205,11 @@ export function optimizeImageFitQr(
       const useLegacy = options._legacyNaiveRender === true;
       const preprocessed = preprocessTarget(input, matrix, mode, compositionPolicy);
       const rendered = q8Island && input.target_rgb
-        ? renderProtectedVisualIslandSvg(matrix, input.target_rgb, mode, visualPolicy === 'q8_negative_space_island' || visualPolicy === 'q9_negative_space_showcase', visualPolicy, input.request.target_image.complexity, logoSize, logoSizeFraction)
+        ? visualPolicy === 'q10_raster_image_layer'
+          ? renderRasterImageLayerPng(matrix, input.target_rgb, mode, input.request.target_image.complexity, logoSize, logoSizeFraction)
+          : renderProtectedVisualIslandSvg(matrix, input.target_rgb, mode, visualPolicy === 'q8_negative_space_island' || visualPolicy === 'q9_negative_space_showcase', visualPolicy, input.request.target_image.complexity, logoSize, logoSizeFraction)
         : renderImageFitSvg(matrix, preprocessed.mask, mode, { useLegacy, edgeScore: preprocessed.edgeScore, componentCount: preprocessed.componentCount });
-      const artifact = makeArtifact(sizeCandidateFlow ? `${logoSize}-${Math.round(logoSizeFraction * 100)}-${mode}` : mode, rendered.svg);
+      const artifact = makeArtifact(sizeCandidateFlow ? `${logoSize}-${Math.round(logoSizeFraction * 100)}-${mode}` : mode, rendered.data, rendered.format === 'png-dataurl' ? 'export_png' : 'export_svg');
       renderedSettings.push({ settings, matrix, rendered, artifact, preference });
       if (selectionPolicy === 'q3_first_pass') {
         const validation = validate(validationCandidate(artifact, rendered.width, settings, mode), input.encoded_payload);
@@ -276,11 +279,13 @@ export function optimizeImageFitQr(
         modified_modules: rendered.modifiedModules,
         modified_fraction: round(rendered.modifiedModules / (matrix.size * matrix.size), 6),
         luminance_policy_version: q8Island && input.target_rgb
-          ? visualPolicy === 'q9_negative_space_showcase'
-            ? 'image-fit-negative-space-showcase-q9-target-aware-centering'
-            : visualPolicy === 'q8_negative_space_island'
-              ? 'image-fit-negative-space-island-q8-cycle2'
-              : 'image-fit-protected-rgb-island-q8-cycle1'
+          ? visualPolicy === 'q10_raster_image_layer'
+            ? 'image-fit-raster-image-layer-q10-continuous'
+            : visualPolicy === 'q9_negative_space_showcase'
+              ? 'image-fit-negative-space-showcase-q9-target-aware-centering'
+              : visualPolicy === 'q8_negative_space_island'
+                ? 'image-fit-negative-space-island-q8-cycle2'
+                : 'image-fit-protected-rgb-island-q8-cycle1'
           : compositionPolicy === 'q3'
           ? 'image-fit-real-target-foreground-q3'
           : 'image-fit-composition-q2-morphology-v1',
@@ -296,11 +301,13 @@ export function optimizeImageFitQr(
       image_fit_evidence: {
         fit_label: fitLabel,
         score_version: q8Island && input.target_rgb
-          ? visualPolicy === 'q9_negative_space_showcase'
-            ? 'image-fit-negative-space-showcase-q9-target-aware-centering'
-            : visualPolicy === 'q8_negative_space_island'
-              ? 'image-fit-negative-space-island-q8-cycle2'
-              : 'image-fit-protected-rgb-island-q8-cycle1'
+          ? visualPolicy === 'q10_raster_image_layer'
+            ? 'image-fit-raster-image-layer-q10-continuous'
+            : visualPolicy === 'q9_negative_space_showcase'
+              ? 'image-fit-negative-space-showcase-q9-target-aware-centering'
+              : visualPolicy === 'q8_negative_space_island'
+                ? 'image-fit-negative-space-island-q8-cycle2'
+                : 'image-fit-protected-rgb-island-q8-cycle1'
           : compositionPolicy === 'q3'
           ? selectionPolicy === 'q7_ranked' ? 'image-fit-scan-first-appearance-q7' : 'image-fit-real-target-coverage-q3'
           : 'image-fit-composition-coverage-q2',
@@ -313,7 +320,7 @@ export function optimizeImageFitQr(
         requires_payment_or_internal_entitlement: true,
         preview_export_parity: 'not_proven',
       },
-      artifacts: [{ kind: artifact.kind, uri: svgDataUri(artifact.data), sha256: artifact.sha256 }],
+      artifacts: [{ kind: artifact.kind, uri: artifactDataUri(artifact), sha256: artifact.sha256 }],
       warnings: mode === 'image_first' ? [{
         code: 'image_fit_image_first_experimental',
         message: 'Image-first remains experimental until stricter launch gates and Product Architect promotion.',
@@ -828,6 +835,11 @@ function retainDominantMaskComponents(mask: readonly boolean[][], maximumCompone
 
 type RgbPlane = NonNullable<ImageFitOptimizerInput['target_rgb']>;
 
+type RenderedImageFit = {
+  data: string; format: 'svg' | 'png-dataurl'; width: number; modifiedModules: number; recognitionScore: number;
+  protectedConflictScore: number; protectedViolations: string[];
+};
+
 function renderProtectedVisualIslandSvg(
   matrix: QrMatrix,
   target: RgbPlane,
@@ -837,10 +849,7 @@ function renderProtectedVisualIslandSvg(
   targetComplexity: ImageFitQrRequestV1['target_image']['complexity'] = 'medium_logo',
   logoSize: ImageFitLogoSize = 'medium',
   logoSizeFraction = LOGO_SIZE_FRACTION[logoSize],
-): {
-  svg: string; width: number; modifiedModules: number; recognitionScore: number;
-  protectedConflictScore: number; protectedViolations: string[];
-} {
+): RenderedImageFit {
   const moduleSize = 8, margin = 4;
   const base = renderDeterministic(matrix, {
     format: 'svg', moduleSize, margin, colorDark: '#111827', colorLight: '#ffffff', shape: 'square',
@@ -874,7 +883,7 @@ function renderProtectedVisualIslandSvg(
     maxX = Math.max(maxX, x); maxY = Math.max(maxY, y);
   }
   if (maxX < minX || maxY < minY) {
-    return { svg: base.data, width: base.width, modifiedModules: 0, recognitionScore: 0, protectedConflictScore: 0, protectedViolations: [] };
+    return { data: base.data, format: 'svg', width: base.width, modifiedModules: 0, recognitionScore: 0, protectedConflictScore: 0, protectedViolations: [] };
   }
   const rowExtents = Array.from({ length: target.height }, () => ({ min: target.width, max: -1 }));
   for (let y = minY; y <= maxY; y++) for (let x = minX; x <= maxX; x++) {
@@ -972,13 +981,143 @@ function renderProtectedVisualIslandSvg(
   const recognitionScore = foregroundSamples === 0 ? 0 : round((foregroundSamples - protectedSamples) / foregroundSamples, 6);
   const protectedConflictScore = foregroundSamples === 0 ? 0 : round(protectedSamples / foregroundSamples, 6);
   return {
-    svg: base.data.replace('</svg>', `${body}</svg>`),
+    data: base.data.replace('</svg>', `${body}</svg>`),
+    format: 'svg',
     width: base.width,
     modifiedModules: modified.size,
     recognitionScore,
     protectedConflictScore,
     protectedViolations: [],
   };
+}
+
+function renderRasterImageLayerPng(
+  matrix: QrMatrix,
+  target: RgbPlane,
+  mode: ImageFitMode,
+  targetComplexity: ImageFitQrRequestV1['target_image']['complexity'] = 'medium_logo',
+  logoSize: ImageFitLogoSize = 'medium',
+  logoSizeFraction = LOGO_SIZE_FRACTION[logoSize],
+): RenderedImageFit {
+  const moduleSize = 8, margin = 4;
+  const width = (matrix.size + margin * 2) * moduleSize;
+  const png = new PNG({ width, height: width });
+  for (let offset = 0; offset < png.data.length; offset += 4) {
+    png.data[offset] = 255; png.data[offset + 1] = 255; png.data[offset + 2] = 255; png.data[offset + 3] = 255;
+  }
+  const setPixelRgb = (x: number, y: number, r: number, g: number, b: number): void => {
+    if (x < 0 || y < 0 || x >= width || y >= width) return;
+    const offset = (y * width + x) * 4;
+    png.data[offset] = Math.max(0, Math.min(255, Math.round(r)));
+    png.data[offset + 1] = Math.max(0, Math.min(255, Math.round(g)));
+    png.data[offset + 2] = Math.max(0, Math.min(255, Math.round(b)));
+    png.data[offset + 3] = 255;
+  };
+  const fillRectRgb = (left: number, top: number, rectWidth: number, rectHeight: number, r: number, g: number, b: number): void => {
+    const x0 = Math.max(0, Math.floor(left)), y0 = Math.max(0, Math.floor(top));
+    const x1 = Math.min(width, Math.ceil(left + rectWidth)), y1 = Math.min(width, Math.ceil(top + rectHeight));
+    for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) setPixelRgb(x, y, r, g, b);
+  };
+  for (let y = 0; y < matrix.size; y++) for (let x = 0; x < matrix.size; x++) {
+    if (matrix.modules[y][x] !== 1) continue;
+    fillRectRgb((margin + x) * moduleSize, (margin + y) * moduleSize, moduleSize, moduleSize, 17, 24, 39);
+  }
+
+  const pixel = (x: number, y: number): [number, number, number] => {
+    const index = (y * target.width + x) * 3;
+    return [target.values[index], target.values[index + 1], target.values[index + 2]];
+  };
+  const borderPixels: Array<[number, number, number]> = [];
+  for (let x = 0; x < target.width; x++) borderPixels.push(pixel(x, 0), pixel(x, target.height - 1));
+  for (let y = 1; y < target.height - 1; y++) borderPixels.push(pixel(0, y), pixel(target.width - 1, y));
+  const medianChannel = (channel: number): number => {
+    const values = borderPixels.map((entry) => entry[channel]).sort((a, b) => a - b);
+    return values[Math.floor(values.length / 2)] ?? 255;
+  };
+  const background: [number, number, number] = [medianChannel(0), medianChannel(1), medianChannel(2)];
+  const distanceFromBackground = (rgb: readonly number[]): number => Math.hypot(rgb[0] - background[0], rgb[1] - background[1], rgb[2] - background[2]);
+  const borderNoise = borderPixels.map(distanceFromBackground).sort((a, b) => a - b);
+  const foregroundThreshold = Math.max(30, (borderNoise[Math.floor(borderNoise.length * 0.6)] ?? 0) * 2.5);
+
+  let minX = target.width, minY = target.height, maxX = -1, maxY = -1;
+  for (let y = 0; y < target.height; y++) for (let x = 0; x < target.width; x++) {
+    if (distanceFromBackground(pixel(x, y)) <= foregroundThreshold) continue;
+    minX = Math.min(minX, x); minY = Math.min(minY, y); maxX = Math.max(maxX, x); maxY = Math.max(maxY, y);
+  }
+  if (maxX < minX || maxY < minY) {
+    const dataUrl = `data:image/png;base64,${PNG.sync.write(png).toString('base64')}`;
+    return { data: dataUrl, format: 'png-dataurl', width, modifiedModules: 0, recognitionScore: 0, protectedConflictScore: 0, protectedViolations: [] };
+  }
+  const cropWidth = maxX - minX + 1, cropHeight = maxY - minY + 1;
+  let foregroundCount = 0, foregroundSumX = 0, foregroundSumY = 0;
+  for (let y = minY; y <= maxY; y++) for (let x = minX; x <= maxX; x++) {
+    if (distanceFromBackground(pixel(x, y)) <= foregroundThreshold) continue;
+    foregroundCount += 1; foregroundSumX += x - minX + 0.5; foregroundSumY += y - minY + 0.5;
+  }
+
+  const inner = matrix.size * moduleSize;
+  const drawWidth = Math.round(inner * logoSizeFraction);
+  const drawHeight = Math.max(1, Math.round(drawWidth * cropHeight / cropWidth));
+  const centeredX = margin * moduleSize + (inner - drawWidth) / 2;
+  const centeredY = margin * moduleSize + (inner - drawHeight) / 2;
+  const clamp = (value: number, low: number, high: number): number => Math.max(low, Math.min(high, value));
+  const centroidX = foregroundCount > 0 ? foregroundSumX / foregroundCount : cropWidth / 2;
+  const centroidY = foregroundCount > 0 ? foregroundSumY / foregroundCount : cropHeight / 2;
+  const centerOnForeground = targetComplexity !== 'complex_photo_like' && targetComplexity !== 'high_risk_thin_detail';
+  const offsetX = centerOnForeground
+    ? clamp(margin * moduleSize + inner / 2 - centroidX * drawWidth / cropWidth, margin * moduleSize, margin * moduleSize + inner - drawWidth)
+    : centeredX;
+  const offsetY = centerOnForeground
+    ? clamp(margin * moduleSize + inner / 2 - centroidY * drawHeight / cropHeight, margin * moduleSize, margin * moduleSize + inner - drawHeight)
+    : centeredY - (matrix.version >= 7 ? drawHeight * 0.12 : 0);
+
+  const modified = new Set<string>();
+  let candidatePixels = 0, protectedPixels = 0;
+  const moduleAtPixel = (px: number, py: number): [number, number] => [Math.floor((px - margin * moduleSize) / moduleSize), Math.floor((py - margin * moduleSize) / moduleSize)];
+  const canPaint = (px: number, py: number): boolean => {
+    const [moduleX, moduleY] = moduleAtPixel(px, py);
+    if (moduleX < 0 || moduleY < 0 || moduleX >= matrix.size || moduleY >= matrix.size) return false;
+    if (isProtectedFunctionalModule(matrix.functionalRegions, moduleX, moduleY)) { protectedPixels += 1; return false; }
+    modified.add(`${moduleX},${moduleY}`);
+    return true;
+  };
+  const roundedContains = (localX: number, localY: number, rectW: number, rectH: number, radius: number): boolean => {
+    const dx = Math.max(radius - localX, 0, localX - (rectW - radius));
+    const dy = Math.max(radius - localY, 0, localY - (rectH - radius));
+    return dx * dx + dy * dy <= radius * radius;
+  };
+  const substratePad = Math.max(8, Math.round(moduleSize * 1.25));
+  const substrateX = Math.round(offsetX - substratePad), substrateY = Math.round(offsetY - substratePad);
+  const substrateW = Math.round(drawWidth + substratePad * 2), substrateH = Math.round(drawHeight + substratePad * 2);
+  const radius = Math.round(Math.min(substrateW, substrateH) * 0.16);
+  for (let y = 0; y < substrateH; y++) for (let x = 0; x < substrateW; x++) {
+    if (!roundedContains(x, y, substrateW - 1, substrateH - 1, radius)) continue;
+    const px = substrateX + x, py = substrateY + y;
+    candidatePixels += 1;
+    if (canPaint(px, py)) setPixelRgb(px, py, 255, 255, 255);
+  }
+
+  const sampleBilinear = (sx: number, sy: number): [number, number, number] => {
+    const x0 = Math.max(0, Math.min(target.width - 1, Math.floor(sx))), y0 = Math.max(0, Math.min(target.height - 1, Math.floor(sy)));
+    const x1 = Math.max(0, Math.min(target.width - 1, x0 + 1)), y1 = Math.max(0, Math.min(target.height - 1, y0 + 1));
+    const tx = sx - x0, ty = sy - y0;
+    const a = pixel(x0, y0), b = pixel(x1, y0), c = pixel(x0, y1), d = pixel(x1, y1);
+    return [0, 1, 2].map((i) => a[i] * (1 - tx) * (1 - ty) + b[i] * tx * (1 - ty) + c[i] * (1 - tx) * ty + d[i] * tx * ty) as [number, number, number];
+  };
+  for (let dy = 0; dy < drawHeight; dy++) for (let dx = 0; dx < drawWidth; dx++) {
+    const px = Math.round(offsetX + dx), py = Math.round(offsetY + dy);
+    const sx = minX + (dx + 0.5) * cropWidth / drawWidth;
+    const sy = minY + (dy + 0.5) * cropHeight / drawHeight;
+    candidatePixels += 1;
+    if (!canPaint(px, py)) continue;
+    const rgb = sampleBilinear(sx, sy);
+    setPixelRgb(px, py, rgb[0], rgb[1], rgb[2]);
+  }
+
+  const recognitionScore = candidatePixels === 0 ? 0 : round((candidatePixels - protectedPixels) / candidatePixels, 6);
+  const protectedConflictScore = candidatePixels === 0 ? 0 : round(protectedPixels / candidatePixels, 6);
+  const dataUrl = `data:image/png;base64,${PNG.sync.write(png).toString('base64')}`;
+  return { data: dataUrl, format: 'png-dataurl', width, modifiedModules: modified.size, recognitionScore, protectedConflictScore, protectedViolations: [] };
 }
 
 /* ================================================================
@@ -990,10 +1129,7 @@ function renderImageFitSvg(
   mask: boolean[][],
   mode: ImageFitMode,
   meta: { useLegacy?: boolean; edgeScore?: number; componentCount?: number },
-): {
-  svg: string; width: number; modifiedModules: number; recognitionScore: number;
-  protectedConflictScore: number; protectedViolations: string[];
-} {
+): RenderedImageFit {
   const moduleSize = 8;
   const margin = 4;
   const width = (matrix.size + margin * 2) * moduleSize;
@@ -1059,7 +1195,7 @@ function renderImageFitSvg(
   const recognitionScore = targetCount === 0 ? 0 : round(appearanceScoreSum / targetCount, 6);
   const protectedConflictScore = targetCount === 0 ? 0 : round(protectedTargetCount / targetCount, 6);
 
-  return { svg, width, modifiedModules, recognitionScore, protectedConflictScore, protectedViolations };
+  return { data: svg, format: 'svg', width, modifiedModules, recognitionScore, protectedConflictScore, protectedViolations };
 }
 
 function normalizedRgbDistance(left: string, right: string): number {
@@ -1138,7 +1274,7 @@ function validationCandidate(
   return {
     candidateId: `validation-${mode}-v${settings.version}-${settings.ecc.toLowerCase()}-m${settings.mask}`,
     matrixRef: `qr:${settings.version}:${settings.ecc}:${settings.mask}`,
-    rendered: { format: 'svg', data: artifact.data, width, height: width },
+    rendered: { format: artifact.media_type === 'image/png' ? 'png-dataurl' : 'svg', data: artifact.data, width, height: width },
     scanResults: [], exportAllowed: false, artisticScore: 0,
   };
 }
@@ -1210,15 +1346,20 @@ function buildFallback(
 }
 
 
-function svgDataUri(svg: string): string {
-  return `data:image/svg+xml;base64,${Buffer.from(svg, 'utf8').toString('base64')}`;
+function artifactDataUri(artifact: ImageFitArtifact): string {
+  if (artifact.media_type === 'image/png') return artifact.data;
+  return `data:image/svg+xml;base64,${Buffer.from(artifact.data, 'utf8').toString('base64')}`;
 }
 
-function makeArtifact(label: string, data: string): ImageFitArtifact {
-  const digest = sha256(data);
+function makeArtifact(label: string, data: string, kind: 'export_svg' | 'export_png' = 'export_svg'): ImageFitArtifact {
+  const digest = kind === 'export_png'
+    ? sha256Bytes(Buffer.from(data.replace(/^data:image\/png;base64,/, ''), 'base64'))
+    : sha256(data);
+  const media_type = kind === 'export_png' ? 'image/png' : 'image/svg+xml';
+  const extension = kind === 'export_png' ? 'png' : 'svg';
   return {
-    kind: 'export_svg', uri: `artifact://image-fit/${label}-${digest.slice(0, 16)}.svg`,
-    sha256: digest, media_type: 'image/svg+xml', data,
+    kind, uri: `artifact://image-fit/${label}-${digest.slice(0, 16)}.${extension}`,
+    sha256: digest, media_type, data,
   };
 }
 
@@ -1293,6 +1434,10 @@ function validateInput(input: ImageFitOptimizerInput): void {
 
 function sha256(value: string): string {
   return createHash('sha256').update(value, 'utf8').digest('hex');
+}
+
+function sha256Bytes(value: Buffer): string {
+  return createHash('sha256').update(value).digest('hex');
 }
 
 function round(value: number, places: number): number {
