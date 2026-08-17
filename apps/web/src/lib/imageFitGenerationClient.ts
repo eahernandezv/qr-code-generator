@@ -264,7 +264,7 @@ function isTargetImage(value: unknown): value is ImageFitRequestV1['target_image
 function isCandidate(value: unknown): value is ImageFitCandidateV1 {
   if (!value || typeof value !== 'object') return false
   const candidate = value as Partial<ImageFitCandidateV1>
-  const preview = candidate.artifacts?.find((artifact) => artifact.kind === 'preview_png' || artifact.kind === 'export_svg')
+  const preview = candidate.artifacts?.find((artifact) => artifact.kind === 'preview_png' || artifact.kind === 'export_png' || artifact.kind === 'export_svg')
   return typeof candidate.candidate_id === 'string' && CANDIDATE_ID.test(candidate.candidate_id)
     && typeof candidate.mode === 'string' && MODES.has(candidate.mode)
     && ['generated', 'validated', 'failed', 'experimental'].includes(candidate.status ?? '')

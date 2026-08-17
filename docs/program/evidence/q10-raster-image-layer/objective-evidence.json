@@ -1,0 +1,82 @@
+{
+  "schema_version": "q10-raster-image-layer.v1",
+  "payload": "https://placeholder-online.com/r/bD7xQ2",
+  "target": {
+    "id": "medium-logo",
+    "path": "docs/program/handoffs/assets/q8-reference-logo.jpg",
+    "complexity": "medium_logo",
+    "sha256": "cb3b4fecbd0547cd2dfb62daeecfc0116e4dd49fb653ac602025a77b00badaec",
+    "width": 192,
+    "height": 144
+  },
+  "variants": {
+    "q9-svg-current": [
+      {
+        "label": "small-40",
+        "size": "small",
+        "fraction": 0.4,
+        "candidate_id": "balanced-dce7fee98f95cf9f7b8b",
+        "artifact_kind": "export_svg",
+        "artifact_media_type": "image/svg+xml",
+        "artifact_sha256": "98e357d88c9dcd7acd7b9b63012d9571ebe12ec003d52cdf55c1dbd548778152",
+        "pass": true,
+        "raw_decode": true,
+        "payload_equal": true,
+        "checks_passed": 8,
+        "checks_total": 8,
+        "protected_violations": [],
+        "recognition_score": 0.941538
+      },
+      {
+        "label": "medium-50",
+        "size": "medium",
+        "fraction": 0.5,
+        "candidate_id": "balanced-6c0ffc353d4c3ac38f2b",
+        "artifact_kind": "export_svg",
+        "artifact_media_type": "image/svg+xml",
+        "artifact_sha256": "35db99f0b2f83737b17c1f05031347846e7d84fc0fb3df79076df33e00939198",
+        "pass": true,
+        "raw_decode": true,
+        "payload_equal": true,
+        "checks_passed": 8,
+        "checks_total": 8,
+        "protected_violations": [],
+        "recognition_score": 0.962659
+      }
+    ],
+    "q10-raster-layer": [
+      {
+        "label": "small-40",
+        "size": "small",
+        "fraction": 0.4,
+        "candidate_id": "balanced-674b3113957a8ee2d78c",
+        "artifact_kind": "export_png",
+        "artifact_media_type": "image/png",
+        "artifact_sha256": "458f5578cca063ab9b5e8b347d12ae24f44871b519272fc200e7e5d5eae10d3c",
+        "pass": true,
+        "raw_decode": true,
+        "payload_equal": true,
+        "checks_passed": 8,
+        "checks_total": 8,
+        "protected_violations": [],
+        "recognition_score": 0.957915
+      },
+      {
+        "label": "medium-50",
+        "size": "medium",
+        "fraction": 0.5,
+        "candidate_id": "balanced-8416e214dc7003cc1b90",
+        "artifact_kind": "export_png",
+        "artifact_media_type": "image/png",
+        "artifact_sha256": "b9d7b08a6445da81884929a1fa35d6c9d2ae649706dc305cbb3c7e8203eb8054",
+        "pass": true,
+        "raw_decode": true,
+        "payload_equal": true,
+        "checks_passed": 8,
+        "checks_total": 8,
+        "protected_violations": [],
+        "recognition_score": 0.972566
+      }
+    ]
+  }
+}
