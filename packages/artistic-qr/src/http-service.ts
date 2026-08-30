@@ -9,7 +9,9 @@ import { authoritativeCandidate, candidateAuthority, InMemoryCandidateAuthorityS
 import { exportArtifact, generateCandidates } from './api/index.js';
 import { GenerationRequestError } from './request-validation.js';
 import { optimizeImageFitQr, type ImageFitQrRequestV1, type ImageFitOptimizerInput } from './image-fit.js';
-import type { ExportRequest, GenerationRequest } from './types.js';
+import { assessImageReadiness, type ImageAssetStore } from './image-readiness.js';
+import { FileSystemImageAssetStore, assetRefForStoredUpload } from './image-asset-store.js';
+import type { AssetRef, ExportRequest, GenerationRequest } from './types.js';
 import type { GenerationEngineOptions } from './engine.js';
 
 const JSON_TYPE = 'application/json; charset=utf-8';
@@ -23,6 +25,7 @@ export interface ArtisticQrHttpServiceOptions {
   maxBodyBytes?: number;
   uploadDir?: string;
   allowedOrigin?: string;
+  imageAssetStore?: ImageAssetStore;
 }
 
 export interface ArtisticQrHttpService {
@@ -39,7 +42,8 @@ export function createArtisticQrHttpService(options: ArtisticQrHttpServiceOption
       : request.url === '/exports' ? 'exports'
         : request.url === '/image-fit/candidates' ? 'image-fit/candidates'
           : request.url === '/image-fit/uploads' ? 'image-fit/uploads'
-            : 'other';
+            : request.url === '/image-readiness/assess' ? 'image-readiness'
+              : 'other';
     applyCors(response, options.allowedOrigin);
     if (request.method === 'OPTIONS') {
       response.writeHead(204).end();
@@ -58,8 +62,8 @@ export function createArtisticQrHttpService(options: ArtisticQrHttpServiceOption
       }
       if (request.method === 'POST' && request.url === '/image-fit/uploads') {
         const body = await readJson(request, maxBodyBytes);
-        const targetImage = storeImageFitUpload(body, uploadDir);
-        sendJson(response, 200, { success: true, target_image: targetImage });
+        const uploaded = storeImageFitUpload(body, uploadDir);
+        sendJson(response, 200, { success: true, target_image: uploaded.target_image, source_asset: uploaded.source_asset });
         return;
       }
       if (request.method === 'POST' && request.url === '/image-fit/candidates') {
@@ -95,6 +99,14 @@ export function createArtisticQrHttpService(options: ArtisticQrHttpServiceOption
         sendJson(response, 200, artifact);
         return;
       }
+      if (request.method === 'POST' && request.url === '/image-readiness/assess') {
+        const report = await assessImageReadiness(await readJson(request, maxBodyBytes), {
+          store: options.imageAssetStore ?? new FileSystemImageAssetStore(uploadDir),
+          generation: options.generation,
+        });
+        sendJson(response, 200, { success: true, report });
+        return;
+      }
       throw new ServiceError(404, 'NOT_FOUND', 'Route not found');
     } catch (error) {
       sendServiceError(response, error, route);
@@ -104,7 +116,7 @@ export function createArtisticQrHttpService(options: ArtisticQrHttpServiceOption
 }
 
 
-function storeImageFitUpload(value: unknown, uploadDir: string): ImageFitQrRequestV1['target_image'] {
+function storeImageFitUpload(value: unknown, uploadDir: string): { target_image: ImageFitQrRequestV1['target_image']; source_asset: AssetRef } {
   const body = requireRecord(value);
   if (Object.keys(body).some((key) => key !== 'data_url' && key !== 'complexity')) {
     throw new ServiceError(400, 'VALIDATION_FAILED', 'Upload request contains an unknown field');
@@ -127,7 +139,7 @@ function storeImageFitUpload(value: unknown, uploadDir: string): ImageFitQrReque
   const hash = sha256(bytes);
   mkdirSync(uploadDir, { recursive: true, mode: 0o700 });
   writeFileSync(resolve(uploadDir, `${hash}.png`), bytes, { mode: 0o600 });
-  return {
+  const target_image = {
     image_ref: `uploads/${hash}.png`,
     mime_type: 'image/png',
     width_px: png.width,
@@ -136,6 +148,10 @@ function storeImageFitUpload(value: unknown, uploadDir: string): ImageFitQrReque
     complexity: typeof body.complexity === 'string' && ['simple_mark', 'medium_logo', 'complex_photo_like', 'high_risk_thin_detail'].includes(body.complexity)
       ? body.complexity as ImageFitQrRequestV1['target_image']['complexity']
       : classifyTargetComplexity(png.width, png.height),
+  } satisfies ImageFitQrRequestV1['target_image'];
+  return {
+    target_image,
+    source_asset: assetRefForStoredUpload(target_image.image_ref, bytes, { mimeType: 'image/png', width: png.width, height: png.height }),
   };
 }
 
@@ -285,7 +301,7 @@ function sha256(data: Buffer | string): string {
 class ServiceError extends Error {
   constructor(
     readonly status: number,
-    readonly code: 'VALIDATION_FAILED' | 'PROVIDER_FAILED' | 'NOT_VALIDATED' | 'EXPORT_FAILED' | 'NOT_FOUND' | 'INTERNAL_ERROR',
+    readonly code: 'VALIDATION_FAILED' | 'PROVIDER_FAILED' | 'NOT_VALIDATED' | 'EXPORT_FAILED' | 'NOT_FOUND' | 'IMAGE_READINESS_FAILED' | 'INTERNAL_ERROR',
     message: string,
   ) {
     super(message);
@@ -345,7 +361,7 @@ function exportFailure(message: string): ServiceError {
   return new ServiceError(400, 'EXPORT_FAILED', message);
 }
 
-function sendServiceError(response: ServerResponse, error: unknown, route: 'candidates' | 'exports' | 'image-fit/candidates' | 'image-fit/uploads' | 'other'): void {
+function sendServiceError(response: ServerResponse, error: unknown, route: 'candidates' | 'exports' | 'image-fit/candidates' | 'image-fit/uploads' | 'image-readiness' | 'other'): void {
   if (error instanceof ServiceError) {
     const code = route === 'exports' && error.code === 'VALIDATION_FAILED' ? 'EXPORT_FAILED' : error.code;
     sendErrorJson(response, error.status, route, code, error.message);
@@ -356,6 +372,11 @@ function sendServiceError(response: ServerResponse, error: unknown, route: 'cand
     return;
   }
   const message = error instanceof Error ? error.message : '';
+  const readinessMatch = /^IMAGE_READINESS_FAILED:\s*(.*)$/.exec(message);
+  if (readinessMatch) {
+    sendErrorJson(response, 400, route, 'IMAGE_READINESS_FAILED', readinessMatch[1] || 'Image readiness failed');
+    return;
+  }
   const match = /^(NOT_VALIDATED|EXPORT_FAILED|UNSUPPORTED_FORMAT):\s*(.*)$/.exec(message);
   if (match) {
     const code = match[1] === 'NOT_VALIDATED' ? 'NOT_VALIDATED' : 'EXPORT_FAILED';
@@ -365,8 +386,8 @@ function sendServiceError(response: ServerResponse, error: unknown, route: 'cand
   sendErrorJson(response, 500, route, 'INTERNAL_ERROR', 'The Core export service could not complete the request');
 }
 
-function sendErrorJson(response: ServerResponse, status: number, route: 'candidates' | 'exports' | 'image-fit/candidates' | 'image-fit/uploads' | 'other', code: string, message: string): void {
-  sendJson(response, status, route === 'candidates' || route === 'image-fit/candidates' || route === 'image-fit/uploads'
+function sendErrorJson(response: ServerResponse, status: number, route: 'candidates' | 'exports' | 'image-fit/candidates' | 'image-fit/uploads' | 'image-readiness' | 'other', code: string, message: string): void {
+  sendJson(response, status, route === 'candidates' || route === 'image-fit/candidates' || route === 'image-fit/uploads' || route === 'image-readiness'
     ? { success: false, code, message }
     : { code, message });
 }

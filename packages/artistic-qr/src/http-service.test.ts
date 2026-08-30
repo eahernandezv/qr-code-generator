@@ -1,9 +1,12 @@
 import { afterEach, describe, expect, it } from 'vitest';
+import { createHash } from 'node:crypto';
 import type { AddressInfo } from 'node:net';
+import { PNG } from 'pngjs';
 import { normalizePayload } from '@qr/qr-core';
 import { InMemoryCandidateAuthorityStore, type CandidateAuthorityRecord } from './candidate-context.js';
 import { createArtisticQrHttpService, type ArtisticQrHttpService } from './http-service.js';
-import type { Candidate, ExportArtifact, GenerationBoard, GenerationRequest } from './types.js';
+import type { AssetRef, Candidate, ExportArtifact, GenerationBoard, GenerationRequest } from './types.js';
+import type { ImageAssetStore, StoredImageAsset } from './image-readiness.js';
 import { runValidation } from './validation.js';
 import * as AjvModule from 'ajv';
 import * as formatsModule from 'ajv-formats';
@@ -120,6 +123,26 @@ describe('B1C Core export HTTP authority boundary', () => {
     expect(response.status).toBe(404);
     await expect(response.json()).resolves.toMatchObject({ code: 'NOT_FOUND' });
   });
+
+  it('POST /image-readiness/assess proves source assets through the current Core path', async () => {
+    const bytes = pngFixture(512, 512);
+    const asset = storedAsset(bytes, 'readiness-http-source');
+    const running = await start(new InMemoryCandidateAuthorityStore(), undefined, new MemoryImageAssetStore(asset));
+
+    const response = await post(running.url, '/image-readiness/assess', {
+      requestId: 'readiness-http-001',
+      sourceAsset: asset.ref,
+      intendedUse: 'level2-image-fit',
+      payloadPreview: 'https://example.com/http-readiness',
+    });
+
+    expect(response.status).toBe(200);
+    const payload = await response.json() as { success: true; report: { decision: string; proof: { pass: boolean; candidateIds: string[] } } };
+    expect(payload.success).toBe(true);
+    expect(payload.report.decision).toBe('ready');
+    expect(payload.report.proof.pass).toBe(true);
+    expect(payload.report.proof.candidateIds).toHaveLength(4);
+  }, 15_000);
 });
 
 describe('POST /image-fit/candidates', () => {
@@ -263,8 +286,12 @@ class MutableAuthorityStore extends InMemoryCandidateAuthorityStore {
   }
 }
 
-async function start(authorityStore = new InMemoryCandidateAuthorityStore()): Promise<{ service: ArtisticQrHttpService; url: string }> {
-  const service = createArtisticQrHttpService({ authorityStore });
+async function start(
+  authorityStore = new InMemoryCandidateAuthorityStore(),
+  uploadDir?: string,
+  imageAssetStore?: ImageAssetStore,
+): Promise<{ service: ArtisticQrHttpService; url: string }> {
+  const service = createArtisticQrHttpService({ authorityStore, uploadDir, imageAssetStore });
   services.push(service);
   await new Promise<void>((resolve) => service.server.listen(0, '127.0.0.1', resolve));
   const address = service.server.address() as AddressInfo;
@@ -325,4 +352,46 @@ function buildImageFitRequest(imageRef: string, sha256: string): unknown {
       export_entitled: false,
     },
   };
+}
+
+
+class MemoryImageAssetStore implements ImageAssetStore {
+  constructor(private readonly asset: StoredImageAsset) {}
+
+  get(ref: AssetRef): StoredImageAsset {
+    if (ref.sha256 !== this.asset.ref.sha256) throw new Error('missing readiness test asset');
+    return this.asset;
+  }
+
+  putPreparedPng(bytes: Buffer, metadata: { width: number; height: number }): StoredImageAsset {
+    return storedAsset(bytes, `prepared-${metadata.width}x${metadata.height}`);
+  }
+}
+
+function storedAsset(bytes: Buffer, assetId: string): StoredImageAsset {
+  const png = PNG.sync.read(bytes);
+  const digest = createHash('sha256').update(bytes).digest('hex');
+  return {
+    ref: {
+      assetId,
+      uri: `uploads/${digest}.png`,
+      mimeType: 'image/png',
+      sha256: digest,
+      width: png.width,
+      height: png.height,
+      byteLength: bytes.length,
+    },
+    bytes,
+  };
+}
+
+function pngFixture(width: number, height: number): Buffer {
+  const png = new PNG({ width, height, colorType: 6 });
+  for (let idx = 0; idx < png.data.length; idx += 4) {
+    png.data[idx] = 180;
+    png.data[idx + 1] = 90;
+    png.data[idx + 2] = 45;
+    png.data[idx + 3] = 255;
+  }
+  return PNG.sync.write(png);
 }

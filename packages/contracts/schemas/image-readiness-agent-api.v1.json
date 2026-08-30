@@ -1,0 +1,165 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://qr.ernesto.dev/schemas/image-readiness-agent-api.v1.json",
+  "title": "Image Readiness Agent API v1",
+  "description": "Contract for uploaded-image readiness analysis, optional cleanup/normalization, prepared asset handoff, and proof-through-generation for Artistic QR Level 2.",
+  "version": "1.0.0",
+  "definitions": {
+    "AssetRef": {
+      "type": "object",
+      "required": ["assetId", "mimeType", "sha256", "width", "height"],
+      "properties": {
+        "assetId": { "type": "string", "minLength": 1 },
+        "uri": { "type": "string", "description": "Opaque local, object-store, or data URI reference; never requires public access." },
+        "mimeType": { "type": "string", "enum": ["image/png", "image/jpeg", "image/webp", "image/svg+xml"] },
+        "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "width": { "type": "integer", "minimum": 1 },
+        "height": { "type": "integer", "minimum": 1 },
+        "byteLength": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "ImageReadinessRequest": {
+      "type": "object",
+      "required": ["requestId", "sourceAsset", "intendedUse"],
+      "properties": {
+        "requestId": { "type": "string", "minLength": 1 },
+        "sourceAsset": { "$ref": "#/definitions/AssetRef" },
+        "intendedUse": {
+          "type": "string",
+          "enum": ["level2-image-fit", "logo-overlay", "reference-image"],
+          "description": "MVP default is level2-image-fit. Other values are contract-compatible but not feature expansion approval."
+        },
+        "payloadPreview": { "type": "string", "maxLength": 256 },
+        "constraints": {
+          "type": "object",
+          "properties": {
+            "preserveImageColors": { "type": "boolean", "default": true },
+            "preserveSubjectCentering": { "type": "boolean", "default": true },
+            "allowBackgroundRemoval": { "type": "boolean", "default": true },
+            "allowCrop": { "type": "boolean", "default": true },
+            "allowUpscale": { "type": "boolean", "default": true },
+            "maxPreparedDimension": { "type": "integer", "minimum": 256, "maximum": 4096, "default": 1536 }
+          }
+        }
+      }
+    },
+    "ReadinessIssue": {
+      "type": "object",
+      "required": ["code", "severity", "message"],
+      "properties": {
+        "code": {
+          "type": "string",
+          "enum": [
+            "LOW_RESOLUTION",
+            "EXCESSIVE_BLUR",
+            "LOW_CONTRAST",
+            "BUSY_BACKGROUND",
+            "SUBJECT_OFF_CENTER",
+            "TRANSPARENCY_PROBLEM",
+            "UNSUPPORTED_FORMAT",
+            "OVERSIZED_ASSET",
+            "SAFETY_REJECTED",
+            "CLEANUP_FAILED",
+            "PROOF_GENERATION_FAILED",
+            "SCAN_PROOF_FAILED"
+          ]
+        },
+        "severity": { "type": "string", "enum": ["info", "warning", "blocking"] },
+        "message": { "type": "string", "minLength": 1 },
+        "region": {
+          "type": "object",
+          "required": ["x", "y", "width", "height"],
+          "properties": {
+            "x": { "type": "number", "minimum": 0 },
+            "y": { "type": "number", "minimum": 0 },
+            "width": { "type": "number", "minimum": 0 },
+            "height": { "type": "number", "minimum": 0 }
+          },
+          "description": "Optional normalized 0..1 region where the issue was detected."
+        }
+      }
+    },
+    "CleanupAction": {
+      "type": "object",
+      "required": ["action", "applied"],
+      "properties": {
+        "action": {
+          "type": "string",
+          "enum": ["format_convert", "crop", "pad", "resize", "background_remove", "background_simplify", "contrast_normalize", "sharpen", "alpha_fix", "center_subject"]
+        },
+        "applied": { "type": "boolean" },
+        "reason": { "type": "string" },
+        "parameters": { "type": "object" }
+      }
+    },
+    "ProofThroughGeneration": {
+      "type": "object",
+      "required": ["attempted", "pass"],
+      "properties": {
+        "attempted": { "type": "boolean" },
+        "pass": { "type": "boolean" },
+        "appOrCorePath": { "type": "string", "description": "Exact command/API/service path used for proof." },
+        "boardId": { "type": "string" },
+        "candidateIds": { "type": "array", "items": { "type": "string" } },
+        "artifactRefs": { "type": "array", "items": { "$ref": "#/definitions/AssetRef" } },
+        "contactSheetRef": { "$ref": "#/definitions/AssetRef" },
+        "scanSummary": {
+          "type": "object",
+          "properties": {
+            "decoder": { "type": "string" },
+            "passed": { "type": "integer", "minimum": 0 },
+            "failed": { "type": "integer", "minimum": 0 },
+            "thresholdVersion": { "type": "string" }
+          }
+        },
+        "failureReason": { "type": "string" }
+      }
+    },
+    "ImageReadinessReport": {
+      "type": "object",
+      "required": ["requestId", "decision", "sourceAsset", "issues", "cleanupActions", "proof"],
+      "properties": {
+        "requestId": { "type": "string" },
+        "decision": {
+          "type": "string",
+          "enum": ["ready", "prepared", "needs_user_replacement", "rejected"],
+          "description": "ready = source can be used as-is; prepared = use preparedAsset; needs_user_replacement/rejected are blocking."
+        },
+        "sourceAsset": { "$ref": "#/definitions/AssetRef" },
+        "preparedAsset": { "$ref": "#/definitions/AssetRef" },
+        "issues": { "type": "array", "items": { "$ref": "#/definitions/ReadinessIssue" } },
+        "cleanupActions": { "type": "array", "items": { "$ref": "#/definitions/CleanupAction" } },
+        "dominantColors": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" },
+          "description": "Observed source colors; QR pixel recoloring must not silently recolor the uploaded image/logo itself."
+        },
+        "subjectRegion": {
+          "type": "object",
+          "required": ["x", "y", "width", "height"],
+          "properties": {
+            "x": { "type": "number", "minimum": 0, "maximum": 1 },
+            "y": { "type": "number", "minimum": 0, "maximum": 1 },
+            "width": { "type": "number", "minimum": 0, "maximum": 1 },
+            "height": { "type": "number", "minimum": 0, "maximum": 1 }
+          }
+        },
+        "proof": { "$ref": "#/definitions/ProofThroughGeneration" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      }
+    }
+  },
+  "methods": {
+    "assessImageReadiness": {
+      "description": "Analyze an uploaded image/logo and return readiness, optional prepared asset, and proof-through-generation evidence.",
+      "input": { "$ref": "#/definitions/ImageReadinessRequest" },
+      "output": { "$ref": "#/definitions/ImageReadinessReport" },
+      "errors": [
+        { "code": "UNSUPPORTED_FORMAT", "message": "Image format is not supported for readiness processing" },
+        { "code": "SAFETY_REJECTED", "message": "Image failed safety review" },
+        { "code": "CLEANUP_FAILED", "message": "Image cleanup could not produce a usable prepared asset" },
+        { "code": "PROOF_GENERATION_FAILED", "message": "Prepared asset could not be proven through the current app/Core path" }
+      ]
+    }
+  }
+}

@@ -10,6 +10,8 @@ export {
   repairCandidate,
 } from './api/index.js';
 export { InMemoryCandidateAuthorityStore, setCandidateAuthorityStore } from './candidate-context.js';
+export { assessImageReadiness, enforceReadinessInvariants, validateImageReadinessRequest } from './image-readiness.js';
+export { FileSystemImageAssetStore, assetRefForStoredUpload, safeStoredAssetPath } from './image-asset-store.js';
 export { PATTERNED_PALETTE_PRESETS, resolveArtisticRenderIntent } from './render-intent.js';
 export { optimizeImageFitQr } from './image-fit.js';
 export { Q8_VISUAL_WEIGHTS, scoreQ8VisualQuality } from './visual-quality.js';
@@ -46,7 +48,15 @@ export type {
   EyeFrameStyle,
   EyeBallStyle,
   FinderStyle,
+  AssetRef,
+  ImageReadinessRequest,
+  ImageReadinessReport,
+  ReadinessDecision,
+  ReadinessIssue,
+  CleanupAction,
+  ProofThroughGeneration,
 } from './types.js';
+export type { ImageAssetStore, ImageReadinessOptions, StoredImageAsset } from './image-readiness.js';
 export type { CandidateAuthorityRecord, CandidateAuthorityStore } from './candidate-context.js';
 export type {
   ArtisticCompositionTreatment,
