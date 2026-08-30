@@ -122,4 +122,45 @@ describe('Image-Fit real generation boundary', () => {
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('network down')))
     await expect(new ImageFitGenerationClient('/real').generate(request)).rejects.toThrow(/service is unavailable/)
   })
+
+  it('runs readiness after upload and uses the prepared asset for generation', async () => {
+    vi.stubGlobal('crypto', webcrypto)
+    const sourceAsset = { assetId: 'sha256:source', uri: 'uploads/' + '1'.repeat(64) + '.png', mimeType: 'image/png' as const, sha256: '1'.repeat(64), width: 80, height: 48, byteLength: 256 }
+    const preparedAsset = { assetId: 'sha256:prepared', uri: 'uploads/' + '2'.repeat(64) + '.png', mimeType: 'image/png' as const, sha256: '2'.repeat(64), width: 1024, height: 1024, byteLength: 1024 }
+    const uploadTarget = { image_ref: sourceAsset.uri, mime_type: 'image/png' as const, width_px: 80, height_px: 48, sha256: sourceAsset.sha256, complexity: 'simple_mark' as const }
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ success: true, target_image: uploadTarget, source_asset: sourceAsset }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({
+        success: true,
+        report: {
+          requestId: 'imgready-test-1',
+          decision: 'prepared',
+          sourceAsset,
+          preparedAsset,
+          issues: [{ code: 'LOW_RESOLUTION', severity: 'warning', message: 'Prepared to launch dimensions.' }],
+          cleanupActions: [{ action: 'pad', applied: true }],
+          proof: { attempted: true, pass: true, appOrCorePath: '@qr/artistic-qr.generateCandidates', candidateIds: ['a', 'b'], scanSummary: { passed: 2, failed: 0, thresholdVersion: 'qr-core-validation.v1' } },
+        },
+      }) })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const upload = await new ImageFitGenerationClient('/api/artistic-qr/image-fit/candidates').uploadTargetImage('data:image/png;base64,abc')
+
+    expect(upload.sourceAsset).toEqual(sourceAsset)
+    expect(upload.readinessReport?.decision).toBe('prepared')
+    expect(upload.targetImage).toMatchObject({ image_ref: preparedAsset.uri, sha256: preparedAsset.sha256, width_px: 1024, height_px: 1024, complexity: 'simple_mark' })
+    expect(fetchMock).toHaveBeenNthCalledWith(1, '/api/artistic-qr/image-fit/uploads', expect.objectContaining({ method: 'POST' }))
+    expect(fetchMock).toHaveBeenNthCalledWith(2, '/api/artistic-qr/image-readiness/assess', expect.objectContaining({ method: 'POST' }))
+  })
+
+  it('fails closed when readiness proof rejects an upload', async () => {
+    vi.stubGlobal('crypto', webcrypto)
+    const sourceAsset = { assetId: 'sha256:source', uri: 'uploads/' + '3'.repeat(64) + '.png', mimeType: 'image/png' as const, sha256: '3'.repeat(64), width: 80, height: 48, byteLength: 256 }
+    vi.stubGlobal('fetch', vi.fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ success: true, target_image: { image_ref: sourceAsset.uri, mime_type: 'image/png', width_px: 80, height_px: 48, sha256: sourceAsset.sha256, complexity: 'simple_mark' }, source_asset: sourceAsset }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ success: true, report: { requestId: 'imgready-test-2', decision: 'rejected', sourceAsset, issues: [{ code: 'SCAN_PROOF_FAILED', severity: 'blocking', message: 'No proof pass.' }], cleanupActions: [], proof: { attempted: true, pass: false, candidateIds: [] } } }) }))
+
+    await expect(new ImageFitGenerationClient('/api/artistic-qr/image-fit/candidates').uploadTargetImage('data:image/png;base64,abc')).rejects.toThrow(/readiness/i)
+  })
+
 })

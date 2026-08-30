@@ -1,6 +1,6 @@
 import React from 'react'
 import { IMAGE_FIT_CONTRACT, type ImageFitDetail, type ImageFitLinkMode, type ImageFitStrength, type ImageFitTreatment } from '../imageFitContract'
-import { buildImageFitRequest, imageFitExportDecision, imageFitGenerationClient, type ImageFitAuthorizedFallbackV1, type ImageFitCandidateV1, type ImageFitRequestV1 } from '../lib/imageFitGenerationClient'
+import { buildImageFitRequest, imageFitExportDecision, imageFitGenerationClient, type ImageFitAuthorizedFallbackV1, type ImageFitCandidateV1, type ImageFitRequestV1, type ImageReadinessReportV1 } from '../lib/imageFitGenerationClient'
 
 const labels: Record<string, string> = {
   logo: 'Logo', pixel_blend: 'Pixel blend', background_image: 'Background image', cutout_perforated: 'Cutout-perforated',
@@ -117,6 +117,7 @@ export default function ImageFitQrConcept() {
   const [uploadState, setUploadState] = React.useState<UploadState>('idle')
   const [error, setError] = React.useState('')
   const [uploadError, setUploadError] = React.useState('')
+  const [readinessReport, setReadinessReport] = React.useState<ImageReadinessReportV1>()
   const [candidates, setCandidates] = React.useState<ImageFitCandidateV1[]>([])
   const [fallback, setFallback] = React.useState<ImageFitAuthorizedFallbackV1>()
   const [selectedId, setSelectedId] = React.useState<string>()
@@ -139,12 +140,14 @@ export default function ImageFitQrConcept() {
     invalidate()
     try {
       const dataUrl = await imageFileToPngDataUrl(file)
-      const uploadedTarget = await imageFitGenerationClient.uploadTargetImage(dataUrl, controller.signal)
-      setTargetImage(uploadedTarget)
+      const upload = await imageFitGenerationClient.uploadTargetImage(dataUrl, controller.signal)
+      setTargetImage(upload.targetImage)
+      setReadinessReport(upload.readinessReport)
       setUploadState('idle')
     } catch (caught) {
       if (caught instanceof DOMException && caught.name === 'AbortError') return
       setUploadError(caught instanceof Error ? caught.message : 'Image upload failed.')
+      setReadinessReport(undefined)
       setUploadState('error')
     }
   }
@@ -206,7 +209,8 @@ export default function ImageFitQrConcept() {
       </section>
 
       <section aria-label="Image-Fit QR controls" className="grid content-start gap-2.5 rounded-2xl border border-white/10 bg-slate-900/65 p-3">
-        <div className="grid grid-cols-[1fr_auto] items-end gap-2 rounded-xl border border-white/10 bg-slate-950/60 p-2.5"><label className="min-w-0"><span className="mb-1 block text-[10px] font-black uppercase tracking-[.16em] text-slate-400">Target image</span><span className="block truncate text-xs">{targetImage.image_ref}</span><span className="mt-1 block text-[9px] text-slate-500">Upload a PNG, JPG, or WebP; Studio converts it to a bounded PNG target for Creator generation.</span></label><label className={`rounded-lg border px-3 py-2 text-center text-[10px] font-bold focus-within:ring-2 focus-within:ring-indigo-300 ${uploadState === 'uploading' ? 'cursor-wait border-white/10 bg-slate-800 text-slate-400' : 'cursor-pointer border-indigo-300/40 bg-indigo-500/20 text-indigo-100'}`}><span>{uploadState === 'uploading' ? 'Uploading…' : 'Choose image'}</span><input aria-label="Choose target image" type="file" accept="image/png,image/jpeg,image/webp" disabled={uploadState === 'uploading'} onChange={(event) => { const file = event.currentTarget.files?.[0]; if (file) void uploadTarget(file); event.currentTarget.value = '' }} className="sr-only" /></label></div>
+        <div className="grid grid-cols-[1fr_auto] items-end gap-2 rounded-xl border border-white/10 bg-slate-950/60 p-2.5"><label className="min-w-0"><span className="mb-1 block text-[10px] font-black uppercase tracking-[.16em] text-slate-400">Target image</span><span className="block truncate text-xs">{targetImage.image_ref}</span><span className="mt-1 block text-[9px] text-slate-500">Upload a PNG, JPG, or WebP; Studio converts it to a bounded PNG target, runs readiness proof, then uses the prepared asset for Creator generation.</span></label><label className={`rounded-lg border px-3 py-2 text-center text-[10px] font-bold focus-within:ring-2 focus-within:ring-indigo-300 ${uploadState === 'uploading' ? 'cursor-wait border-white/10 bg-slate-800 text-slate-400' : 'cursor-pointer border-indigo-300/40 bg-indigo-500/20 text-indigo-100'}`}><span>{uploadState === 'uploading' ? 'Checking readiness…' : 'Choose image'}</span><input aria-label="Choose target image" type="file" accept="image/png,image/jpeg,image/webp" disabled={uploadState === 'uploading'} onChange={(event) => { const file = event.currentTarget.files?.[0]; if (file) void uploadTarget(file); event.currentTarget.value = '' }} className="sr-only" /></label></div>
+        {readinessReport && <section aria-label="Image readiness proof" data-testid="image-readiness-proof" data-readiness-decision={readinessReport.decision} data-readiness-proof-pass={readinessReport.proof.pass ? 'true' : 'false'} className="rounded-xl border border-emerald-300/25 bg-emerald-400/10 px-3 py-2 text-[10px] leading-relaxed text-emerald-50"><strong className="text-white">Image ready:</strong> {readinessReport.decision === 'prepared' ? 'Readiness cleaned and prepared this upload before generation.' : 'Readiness accepted this upload for generation.'}<span className="block text-emerald-100/80">Core proof {readinessReport.proof.pass ? 'passed' : 'failed'} · {readinessReport.proof.candidateIds?.length ?? 0} generated candidates · {readinessReport.proof.scanSummary?.thresholdVersion ?? 'decoder threshold recorded'}</span>{readinessReport.cleanupActions.some((action) => action.applied) && <span className="block text-emerald-100/80">Cleanup: {readinessReport.cleanupActions.filter((action) => action.applied).map((action) => action.action).join(', ')}</span>}</section>}
         {uploadError && <div role="alert" className="rounded-xl border border-rose-300/30 bg-rose-400/10 px-3 py-2 text-xs text-rose-100"><strong>Upload failed.</strong> {uploadError}</div>}
         <label><span className="mb-1 block text-[10px] font-black uppercase tracking-[.16em] text-slate-400">Destination</span><input aria-label="Level 2 destination URL" value={destination} aria-invalid={!destinationValid} onChange={(event) => change(setDestination, event.target.value)} className="h-11 w-full rounded-xl border border-white/10 bg-slate-950 px-3 text-xs outline-none focus:ring-2 focus:ring-indigo-300" /></label>
         <p className="rounded-xl border border-indigo-300/20 bg-indigo-500/10 px-3 py-2 text-[10px] text-indigo-100">Core tries up to three values per size band: Small 40→38→36 within 30–40%, Medium 50→48→46 within 41–50%, and Large 60→58→56 within 51–60%. Only validated target-matching outputs appear in this preview toggle.</p>
