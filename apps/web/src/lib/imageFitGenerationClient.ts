@@ -90,9 +90,47 @@ const CANDIDATE_ID = /^[a-z0-9._:-]{6,128}$/
 const ARTIFACT_KINDS = new Set(['preview_png', 'export_png', 'export_svg', 'metadata_json'])
 const MODES = new Set(IMAGE_FIT_CONTRACT.controls.strengths)
 
+export type ImageAssetRefV1 = {
+  assetId: string
+  uri?: string
+  mimeType: ImageFitRequestV1['target_image']['mime_type']
+  sha256: string
+  width: number
+  height: number
+  byteLength?: number
+}
+
+export type ImageReadinessReportV1 = {
+  requestId: string
+  decision: 'ready' | 'prepared' | 'needs_user_replacement' | 'rejected'
+  sourceAsset: ImageAssetRefV1
+  preparedAsset?: ImageAssetRefV1
+  issues: Array<{ code: string; severity: 'info' | 'warning' | 'blocking'; message: string }>
+  cleanupActions: Array<{ action: string; applied: boolean; reason?: string; parameters?: Record<string, unknown> }>
+  proof: { attempted: boolean; pass: boolean; appOrCorePath?: string; boardId?: string; candidateIds?: string[]; scanSummary?: { decoder?: string; passed?: number; failed?: number; thresholdVersion?: string }; failureReason?: string }
+}
+
 export type ImageFitUploadResponseV1 = {
   success: true
   target_image: ImageFitRequestV1['target_image']
+  source_asset?: ImageAssetRefV1
+}
+
+export type ImageFitUploadReadinessResult = {
+  targetImage: ImageFitRequestV1['target_image']
+  sourceAsset?: ImageAssetRefV1
+  readinessReport?: ImageReadinessReportV1
+}
+
+export function targetImageFromAsset(asset: ImageAssetRefV1, fallbackComplexity: ImageFitRequestV1['target_image']['complexity']): ImageFitRequestV1['target_image'] {
+  return {
+    image_ref: asset.uri ?? `uploads/${asset.sha256}.png`,
+    mime_type: asset.mimeType,
+    width_px: asset.width,
+    height_px: asset.height,
+    sha256: asset.sha256,
+    complexity: fallbackComplexity,
+  }
 }
 
 export function buildImageFitRequest(controls: ImageFitRequestControls, requestId = createRequestId()): ImageFitRequestV1 {
@@ -117,6 +155,11 @@ function createRequestId() {
   return `l2req-${random}`.slice(0, 128)
 }
 
+function createReadinessRequestId() {
+  const random = globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`
+  return `imgready-${random}`.slice(0, 128)
+}
+
 function normalizePublicHttpsUrl(value: string) {
   let url: URL
   try { url = new URL(value) } catch { throw new Error('Enter a complete HTTPS destination URL.') }
@@ -139,7 +182,7 @@ function redactDisplayUrl(url: URL) {
 export class ImageFitGenerationClient {
   constructor(private readonly endpoint = import.meta.env.VITE_IMAGE_FIT_QR_API_URL || '/api/artistic-qr/image-fit/candidates') {}
 
-  async uploadTargetImage(dataUrl: string, signal?: AbortSignal): Promise<ImageFitRequestV1['target_image']> {
+  async uploadTargetImage(dataUrl: string, signal?: AbortSignal): Promise<ImageFitUploadReadinessResult> {
     let response: Response
     try {
       response = await fetch('/api/artistic-qr/image-fit/uploads', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ data_url: dataUrl }), signal })
@@ -152,9 +195,47 @@ export class ImageFitGenerationClient {
       const serverError = body as { message?: unknown } | undefined
       throw new Error(typeof serverError?.message === 'string' ? serverError.message : 'Image upload could not be accepted.')
     }
-    const targetImage = (body as ImageFitUploadResponseV1 | undefined)?.target_image
+    const upload = body as ImageFitUploadResponseV1 | undefined
+    const targetImage = upload?.target_image
     if (!isTargetImage(targetImage)) throw new Error('Image upload returned an invalid target image.')
-    return targetImage
+    const sourceAsset = isAssetRef(upload?.source_asset) ? upload.source_asset : undefined
+    if (!sourceAsset) return { targetImage }
+    const readinessReport = await this.assessImageReadiness(sourceAsset, signal)
+    if (readinessReport.decision === 'needs_user_replacement' || readinessReport.decision === 'rejected' || !readinessReport.proof.pass) {
+      throw new Error(`Image readiness failed: ${readinessReport.issues.find((issue) => issue.severity === 'blocking')?.message ?? readinessReport.proof.failureReason ?? 'Upload needs a replacement image.'}`)
+    }
+    const prepared = readinessReport.preparedAsset
+      ? targetImageFromAsset(readinessReport.preparedAsset, targetImage.complexity)
+      : targetImage
+    return { targetImage: prepared, sourceAsset, readinessReport }
+  }
+
+  async assessImageReadiness(sourceAsset: ImageAssetRefV1, signal?: AbortSignal): Promise<ImageReadinessReportV1> {
+    let response: Response
+    try {
+      response = await fetch('/api/artistic-qr/image-readiness/assess', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          requestId: createReadinessRequestId(),
+          sourceAsset,
+          intendedUse: 'level2-image-fit',
+          constraints: { preserveImageColors: true, preserveSubjectCentering: true, allowCrop: true, allowUpscale: true, maxPreparedDimension: 1024 },
+        }),
+        signal,
+      })
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') throw error
+      throw new Error('Image readiness service is unavailable. Keep the controlled target or retry.')
+    }
+    const body = await response.json().catch(() => undefined) as unknown
+    if (!response.ok) {
+      const serverError = body as { message?: unknown } | undefined
+      throw new Error(typeof serverError?.message === 'string' ? serverError.message : 'Image readiness could not be completed.')
+    }
+    const report = (body as { report?: unknown } | undefined)?.report
+    if (!isReadinessReport(report, sourceAsset.sha256)) throw new Error('Image readiness returned invalid proof. No uploaded-image evidence was accepted.')
+    return report
   }
 
   async generate(request: ImageFitRequestV1, signal?: AbortSignal): Promise<ImageFitGenerationResponseV1> {
@@ -249,6 +330,33 @@ export function isGenerationResponse(value: unknown, requestId: string): value i
     && Array.isArray(response.candidates)
     && response.candidates.length <= 12
     && response.candidates.every(isCandidate)
+}
+
+function isAssetRef(value: unknown): value is ImageAssetRefV1 {
+  if (!value || typeof value !== 'object') return false
+  const asset = value as Partial<ImageAssetRefV1>
+  return typeof asset.assetId === 'string'
+    && (asset.uri === undefined || typeof asset.uri === 'string')
+    && ['image/png', 'image/jpeg', 'image/webp', 'image/svg+xml'].includes(asset.mimeType ?? '')
+    && SHA256.test(asset.sha256 ?? '')
+    && typeof asset.width === 'number' && Number.isInteger(asset.width) && asset.width > 0
+    && typeof asset.height === 'number' && Number.isInteger(asset.height) && asset.height > 0
+}
+
+function isReadinessReport(value: unknown, sourceSha256: string): value is ImageReadinessReportV1 {
+  if (!value || typeof value !== 'object') return false
+  const report = value as Partial<ImageReadinessReportV1>
+  return typeof report.requestId === 'string'
+    && ['ready', 'prepared', 'needs_user_replacement', 'rejected'].includes(report.decision ?? '')
+    && isAssetRef(report.sourceAsset)
+    && report.sourceAsset.sha256 === sourceSha256
+    && (report.preparedAsset === undefined || isAssetRef(report.preparedAsset))
+    && Array.isArray(report.issues)
+    && Array.isArray(report.cleanupActions)
+    && report.proof?.attempted === true
+    && report.proof.pass === true
+    && Array.isArray(report.proof.candidateIds)
+    && report.proof.candidateIds.length > 0
 }
 
 function isTargetImage(value: unknown): value is ImageFitRequestV1['target_image'] {
