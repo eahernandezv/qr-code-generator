@@ -175,3 +175,97 @@ export interface ExportArtifact {
     validationVersion: string;
   };
 }
+
+
+export interface AssetRef {
+  assetId: string;
+  uri?: string;
+  mimeType: 'image/png' | 'image/jpeg' | 'image/webp' | 'image/svg+xml';
+  sha256: string;
+  width: number;
+  height: number;
+  byteLength?: number;
+}
+
+export interface ImageReadinessRequest {
+  requestId: string;
+  sourceAsset: AssetRef;
+  intendedUse: 'level2-image-fit' | 'logo-overlay' | 'reference-image';
+  payloadPreview?: string;
+  constraints?: {
+    preserveImageColors?: boolean;
+    preserveSubjectCentering?: boolean;
+    allowBackgroundRemoval?: boolean;
+    allowCrop?: boolean;
+    allowUpscale?: boolean;
+    maxPreparedDimension?: number;
+  };
+}
+
+export type ReadinessDecision = 'ready' | 'prepared' | 'needs_user_replacement' | 'rejected';
+
+export interface ReadinessIssue {
+  code:
+    | 'LOW_RESOLUTION'
+    | 'EXCESSIVE_BLUR'
+    | 'LOW_CONTRAST'
+    | 'BUSY_BACKGROUND'
+    | 'SUBJECT_OFF_CENTER'
+    | 'TRANSPARENCY_PROBLEM'
+    | 'UNSUPPORTED_FORMAT'
+    | 'OVERSIZED_ASSET'
+    | 'SAFETY_REJECTED'
+    | 'CLEANUP_FAILED'
+    | 'PROOF_GENERATION_FAILED'
+    | 'SCAN_PROOF_FAILED';
+  severity: 'info' | 'warning' | 'blocking';
+  message: string;
+  region?: { x: number; y: number; width: number; height: number };
+}
+
+export interface CleanupAction {
+  action:
+    | 'format_convert'
+    | 'crop'
+    | 'pad'
+    | 'resize'
+    | 'background_remove'
+    | 'background_simplify'
+    | 'contrast_normalize'
+    | 'sharpen'
+    | 'alpha_fix'
+    | 'center_subject';
+  applied: boolean;
+  reason?: string;
+  parameters?: Record<string, unknown>;
+}
+
+export interface ProofThroughGeneration {
+  attempted: boolean;
+  pass: boolean;
+  appOrCorePath?: string;
+  boardId?: string;
+  candidateIds?: string[];
+  artifactRefs?: AssetRef[];
+  contactSheetRef?: AssetRef;
+  scanSummary?: {
+    decoder?: string;
+    passed?: number;
+    failed?: number;
+    thresholdVersion?: string;
+  };
+  failureReason?: string;
+}
+
+export interface ImageReadinessReport {
+  requestId: string;
+  decision: ReadinessDecision;
+  sourceAsset: AssetRef;
+  preparedAsset?: AssetRef;
+  issues: ReadinessIssue[];
+  cleanupActions: CleanupAction[];
+  dominantColors?: string[];
+  subjectRegion?: { x: number; y: number; width: number; height: number };
+  proof: ProofThroughGeneration;
+  createdAt?: string;
+}
