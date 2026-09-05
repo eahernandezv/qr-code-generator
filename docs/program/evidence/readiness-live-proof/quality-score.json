@@ -1,0 +1,99 @@
+{
+  "createdAt": "2026-09-05T08:15:57.901Z",
+  "visualReview": {
+    "reviewer": "QR Product Architect",
+    "rubric": "1=poor, 5=sponsor-demo strong; scan safety is controlled decoder proof, sponsor confidence is manual art-direction verdict",
+    "contactSheet": "docs/program/evidence/readiness-live-proof/fox-wolf-readable-quality-sheet.png",
+    "contactSheetSha256": "f8576dc6677406b288b771e82b671b7cd6add6129eb083d65fa420a81d96efd8",
+    "decision": "PASS_LEVEL2_DEMO_CANDIDATE_HOLD_PUBLIC_RELEASE",
+    "summary": "At least one fox and one wolf candidate now reaches 4/5 sponsor-demo confidence as a controlled Core evidence sample. Public/live Studio promotion remains gated by deployment and normal UI proof."
+  },
+  "targets": [
+    {
+      "kind": "fox",
+      "subjectRegion": {
+        "x": 0.2,
+        "y": 0.076,
+        "width": 0.606,
+        "height": 0.803
+      },
+      "readinessScanSummary": {
+        "decoder": "jsQR",
+        "passed": 4,
+        "failed": 0,
+        "thresholdVersion": "mvp-l2-readiness-v1"
+      },
+      "candidateCount": 3,
+      "validatedCount": 3,
+      "variants": [
+        {
+          "size": "small",
+          "path": "docs/program/evidence/readiness-live-proof/fox-0-small.png",
+          "sha256": "8e6df5600bd6757fb0811d62dc949cc4f8d6e5425d604731194708dfb8313ee9"
+        },
+        {
+          "size": "medium",
+          "path": "docs/program/evidence/readiness-live-proof/fox-1-medium.png",
+          "sha256": "5a5bf45e5f609810bf1f040abaef418c44ec0bd54724e9d11d665578cd416d39"
+        },
+        {
+          "size": "large",
+          "path": "docs/program/evidence/readiness-live-proof/fox-2-large.png",
+          "sha256": "bc08d89c8c1f650ca49bd42f9aabe2f85a31c09e9316025a53b72cdd5924be1b"
+        }
+      ],
+      "best": "large",
+      "scores": {
+        "scan_safety": 5,
+        "recognizability": 4,
+        "cleanliness": 4,
+        "qr_art_balance": 4,
+        "sponsor_demo_confidence": 4
+      },
+      "notes": "Large has the strongest Image-Fit read: recognizable fox, no broad pasted white square, QR texture visible through the face. Medium is cleaner but less integrated."
+    },
+    {
+      "kind": "wolf",
+      "subjectRegion": {
+        "x": 0.194,
+        "y": 0.076,
+        "width": 0.617,
+        "height": 0.803
+      },
+      "readinessScanSummary": {
+        "decoder": "jsQR",
+        "passed": 4,
+        "failed": 0,
+        "thresholdVersion": "mvp-l2-readiness-v1"
+      },
+      "candidateCount": 3,
+      "validatedCount": 3,
+      "variants": [
+        {
+          "size": "small",
+          "path": "docs/program/evidence/readiness-live-proof/wolf-0-small.png",
+          "sha256": "9c5929ec74a80f85bbcf9c703a44b08498cad84e013afb31fc585e465ff74915"
+        },
+        {
+          "size": "medium",
+          "path": "docs/program/evidence/readiness-live-proof/wolf-1-medium.png",
+          "sha256": "ae85e0df43fbe81476e051f2fcedec7dd21ca3ff785188d4368a822e3beb383c"
+        },
+        {
+          "size": "large",
+          "path": "docs/program/evidence/readiness-live-proof/wolf-2-large.png",
+          "sha256": "a7ea34dcaf63bc2c3a6dea5f265544243d66158917e4c3ea98e4a3bbbda82537"
+        }
+      ],
+      "best": "medium",
+      "scores": {
+        "scan_safety": 5,
+        "recognizability": 4,
+        "cleanliness": 4,
+        "qr_art_balance": 4,
+        "sponsor_demo_confidence": 4
+      },
+      "notes": "Medium balances wolf recognition and QR texture best. Large is more integrated but noisier around the eyes/face."
+    }
+  ]
+}

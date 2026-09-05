@@ -1,6 +1,6 @@
 {
   "base": "http://127.0.0.1:8787",
-  "createdAt": "2026-09-05T07:56:54.747Z",
+  "createdAt": "2026-09-05T08:15:57.901Z",
   "results": [
     {
       "kind": "fox",
@@ -26,7 +26,7 @@
         }
       },
       "readiness": {
-        "requestId": "live-fox-1788594933819",
+        "requestId": "live-fox-1788596074789",
         "decision": "prepared",
         "sourceAsset": {
           "assetId": "sha256:ae1a364b84d00d1dfad8dcf4f92d4fb2d1faff39de17aae39e32de266653a99f",
@@ -104,12 +104,12 @@
           "attempted": true,
           "pass": true,
           "appOrCorePath": "assessImageReadiness -> generateCandidates(deterministic_template) -> runValidation(jsQR)",
-          "boardId": "56984b0d-fc2d-42fb-b7da-1aa2e7687e9d",
+          "boardId": "89c7b4e9-0670-418e-8326-3287ab8e186f",
           "candidateIds": [
-            "58a21199-cf1e-4e15-a5c8-2e00e91125f1",
-            "a8707520-c801-45d9-a4e8-ccbed9c98396",
-            "7ed8e0d6-c4bd-4e0c-be56-c4e1cd83064e",
-            "40d0ea2e-7da9-4065-ac26-8d414608cc51"
+            "3e743b52-4032-4d57-88e4-e66fc371ce39",
+            "8f1d6afd-6368-4463-a9c6-013b92754c9e",
+            "b31a62f6-a581-485d-8046-be006dd344dd",
+            "a3660c9c-1640-44de-bf09-9543641bf089"
           ],
           "artifactRefs": [
             {
@@ -129,19 +129,19 @@
             "thresholdVersion": "mvp-l2-readiness-v1"
           }
         },
-        "createdAt": "2026-09-05T07:55:35.775Z"
+        "createdAt": "2026-09-05T08:14:36.681Z"
       },
       "candidateCount": 3,
       "validatedCount": 3,
       "candidateIds": [
-        "balanced-e2df34e6f824170c1f2e",
-        "balanced-f252d4c04b69526c9586",
-        "balanced-78c38e34767778dcbb9b"
+        "balanced-47fb98a3b566ec7c8a64",
+        "balanced-f0ae29ce6fd97947fea6",
+        "balanced-636c9d6f88b3a2387200"
       ],
       "artifactHashes": [
-        "74247ef424f44737864e4c7c9bd84832a8819243d8d5a8b26948b01015e31bcf",
-        "285f139862aa2196c25fa95cc3fe1160ab4b65dfcad9c2817554c0ba69a76fb2",
-        "584fa68d31861a051c364fd898e4f627e10f1e1073b641c55afa95979dfa5245"
+        "8e6df5600bd6757fb0811d62dc949cc4f8d6e5425d604731194708dfb8313ee9",
+        "5a5bf45e5f609810bf1f040abaef418c44ec0bd54724e9d11d665578cd416d39",
+        "bc08d89c8c1f650ca49bd42f9aabe2f85a31c09e9316025a53b72cdd5924be1b"
       ]
     },
     {
@@ -168,7 +168,7 @@
         }
       },
       "readiness": {
-        "requestId": "live-wolf-1788594970859",
+        "requestId": "live-wolf-1788596111624",
         "decision": "prepared",
         "sourceAsset": {
           "assetId": "sha256:6dfbd06f6ea922e9658e1f0dfcb00c8a7551765a51683bfd86ce2d3f1f4d320a",
@@ -246,12 +246,12 @@
           "attempted": true,
           "pass": true,
           "appOrCorePath": "assessImageReadiness -> generateCandidates(deterministic_template) -> runValidation(jsQR)",
-          "boardId": "00bd6f86-ff7a-4c70-b330-01c0ddc42e10",
+          "boardId": "a06c3106-7be9-45b8-a304-858ab30a235a",
           "candidateIds": [
-            "2dc61346-5077-46b8-8d4f-021cbd44794d",
-            "0f36707a-e850-4f9f-9790-87c2c97af3bc",
-            "20a93399-64ff-4aca-ad3d-b7d56bea29c7",
-            "ff57aaa8-4570-493f-aac9-c199a5ad2c46"
+            "35516a61-9190-4a02-a170-fa321baaa9ad",
+            "a99f0710-6c79-4a4f-8712-f126f064f95f",
+            "a1ac59ca-9bd3-43a4-8efe-64f8804a5919",
+            "2142c2e7-3b00-4fc2-8095-dbd539d53801"
           ],
           "artifactRefs": [
             {
@@ -271,19 +271,19 @@
             "thresholdVersion": "mvp-l2-readiness-v1"
           }
         },
-        "createdAt": "2026-09-05T07:56:12.464Z"
+        "createdAt": "2026-09-05T08:15:13.162Z"
       },
       "candidateCount": 3,
       "validatedCount": 3,
       "candidateIds": [
-        "balanced-9a984aa9b815f9cc969b",
-        "balanced-6c0038608a476d5a9e7e",
-        "balanced-1874263af998a2e499e4"
+        "balanced-1bac926cae1579d1168f",
+        "balanced-6c45d8e08cb4def4f21b",
+        "balanced-1511e7901da03a37eeaa"
       ],
       "artifactHashes": [
-        "4e7690f72f26758e2c1ac6f345ce7cc734fd20a7befa92e1f8ae0c4c66b9145d",
-        "f9dcf35ebbc7a00658da2a394c67ac1eaf71447d9d896df192fdb2bbfca867b4",
-        "4165bc0b3f172fa19ace92de76a419c95ca99ecf87d8a6b4beb18819f9f71db3"
+        "9c5929ec74a80f85bbcf9c703a44b08498cad84e013afb31fc585e465ff74915",
+        "ae85e0df43fbe81476e051f2fcedec7dd21ca3ff785188d4368a822e3beb383c",
+        "a7ea34dcaf63bc2c3a6dea5f265544243d66158917e4c3ea98e4a3bbbda82537"
       ]
     }
   ]
