@@ -1136,7 +1136,9 @@ function renderRasterImageLayerPng(
     const [moduleX, moduleY] = moduleAtPixel(px, py);
     const activeModule = moduleX >= 0 && moduleY >= 0 && moduleX < matrix.size && moduleY < matrix.size && matrix.modules[moduleY][moduleX] === 1;
     if (activeModule) {
-      const texture = foreground ? 0.54 : 0.18;
+      const texture = foreground
+        ? logoSize === 'large' ? 0.54 : 0.62
+        : logoSize === 'large' ? 0.18 : 0.24;
       setPixelRgb(
         px,
         py,

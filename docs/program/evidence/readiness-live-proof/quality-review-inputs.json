@@ -1,9 +1,9 @@
 {
-  "createdAt": "2026-09-05T07:56:55.333Z",
+  "createdAt": "2026-09-05T08:15:58.467Z",
   "cells": [
     {
       "label": "fox source",
-      "path": "/home/hermes/qr-readiness-worktree/docs/program/evidence/readiness-live-proof/fox-source.png",
+      "path": "/home/hermes/worktrees/qr-q10-visual-confidence/docs/program/evidence/readiness-live-proof/fox-source.png",
       "sha256": "ae1a364b84d00d1dfad8dcf4f92d4fb2d1faff39de17aae39e32de266653a99f",
       "width": 180,
       "height": 132
@@ -17,28 +17,28 @@
     },
     {
       "label": "fox small",
-      "path": "/home/hermes/qr-readiness-worktree/docs/program/evidence/readiness-live-proof/fox-0-small.png",
-      "sha256": "74247ef424f44737864e4c7c9bd84832a8819243d8d5a8b26948b01015e31bcf",
+      "path": "/home/hermes/worktrees/qr-q10-visual-confidence/docs/program/evidence/readiness-live-proof/fox-0-small.png",
+      "sha256": "8e6df5600bd6757fb0811d62dc949cc4f8d6e5425d604731194708dfb8313ee9",
       "width": 584,
       "height": 584
     },
     {
       "label": "fox medium",
-      "path": "/home/hermes/qr-readiness-worktree/docs/program/evidence/readiness-live-proof/fox-1-medium.png",
-      "sha256": "285f139862aa2196c25fa95cc3fe1160ab4b65dfcad9c2817554c0ba69a76fb2",
+      "path": "/home/hermes/worktrees/qr-q10-visual-confidence/docs/program/evidence/readiness-live-proof/fox-1-medium.png",
+      "sha256": "5a5bf45e5f609810bf1f040abaef418c44ec0bd54724e9d11d665578cd416d39",
       "width": 584,
       "height": 584
     },
     {
       "label": "fox large",
-      "path": "/home/hermes/qr-readiness-worktree/docs/program/evidence/readiness-live-proof/fox-2-large.png",
-      "sha256": "584fa68d31861a051c364fd898e4f627e10f1e1073b641c55afa95979dfa5245",
+      "path": "/home/hermes/worktrees/qr-q10-visual-confidence/docs/program/evidence/readiness-live-proof/fox-2-large.png",
+      "sha256": "bc08d89c8c1f650ca49bd42f9aabe2f85a31c09e9316025a53b72cdd5924be1b",
       "width": 584,
       "height": 584
     },
     {
       "label": "wolf source",
-      "path": "/home/hermes/qr-readiness-worktree/docs/program/evidence/readiness-live-proof/wolf-source.png",
+      "path": "/home/hermes/worktrees/qr-q10-visual-confidence/docs/program/evidence/readiness-live-proof/wolf-source.png",
       "sha256": "6dfbd06f6ea922e9658e1f0dfcb00c8a7551765a51683bfd86ce2d3f1f4d320a",
       "width": 180,
       "height": 132
@@ -52,24 +52,24 @@
     },
     {
       "label": "wolf small",
-      "path": "/home/hermes/qr-readiness-worktree/docs/program/evidence/readiness-live-proof/wolf-0-small.png",
-      "sha256": "4e7690f72f26758e2c1ac6f345ce7cc734fd20a7befa92e1f8ae0c4c66b9145d",
+      "path": "/home/hermes/worktrees/qr-q10-visual-confidence/docs/program/evidence/readiness-live-proof/wolf-0-small.png",
+      "sha256": "9c5929ec74a80f85bbcf9c703a44b08498cad84e013afb31fc585e465ff74915",
       "width": 584,
       "height": 584
     },
     {
       "label": "wolf medium",
-      "path": "/home/hermes/qr-readiness-worktree/docs/program/evidence/readiness-live-proof/wolf-1-medium.png",
-      "sha256": "f9dcf35ebbc7a00658da2a394c67ac1eaf71447d9d896df192fdb2bbfca867b4",
+      "path": "/home/hermes/worktrees/qr-q10-visual-confidence/docs/program/evidence/readiness-live-proof/wolf-1-medium.png",
+      "sha256": "ae85e0df43fbe81476e051f2fcedec7dd21ca3ff785188d4368a822e3beb383c",
       "width": 584,
       "height": 584
     },
     {
       "label": "wolf large",
-      "path": "/home/hermes/qr-readiness-worktree/docs/program/evidence/readiness-live-proof/wolf-2-large.png",
-      "sha256": "4165bc0b3f172fa19ace92de76a419c95ca99ecf87d8a6b4beb18819f9f71db3",
-      "width": 584,
-      "height": 584
+      "path": "/home/hermes/worktrees/qr-q10-visual-confidence/docs/program/evidence/readiness-live-proof/wolf-2-large.png",
+      "sha256": "a7ea34dcaf63bc2c3a6dea5f265544243d66158917e4c3ea98e4a3bbbda82537",
+      "width": 488,
+      "height": 488
     }
   ]
 }

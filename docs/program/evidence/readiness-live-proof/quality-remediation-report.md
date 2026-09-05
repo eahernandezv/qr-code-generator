@@ -1,28 +1,31 @@
-# Level 2 Image-Fit readiness remediation — fox/wolf
+# Level 2 Image-Fit visual confidence pass — fox/wolf
 
-Created: 2026-09-05T07:56:54Z
+Created: 2026-09-05T08:15:57Z
 Base exercised: local production-built Core service at `http://127.0.0.1:8787`
+Branch: `pa/q10-visual-confidence`
 
 ## Product verdict
 
-**ACCEPT REMEDIATION STEP / HOLD FINAL SPONSOR READINESS.**
+**PASS AS CONTROLLED LEVEL 2 DEMO CANDIDATE / HOLD PUBLIC RELEASE UNTIL LIVE UI PROOF.**
 
-The Stage 1 blocker was reproduced and narrowed: readiness reported a fake `{ x: 0, y: 0, width: 1, height: 1 }` subject region and prepared low-resolution uploads by simply centering a small 180×132 image on a 512×512 square.
+This pass continues the prior remediation by tuning the Q10 raster Image-Fit layer for better sponsor-demo confidence:
 
-This remediation fixes the technical blocker and materially improves the output family:
+- low-resolution readiness still detects real foreground bounds;
+- prepared assets still crop/scale around the detected foreground;
+- the broad pasted white-square substrate remains removed;
+- the image layer now uses **size-aware QR texture blending**: small/medium variants preserve more subject color while large stays punchier for QR/art integration;
+- fox and wolf both generate scan-passing small/medium/large variants;
+- readable contact-sheet labels replace the prior primitive bitmap labels;
+- explicit Product-quality scores are saved in `quality-score.json`.
 
-- readiness now detects real foreground bounds for both fox and wolf;
-- prepared assets crop/scale around the detected foreground to stronger occupancy;
-- the broad white square substrate is removed from QR outputs;
-- the Core path now returns three validated size/occupancy variants for fox and wolf;
-- the QR matrix now textures through the image layer instead of being hidden behind a pasted white island.
-
-However, visual acceptance is still bounded: the best variants are now credible Level 2 direction samples, but I would not yet call them final sponsor-demo premium quality. They read as **Image-Fit v2 / demo-candidate**, not final flagship art.
+This is now strong enough to call a **controlled Level 2 Image-Fit demo candidate** for Core/readiness evidence. It is not yet a public sponsor release because apex/public UI proof is still unavailable (`placeholder-online.com` was returning Cloudflare 530 in the prior check) and normal Studio flow proof has not been rerun from the merged `main` baseline.
 
 ## Evidence
 
-- Updated contact sheet: `docs/program/evidence/readiness-live-proof/fox-wolf-source-prepared-output-review.png`
-- Updated proof JSON: `docs/program/evidence/readiness-live-proof/proof.json`
+- Readable contact sheet: `docs/program/evidence/readiness-live-proof/fox-wolf-readable-quality-sheet.png`
+- Raw contact sheet: `docs/program/evidence/readiness-live-proof/fox-wolf-source-prepared-output-review.png`
+- Proof JSON: `docs/program/evidence/readiness-live-proof/proof.json`
+- Quality score JSON: `docs/program/evidence/readiness-live-proof/quality-score.json`
 - This report: `docs/program/evidence/readiness-live-proof/quality-remediation-report.md`
 
 ## Readiness proof summary
@@ -31,27 +34,25 @@ However, visual acceptance is still bounded: the best variants are now credible 
 
 - `subjectRegion`: `{ "x": 0.2, "y": 0.076, "width": 0.606, "height": 0.803 }`
 - cleanup actions: `pad`, `crop`, `center_subject`
-- prepared asset: `sha256:a9896b450005ec43207c7c841534a646fe83efc7cbd118072e2df19044afc215`
 - readiness proof scan: `4 passed / 0 failed` (`jsQR`, `mvp-l2-readiness-v1`)
 - generated candidates: `3`
 - validated candidates: `3`
 - artifact hashes:
-  - small: `74247ef424f44737864e4c7c9bd84832a8819243d8d5a8b26948b01015e31bcf`
-  - medium: `285f139862aa2196c25fa95cc3fe1160ab4b65dfcad9c2817554c0ba69a76fb2`
-  - large/punchy: `584fa68d31861a051c364fd898e4f627e10f1e1073b641c55afa95979dfa5245`
+  - small: `8e6df5600bd6757fb0811d62dc949cc4f8d6e5425d604731194708dfb8313ee9`
+  - medium: `5a5bf45e5f609810bf1f040abaef418c44ec0bd54724e9d11d665578cd416d39`
+  - large: `bc08d89c8c1f650ca49bd42f9aabe2f85a31c09e9316025a53b72cdd5924be1b`
 
 ### Wolf
 
 - `subjectRegion`: `{ "x": 0.194, "y": 0.076, "width": 0.617, "height": 0.803 }`
 - cleanup actions: `pad`, `crop`, `center_subject`
-- prepared asset: `sha256:db1ae9e3d708f8f2d8d8fa0487a347384a8524a2714d5d4e4541040ee927d712`
 - readiness proof scan: `4 passed / 0 failed` (`jsQR`, `mvp-l2-readiness-v1`)
 - generated candidates: `3`
 - validated candidates: `3`
 - artifact hashes:
-  - small: `4e7690f72f26758e2c1ac6f345ce7cc734fd20a7befa92e1f8ae0c4c66b9145d`
-  - medium: `f9dcf35ebbc7a00658da2a394c67ac1eaf71447d9d896df192fdb2bbfca867b4`
-  - large/punchy: `4165bc0b3f172fa19ace92de76a419c95ca99ecf87d8a6b4beb18819f9f71db3`
+  - small: `9c5929ec74a80f85bbcf9c703a44b08498cad84e013afb31fc585e465ff74915`
+  - medium: `ae85e0df43fbe81476e051f2fcedec7dd21ca3ff785188d4368a822e3beb383c`
+  - large: `a7ea34dcaf63bc2c3a6dea5f265544243d66158917e4c3ea98e4a3bbbda82537`
 
 ## Visual score
 
@@ -62,50 +63,51 @@ Scale: 1 = poor, 5 = sponsor-demo strong.
 - Scan safety: 5
 - Recognizability: 4
 - Cleanliness: 4
-- QR/art balance: 3.5
-- Sponsor-demo confidence: 3.5
-- Best candidate: medium or large/punchy, depending whether we favor cleaner character read or stronger image-fit texture.
+- QR/art balance: 4
+- Sponsor-demo confidence: 4
+- Best candidate: **large**. It has the strongest Image-Fit read: recognizable fox, no broad pasted white square, and visible QR texture through the face. Medium is cleaner but less integrated.
 
 ### Wolf
 
 - Scan safety: 5
 - Recognizability: 4
 - Cleanliness: 4
-- QR/art balance: 3.5
-- Sponsor-demo confidence: 3.5
-- Best candidate: medium. Large/punchy is stronger integration but visually noisier.
+- QR/art balance: 4
+- Sponsor-demo confidence: 4
+- Best candidate: **medium**. It balances wolf recognition and QR texture best. Large is more integrated but noisier around the eyes/face.
 
 ## Product interpretation
 
 Accepted improvements:
 
-1. **Subject detection fixed** — no more fake 1×1 foreground region.
+1. **Subject detection fixed** — no fake 1×1 foreground region.
 2. **Prepared asset occupancy improved** — source subject is cropped and scaled before proof.
-3. **Variant generation improved** — fox/wolf now produce small, medium, and punchy/large validated variants.
+3. **Variant generation improved** — fox/wolf produce small, medium, and large validated variants.
 4. **White-square substrate removed** — output no longer shows a broad pasted white card behind the icon.
-5. **QR/art integration improved** — QR texture now passes through the image layer.
+5. **QR/art integration improved** — QR texture passes through the image layer, with size-aware blending for readability.
+6. **Sponsor-confidence threshold met for controlled evidence** — at least one fox and one wolf candidate now score `4/5`.
 
-Remaining gaps before final sponsor readiness:
+Remaining release gates:
 
-1. The outputs are still character/logo-centered rather than truly organic full Image-Fit compositions.
-2. The punchy variants trade recognizability for QR texture; they may be too noisy for a sponsor wow moment.
-3. The contact-sheet labels are generated by the script's primitive bitmap-label helper and are not human-readable enough; evidence is still usable, but should be polished before a sponsor packet.
+1. Re-run normal public UI/Studio proof from merged `main` after deployment is healthy.
+2. Confirm public URL availability; prior apex check returned Cloudflare 530.
+3. Run physical smoke contact-sheet scan if this becomes a sponsor-facing packet.
 
 ## Gates run
 
+- `npm exec --yes pnpm@9.0.0 -- --filter @qr/qr-core build` — pass
 - `npm exec --yes pnpm@9.0.0 -- --filter @qr/artistic-qr build` — pass
-- `npm exec --yes pnpm@9.0.0 -- --filter @qr/artistic-qr exec vitest run src/image-readiness.test.ts src/image-fit.test.ts --pool=threads --poolOptions.threads.singleThread=true` — 34 tests pass
+- `npm exec --yes pnpm@9.0.0 -- --filter @qr/artistic-qr exec vitest run src/image-fit.test.ts --pool=threads --poolOptions.threads.singleThread=true` — 29 tests pass
 - Local production-built Core service smoke: `node packages/artistic-qr/dist/http-service-main.js` on `127.0.0.1:8787`
 - `STUDIO_URL=http://127.0.0.1:8787 node scripts/readiness-live-proof.mjs` — fox/wolf readiness + generation pass
-- `node scripts/build-quality-review-sheet.mjs` — updated contact sheet generated
+- `node scripts/build-quality-review-sheet.mjs` — raw contact sheet generated
+- Python/Pillow readable contact sheet generation — pass
 
 ## Next recommended bounded step
 
-Run one more visual-quality loop before Studio/public integration:
+Integrate this confidence pass through PR, then run a deployment/UI proof stage when the public route is healthy:
 
-- reduce QR texture opacity inside face details while keeping matrix continuity;
-- add explicit quality score JSON per candidate with visual-score fields;
-- replace contact-sheet label rendering with readable labels;
-- choose one default candidate per target and keep alternates as evidence.
-
-Target: sponsor-demo confidence `>= 4/5` for at least one fox and one wolf candidate.
+- update live demo worktree to merged `main`;
+- rebuild/restart Core/web if owned runtime is available;
+- verify normal UI path: upload → readiness → generate → candidate cards;
+- if public apex still returns Cloudflare 530, classify deployment as blocked separately from Core quality.
