@@ -225,6 +225,14 @@
             "optimized_short_link",
             "original_url"
           ]
+        },
+        "image_embedding_style": {
+          "enum": [
+            "clean_logo_fit",
+            "embedded_image_fit"
+          ],
+          "default": "clean_logo_fit",
+          "description": "Customer-facing Level 2 design choice: clean_logo_fit preserves a crisp logo/mascot over a scan-safe QR; embedded_image_fit visibly blends the image into the QR matrix."
         }
       }
     },
