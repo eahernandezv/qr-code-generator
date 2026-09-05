@@ -466,12 +466,12 @@ describe('Q8 deterministic protected visual island', () => {
     const automatic = optimizeImageFitQr(rgbLogoInput());
     const explicit = optimizeImageFitQr(rgbLogoInput(), { _visualPolicy: 'q10_raster_image_layer' });
     expect(automatic.response.candidates.map((candidate) => candidate.image_fit_evidence.score_version))
-      .toEqual(Array(2).fill('image-fit-raster-image-layer-q10-continuous'));
+      .toEqual(Array(3).fill('image-fit-raster-image-layer-q10-continuous'));
     expect(automatic.response.candidates.map((candidate) => automatic.artifacts[candidate.candidate_id].media_type))
-      .toEqual(Array(2).fill('image/png'));
+      .toEqual(Array(3).fill('image/png'));
     expect(automatic.response.candidates.map((candidate) => automatic.artifacts[candidate.candidate_id].sha256))
       .toEqual(explicit.response.candidates.map((candidate) => explicit.artifacts[candidate.candidate_id].sha256));
-    expect(automatic.response.candidates.map((candidate) => candidate.image_treatment.logo_size)).toEqual(['small', 'medium']);
+    expect(automatic.response.candidates.map((candidate) => candidate.image_treatment.logo_size)).toEqual(['small', 'medium', 'large']);
     expect(optimizeImageFitQr(realisticInput()).response.candidates.every((candidate) => candidate.image_fit_evidence.score_version.includes('q7'))).toBe(true);
   }, 30_000);
 

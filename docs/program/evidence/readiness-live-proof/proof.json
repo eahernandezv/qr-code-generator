@@ -1,0 +1,290 @@
+{
+  "base": "http://127.0.0.1:8787",
+  "createdAt": "2026-09-05T07:56:54.747Z",
+  "results": [
+    {
+      "kind": "fox",
+      "sourceSha256": "ae1a364b84d00d1dfad8dcf4f92d4fb2d1faff39de17aae39e32de266653a99f",
+      "upload": {
+        "success": true,
+        "target_image": {
+          "image_ref": "uploads/ae1a364b84d00d1dfad8dcf4f92d4fb2d1faff39de17aae39e32de266653a99f.png",
+          "mime_type": "image/png",
+          "width_px": 180,
+          "height_px": 132,
+          "sha256": "ae1a364b84d00d1dfad8dcf4f92d4fb2d1faff39de17aae39e32de266653a99f",
+          "complexity": "medium_logo"
+        },
+        "source_asset": {
+          "assetId": "sha256:ae1a364b84d00d1dfad8dcf4f92d4fb2d1faff39de17aae39e32de266653a99f",
+          "uri": "uploads/ae1a364b84d00d1dfad8dcf4f92d4fb2d1faff39de17aae39e32de266653a99f.png",
+          "mimeType": "image/png",
+          "sha256": "ae1a364b84d00d1dfad8dcf4f92d4fb2d1faff39de17aae39e32de266653a99f",
+          "width": 180,
+          "height": 132,
+          "byteLength": 1827
+        }
+      },
+      "readiness": {
+        "requestId": "live-fox-1788594933819",
+        "decision": "prepared",
+        "sourceAsset": {
+          "assetId": "sha256:ae1a364b84d00d1dfad8dcf4f92d4fb2d1faff39de17aae39e32de266653a99f",
+          "uri": "uploads/ae1a364b84d00d1dfad8dcf4f92d4fb2d1faff39de17aae39e32de266653a99f.png",
+          "mimeType": "image/png",
+          "sha256": "ae1a364b84d00d1dfad8dcf4f92d4fb2d1faff39de17aae39e32de266653a99f",
+          "width": 180,
+          "height": 132,
+          "byteLength": 1827
+        },
+        "preparedAsset": {
+          "assetId": "sha256:a9896b450005ec43207c7c841534a646fe83efc7cbd118072e2df19044afc215",
+          "uri": "uploads/a9896b450005ec43207c7c841534a646fe83efc7cbd118072e2df19044afc215.png",
+          "mimeType": "image/png",
+          "sha256": "a9896b450005ec43207c7c841534a646fe83efc7cbd118072e2df19044afc215",
+          "width": 512,
+          "height": 512,
+          "byteLength": 4162
+        },
+        "issues": [
+          {
+            "code": "LOW_RESOLUTION",
+            "severity": "warning",
+            "message": "Image is below the preferred Level 2 readiness size and will be normalized before generation proof."
+          }
+        ],
+        "cleanupActions": [
+          {
+            "action": "pad",
+            "applied": true,
+            "reason": "Normalize uploaded image to a centered square PNG for Level 2 generation proof.",
+            "parameters": {
+              "width": 512,
+              "height": 512
+            }
+          },
+          {
+            "action": "crop",
+            "applied": true,
+            "reason": "Crop to detected foreground and increase subject occupancy for stronger Image-Fit generation proof.",
+            "parameters": {
+              "cropX": 27,
+              "cropY": 1,
+              "cropW": 127,
+              "cropH": 124,
+              "targetOccupancy": 0.7
+            }
+          },
+          {
+            "action": "center_subject",
+            "applied": true,
+            "reason": "Center detected foreground within prepared asset.",
+            "parameters": {
+              "offsetX": 77,
+              "offsetY": 81,
+              "drawW": 358,
+              "drawH": 350
+            }
+          }
+        ],
+        "dominantColors": [
+          "#fafaf7",
+          "#db6020",
+          "#fff7eb",
+          "#d45c1c",
+          "#111827"
+        ],
+        "subjectRegion": {
+          "x": 0.2,
+          "y": 0.076,
+          "width": 0.606,
+          "height": 0.803
+        },
+        "proof": {
+          "attempted": true,
+          "pass": true,
+          "appOrCorePath": "assessImageReadiness -> generateCandidates(deterministic_template) -> runValidation(jsQR)",
+          "boardId": "56984b0d-fc2d-42fb-b7da-1aa2e7687e9d",
+          "candidateIds": [
+            "58a21199-cf1e-4e15-a5c8-2e00e91125f1",
+            "a8707520-c801-45d9-a4e8-ccbed9c98396",
+            "7ed8e0d6-c4bd-4e0c-be56-c4e1cd83064e",
+            "40d0ea2e-7da9-4065-ac26-8d414608cc51"
+          ],
+          "artifactRefs": [
+            {
+              "assetId": "sha256:a9896b450005ec43207c7c841534a646fe83efc7cbd118072e2df19044afc215",
+              "uri": "uploads/a9896b450005ec43207c7c841534a646fe83efc7cbd118072e2df19044afc215.png",
+              "mimeType": "image/png",
+              "sha256": "a9896b450005ec43207c7c841534a646fe83efc7cbd118072e2df19044afc215",
+              "width": 512,
+              "height": 512,
+              "byteLength": 4162
+            }
+          ],
+          "scanSummary": {
+            "decoder": "jsQR",
+            "passed": 4,
+            "failed": 0,
+            "thresholdVersion": "mvp-l2-readiness-v1"
+          }
+        },
+        "createdAt": "2026-09-05T07:55:35.775Z"
+      },
+      "candidateCount": 3,
+      "validatedCount": 3,
+      "candidateIds": [
+        "balanced-e2df34e6f824170c1f2e",
+        "balanced-f252d4c04b69526c9586",
+        "balanced-78c38e34767778dcbb9b"
+      ],
+      "artifactHashes": [
+        "74247ef424f44737864e4c7c9bd84832a8819243d8d5a8b26948b01015e31bcf",
+        "285f139862aa2196c25fa95cc3fe1160ab4b65dfcad9c2817554c0ba69a76fb2",
+        "584fa68d31861a051c364fd898e4f627e10f1e1073b641c55afa95979dfa5245"
+      ]
+    },
+    {
+      "kind": "wolf",
+      "sourceSha256": "6dfbd06f6ea922e9658e1f0dfcb00c8a7551765a51683bfd86ce2d3f1f4d320a",
+      "upload": {
+        "success": true,
+        "target_image": {
+          "image_ref": "uploads/6dfbd06f6ea922e9658e1f0dfcb00c8a7551765a51683bfd86ce2d3f1f4d320a.png",
+          "mime_type": "image/png",
+          "width_px": 180,
+          "height_px": 132,
+          "sha256": "6dfbd06f6ea922e9658e1f0dfcb00c8a7551765a51683bfd86ce2d3f1f4d320a",
+          "complexity": "medium_logo"
+        },
+        "source_asset": {
+          "assetId": "sha256:6dfbd06f6ea922e9658e1f0dfcb00c8a7551765a51683bfd86ce2d3f1f4d320a",
+          "uri": "uploads/6dfbd06f6ea922e9658e1f0dfcb00c8a7551765a51683bfd86ce2d3f1f4d320a.png",
+          "mimeType": "image/png",
+          "sha256": "6dfbd06f6ea922e9658e1f0dfcb00c8a7551765a51683bfd86ce2d3f1f4d320a",
+          "width": 180,
+          "height": 132,
+          "byteLength": 1656
+        }
+      },
+      "readiness": {
+        "requestId": "live-wolf-1788594970859",
+        "decision": "prepared",
+        "sourceAsset": {
+          "assetId": "sha256:6dfbd06f6ea922e9658e1f0dfcb00c8a7551765a51683bfd86ce2d3f1f4d320a",
+          "uri": "uploads/6dfbd06f6ea922e9658e1f0dfcb00c8a7551765a51683bfd86ce2d3f1f4d320a.png",
+          "mimeType": "image/png",
+          "sha256": "6dfbd06f6ea922e9658e1f0dfcb00c8a7551765a51683bfd86ce2d3f1f4d320a",
+          "width": 180,
+          "height": 132,
+          "byteLength": 1656
+        },
+        "preparedAsset": {
+          "assetId": "sha256:db1ae9e3d708f8f2d8d8fa0487a347384a8524a2714d5d4e4541040ee927d712",
+          "uri": "uploads/db1ae9e3d708f8f2d8d8fa0487a347384a8524a2714d5d4e4541040ee927d712.png",
+          "mimeType": "image/png",
+          "sha256": "db1ae9e3d708f8f2d8d8fa0487a347384a8524a2714d5d4e4541040ee927d712",
+          "width": 512,
+          "height": 512,
+          "byteLength": 3864
+        },
+        "issues": [
+          {
+            "code": "LOW_RESOLUTION",
+            "severity": "warning",
+            "message": "Image is below the preferred Level 2 readiness size and will be normalized before generation proof."
+          }
+        ],
+        "cleanupActions": [
+          {
+            "action": "pad",
+            "applied": true,
+            "reason": "Normalize uploaded image to a centered square PNG for Level 2 generation proof.",
+            "parameters": {
+              "width": 512,
+              "height": 512
+            }
+          },
+          {
+            "action": "crop",
+            "applied": true,
+            "reason": "Crop to detected foreground and increase subject occupancy for stronger Image-Fit generation proof.",
+            "parameters": {
+              "cropX": 26,
+              "cropY": 1,
+              "cropW": 129,
+              "cropH": 124,
+              "targetOccupancy": 0.7
+            }
+          },
+          {
+            "action": "center_subject",
+            "applied": true,
+            "reason": "Center detected foreground within prepared asset.",
+            "parameters": {
+              "offsetX": 77,
+              "offsetY": 83,
+              "drawW": 358,
+              "drawH": 345
+            }
+          }
+        ],
+        "dominantColors": [
+          "#fafaf7",
+          "#6b7280",
+          "#e2e8f0",
+          "#566173",
+          "#111827"
+        ],
+        "subjectRegion": {
+          "x": 0.194,
+          "y": 0.076,
+          "width": 0.617,
+          "height": 0.803
+        },
+        "proof": {
+          "attempted": true,
+          "pass": true,
+          "appOrCorePath": "assessImageReadiness -> generateCandidates(deterministic_template) -> runValidation(jsQR)",
+          "boardId": "00bd6f86-ff7a-4c70-b330-01c0ddc42e10",
+          "candidateIds": [
+            "2dc61346-5077-46b8-8d4f-021cbd44794d",
+            "0f36707a-e850-4f9f-9790-87c2c97af3bc",
+            "20a93399-64ff-4aca-ad3d-b7d56bea29c7",
+            "ff57aaa8-4570-493f-aac9-c199a5ad2c46"
+          ],
+          "artifactRefs": [
+            {
+              "assetId": "sha256:db1ae9e3d708f8f2d8d8fa0487a347384a8524a2714d5d4e4541040ee927d712",
+              "uri": "uploads/db1ae9e3d708f8f2d8d8fa0487a347384a8524a2714d5d4e4541040ee927d712.png",
+              "mimeType": "image/png",
+              "sha256": "db1ae9e3d708f8f2d8d8fa0487a347384a8524a2714d5d4e4541040ee927d712",
+              "width": 512,
+              "height": 512,
+              "byteLength": 3864
+            }
+          ],
+          "scanSummary": {
+            "decoder": "jsQR",
+            "passed": 4,
+            "failed": 0,
+            "thresholdVersion": "mvp-l2-readiness-v1"
+          }
+        },
+        "createdAt": "2026-09-05T07:56:12.464Z"
+      },
+      "candidateCount": 3,
+      "validatedCount": 3,
+      "candidateIds": [
+        "balanced-9a984aa9b815f9cc969b",
+        "balanced-6c0038608a476d5a9e7e",
+        "balanced-1874263af998a2e499e4"
+      ],
+      "artifactHashes": [
+        "4e7690f72f26758e2c1ac6f345ce7cc734fd20a7befa92e1f8ae0c4c66b9145d",
+        "f9dcf35ebbc7a00658da2a394c67ac1eaf71447d9d896df192fdb2bbfca867b4",
+        "4165bc0b3f172fa19ace92de76a419c95ca99ecf87d8a6b4beb18819f9f71db3"
+      ]
+    }
+  ]
+}
