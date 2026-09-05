@@ -29,6 +29,7 @@ export const IMAGE_FIT_CONTRACT = {
     details: controlProperties.detail.enum,
     logoSizes: controlProperties.logo_size.enum,
     linkModes: controlProperties.link_mode.enum,
+    imageEmbeddingStyles: controlProperties.image_embedding_style.enum,
   },
 } as const
 
@@ -37,3 +38,4 @@ export type ImageFitStrength = (typeof IMAGE_FIT_CONTRACT.controls.strengths)[nu
 export type ImageFitDetail = (typeof IMAGE_FIT_CONTRACT.controls.details)[number]
 export type ImageFitLogoSize = (typeof IMAGE_FIT_CONTRACT.controls.logoSizes)[number]
 export type ImageFitLinkMode = (typeof IMAGE_FIT_CONTRACT.controls.linkModes)[number]
+export type ImageEmbeddingStyle = (typeof IMAGE_FIT_CONTRACT.controls.imageEmbeddingStyles)[number]

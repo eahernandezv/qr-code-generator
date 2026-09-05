@@ -462,16 +462,24 @@ describe('Q8 deterministic protected visual island', () => {
     }
   }, 30_000);
 
-  it('promotes the Q10 raster image layer by default only when an RGB plane is available', () => {
-    const automatic = optimizeImageFitQr(rgbLogoInput());
-    const explicit = optimizeImageFitQr(rgbLogoInput(), { _visualPolicy: 'q10_raster_image_layer' });
-    expect(automatic.response.candidates.map((candidate) => candidate.image_fit_evidence.score_version))
+  it('defaults RGB targets to Clean Logo-Fit while preserving Embedded Image-Fit as an explicit customer style', () => {
+    const clean = optimizeImageFitQr(rgbLogoInput());
+    const embeddedInput = rgbLogoInput();
+    embeddedInput.request.user_controls.image_embedding_style = 'embedded_image_fit';
+    const embedded = optimizeImageFitQr(embeddedInput);
+    const explicitClean = optimizeImageFitQr(rgbLogoInput(), { _visualPolicy: 'q11_clean_logo_fit' });
+
+    expect(clean.response.candidates.map((candidate) => candidate.image_fit_evidence.score_version))
+      .toEqual(Array(3).fill('clean-logo-fit-q11-preserve-subject'));
+    expect(embedded.response.candidates.map((candidate) => candidate.image_fit_evidence.score_version))
       .toEqual(Array(3).fill('image-fit-raster-image-layer-q10-continuous'));
-    expect(automatic.response.candidates.map((candidate) => automatic.artifacts[candidate.candidate_id].media_type))
+    expect(clean.response.candidates.map((candidate) => clean.artifacts[candidate.candidate_id].media_type))
       .toEqual(Array(3).fill('image/png'));
-    expect(automatic.response.candidates.map((candidate) => automatic.artifacts[candidate.candidate_id].sha256))
-      .toEqual(explicit.response.candidates.map((candidate) => explicit.artifacts[candidate.candidate_id].sha256));
-    expect(automatic.response.candidates.map((candidate) => candidate.image_treatment.logo_size)).toEqual(['small', 'medium', 'large']);
+    expect(clean.response.candidates.map((candidate) => clean.artifacts[candidate.candidate_id].sha256))
+      .toEqual(explicitClean.response.candidates.map((candidate) => explicitClean.artifacts[candidate.candidate_id].sha256));
+    expect(clean.response.candidates.map((candidate) => clean.artifacts[candidate.candidate_id].sha256))
+      .not.toEqual(embedded.response.candidates.map((candidate) => embedded.artifacts[candidate.candidate_id].sha256));
+    expect(clean.response.candidates.map((candidate) => candidate.image_treatment.logo_size)).toEqual(['small', 'medium', 'large']);
     expect(optimizeImageFitQr(realisticInput()).response.candidates.every((candidate) => candidate.image_fit_evidence.score_version.includes('q7'))).toBe(true);
   }, 30_000);
 

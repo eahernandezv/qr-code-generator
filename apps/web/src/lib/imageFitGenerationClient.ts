@@ -1,10 +1,10 @@
-import { IMAGE_FIT_CONTRACT, type ImageFitDetail, type ImageFitLinkMode, type ImageFitLogoSize, type ImageFitStrength, type ImageFitTreatment } from '../imageFitContract'
+import { IMAGE_FIT_CONTRACT, type ImageEmbeddingStyle, type ImageFitDetail, type ImageFitLinkMode, type ImageFitLogoSize, type ImageFitStrength, type ImageFitTreatment } from '../imageFitContract'
 
 export type ImageFitRequestV1 = {
   request_id: string
   destination: { kind: 'url'; normalized_url: string; display_url: string; safety: { verdict: 'pass'; policy_version: string } }
   target_image: { image_ref: string; mime_type: 'image/png' | 'image/jpeg' | 'image/webp' | 'image/svg+xml'; width_px: number; height_px: number; sha256: string; complexity: 'simple_mark' | 'medium_logo' | 'complex_photo_like' | 'high_risk_thin_detail' }
-  user_controls: { treatment: ImageFitTreatment; strength: ImageFitStrength; detail: ImageFitDetail; logo_size?: ImageFitLogoSize; link_mode: ImageFitLinkMode }
+  user_controls: { treatment: ImageFitTreatment; strength: ImageFitStrength; detail: ImageFitDetail; image_embedding_style?: ImageEmbeddingStyle; logo_size?: ImageFitLogoSize; link_mode: ImageFitLinkMode }
   constraints: { max_candidates: number; max_search_ms: number; allowed_ecc: ('Q' | 'H')[]; allowed_masks: number[]; allowed_versions: number[] }
   entitlement_context: { mode: 'preview'; export_entitled: false }
 }
@@ -54,6 +54,7 @@ export type ImageFitRequestControls = {
   strength: ImageFitStrength
   detail: ImageFitDetail
   logoSize?: ImageFitLogoSize
+  imageEmbeddingStyle?: ImageEmbeddingStyle
   linkMode: ImageFitLinkMode
   targetImage: ImageFitRequestV1['target_image']
 }
@@ -144,7 +145,7 @@ export function buildImageFitRequest(controls: ImageFitRequestControls, requestI
       safety: { verdict: 'pass', policy_version: 'studio-public-https-input-v1' },
     },
     target_image: { ...controls.targetImage },
-    user_controls: { treatment: controls.treatment, strength: controls.strength, detail: controls.detail, ...(controls.logoSize ? { logo_size: controls.logoSize } : {}), link_mode: controls.linkMode },
+    user_controls: { treatment: controls.treatment, strength: controls.strength, detail: controls.detail, ...(controls.imageEmbeddingStyle ? { image_embedding_style: controls.imageEmbeddingStyle } : {}), ...(controls.logoSize ? { logo_size: controls.logoSize } : {}), link_mode: controls.linkMode },
     constraints: { max_candidates: 12, max_search_ms: 45_000, allowed_ecc: ['Q', 'H'], allowed_masks: [0, 1, 2, 3, 4, 5, 6, 7], allowed_versions: [8, 9, 10, 11, 12] },
     entitlement_context: { mode: 'preview', export_entitled: false },
   }

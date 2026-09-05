@@ -1,0 +1,756 @@
+{
+  "schema_version": "qr-design-style-options-clean-first.v1",
+  "base": "https://placeholder-online.com",
+  "createdAt": "2026-09-05T11:19:08.437Z",
+  "sheet": "/home/hermes/worktrees/qr-placeholder-live/docs/program/evidence/design-style-options-clean-first/clean-logo-vs-art-blend-contact-sheet.png",
+  "results": [
+    {
+      "kind": "fox",
+      "style": "clean_logo_fit",
+      "sourceSha256": "ae1a364b84d00d1dfad8dcf4f92d4fb2d1faff39de17aae39e32de266653a99f",
+      "upload": {
+        "success": true,
+        "target_image": {
+          "image_ref": "uploads/ae1a364b84d00d1dfad8dcf4f92d4fb2d1faff39de17aae39e32de266653a99f.png",
+          "mime_type": "image/png",
+          "width_px": 180,
+          "height_px": 132,
+          "sha256": "ae1a364b84d00d1dfad8dcf4f92d4fb2d1faff39de17aae39e32de266653a99f",
+          "complexity": "medium_logo"
+        },
+        "source_asset": {
+          "assetId": "sha256:ae1a364b84d00d1dfad8dcf4f92d4fb2d1faff39de17aae39e32de266653a99f",
+          "uri": "uploads/ae1a364b84d00d1dfad8dcf4f92d4fb2d1faff39de17aae39e32de266653a99f.png",
+          "mimeType": "image/png",
+          "sha256": "ae1a364b84d00d1dfad8dcf4f92d4fb2d1faff39de17aae39e32de266653a99f",
+          "width": 180,
+          "height": 132,
+          "byteLength": 1827
+        }
+      },
+      "readiness": {
+        "requestId": "style-fox-1788606998730",
+        "decision": "prepared",
+        "sourceAsset": {
+          "assetId": "sha256:ae1a364b84d00d1dfad8dcf4f92d4fb2d1faff39de17aae39e32de266653a99f",
+          "uri": "uploads/ae1a364b84d00d1dfad8dcf4f92d4fb2d1faff39de17aae39e32de266653a99f.png",
+          "mimeType": "image/png",
+          "sha256": "ae1a364b84d00d1dfad8dcf4f92d4fb2d1faff39de17aae39e32de266653a99f",
+          "width": 180,
+          "height": 132,
+          "byteLength": 1827
+        },
+        "preparedAsset": {
+          "assetId": "sha256:a9896b450005ec43207c7c841534a646fe83efc7cbd118072e2df19044afc215",
+          "uri": "uploads/a9896b450005ec43207c7c841534a646fe83efc7cbd118072e2df19044afc215.png",
+          "mimeType": "image/png",
+          "sha256": "a9896b450005ec43207c7c841534a646fe83efc7cbd118072e2df19044afc215",
+          "width": 512,
+          "height": 512,
+          "byteLength": 4162
+        },
+        "issues": [
+          {
+            "code": "LOW_RESOLUTION",
+            "severity": "warning",
+            "message": "Image is below the preferred Level 2 readiness size and will be normalized before generation proof."
+          }
+        ],
+        "cleanupActions": [
+          {
+            "action": "pad",
+            "applied": true,
+            "reason": "Normalize uploaded image to a centered square PNG for Level 2 generation proof.",
+            "parameters": {
+              "width": 512,
+              "height": 512
+            }
+          },
+          {
+            "action": "crop",
+            "applied": true,
+            "reason": "Crop to detected foreground and increase subject occupancy for stronger Image-Fit generation proof.",
+            "parameters": {
+              "cropX": 27,
+              "cropY": 1,
+              "cropW": 127,
+              "cropH": 124,
+              "targetOccupancy": 0.7
+            }
+          },
+          {
+            "action": "center_subject",
+            "applied": true,
+            "reason": "Center detected foreground within prepared asset.",
+            "parameters": {
+              "offsetX": 77,
+              "offsetY": 81,
+              "drawW": 358,
+              "drawH": 350
+            }
+          }
+        ],
+        "dominantColors": [
+          "#fafaf7",
+          "#db6020",
+          "#fff7eb",
+          "#d45c1c",
+          "#111827"
+        ],
+        "subjectRegion": {
+          "x": 0.2,
+          "y": 0.076,
+          "width": 0.606,
+          "height": 0.803
+        },
+        "proof": {
+          "attempted": true,
+          "pass": true,
+          "appOrCorePath": "assessImageReadiness -> generateCandidates(deterministic_template) -> runValidation(jsQR)",
+          "boardId": "f837446d-53a9-4fb9-8daf-638beec8312a",
+          "candidateIds": [
+            "a9a07e80-42f5-41df-874c-49073d4970ee",
+            "28607492-550f-49ca-b867-94fe5cf647a7",
+            "8d854cd9-b9c9-4fc1-ba00-e22732437f69",
+            "40173b0f-5b0d-4700-baaa-b9cd7f31aa01"
+          ],
+          "artifactRefs": [
+            {
+              "assetId": "sha256:a9896b450005ec43207c7c841534a646fe83efc7cbd118072e2df19044afc215",
+              "uri": "uploads/a9896b450005ec43207c7c841534a646fe83efc7cbd118072e2df19044afc215.png",
+              "mimeType": "image/png",
+              "sha256": "a9896b450005ec43207c7c841534a646fe83efc7cbd118072e2df19044afc215",
+              "width": 512,
+              "height": 512,
+              "byteLength": 4162
+            }
+          ],
+          "scanSummary": {
+            "decoder": "jsQR",
+            "passed": 4,
+            "failed": 0,
+            "thresholdVersion": "mvp-l2-readiness-v1"
+          }
+        },
+        "createdAt": "2026-09-05T11:16:40.809Z"
+      },
+      "prepared": {
+        "image_ref": "uploads/a9896b450005ec43207c7c841534a646fe83efc7cbd118072e2df19044afc215.png",
+        "mime_type": "image/png",
+        "width_px": 512,
+        "height_px": 512,
+        "sha256": "a9896b450005ec43207c7c841534a646fe83efc7cbd118072e2df19044afc215",
+        "complexity": "medium_logo"
+      },
+      "generation": {
+        "candidateCount": 3,
+        "validatedCount": 3,
+        "saved": [
+          {
+            "size": "small",
+            "file": "fox-clean_logo_fit-small.png",
+            "sha256": "8ee25c609df6608a71536b2372afd97a918e530bbab083e9cdcd8abc0a119f21",
+            "candidate_id": "balanced-e980598b7ba78062db88",
+            "score_version": "clean-logo-fit-q11-preserve-subject",
+            "checks": "8/8",
+            "recognition_score": 0.948692,
+            "blockers": [
+              "preview_export_parity_not_proven",
+              "preview_not_paid",
+              "short_link_not_committed"
+            ]
+          },
+          {
+            "size": "medium",
+            "file": "fox-clean_logo_fit-medium.png",
+            "sha256": "636be48e6353307a68f70b9defc031e0cc37046532db18fa34438dca9bfe5749",
+            "candidate_id": "balanced-c3c51d83b527c8e842cd",
+            "score_version": "clean-logo-fit-q11-preserve-subject",
+            "checks": "8/8",
+            "recognition_score": 0.967123,
+            "blockers": [
+              "preview_export_parity_not_proven",
+              "preview_not_paid",
+              "short_link_not_committed"
+            ]
+          },
+          {
+            "size": "large",
+            "file": "fox-clean_logo_fit-large.png",
+            "sha256": "85cf82cb1831caac6c3a8cf54d819c1d62b0e967b3ef1846ec327a1c6f6f70cf",
+            "candidate_id": "balanced-9de2b6172a5d7031a061",
+            "score_version": "clean-logo-fit-q11-preserve-subject",
+            "checks": "8/8",
+            "recognition_score": 0.971927,
+            "blockers": [
+              "preview_export_parity_not_proven",
+              "preview_not_paid",
+              "short_link_not_committed"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "kind": "fox",
+      "style": "embedded_image_fit",
+      "sourceSha256": "ae1a364b84d00d1dfad8dcf4f92d4fb2d1faff39de17aae39e32de266653a99f",
+      "upload": {
+        "success": true,
+        "target_image": {
+          "image_ref": "uploads/ae1a364b84d00d1dfad8dcf4f92d4fb2d1faff39de17aae39e32de266653a99f.png",
+          "mime_type": "image/png",
+          "width_px": 180,
+          "height_px": 132,
+          "sha256": "ae1a364b84d00d1dfad8dcf4f92d4fb2d1faff39de17aae39e32de266653a99f",
+          "complexity": "medium_logo"
+        },
+        "source_asset": {
+          "assetId": "sha256:ae1a364b84d00d1dfad8dcf4f92d4fb2d1faff39de17aae39e32de266653a99f",
+          "uri": "uploads/ae1a364b84d00d1dfad8dcf4f92d4fb2d1faff39de17aae39e32de266653a99f.png",
+          "mimeType": "image/png",
+          "sha256": "ae1a364b84d00d1dfad8dcf4f92d4fb2d1faff39de17aae39e32de266653a99f",
+          "width": 180,
+          "height": 132,
+          "byteLength": 1827
+        }
+      },
+      "readiness": {
+        "requestId": "style-fox-1788606998730",
+        "decision": "prepared",
+        "sourceAsset": {
+          "assetId": "sha256:ae1a364b84d00d1dfad8dcf4f92d4fb2d1faff39de17aae39e32de266653a99f",
+          "uri": "uploads/ae1a364b84d00d1dfad8dcf4f92d4fb2d1faff39de17aae39e32de266653a99f.png",
+          "mimeType": "image/png",
+          "sha256": "ae1a364b84d00d1dfad8dcf4f92d4fb2d1faff39de17aae39e32de266653a99f",
+          "width": 180,
+          "height": 132,
+          "byteLength": 1827
+        },
+        "preparedAsset": {
+          "assetId": "sha256:a9896b450005ec43207c7c841534a646fe83efc7cbd118072e2df19044afc215",
+          "uri": "uploads/a9896b450005ec43207c7c841534a646fe83efc7cbd118072e2df19044afc215.png",
+          "mimeType": "image/png",
+          "sha256": "a9896b450005ec43207c7c841534a646fe83efc7cbd118072e2df19044afc215",
+          "width": 512,
+          "height": 512,
+          "byteLength": 4162
+        },
+        "issues": [
+          {
+            "code": "LOW_RESOLUTION",
+            "severity": "warning",
+            "message": "Image is below the preferred Level 2 readiness size and will be normalized before generation proof."
+          }
+        ],
+        "cleanupActions": [
+          {
+            "action": "pad",
+            "applied": true,
+            "reason": "Normalize uploaded image to a centered square PNG for Level 2 generation proof.",
+            "parameters": {
+              "width": 512,
+              "height": 512
+            }
+          },
+          {
+            "action": "crop",
+            "applied": true,
+            "reason": "Crop to detected foreground and increase subject occupancy for stronger Image-Fit generation proof.",
+            "parameters": {
+              "cropX": 27,
+              "cropY": 1,
+              "cropW": 127,
+              "cropH": 124,
+              "targetOccupancy": 0.7
+            }
+          },
+          {
+            "action": "center_subject",
+            "applied": true,
+            "reason": "Center detected foreground within prepared asset.",
+            "parameters": {
+              "offsetX": 77,
+              "offsetY": 81,
+              "drawW": 358,
+              "drawH": 350
+            }
+          }
+        ],
+        "dominantColors": [
+          "#fafaf7",
+          "#db6020",
+          "#fff7eb",
+          "#d45c1c",
+          "#111827"
+        ],
+        "subjectRegion": {
+          "x": 0.2,
+          "y": 0.076,
+          "width": 0.606,
+          "height": 0.803
+        },
+        "proof": {
+          "attempted": true,
+          "pass": true,
+          "appOrCorePath": "assessImageReadiness -> generateCandidates(deterministic_template) -> runValidation(jsQR)",
+          "boardId": "f837446d-53a9-4fb9-8daf-638beec8312a",
+          "candidateIds": [
+            "a9a07e80-42f5-41df-874c-49073d4970ee",
+            "28607492-550f-49ca-b867-94fe5cf647a7",
+            "8d854cd9-b9c9-4fc1-ba00-e22732437f69",
+            "40173b0f-5b0d-4700-baaa-b9cd7f31aa01"
+          ],
+          "artifactRefs": [
+            {
+              "assetId": "sha256:a9896b450005ec43207c7c841534a646fe83efc7cbd118072e2df19044afc215",
+              "uri": "uploads/a9896b450005ec43207c7c841534a646fe83efc7cbd118072e2df19044afc215.png",
+              "mimeType": "image/png",
+              "sha256": "a9896b450005ec43207c7c841534a646fe83efc7cbd118072e2df19044afc215",
+              "width": 512,
+              "height": 512,
+              "byteLength": 4162
+            }
+          ],
+          "scanSummary": {
+            "decoder": "jsQR",
+            "passed": 4,
+            "failed": 0,
+            "thresholdVersion": "mvp-l2-readiness-v1"
+          }
+        },
+        "createdAt": "2026-09-05T11:16:40.809Z"
+      },
+      "prepared": {
+        "image_ref": "uploads/a9896b450005ec43207c7c841534a646fe83efc7cbd118072e2df19044afc215.png",
+        "mime_type": "image/png",
+        "width_px": 512,
+        "height_px": 512,
+        "sha256": "a9896b450005ec43207c7c841534a646fe83efc7cbd118072e2df19044afc215",
+        "complexity": "medium_logo"
+      },
+      "generation": {
+        "candidateCount": 3,
+        "validatedCount": 3,
+        "saved": [
+          {
+            "size": "small",
+            "file": "fox-embedded_image_fit-small.png",
+            "sha256": "30dc7f99d477a700162ebcc586c92aab5fd6d0640372bd846810ef21cbda5985",
+            "candidate_id": "balanced-745280d4e78d9c6ad608",
+            "score_version": "image-fit-raster-image-layer-q10-continuous",
+            "checks": "8/8",
+            "recognition_score": 0.948692,
+            "blockers": [
+              "preview_export_parity_not_proven",
+              "preview_not_paid",
+              "short_link_not_committed"
+            ]
+          },
+          {
+            "size": "medium",
+            "file": "fox-embedded_image_fit-medium.png",
+            "sha256": "9b07bd09aa3f61762f3ad568551407b55b8b4aa938727b8fb6e045090c695032",
+            "candidate_id": "balanced-324d12cebae7fcce8b3a",
+            "score_version": "image-fit-raster-image-layer-q10-continuous",
+            "checks": "8/8",
+            "recognition_score": 0.967123,
+            "blockers": [
+              "preview_export_parity_not_proven",
+              "preview_not_paid",
+              "short_link_not_committed"
+            ]
+          },
+          {
+            "size": "large",
+            "file": "fox-embedded_image_fit-large.png",
+            "sha256": "d3b92cdcc9cc820e3b702c55e792ae41c6d039bd2b0c8c1f64bd86bb4e925f93",
+            "candidate_id": "balanced-44ad164e5e27962b041a",
+            "score_version": "image-fit-raster-image-layer-q10-continuous",
+            "checks": "8/8",
+            "recognition_score": 0.977235,
+            "blockers": [
+              "preview_export_parity_not_proven",
+              "preview_not_paid",
+              "short_link_not_committed"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "kind": "wolf",
+      "style": "clean_logo_fit",
+      "sourceSha256": "6dfbd06f6ea922e9658e1f0dfcb00c8a7551765a51683bfd86ce2d3f1f4d320a",
+      "upload": {
+        "success": true,
+        "target_image": {
+          "image_ref": "uploads/6dfbd06f6ea922e9658e1f0dfcb00c8a7551765a51683bfd86ce2d3f1f4d320a.png",
+          "mime_type": "image/png",
+          "width_px": 180,
+          "height_px": 132,
+          "sha256": "6dfbd06f6ea922e9658e1f0dfcb00c8a7551765a51683bfd86ce2d3f1f4d320a",
+          "complexity": "medium_logo"
+        },
+        "source_asset": {
+          "assetId": "sha256:6dfbd06f6ea922e9658e1f0dfcb00c8a7551765a51683bfd86ce2d3f1f4d320a",
+          "uri": "uploads/6dfbd06f6ea922e9658e1f0dfcb00c8a7551765a51683bfd86ce2d3f1f4d320a.png",
+          "mimeType": "image/png",
+          "sha256": "6dfbd06f6ea922e9658e1f0dfcb00c8a7551765a51683bfd86ce2d3f1f4d320a",
+          "width": 180,
+          "height": 132,
+          "byteLength": 1656
+        }
+      },
+      "readiness": {
+        "requestId": "style-wolf-1788607069416",
+        "decision": "prepared",
+        "sourceAsset": {
+          "assetId": "sha256:6dfbd06f6ea922e9658e1f0dfcb00c8a7551765a51683bfd86ce2d3f1f4d320a",
+          "uri": "uploads/6dfbd06f6ea922e9658e1f0dfcb00c8a7551765a51683bfd86ce2d3f1f4d320a.png",
+          "mimeType": "image/png",
+          "sha256": "6dfbd06f6ea922e9658e1f0dfcb00c8a7551765a51683bfd86ce2d3f1f4d320a",
+          "width": 180,
+          "height": 132,
+          "byteLength": 1656
+        },
+        "preparedAsset": {
+          "assetId": "sha256:db1ae9e3d708f8f2d8d8fa0487a347384a8524a2714d5d4e4541040ee927d712",
+          "uri": "uploads/db1ae9e3d708f8f2d8d8fa0487a347384a8524a2714d5d4e4541040ee927d712.png",
+          "mimeType": "image/png",
+          "sha256": "db1ae9e3d708f8f2d8d8fa0487a347384a8524a2714d5d4e4541040ee927d712",
+          "width": 512,
+          "height": 512,
+          "byteLength": 3864
+        },
+        "issues": [
+          {
+            "code": "LOW_RESOLUTION",
+            "severity": "warning",
+            "message": "Image is below the preferred Level 2 readiness size and will be normalized before generation proof."
+          }
+        ],
+        "cleanupActions": [
+          {
+            "action": "pad",
+            "applied": true,
+            "reason": "Normalize uploaded image to a centered square PNG for Level 2 generation proof.",
+            "parameters": {
+              "width": 512,
+              "height": 512
+            }
+          },
+          {
+            "action": "crop",
+            "applied": true,
+            "reason": "Crop to detected foreground and increase subject occupancy for stronger Image-Fit generation proof.",
+            "parameters": {
+              "cropX": 26,
+              "cropY": 1,
+              "cropW": 129,
+              "cropH": 124,
+              "targetOccupancy": 0.7
+            }
+          },
+          {
+            "action": "center_subject",
+            "applied": true,
+            "reason": "Center detected foreground within prepared asset.",
+            "parameters": {
+              "offsetX": 77,
+              "offsetY": 83,
+              "drawW": 358,
+              "drawH": 345
+            }
+          }
+        ],
+        "dominantColors": [
+          "#fafaf7",
+          "#6b7280",
+          "#e2e8f0",
+          "#566173",
+          "#111827"
+        ],
+        "subjectRegion": {
+          "x": 0.194,
+          "y": 0.076,
+          "width": 0.617,
+          "height": 0.803
+        },
+        "proof": {
+          "attempted": true,
+          "pass": true,
+          "appOrCorePath": "assessImageReadiness -> generateCandidates(deterministic_template) -> runValidation(jsQR)",
+          "boardId": "5faf46ba-eab4-47af-930a-f46fdcd7e20e",
+          "candidateIds": [
+            "d11c7d97-9293-44f8-9071-22ff44cc0dd6",
+            "dcb69892-8bb0-40f3-a8f7-24dba77a53fd",
+            "17bf5cef-5ac0-4013-9d20-a160509390cd",
+            "9d9bc768-fb89-4963-b87b-e9be2a4ed457"
+          ],
+          "artifactRefs": [
+            {
+              "assetId": "sha256:db1ae9e3d708f8f2d8d8fa0487a347384a8524a2714d5d4e4541040ee927d712",
+              "uri": "uploads/db1ae9e3d708f8f2d8d8fa0487a347384a8524a2714d5d4e4541040ee927d712.png",
+              "mimeType": "image/png",
+              "sha256": "db1ae9e3d708f8f2d8d8fa0487a347384a8524a2714d5d4e4541040ee927d712",
+              "width": 512,
+              "height": 512,
+              "byteLength": 3864
+            }
+          ],
+          "scanSummary": {
+            "decoder": "jsQR",
+            "passed": 4,
+            "failed": 0,
+            "thresholdVersion": "mvp-l2-readiness-v1"
+          }
+        },
+        "createdAt": "2026-09-05T11:17:50.963Z"
+      },
+      "prepared": {
+        "image_ref": "uploads/db1ae9e3d708f8f2d8d8fa0487a347384a8524a2714d5d4e4541040ee927d712.png",
+        "mime_type": "image/png",
+        "width_px": 512,
+        "height_px": 512,
+        "sha256": "db1ae9e3d708f8f2d8d8fa0487a347384a8524a2714d5d4e4541040ee927d712",
+        "complexity": "medium_logo"
+      },
+      "generation": {
+        "candidateCount": 3,
+        "validatedCount": 3,
+        "saved": [
+          {
+            "size": "small",
+            "file": "wolf-clean_logo_fit-small.png",
+            "sha256": "136813dd1dbdd5107bf69a51d6177a8e0ed7cd69e9c923edef19234fbb063a24",
+            "candidate_id": "balanced-07131ab84196a2f9342b",
+            "score_version": "clean-logo-fit-q11-preserve-subject",
+            "checks": "8/8",
+            "recognition_score": 0.948434,
+            "blockers": [
+              "preview_export_parity_not_proven",
+              "preview_not_paid",
+              "short_link_not_committed"
+            ]
+          },
+          {
+            "size": "medium",
+            "file": "wolf-clean_logo_fit-medium.png",
+            "sha256": "be3af36a1bcae95dfbfd1050650a89dcdd0ddd6672394e45e812d29f066a0452",
+            "candidate_id": "balanced-a10801ea0a06a47d2f09",
+            "score_version": "clean-logo-fit-q11-preserve-subject",
+            "checks": "8/8",
+            "recognition_score": 0.967024,
+            "blockers": [
+              "preview_export_parity_not_proven",
+              "preview_not_paid",
+              "short_link_not_committed"
+            ]
+          },
+          {
+            "size": "large",
+            "file": "wolf-clean_logo_fit-large.png",
+            "sha256": "0aab2fb3dfdf4cd2372fef2ab1aacf161398e5c9f04fe6995b38f84e514013f7",
+            "candidate_id": "balanced-3984cd00f5ef5a4d6783",
+            "score_version": "clean-logo-fit-q11-preserve-subject",
+            "checks": "8/8",
+            "recognition_score": 0.971765,
+            "blockers": [
+              "preview_export_parity_not_proven",
+              "preview_not_paid",
+              "short_link_not_committed"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "kind": "wolf",
+      "style": "embedded_image_fit",
+      "sourceSha256": "6dfbd06f6ea922e9658e1f0dfcb00c8a7551765a51683bfd86ce2d3f1f4d320a",
+      "upload": {
+        "success": true,
+        "target_image": {
+          "image_ref": "uploads/6dfbd06f6ea922e9658e1f0dfcb00c8a7551765a51683bfd86ce2d3f1f4d320a.png",
+          "mime_type": "image/png",
+          "width_px": 180,
+          "height_px": 132,
+          "sha256": "6dfbd06f6ea922e9658e1f0dfcb00c8a7551765a51683bfd86ce2d3f1f4d320a",
+          "complexity": "medium_logo"
+        },
+        "source_asset": {
+          "assetId": "sha256:6dfbd06f6ea922e9658e1f0dfcb00c8a7551765a51683bfd86ce2d3f1f4d320a",
+          "uri": "uploads/6dfbd06f6ea922e9658e1f0dfcb00c8a7551765a51683bfd86ce2d3f1f4d320a.png",
+          "mimeType": "image/png",
+          "sha256": "6dfbd06f6ea922e9658e1f0dfcb00c8a7551765a51683bfd86ce2d3f1f4d320a",
+          "width": 180,
+          "height": 132,
+          "byteLength": 1656
+        }
+      },
+      "readiness": {
+        "requestId": "style-wolf-1788607069416",
+        "decision": "prepared",
+        "sourceAsset": {
+          "assetId": "sha256:6dfbd06f6ea922e9658e1f0dfcb00c8a7551765a51683bfd86ce2d3f1f4d320a",
+          "uri": "uploads/6dfbd06f6ea922e9658e1f0dfcb00c8a7551765a51683bfd86ce2d3f1f4d320a.png",
+          "mimeType": "image/png",
+          "sha256": "6dfbd06f6ea922e9658e1f0dfcb00c8a7551765a51683bfd86ce2d3f1f4d320a",
+          "width": 180,
+          "height": 132,
+          "byteLength": 1656
+        },
+        "preparedAsset": {
+          "assetId": "sha256:db1ae9e3d708f8f2d8d8fa0487a347384a8524a2714d5d4e4541040ee927d712",
+          "uri": "uploads/db1ae9e3d708f8f2d8d8fa0487a347384a8524a2714d5d4e4541040ee927d712.png",
+          "mimeType": "image/png",
+          "sha256": "db1ae9e3d708f8f2d8d8fa0487a347384a8524a2714d5d4e4541040ee927d712",
+          "width": 512,
+          "height": 512,
+          "byteLength": 3864
+        },
+        "issues": [
+          {
+            "code": "LOW_RESOLUTION",
+            "severity": "warning",
+            "message": "Image is below the preferred Level 2 readiness size and will be normalized before generation proof."
+          }
+        ],
+        "cleanupActions": [
+          {
+            "action": "pad",
+            "applied": true,
+            "reason": "Normalize uploaded image to a centered square PNG for Level 2 generation proof.",
+            "parameters": {
+              "width": 512,
+              "height": 512
+            }
+          },
+          {
+            "action": "crop",
+            "applied": true,
+            "reason": "Crop to detected foreground and increase subject occupancy for stronger Image-Fit generation proof.",
+            "parameters": {
+              "cropX": 26,
+              "cropY": 1,
+              "cropW": 129,
+              "cropH": 124,
+              "targetOccupancy": 0.7
+            }
+          },
+          {
+            "action": "center_subject",
+            "applied": true,
+            "reason": "Center detected foreground within prepared asset.",
+            "parameters": {
+              "offsetX": 77,
+              "offsetY": 83,
+              "drawW": 358,
+              "drawH": 345
+            }
+          }
+        ],
+        "dominantColors": [
+          "#fafaf7",
+          "#6b7280",
+          "#e2e8f0",
+          "#566173",
+          "#111827"
+        ],
+        "subjectRegion": {
+          "x": 0.194,
+          "y": 0.076,
+          "width": 0.617,
+          "height": 0.803
+        },
+        "proof": {
+          "attempted": true,
+          "pass": true,
+          "appOrCorePath": "assessImageReadiness -> generateCandidates(deterministic_template) -> runValidation(jsQR)",
+          "boardId": "5faf46ba-eab4-47af-930a-f46fdcd7e20e",
+          "candidateIds": [
+            "d11c7d97-9293-44f8-9071-22ff44cc0dd6",
+            "dcb69892-8bb0-40f3-a8f7-24dba77a53fd",
+            "17bf5cef-5ac0-4013-9d20-a160509390cd",
+            "9d9bc768-fb89-4963-b87b-e9be2a4ed457"
+          ],
+          "artifactRefs": [
+            {
+              "assetId": "sha256:db1ae9e3d708f8f2d8d8fa0487a347384a8524a2714d5d4e4541040ee927d712",
+              "uri": "uploads/db1ae9e3d708f8f2d8d8fa0487a347384a8524a2714d5d4e4541040ee927d712.png",
+              "mimeType": "image/png",
+              "sha256": "db1ae9e3d708f8f2d8d8fa0487a347384a8524a2714d5d4e4541040ee927d712",
+              "width": 512,
+              "height": 512,
+              "byteLength": 3864
+            }
+          ],
+          "scanSummary": {
+            "decoder": "jsQR",
+            "passed": 4,
+            "failed": 0,
+            "thresholdVersion": "mvp-l2-readiness-v1"
+          }
+        },
+        "createdAt": "2026-09-05T11:17:50.963Z"
+      },
+      "prepared": {
+        "image_ref": "uploads/db1ae9e3d708f8f2d8d8fa0487a347384a8524a2714d5d4e4541040ee927d712.png",
+        "mime_type": "image/png",
+        "width_px": 512,
+        "height_px": 512,
+        "sha256": "db1ae9e3d708f8f2d8d8fa0487a347384a8524a2714d5d4e4541040ee927d712",
+        "complexity": "medium_logo"
+      },
+      "generation": {
+        "candidateCount": 3,
+        "validatedCount": 3,
+        "saved": [
+          {
+            "size": "small",
+            "file": "wolf-embedded_image_fit-small.png",
+            "sha256": "72a7bb0663619eae61fed63b1e529b8f06b3418a0886827f6e2ed8e1d44c2916",
+            "candidate_id": "balanced-dd411712101d862152fe",
+            "score_version": "image-fit-raster-image-layer-q10-continuous",
+            "checks": "8/8",
+            "recognition_score": 0.948434,
+            "blockers": [
+              "preview_export_parity_not_proven",
+              "preview_not_paid",
+              "short_link_not_committed"
+            ]
+          },
+          {
+            "size": "medium",
+            "file": "wolf-embedded_image_fit-medium.png",
+            "sha256": "3c5f555544fe97445d3ae6c0d1c64fe45df56b4108f745ee578e4bf53592131a",
+            "candidate_id": "balanced-459c42ba9b64f93969e5",
+            "score_version": "image-fit-raster-image-layer-q10-continuous",
+            "checks": "8/8",
+            "recognition_score": 0.967024,
+            "blockers": [
+              "preview_export_parity_not_proven",
+              "preview_not_paid",
+              "short_link_not_committed"
+            ]
+          },
+          {
+            "size": "large",
+            "file": "wolf-embedded_image_fit-large.png",
+            "sha256": "32c5d49c6355ad53fdf69dccee82d4bb2feb70809a983bbdaccc5c40cfaa38db",
+            "candidate_id": "balanced-8f8a5eaa6007b5c4167c",
+            "score_version": "image-fit-raster-image-layer-q10-continuous",
+            "checks": "7/8",
+            "recognition_score": 0.965443,
+            "blockers": [
+              "preview_export_parity_not_proven",
+              "preview_not_paid",
+              "short_link_not_committed"
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -11,6 +11,7 @@ import type { Candidate, ScanValidationResult } from './types.js';
 import { runValidation } from './validation.js';
 
 export type ImageFitMode = 'readable' | 'balanced' | 'image_first';
+export type ImageEmbeddingStyle = 'clean_logo_fit' | 'embedded_image_fit';
 export type ImageFitLogoSize = 'small' | 'medium' | 'large';
 export type ImageFitEcc = 'Q' | 'H';
 export type ShortLinkState = 'reserved' | 'committed' | 'expired' | 'disabled';
@@ -29,6 +30,8 @@ export interface ImageFitQrRequestV1 {
   user_controls: {
     treatment: 'logo' | 'pixel_blend' | 'background_image' | 'cutout_perforated';
     strength: ImageFitMode; detail: 'simple' | 'detailed' | 'maximum';
+    /** Customer-facing design choice: crisp logo preservation vs visibly embedded QR/art blending. */
+    image_embedding_style?: ImageEmbeddingStyle;
     logo_size?: ImageFitLogoSize;
     link_mode: 'optimized_short_link' | 'original_url';
   };
@@ -138,7 +141,7 @@ export interface ImageFitOptimizerOptions {
   /** Evidence switch for exact Q3 first-pass versus Q7 ranked selection comparisons. */
   _selectionPolicy?: 'q3_first_pass' | 'q7_ranked';
   /** Evidence-gated deterministic foreground-island families. Public contracts remain unchanged. */
-  _visualPolicy?: 'q7_module_recolor' | 'q8_protected_island' | 'q8_negative_space_island' | 'q9_negative_space_showcase' | 'q10_raster_image_layer';
+  _visualPolicy?: 'q7_module_recolor' | 'q8_protected_island' | 'q8_negative_space_island' | 'q9_negative_space_showcase' | 'q10_raster_image_layer' | 'q11_clean_logo_fit';
 }
 
 const MODE_ORDER: readonly ImageFitMode[] = ['readable', 'balanced', 'image_first'];
@@ -161,11 +164,11 @@ export function optimizeImageFitQr(
   const validate = options.validationRunner ?? runValidation;
   const compositionPolicy = options._compositionPolicy ?? 'q3';
   const selectionPolicy = options._selectionPolicy ?? 'q7_ranked';
-  const visualPolicy = options._visualPolicy ?? (input.target_rgb ? 'q10_raster_image_layer' : 'q7_module_recolor');
+  const visualPolicy = options._visualPolicy ?? defaultVisualPolicy(input);
   const started = performance.now();
   const artifacts: Record<string, ImageFitArtifact> = {};
   const candidates: ImageFitCandidateV1[] = [];
-  const sizeCandidateFlow = (visualPolicy === 'q9_negative_space_showcase' || visualPolicy === 'q10_raster_image_layer') && Boolean(input.target_rgb);
+  const sizeCandidateFlow = (visualPolicy === 'q9_negative_space_showcase' || visualPolicy === 'q10_raster_image_layer' || visualPolicy === 'q11_clean_logo_fit') && Boolean(input.target_rgb);
   const candidateSpecs = sizeCandidateFlow
     ? LOGO_SIZE_ORDER.flatMap((logoSize) => LOGO_SIZE_ATTEMPTS[logoSize].map((logoSizeFraction) => ({ mode: 'balanced' as const, logoSize, logoSizeFraction })))
     : MODE_ORDER.slice(0, Math.min(input.request.constraints.max_candidates, MODE_ORDER.length))
@@ -183,7 +186,7 @@ export function optimizeImageFitQr(
     };
     let selected: Evaluated | undefined;
     const renderedSettings: Array<Omit<Evaluated, 'validation'>> = [];
-    const q8Island = visualPolicy === 'q8_protected_island' || visualPolicy === 'q8_negative_space_island' || visualPolicy === 'q9_negative_space_showcase' || visualPolicy === 'q10_raster_image_layer';
+    const q8Island = visualPolicy === 'q8_protected_island' || visualPolicy === 'q8_negative_space_island' || visualPolicy === 'q9_negative_space_showcase' || visualPolicy === 'q10_raster_image_layer' || visualPolicy === 'q11_clean_logo_fit';
     const settingsCandidates = settingsCandidatesForMode(input.request, mode, q8Island);
     for (let preference = 0; preference < settingsCandidates.length; preference++) {
       if (performance.now() - started > input.request.constraints.max_search_ms) break;
@@ -205,8 +208,8 @@ export function optimizeImageFitQr(
       const useLegacy = options._legacyNaiveRender === true;
       const preprocessed = preprocessTarget(input, matrix, mode, compositionPolicy);
       const rendered = q8Island && input.target_rgb
-        ? visualPolicy === 'q10_raster_image_layer'
-          ? renderRasterImageLayerPng(matrix, input.target_rgb, mode, input.request.target_image.complexity, logoSize, logoSizeFraction)
+        ? visualPolicy === 'q10_raster_image_layer' || visualPolicy === 'q11_clean_logo_fit'
+          ? renderRasterImageLayerPng(matrix, input.target_rgb, mode, input.request.target_image.complexity, logoSize, logoSizeFraction, visualPolicy === 'q11_clean_logo_fit')
           : renderProtectedVisualIslandSvg(matrix, input.target_rgb, mode, visualPolicy === 'q8_negative_space_island' || visualPolicy === 'q9_negative_space_showcase', visualPolicy, input.request.target_image.complexity, logoSize, logoSizeFraction)
         : renderImageFitSvg(matrix, preprocessed.mask, mode, { useLegacy, edgeScore: preprocessed.edgeScore, componentCount: preprocessed.componentCount });
       const artifact = makeArtifact(sizeCandidateFlow ? `${logoSize}-${Math.round(logoSizeFraction * 100)}-${mode}` : mode, rendered.data, rendered.format === 'png-dataurl' ? 'export_png' : 'export_svg');
@@ -279,13 +282,15 @@ export function optimizeImageFitQr(
         modified_modules: rendered.modifiedModules,
         modified_fraction: round(rendered.modifiedModules / (matrix.size * matrix.size), 6),
         luminance_policy_version: q8Island && input.target_rgb
-          ? visualPolicy === 'q10_raster_image_layer'
-            ? 'image-fit-raster-image-layer-q10-continuous'
-            : visualPolicy === 'q9_negative_space_showcase'
-              ? 'image-fit-negative-space-showcase-q9-target-aware-centering'
-              : visualPolicy === 'q8_negative_space_island'
-                ? 'image-fit-negative-space-island-q8-cycle2'
-                : 'image-fit-protected-rgb-island-q8-cycle1'
+          ? visualPolicy === 'q11_clean_logo_fit'
+            ? 'clean-logo-fit-q11-preserve-subject'
+            : visualPolicy === 'q10_raster_image_layer'
+              ? 'image-fit-raster-image-layer-q10-continuous'
+              : visualPolicy === 'q9_negative_space_showcase'
+                ? 'image-fit-negative-space-showcase-q9-target-aware-centering'
+                : visualPolicy === 'q8_negative_space_island'
+                  ? 'image-fit-negative-space-island-q8-cycle2'
+                  : 'image-fit-protected-rgb-island-q8-cycle1'
           : compositionPolicy === 'q3'
           ? 'image-fit-real-target-foreground-q3'
           : 'image-fit-composition-q2-morphology-v1',
@@ -301,13 +306,15 @@ export function optimizeImageFitQr(
       image_fit_evidence: {
         fit_label: fitLabel,
         score_version: q8Island && input.target_rgb
-          ? visualPolicy === 'q10_raster_image_layer'
-            ? 'image-fit-raster-image-layer-q10-continuous'
-            : visualPolicy === 'q9_negative_space_showcase'
-              ? 'image-fit-negative-space-showcase-q9-target-aware-centering'
-              : visualPolicy === 'q8_negative_space_island'
-                ? 'image-fit-negative-space-island-q8-cycle2'
-                : 'image-fit-protected-rgb-island-q8-cycle1'
+          ? visualPolicy === 'q11_clean_logo_fit'
+            ? 'clean-logo-fit-q11-preserve-subject'
+            : visualPolicy === 'q10_raster_image_layer'
+              ? 'image-fit-raster-image-layer-q10-continuous'
+              : visualPolicy === 'q9_negative_space_showcase'
+                ? 'image-fit-negative-space-showcase-q9-target-aware-centering'
+                : visualPolicy === 'q8_negative_space_island'
+                  ? 'image-fit-negative-space-island-q8-cycle2'
+                  : 'image-fit-protected-rgb-island-q8-cycle1'
           : compositionPolicy === 'q3'
           ? selectionPolicy === 'q7_ranked' ? 'image-fit-scan-first-appearance-q7' : 'image-fit-real-target-coverage-q3'
           : 'image-fit-composition-coverage-q2',
@@ -370,6 +377,13 @@ function compareEvaluated(
   const a = tuple(left), b = tuple(right);
   for (let index = 0; index < a.length; index++) if (a[index] !== b[index]) return a[index] - b[index];
   return 0;
+}
+
+function defaultVisualPolicy(input: ImageFitOptimizerInput): NonNullable<ImageFitOptimizerOptions['_visualPolicy']> {
+  if (!input.target_rgb) return 'q7_module_recolor';
+  return input.request.user_controls.image_embedding_style === 'embedded_image_fit'
+    ? 'q10_raster_image_layer'
+    : 'q11_clean_logo_fit';
 }
 
 function settingsCandidatesForMode(request: ImageFitQrRequestV1, mode: ImageFitMode, q8ProtectedIsland = false): QrSearchSettings[] {
@@ -998,6 +1012,7 @@ function renderRasterImageLayerPng(
   targetComplexity: ImageFitQrRequestV1['target_image']['complexity'] = 'medium_logo',
   logoSize: ImageFitLogoSize = 'medium',
   logoSizeFraction = LOGO_SIZE_FRACTION[logoSize],
+  cleanLogoFit = false,
 ): RenderedImageFit {
   const moduleSize = 8, margin = 4;
   const width = (matrix.size + margin * 2) * moduleSize;
@@ -1079,7 +1094,8 @@ function renderRasterImageLayerPng(
   }
 
   const inner = matrix.size * moduleSize;
-  const drawWidth = Math.round(inner * logoSizeFraction);
+  const effectiveLogoSizeFraction = cleanLogoFit ? Math.min(logoSizeFraction, logoSize === 'large' ? 0.54 : logoSizeFraction) : logoSizeFraction;
+  const drawWidth = Math.round(inner * effectiveLogoSizeFraction);
   const drawHeight = Math.max(1, Math.round(drawWidth * cropHeight / cropWidth));
   const centeredX = margin * moduleSize + (inner - drawWidth) / 2;
   const centeredY = margin * moduleSize + (inner - drawHeight) / 2;
@@ -1128,17 +1144,27 @@ function renderRasterImageLayerPng(
     if (!foreground && !internalNegativeSpace && !silhouetteSubstrate) continue;
     candidatePixels += 1;
     if (!canPaint(px, py)) continue;
+    if (cleanLogoFit && silhouetteSubstrate) {
+      // Clean Logo-Fit must not paint exterior/background-connected white caps or halos.
+      // Only true foreground plus enclosed internal negative-space details belong in the logo overlay.
+      continue;
+    }
     if (silhouetteSubstrate) {
       setPixelRgb(px, py, 255, 255, 255);
       continue;
     }
     const rgb = foreground ? sampleBilinear(sx, sy) : [255, 255, 255] as [number, number, number];
+    if (cleanLogoFit && !foreground && !internalNegativeSpace) {
+      continue;
+    }
     const [moduleX, moduleY] = moduleAtPixel(px, py);
     const activeModule = moduleX >= 0 && moduleY >= 0 && moduleX < matrix.size && moduleY < matrix.size && matrix.modules[moduleY][moduleX] === 1;
     if (activeModule) {
-      const texture = foreground
-        ? logoSize === 'large' ? 0.54 : 0.62
-        : logoSize === 'large' ? 0.18 : 0.24;
+      const texture = cleanLogoFit
+        ? logoSize === 'large' ? 0.78 : 0.86
+        : foreground
+          ? logoSize === 'large' ? 0.54 : 0.62
+          : logoSize === 'large' ? 0.18 : 0.24;
       setPixelRgb(
         px,
         py,
@@ -1434,6 +1460,10 @@ function validateInput(input: ImageFitOptimizerInput): void {
   }
   if (constraints.allowed_ecc.length === 0 || constraints.allowed_ecc.some((v) => v !== 'Q' && v !== 'H')) {
     throw new Error('allowed_ecc must contain Q or H');
+  }
+  const embeddingStyle = input.request.user_controls.image_embedding_style;
+  if (embeddingStyle !== undefined && embeddingStyle !== 'clean_logo_fit' && embeddingStyle !== 'embedded_image_fit') {
+    throw new Error('image_embedding_style must be clean_logo_fit or embedded_image_fit');
   }
   const logoSize = input.request.user_controls.logo_size ?? 'medium';
   if (logoSize !== 'small' && logoSize !== 'medium' && logoSize !== 'large') {

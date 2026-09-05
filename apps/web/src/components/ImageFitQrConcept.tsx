@@ -1,5 +1,5 @@
 import React from 'react'
-import { IMAGE_FIT_CONTRACT, type ImageFitDetail, type ImageFitLinkMode, type ImageFitStrength, type ImageFitTreatment } from '../imageFitContract'
+import { IMAGE_FIT_CONTRACT, type ImageEmbeddingStyle, type ImageFitDetail, type ImageFitLinkMode, type ImageFitStrength, type ImageFitTreatment } from '../imageFitContract'
 import { buildImageFitRequest, imageFitExportDecision, imageFitGenerationClient, type ImageFitAuthorizedFallbackV1, type ImageFitCandidateV1, type ImageFitRequestV1, type ImageReadinessReportV1 } from '../lib/imageFitGenerationClient'
 
 const labels: Record<string, string> = {
@@ -7,6 +7,7 @@ const labels: Record<string, string> = {
   readable: 'Mellow', balanced: 'Balanced', image_first: 'Punchy', experimental: 'Punchy', failed: 'Failed', simple: 'Simple', detailed: 'Detailed', maximum: 'Maximum',
   small: 'Small', medium: 'Medium', large: 'Large',
   optimized_short_link: 'Optimized short link', original_url: 'Original URL',
+  clean_logo_fit: 'Clean Logo', embedded_image_fit: 'Art Blend',
 }
 
 type RunState = 'idle' | 'loading' | 'success' | 'error'
@@ -111,6 +112,7 @@ export default function ImageFitQrConcept() {
   const strength = fixtureRequest.user_controls.strength as ImageFitStrength
   const detail = fixtureRequest.user_controls.detail as ImageFitDetail
   const [linkMode, setLinkMode] = React.useState<ImageFitLinkMode>(fixtureRequest.user_controls.link_mode)
+  const [imageEmbeddingStyle, setImageEmbeddingStyle] = React.useState<ImageEmbeddingStyle>('clean_logo_fit')
   const [destination, setDestination] = React.useState(fixtureRequest.destination.normalized_url)
   const [targetImage, setTargetImage] = React.useState<ImageFitRequestV1['target_image']>(fixtureRequest.target_image as ImageFitRequestV1['target_image'])
   const [runState, setRunState] = React.useState<RunState>('idle')
@@ -158,7 +160,7 @@ export default function ImageFitQrConcept() {
     abortRef.current = controller
     setRunState('loading')
     try {
-      const request = buildImageFitRequest({ destination, treatment, strength, detail, linkMode, targetImage })
+      const request = buildImageFitRequest({ destination, treatment, strength, detail, linkMode, imageEmbeddingStyle, targetImage })
       const response = await imageFitGenerationClient.generate(request, controller.signal)
       const qualifying = response.candidates.filter((candidate) => candidate.status === 'validated' && candidate.scan_evidence.verdict === 'pass' && candidate.protected_regions.violations.length === 0)
       if (qualifying.length === 0) {
@@ -214,6 +216,8 @@ export default function ImageFitQrConcept() {
         {uploadError && <div role="alert" className="rounded-xl border border-rose-300/30 bg-rose-400/10 px-3 py-2 text-xs text-rose-100"><strong>Upload failed.</strong> {uploadError}</div>}
         <label><span className="mb-1 block text-[10px] font-black uppercase tracking-[.16em] text-slate-400">Destination</span><input aria-label="Level 2 destination URL" value={destination} aria-invalid={!destinationValid} onChange={(event) => change(setDestination, event.target.value)} className="h-11 w-full rounded-xl border border-white/10 bg-slate-950 px-3 text-xs outline-none focus:ring-2 focus:ring-indigo-300" /></label>
         <p className="rounded-xl border border-indigo-300/20 bg-indigo-500/10 px-3 py-2 text-[10px] text-indigo-100">Core tries up to three values per size band: Small 40→38→36 within 30–40%, Medium 50→48→46 within 41–50%, and Large 60→58→56 within 51–60%. Only validated target-matching outputs appear in this preview toggle.</p>
+        <ChoiceRow label="Design style" value={imageEmbeddingStyle} values={IMAGE_FIT_CONTRACT.controls.imageEmbeddingStyles} onChange={(value) => change(setImageEmbeddingStyle, value)} />
+        <p className="rounded-xl border border-indigo-300/20 bg-indigo-500/10 px-3 py-2 text-[10px] text-indigo-100">{imageEmbeddingStyle === 'clean_logo_fit' ? 'Clean Logo preserves a crisp logo or mascot over the scan-safe QR. It is the current optimized default.' : 'Art Blend visibly interweaves the image with the QR matrix. It is the more experimental Level 2 look.'}</p>
         <ChoiceRow label="Link mode" value={linkMode} values={IMAGE_FIT_CONTRACT.controls.linkModes} onChange={(value) => change(setLinkMode, value)} />
         <p className={`rounded-xl border px-3 py-2 text-[10px] ${linkMode === 'optimized_short_link' ? 'border-indigo-300/20 bg-indigo-500/10 text-indigo-100' : 'border-amber-300/30 bg-amber-300/10 text-amber-100'}`}>{linkMode === 'optimized_short_link' ? 'Optimized short links can help the QR matrix fit the image more cleanly. Generation may reserve/evaluate slugs; this page cannot commit one.' : 'Original URLs can increase QR density and reduce image clarity.'}</p>
         <button type="button" onClick={generate} disabled={!canGenerate} className="min-h-11 rounded-xl bg-indigo-500 px-4 text-sm font-black text-white disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-400">{runState === 'loading' ? 'Generating candidates…' : 'Generate candidates'}</button>
