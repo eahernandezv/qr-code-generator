@@ -1049,9 +1049,32 @@ function renderRasterImageLayerPng(
     return { data: dataUrl, format: 'png-dataurl', width, modifiedModules: 0, recognitionScore: 0, protectedConflictScore: 0, protectedViolations: [] };
   }
   const cropWidth = maxX - minX + 1, cropHeight = maxY - minY + 1;
+  const rowExtents = Array.from({ length: target.height }, () => ({ min: target.width, max: -1 }));
+  const backgroundConnected = new Uint8Array(cropWidth * cropHeight);
+  const isForegroundAt = (x: number, y: number): boolean => distanceFromBackground(pixel(x, y)) > foregroundThreshold;
+  for (let y = minY; y <= maxY; y++) for (let x = minX; x <= maxX; x++) {
+    if (!isForegroundAt(x, y)) continue;
+    rowExtents[y].min = Math.min(rowExtents[y].min, x);
+    rowExtents[y].max = Math.max(rowExtents[y].max, x);
+  }
+  const markOutside = (x: number, y: number, stack: number[]): void => {
+    if (x < minX || x > maxX || y < minY || y > maxY || isForegroundAt(x, y)) return;
+    const index = (y - minY) * cropWidth + (x - minX);
+    if (backgroundConnected[index]) return;
+    backgroundConnected[index] = 1;
+    stack.push(index);
+  };
+  const stack: number[] = [];
+  for (let x = minX; x <= maxX; x++) { markOutside(x, minY, stack); markOutside(x, maxY, stack); }
+  for (let y = minY + 1; y < maxY; y++) { markOutside(minX, y, stack); markOutside(maxX, y, stack); }
+  while (stack.length > 0) {
+    const index = stack.pop() ?? 0;
+    const x = minX + (index % cropWidth), y = minY + Math.floor(index / cropWidth);
+    markOutside(x + 1, y, stack); markOutside(x - 1, y, stack); markOutside(x, y + 1, stack); markOutside(x, y - 1, stack);
+  }
   let foregroundCount = 0, foregroundSumX = 0, foregroundSumY = 0;
   for (let y = minY; y <= maxY; y++) for (let x = minX; x <= maxX; x++) {
-    if (distanceFromBackground(pixel(x, y)) <= foregroundThreshold) continue;
+    if (!isForegroundAt(x, y)) continue;
     foregroundCount += 1; foregroundSumX += x - minX + 0.5; foregroundSumY += y - minY + 0.5;
   }
 
@@ -1081,22 +1104,6 @@ function renderRasterImageLayerPng(
     modified.add(`${moduleX},${moduleY}`);
     return true;
   };
-  const roundedContains = (localX: number, localY: number, rectW: number, rectH: number, radius: number): boolean => {
-    const dx = Math.max(radius - localX, 0, localX - (rectW - radius));
-    const dy = Math.max(radius - localY, 0, localY - (rectH - radius));
-    return dx * dx + dy * dy <= radius * radius;
-  };
-  const substratePad = Math.max(8, Math.round(moduleSize * 1.25));
-  const substrateX = Math.round(offsetX - substratePad), substrateY = Math.round(offsetY - substratePad);
-  const substrateW = Math.round(drawWidth + substratePad * 2), substrateH = Math.round(drawHeight + substratePad * 2);
-  const radius = Math.round(Math.min(substrateW, substrateH) * 0.16);
-  for (let y = 0; y < substrateH; y++) for (let x = 0; x < substrateW; x++) {
-    if (!roundedContains(x, y, substrateW - 1, substrateH - 1, radius)) continue;
-    const px = substrateX + x, py = substrateY + y;
-    candidatePixels += 1;
-    if (canPaint(px, py)) setPixelRgb(px, py, 255, 255, 255);
-  }
-
   const sampleBilinear = (sx: number, sy: number): [number, number, number] => {
     const x0 = Math.max(0, Math.min(target.width - 1, Math.floor(sx))), y0 = Math.max(0, Math.min(target.height - 1, Math.floor(sy)));
     const x1 = Math.max(0, Math.min(target.width - 1, x0 + 1)), y1 = Math.max(0, Math.min(target.height - 1, y0 + 1));
@@ -1108,9 +1115,37 @@ function renderRasterImageLayerPng(
     const px = Math.round(offsetX + dx), py = Math.round(offsetY + dy);
     const sx = minX + (dx + 0.5) * cropWidth / drawWidth;
     const sy = minY + (dy + 0.5) * cropHeight / drawHeight;
+    const sourceX = Math.max(minX, Math.min(maxX, Math.floor(sx)));
+    const sourceY = Math.max(minY, Math.min(maxY, Math.floor(sy)));
+    const sourceIndex = (sourceY - minY) * cropWidth + (sourceX - minX);
+    const foreground = isForegroundAt(sourceX, sourceY);
+    const extent = rowExtents[sourceY];
+    const exteriorBackground = backgroundConnected[sourceIndex] === 1;
+    const internalNegativeSpace = !foreground && !exteriorBackground
+      && extent.max >= extent.min && sourceX > extent.min && sourceX < extent.max;
+    const silhouetteSubstrate = !foreground && !internalNegativeSpace
+      && extent.max >= extent.min && sourceX >= extent.min - 2 && sourceX <= extent.max + 2;
+    if (!foreground && !internalNegativeSpace && !silhouetteSubstrate) continue;
     candidatePixels += 1;
     if (!canPaint(px, py)) continue;
-    const rgb = sampleBilinear(sx, sy);
+    if (silhouetteSubstrate) {
+      setPixelRgb(px, py, 255, 255, 255);
+      continue;
+    }
+    const rgb = foreground ? sampleBilinear(sx, sy) : [255, 255, 255] as [number, number, number];
+    const [moduleX, moduleY] = moduleAtPixel(px, py);
+    const activeModule = moduleX >= 0 && moduleY >= 0 && moduleX < matrix.size && moduleY < matrix.size && matrix.modules[moduleY][moduleX] === 1;
+    if (activeModule) {
+      const texture = foreground ? 0.54 : 0.18;
+      setPixelRgb(
+        px,
+        py,
+        rgb[0] * texture + 17 * (1 - texture),
+        rgb[1] * texture + 24 * (1 - texture),
+        rgb[2] * texture + 39 * (1 - texture),
+      );
+      continue;
+    }
     setPixelRgb(px, py, rgb[0], rgb[1], rgb[2]);
   }
 

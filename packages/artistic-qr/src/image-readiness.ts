@@ -43,13 +43,14 @@ export async function assessImageReadiness(
   const source = await options.store.get(request.sourceAsset);
   verifyAssetBytes(source.ref, source.bytes);
 
+  const sourceSubjectRegion = source.ref.mimeType === 'image/png' ? detectPngSubjectRegion(source.bytes) : undefined;
   const issues = analyzeSource(source.ref);
   const cleanupActions: CleanupAction[] = [];
   let proofAsset = source.ref;
   let decision: ReadinessDecision = issues.some((issue) => issue.severity === 'blocking') ? 'needs_user_replacement' : 'ready';
 
   if (decision !== 'needs_user_replacement' && issues.some((issue) => issue.code === 'LOW_RESOLUTION' || issue.code === 'SUBJECT_OFF_CENTER')) {
-    const prepared = await preparePngAsset(source, options.store);
+    const prepared = await preparePngAsset(source, options.store, sourceSubjectRegion, request.constraints?.maxPreparedDimension);
     if (prepared) {
       proofAsset = prepared.ref;
       decision = 'prepared';
@@ -77,7 +78,7 @@ export async function assessImageReadiness(
     issues,
     cleanupActions,
     dominantColors: source.ref.mimeType === 'image/png' ? dominantPngColors(source.bytes) : [],
-    subjectRegion: { x: 0, y: 0, width: 1, height: 1 },
+    subjectRegion: sourceSubjectRegion?.region ?? { x: 0, y: 0, width: 1, height: 1 },
     proof,
     createdAt: (options.now ?? (() => new Date()))().toISOString(),
   };
@@ -137,10 +138,15 @@ function analyzeSource(ref: AssetRef): ReadinessIssue[] {
   return issues;
 }
 
-async function preparePngAsset(source: StoredImageAsset, store: ImageAssetStore): Promise<{ ref: AssetRef; actions: CleanupAction[] } | null> {
+async function preparePngAsset(
+  source: StoredImageAsset,
+  store: ImageAssetStore,
+  subject: PngSubjectRegion | undefined,
+  maxPreparedDimension?: number,
+): Promise<{ ref: AssetRef; actions: CleanupAction[] } | null> {
   if (source.ref.mimeType !== 'image/png') return null;
   const png = PNG.sync.read(source.bytes);
-  const size = Math.max(READINESS_THRESHOLD_PX, png.width, png.height);
+  const size = Math.min(maxPreparedDimension ?? READINESS_THRESHOLD_PX, Math.max(READINESS_THRESHOLD_PX, png.width, png.height));
   const canvas = new PNG({ width: size, height: size, colorType: 6 });
   for (let idx = 0; idx < canvas.data.length; idx += 4) {
     canvas.data[idx] = 255;
@@ -148,18 +154,103 @@ async function preparePngAsset(source: StoredImageAsset, store: ImageAssetStore)
     canvas.data[idx + 2] = 255;
     canvas.data[idx + 3] = 255;
   }
-  const offsetX = Math.floor((size - png.width) / 2);
-  const offsetY = Math.floor((size - png.height) / 2);
-  PNG.bitblt(png, canvas, 0, 0, png.width, png.height, offsetX, offsetY);
+
+  const bounds = subject?.bounds ?? { minX: 0, minY: 0, maxX: png.width - 1, maxY: png.height - 1 };
+  const subjectWidth = bounds.maxX - bounds.minX + 1;
+  const subjectHeight = bounds.maxY - bounds.minY + 1;
+  const pad = Math.max(4, Math.round(Math.max(subjectWidth, subjectHeight) * 0.08));
+  const cropX = Math.max(0, bounds.minX - pad);
+  const cropY = Math.max(0, bounds.minY - pad);
+  const cropW = Math.min(png.width - cropX, subjectWidth + pad * 2);
+  const cropH = Math.min(png.height - cropY, subjectHeight + pad * 2);
+  const targetOccupancy = 0.70;
+  const drawScale = Math.min((size * targetOccupancy) / cropW, (size * targetOccupancy) / cropH);
+  const drawW = Math.max(1, Math.round(cropW * drawScale));
+  const drawH = Math.max(1, Math.round(cropH * drawScale));
+  const offsetX = Math.floor((size - drawW) / 2);
+  const offsetY = Math.floor((size - drawH) / 2);
+  blitScaled(png, canvas, cropX, cropY, cropW, cropH, offsetX, offsetY, drawW, drawH);
   const bytes = PNG.sync.write(canvas);
   const stored = await store.putPreparedPng(bytes, { width: size, height: size });
   return {
     ref: stored.ref,
     actions: [
       { action: png.width === png.height ? 'resize' : 'pad', applied: true, reason: 'Normalize uploaded image to a centered square PNG for Level 2 generation proof.', parameters: { width: size, height: size } },
-      { action: 'center_subject', applied: true, reason: 'Center source pixels within prepared asset.', parameters: { offsetX, offsetY } },
+      { action: 'crop', applied: true, reason: 'Crop to detected foreground and increase subject occupancy for stronger Image-Fit generation proof.', parameters: { cropX, cropY, cropW, cropH, targetOccupancy } },
+      { action: 'center_subject', applied: true, reason: 'Center detected foreground within prepared asset.', parameters: { offsetX, offsetY, drawW, drawH } },
     ],
   };
+}
+
+interface PngSubjectRegion {
+  region: { x: number; y: number; width: number; height: number };
+  bounds: { minX: number; minY: number; maxX: number; maxY: number };
+}
+
+function detectPngSubjectRegion(bytes: Buffer): PngSubjectRegion | undefined {
+  try {
+    const png = PNG.sync.read(bytes);
+    const pixel = (x: number, y: number): [number, number, number, number] => {
+      const offset = (y * png.width + x) * 4;
+      return [png.data[offset], png.data[offset + 1], png.data[offset + 2], png.data[offset + 3]];
+    };
+    const border: Array<[number, number, number]> = [];
+    for (let x = 0; x < png.width; x++) {
+      const top = pixel(x, 0), bottom = pixel(x, png.height - 1);
+      if (top[3] >= 128) border.push([top[0], top[1], top[2]]);
+      if (bottom[3] >= 128) border.push([bottom[0], bottom[1], bottom[2]]);
+    }
+    for (let y = 1; y < png.height - 1; y++) {
+      const left = pixel(0, y), right = pixel(png.width - 1, y);
+      if (left[3] >= 128) border.push([left[0], left[1], left[2]]);
+      if (right[3] >= 128) border.push([right[0], right[1], right[2]]);
+    }
+    const median = (channel: number): number => {
+      const values = border.map((rgb) => rgb[channel]).sort((a, b) => a - b);
+      return values[Math.floor(values.length / 2)] ?? 255;
+    };
+    const background: [number, number, number] = [median(0), median(1), median(2)];
+    const distances = border.map((rgb) => Math.hypot(rgb[0] - background[0], rgb[1] - background[1], rgb[2] - background[2])).sort((a, b) => a - b);
+    const threshold = Math.max(28, (distances[Math.floor(distances.length * 0.75)] ?? 0) * 2.5);
+    let minX = png.width, minY = png.height, maxX = -1, maxY = -1;
+    for (let y = 0; y < png.height; y++) for (let x = 0; x < png.width; x++) {
+      const [r, g, b, a] = pixel(x, y);
+      if (a < 128) continue;
+      if (Math.hypot(r - background[0], g - background[1], b - background[2]) <= threshold) continue;
+      minX = Math.min(minX, x); minY = Math.min(minY, y); maxX = Math.max(maxX, x); maxY = Math.max(maxY, y);
+    }
+    if (maxX < minX || maxY < minY) return undefined;
+    return {
+      bounds: { minX, minY, maxX, maxY },
+      region: {
+        x: roundRegion(minX / png.width),
+        y: roundRegion(minY / png.height),
+        width: roundRegion((maxX - minX + 1) / png.width),
+        height: roundRegion((maxY - minY + 1) / png.height),
+      },
+    };
+  } catch {
+    return undefined;
+  }
+}
+
+function blitScaled(source: PNG, target: PNG, sx: number, sy: number, sw: number, sh: number, dx: number, dy: number, dw: number, dh: number): void {
+  for (let y = 0; y < dh; y++) for (let x = 0; x < dw; x++) {
+    const sourceX = sx + Math.min(sw - 1, Math.floor((x + 0.5) * sw / dw));
+    const sourceY = sy + Math.min(sh - 1, Math.floor((y + 0.5) * sh / dh));
+    const sourceOffset = (sourceY * source.width + sourceX) * 4;
+    const targetX = dx + x, targetY = dy + y;
+    if (targetX < 0 || targetY < 0 || targetX >= target.width || targetY >= target.height) continue;
+    const targetOffset = (targetY * target.width + targetX) * 4;
+    target.data[targetOffset] = source.data[sourceOffset];
+    target.data[targetOffset + 1] = source.data[sourceOffset + 1];
+    target.data[targetOffset + 2] = source.data[sourceOffset + 2];
+    target.data[targetOffset + 3] = source.data[sourceOffset + 3];
+  }
+}
+
+function roundRegion(value: number): number {
+  return Math.max(0, Math.min(1, Math.round(value * 1000) / 1000));
 }
 
 async function proveThroughGeneration(
