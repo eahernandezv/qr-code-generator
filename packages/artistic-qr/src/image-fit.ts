@@ -1147,9 +1147,13 @@ function renderRasterImageLayerPng(
     const [moduleX, moduleY] = moduleAtPixel(px, py);
     const activeModule = moduleX >= 0 && moduleY >= 0 && moduleX < matrix.size && moduleY < matrix.size && matrix.modules[moduleY][moduleX] === 1;
     if (activeModule) {
+      // Q13 Logo-Fit polish: let foreground colours carry more of the uploaded
+      // mark on active QR modules while still blending against the dark matrix.
+      // Internal negative-space stays conservative so white details do not read
+      // as a pasted substrate.
       const texture = foreground
-        ? logoSize === 'large' ? 0.54 : 0.62
-        : logoSize === 'large' ? 0.18 : 0.24;
+        ? logoSize === 'large' ? 0.62 : 0.72
+        : logoSize === 'large' ? 0.14 : 0.18;
       setPixelRgb(
         px,
         py,
