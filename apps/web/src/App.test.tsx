@@ -94,6 +94,44 @@ describe('App integration', () => {
     expect(screen.getByText('Ready for real generation')).toBeInTheDocument()
   })
 
+  it('uses a readiness-prepared uploaded asset as the authoritative generation target', async () => {
+    const user = userEvent.setup()
+    window.history.replaceState({}, '', '/concepts/level2-image-fit-qr')
+    vi.stubGlobal('crypto', webcrypto)
+    const response = structuredClone((await import('../../../packages/contracts/fixtures/image-fit-qr/valid-balanced-response.v1.json')).default)
+    const sourceAsset = { assetId: 'sha256:source-upload', uri: 'uploads/' + '3'.repeat(64) + '.png', mimeType: 'image/png' as const, sha256: '3'.repeat(64), width: 80, height: 48, byteLength: 256 }
+    const preparedAsset = { assetId: 'sha256:prepared-upload', uri: 'prepared/' + '4'.repeat(64) + '.png', mimeType: 'image/png' as const, sha256: '4'.repeat(64), width: 1024, height: 1024, byteLength: 1024 }
+    const uploadTarget = { image_ref: sourceAsset.uri, mime_type: 'image/png' as const, width_px: 80, height_px: 48, sha256: sourceAsset.sha256, complexity: 'simple_mark' as const }
+    const fetchMock = vi.fn().mockImplementation(async (url, init) => {
+      if (String(url).includes('/image-fit/uploads')) return { ok: true, json: async () => ({ success: true, target_image: uploadTarget, source_asset: sourceAsset }) }
+      if (String(url).includes('/image-readiness/assess')) return { ok: true, json: async () => ({ success: true, report: {
+        requestId: 'app-readiness-upload-1', decision: 'prepared', sourceAsset, preparedAsset,
+        issues: [{ code: 'LOW_RESOLUTION', severity: 'warning', message: 'Prepared to launch dimensions.' }],
+        cleanupActions: [{ action: 'pad', applied: true }, { action: 'crop', applied: true }, { action: 'center_subject', applied: true }],
+        proof: { attempted: true, pass: true, appOrCorePath: '@qr/artistic-qr.generateCandidates', candidateIds: ['small', 'medium', 'large'], scanSummary: { passed: 3, failed: 0, thresholdVersion: 'mvp-l2-readiness-v1' } },
+      } }) }
+      const request = JSON.parse(String(init?.body))
+      expect(request.target_image).toMatchObject({ image_ref: preparedAsset.uri, sha256: preparedAsset.sha256, width_px: 1024, height_px: 1024 })
+      return { ok: true, json: async () => ({ ...response, request: { ...response.request, request_id: request.request_id, target_image: request.target_image } }) }
+    })
+    vi.stubGlobal('fetch', fetchMock)
+    render(<App />)
+
+    const input = screen.getByLabelText('Choose target image')
+    await user.upload(input, new File(['uploaded-image'], 'fox.png', { type: 'image/png' }))
+
+    const readinessProof = await screen.findByTestId('image-readiness-proof')
+    expect(readinessProof).toHaveAttribute('data-readiness-decision', 'prepared')
+    expect(readinessProof).toHaveAttribute('data-readiness-proof-pass', 'true')
+    expect(readinessProof).toHaveTextContent(/Core proof passed.*mvp-l2-readiness-v1/)
+    expect(readinessProof).toHaveTextContent(/Cleanup: pad, crop, center_subject/)
+    expect(screen.getByText(preparedAsset.uri)).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Generate candidates' }))
+    expect(await screen.findByTestId('selected-image-fit-candidate')).toBeInTheDocument()
+    expect(fetchMock).toHaveBeenCalledTimes(3)
+  })
+
   it('fails closed when Creator generation is unavailable and never shows fixture evidence', async () => {
     const user = userEvent.setup()
     window.history.replaceState({}, '', '/concepts/level2-image-fit-qr')

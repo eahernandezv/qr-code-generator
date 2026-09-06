@@ -53,6 +53,7 @@ beforeEach(() => {
     }
     globalCtx.HTMLCanvasElement.prototype.toDataURL = vi.fn(() => 'data:image/png;base64,mocked')
   }
+  globalCtx.createImageBitmap = vi.fn(async () => ({ width: 96, height: 64, close: vi.fn() }))
   // Ensure Image triggers onload immediately for data URLs in tests
   if (globalCtx.Image) {
     const OriginalImage = globalCtx.Image
