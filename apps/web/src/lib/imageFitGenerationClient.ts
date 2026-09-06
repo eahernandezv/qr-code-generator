@@ -145,7 +145,7 @@ export function buildImageFitRequest(controls: ImageFitRequestControls, requestI
     },
     target_image: { ...controls.targetImage },
     user_controls: { treatment: controls.treatment, strength: controls.strength, detail: controls.detail, ...(controls.logoSize ? { logo_size: controls.logoSize } : {}), link_mode: controls.linkMode },
-    constraints: { max_candidates: 12, max_search_ms: 45_000, allowed_ecc: ['Q', 'H'], allowed_masks: [0, 1, 2, 3, 4, 5, 6, 7], allowed_versions: [8, 9, 10, 11, 12] },
+    constraints: { max_candidates: 12, max_search_ms: 45_000, allowed_ecc: ['Q', 'H'], allowed_masks: [0, 1, 2, 3, 4, 5, 6, 7], allowed_versions: [5, 6, 7, 8, 9, 10, 11, 12] },
     entitlement_context: { mode: 'preview', export_entitled: false },
   }
 }
