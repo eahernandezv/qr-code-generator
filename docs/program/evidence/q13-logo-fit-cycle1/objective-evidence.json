@@ -1,0 +1,98 @@
+{
+  "schema_version": "q13-logo-fit-cycle1.v1",
+  "generated_at": "2026-09-06T16:30:34.167Z",
+  "payload": "https://placeholder-online.com/r/bD7xQ2",
+  "target": {
+    "id": "medium-logo",
+    "path": "docs/program/handoffs/assets/q8-reference-logo.jpg",
+    "complexity": "medium_logo",
+    "sha256": "cb3b4fecbd0547cd2dfb62daeecfc0116e4dd49fb653ac602025a77b00badaec",
+    "width": 192,
+    "height": 144
+  },
+  "baseline_q11": [
+    {
+      "label": "small-40",
+      "candidate_id": "balanced-5c03819ea48da690de14",
+      "media_type": "image/png",
+      "sha256": "970d44fbafe2a5f7c7639b658b12a3c5e194863789a26b06bf33cfde8d340c4f",
+      "scan_verdict": "pass",
+      "checks_passed": 8,
+      "checks_total": 8,
+      "protected_violations": [],
+      "recognition_score": 0.808731,
+      "score_version": "image-fit-raster-image-layer-q10-continuous"
+    },
+    {
+      "label": "medium-50",
+      "candidate_id": "balanced-483f8b17f43bd10f2c52",
+      "media_type": "image/png",
+      "sha256": "d8c9c161b856a5f0fcdfc4bb0eb3f3c0e2b01ce89b79517f6a4fb696c727087e",
+      "scan_verdict": "pass",
+      "checks_passed": 8,
+      "checks_total": 8,
+      "protected_violations": [],
+      "recognition_score": 0.859408,
+      "score_version": "image-fit-raster-image-layer-q10-continuous"
+    },
+    {
+      "label": "large-60",
+      "candidate_id": "balanced-996fef300bbde9fe75c2",
+      "media_type": "image/png",
+      "sha256": "7c1dff299726cb120344e953a8e040d844b8c8f7d084bad39e079a852feb885c",
+      "scan_verdict": "pass",
+      "checks_passed": 8,
+      "checks_total": 8,
+      "protected_violations": [],
+      "recognition_score": 0.895685,
+      "score_version": "image-fit-raster-image-layer-q10-continuous"
+    }
+  ],
+  "q13_candidate": [
+    {
+      "label": "small-40",
+      "size": "small",
+      "fraction": 0.4,
+      "candidate_id": "balanced-08121b3391c8c3409f1e",
+      "media_type": "image/png",
+      "sha256": "214a8268491a05d0cef30e83d7b131c0b6f33131ce2c7a463769371b22bd98c7",
+      "scan_verdict": "pass",
+      "checks_passed": 8,
+      "checks_total": 8,
+      "payload_equal": true,
+      "protected_violations": [],
+      "recognition_score": 0.94158,
+      "score_version": "image-fit-raster-image-layer-q10-continuous"
+    },
+    {
+      "label": "medium-50",
+      "size": "medium",
+      "fraction": 0.5,
+      "candidate_id": "balanced-17317b4dbf90df8495cc",
+      "media_type": "image/png",
+      "sha256": "8d95dfa1142d2b824734bf433efca0f83a61e5a6d4e6943073696bfc506d7d7f",
+      "scan_verdict": "pass",
+      "checks_passed": 8,
+      "checks_total": 8,
+      "payload_equal": true,
+      "protected_violations": [],
+      "recognition_score": 0.962649,
+      "score_version": "image-fit-raster-image-layer-q10-continuous"
+    },
+    {
+      "label": "large-60",
+      "size": "large",
+      "fraction": 0.6,
+      "candidate_id": "balanced-6addf9c3e2855e79c6dc",
+      "media_type": "image/png",
+      "sha256": "6fbb5aef7eeb9861ebd1467ae9c56713c59ef5940d0087db2d0306685ef0af7d",
+      "scan_verdict": "pass",
+      "checks_passed": 8,
+      "checks_total": 8,
+      "payload_equal": true,
+      "protected_violations": [],
+      "recognition_score": 0.974063,
+      "score_version": "image-fit-raster-image-layer-q10-continuous"
+    }
+  ]
+}
