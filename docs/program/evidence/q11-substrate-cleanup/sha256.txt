@@ -1,0 +1,5 @@
+26044463bff88b73e3c30f7357e255428b1733039cf748e30bdb5f11653db6c0  /home/hermes/qr-mvp-demo/docs/program/evidence/q11-substrate-cleanup/contact-sheet-current-q11.png
+5fa77001ec0d2f4050a9f0231562b66f9cb54153b0d14ee0d8a0e69c9a00a13d  /home/hermes/qr-mvp-demo/docs/program/evidence/q11-substrate-cleanup/objective-evidence.json
+970d44fbafe2a5f7c7639b658b12a3c5e194863789a26b06bf33cfde8d340c4f  /home/hermes/qr-mvp-demo/docs/program/evidence/q11-substrate-cleanup/current-q11/small-40.png
+d8c9c161b856a5f0fcdfc4bb0eb3f3c0e2b01ce89b79517f6a4fb696c727087e  /home/hermes/qr-mvp-demo/docs/program/evidence/q11-substrate-cleanup/current-q11/medium-50.png
+7c1dff299726cb120344e953a8e040d844b8c8f7d084bad39e079a852feb885c  /home/hermes/qr-mvp-demo/docs/program/evidence/q11-substrate-cleanup/current-q11/large-60.png

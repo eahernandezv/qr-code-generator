@@ -145,9 +145,13 @@ const MODE_ORDER: readonly ImageFitMode[] = ['readable', 'balanced', 'image_firs
 const LOGO_SIZE_ORDER: readonly ImageFitLogoSize[] = ['small', 'medium', 'large'];
 const LOGO_SIZE_FRACTION: Record<ImageFitLogoSize, number> = { small: 0.40, medium: 0.50, large: 0.60 };
 const LOGO_SIZE_ATTEMPTS: Record<ImageFitLogoSize, readonly number[]> = {
-  small: [0.40, 0.38, 0.36],
-  medium: [0.50, 0.48, 0.46],
-  large: [0.60, 0.58, 0.56],
+  // Tall or tightly-cleaned logos can exceed the scan-safe envelope at the nominal
+  // fractions because their height becomes much larger than their width. Keep the
+  // public Small/Medium/Large categories, but let each category walk down into a
+  // conservative recovery ladder before falling back to Level 1.
+  small: [0.40, 0.36, 0.32, 0.28, 0.24, 0.20],
+  medium: [0.50, 0.46, 0.42, 0.38, 0.34, 0.30, 0.26],
+  large: [0.60, 0.56, 0.52, 0.48, 0.44, 0.40, 0.36],
 };
 const MAX_VISUAL_CHALLENGERS_PER_MODE = 2;
 const DISCLAIMER = 'Controlled decoder checks are not a universal scan guarantee. No physical-device or print scan was performed.';
@@ -928,8 +932,13 @@ function renderProtectedVisualIslandSvg(
   const fraction = q9Showcase
     ? logoSizeFraction
     : mode === 'readable' ? 0.32 : mode === 'balanced' ? 0.42 : 0.52;
-  const drawWidth = Math.round(inner * fraction);
-  const drawHeight = Math.max(1, Math.round(drawWidth * cropHeight / cropWidth));
+  const maxDrawExtent = Math.round(inner * fraction);
+  const drawWidth = cropHeight > cropWidth
+    ? Math.max(1, Math.round(maxDrawExtent * cropWidth / cropHeight))
+    : maxDrawExtent;
+  const drawHeight = cropHeight > cropWidth
+    ? maxDrawExtent
+    : Math.max(1, Math.round(drawWidth * cropHeight / cropWidth));
   const centeredX = margin * moduleSize + (inner - drawWidth) / 2;
   const centeredY = margin * moduleSize + (inner - drawHeight) / 2;
   const clamp = (value: number, low: number, high: number): number => Math.max(low, Math.min(high, value));
@@ -943,7 +952,8 @@ function renderProtectedVisualIslandSvg(
   const offsetX = centerOnForeground
     ? clamp(qrCenterX - centroidDrawX, margin * moduleSize, margin * moduleSize + inner - drawWidth)
     : centeredX;
-  // Q9 centers simple/logo foregrounds, but preserves the proven scan-safer placement for complex/texture targets.
+  // Q9 centers simple/logo foregrounds on the QR canvas. Scan safety still comes from
+  // protected-module paint suppression and validation, not a visible upward bias.
   const offsetY = centerOnForeground
     ? clamp(qrCenterY - centroidDrawY, margin * moduleSize, margin * moduleSize + inner - drawHeight)
     : centeredY - (matrix.version >= 7 ? drawHeight * 0.12 : 0);
@@ -1049,14 +1059,11 @@ function renderRasterImageLayerPng(
     return { data: dataUrl, format: 'png-dataurl', width, modifiedModules: 0, recognitionScore: 0, protectedConflictScore: 0, protectedViolations: [] };
   }
   const cropWidth = maxX - minX + 1, cropHeight = maxY - minY + 1;
-  const rowExtents = Array.from({ length: target.height }, () => ({ min: target.width, max: -1 }));
+  // Keep the raster path from reintroducing the pasted white canvas that the
+  // readiness cleanup removed. Treat only background-like pixels connected to
+  // the crop edge as exterior; enclosed white face/ear details stay paintable.
   const backgroundConnected = new Uint8Array(cropWidth * cropHeight);
   const isForegroundAt = (x: number, y: number): boolean => distanceFromBackground(pixel(x, y)) > foregroundThreshold;
-  for (let y = minY; y <= maxY; y++) for (let x = minX; x <= maxX; x++) {
-    if (!isForegroundAt(x, y)) continue;
-    rowExtents[y].min = Math.min(rowExtents[y].min, x);
-    rowExtents[y].max = Math.max(rowExtents[y].max, x);
-  }
   const markOutside = (x: number, y: number, stack: number[]): void => {
     if (x < minX || x > maxX || y < minY || y > maxY || isForegroundAt(x, y)) return;
     const index = (y - minY) * cropWidth + (x - minX);
@@ -1072,15 +1079,23 @@ function renderRasterImageLayerPng(
     const x = minX + (index % cropWidth), y = minY + Math.floor(index / cropWidth);
     markOutside(x + 1, y, stack); markOutside(x - 1, y, stack); markOutside(x, y + 1, stack); markOutside(x, y - 1, stack);
   }
+  const rowExtents = Array.from({ length: target.height }, () => ({ min: target.width, max: -1 }));
   let foregroundCount = 0, foregroundSumX = 0, foregroundSumY = 0;
   for (let y = minY; y <= maxY; y++) for (let x = minX; x <= maxX; x++) {
     if (!isForegroundAt(x, y)) continue;
+    rowExtents[y].min = Math.min(rowExtents[y].min, x);
+    rowExtents[y].max = Math.max(rowExtents[y].max, x);
     foregroundCount += 1; foregroundSumX += x - minX + 0.5; foregroundSumY += y - minY + 0.5;
   }
 
   const inner = matrix.size * moduleSize;
-  const drawWidth = Math.round(inner * logoSizeFraction);
-  const drawHeight = Math.max(1, Math.round(drawWidth * cropHeight / cropWidth));
+  const maxDrawExtent = Math.round(inner * logoSizeFraction);
+  const drawWidth = cropHeight > cropWidth
+    ? Math.max(1, Math.round(maxDrawExtent * cropWidth / cropHeight))
+    : maxDrawExtent;
+  const drawHeight = cropHeight > cropWidth
+    ? maxDrawExtent
+    : Math.max(1, Math.round(drawWidth * cropHeight / cropWidth));
   const centeredX = margin * moduleSize + (inner - drawWidth) / 2;
   const centeredY = margin * moduleSize + (inner - drawHeight) / 2;
   const clamp = (value: number, low: number, high: number): number => Math.max(low, Math.min(high, value));
@@ -1090,6 +1105,8 @@ function renderRasterImageLayerPng(
   const offsetX = centerOnForeground
     ? clamp(margin * moduleSize + inner / 2 - centroidX * drawWidth / cropWidth, margin * moduleSize, margin * moduleSize + inner - drawWidth)
     : centeredX;
+  // Center logo foregrounds on the QR canvas. Protected-module suppression plus
+  // decoder validation decide safety; do not bias the visible logo upward.
   const offsetY = centerOnForeground
     ? clamp(margin * moduleSize + inner / 2 - centroidY * drawHeight / cropHeight, margin * moduleSize, margin * moduleSize + inner - drawHeight)
     : centeredY - (matrix.version >= 7 ? drawHeight * 0.12 : 0);
@@ -1123,15 +1140,9 @@ function renderRasterImageLayerPng(
     const exteriorBackground = backgroundConnected[sourceIndex] === 1;
     const internalNegativeSpace = !foreground && !exteriorBackground
       && extent.max >= extent.min && sourceX > extent.min && sourceX < extent.max;
-    const silhouetteSubstrate = !foreground && !internalNegativeSpace
-      && extent.max >= extent.min && sourceX >= extent.min - 2 && sourceX <= extent.max + 2;
-    if (!foreground && !internalNegativeSpace && !silhouetteSubstrate) continue;
+    if (!foreground && !internalNegativeSpace) continue;
     candidatePixels += 1;
     if (!canPaint(px, py)) continue;
-    if (silhouetteSubstrate) {
-      setPixelRgb(px, py, 255, 255, 255);
-      continue;
-    }
     const rgb = foreground ? sampleBilinear(sx, sy) : [255, 255, 255] as [number, number, number];
     const [moduleX, moduleY] = moduleAtPixel(px, py);
     const activeModule = moduleX >= 0 && moduleY >= 0 && moduleX < matrix.size && moduleY < matrix.size && matrix.modules[moduleY][moduleX] === 1;

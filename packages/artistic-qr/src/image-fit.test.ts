@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs';
+import { PNG } from 'pngjs';
 import * as AjvModule from 'ajv';
 import * as formatsModule from 'ajv-formats';
 import { describe, expect, it } from 'vitest';
@@ -462,17 +463,40 @@ describe('Q8 deterministic protected visual island', () => {
     }
   }, 30_000);
 
-  it('promotes the Q10 raster image layer by default only when an RGB plane is available', () => {
+  it('defaults RGB targets to the cleaned Q10 continuous PNG renderer while keeping Q9 explicit', () => {
     const automatic = optimizeImageFitQr(rgbLogoInput());
-    const explicit = optimizeImageFitQr(rgbLogoInput(), { _visualPolicy: 'q10_raster_image_layer' });
+    const explicitQ9 = optimizeImageFitQr(rgbLogoInput(), { _visualPolicy: 'q9_negative_space_showcase' });
     expect(automatic.response.candidates.map((candidate) => candidate.image_fit_evidence.score_version))
       .toEqual(Array(3).fill('image-fit-raster-image-layer-q10-continuous'));
     expect(automatic.response.candidates.map((candidate) => automatic.artifacts[candidate.candidate_id].media_type))
       .toEqual(Array(3).fill('image/png'));
-    expect(automatic.response.candidates.map((candidate) => automatic.artifacts[candidate.candidate_id].sha256))
-      .toEqual(explicit.response.candidates.map((candidate) => explicit.artifacts[candidate.candidate_id].sha256));
     expect(automatic.response.candidates.map((candidate) => candidate.image_treatment.logo_size)).toEqual(['small', 'medium', 'large']);
+    expect(automatic.response.candidates.every((candidate) => candidate.scan_evidence.verdict === 'pass')).toBe(true);
+    expect(explicitQ9.response.candidates.map((candidate) => candidate.image_fit_evidence.score_version))
+      .toEqual(Array(explicitQ9.response.candidates.length).fill('image-fit-negative-space-showcase-q9-target-aware-centering'));
+    expect(explicitQ9.response.candidates.map((candidate) => explicitQ9.artifacts[candidate.candidate_id].media_type))
+      .toEqual(Array(explicitQ9.response.candidates.length).fill('image/svg+xml'));
+    expect(explicitQ9.response.candidates.map((candidate) => candidate.image_treatment.logo_size)).toEqual(['small', 'medium', 'large']);
     expect(optimizeImageFitQr(realisticInput()).response.candidates.every((candidate) => candidate.image_fit_evidence.score_version.includes('q7'))).toBe(true);
+  }, 30_000);
+
+  it('centers the Q10 raster logo foreground instead of applying an upward visual bias', () => {
+    const result = optimizeImageFitQr(rgbLogoInput());
+    const medium = result.response.candidates.find((candidate) => candidate.image_treatment.logo_size === 'medium');
+    expect(medium).toBeDefined();
+    const artifact = result.artifacts[medium!.candidate_id];
+    const png = PNG.sync.read(Buffer.from(artifact.data.replace(/^data:image\/png;base64,/, ''), 'base64'));
+    let count = 0, sumX = 0, sumY = 0;
+    for (let y = 0; y < png.height; y++) for (let x = 0; x < png.width; x++) {
+      const offset = (y * png.width + x) * 4;
+      const r = png.data[offset], g = png.data[offset + 1], b = png.data[offset + 2];
+      const logoColor = b > 150 && (r < 220 || g < 220);
+      if (!logoColor) continue;
+      count += 1; sumX += x; sumY += y;
+    }
+    expect(count).toBeGreaterThan(100);
+    expect(Math.abs(sumX / count - png.width / 2)).toBeLessThanOrEqual(8);
+    expect(Math.abs(sumY / count - png.height / 2)).toBeLessThanOrEqual(8);
   }, 30_000);
 
   it('returns Small, Medium, and Large as separately validated Q9 size candidates', () => {
